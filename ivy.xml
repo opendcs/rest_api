@@ -1,0 +1,56 @@
+
+
+<ivy-module version="2.0" xmlns:e="https//ant.apache.org/ivy/extra">
+    <info organisation="com.opendcs" 
+          module="opendcs-rest-api"
+          revision="${version}"/>
+    <configurations defaultconf="runtime" defaultconfmapping="*->default">
+        <conf name="runtime" visibility="public"/>
+        <conf name="compile" visibility="public"/>      
+        <conf name="build" visibility="private"/>
+    </configurations>
+    <publications>
+        <artifact name="opendcs-rest-api" type="pom" conf="runtime" ext="pom"/>
+        <artifact name="opendcs-rest-api" type="war" conf="runtime" ext="war"/>
+    </publications>
+    <dependencies>                
+        <dependency org="io.swagger.core.v3" name="swagger-jaxrs2" rev="2.2.2"/>
+        <dependency org="io.swagger.core.v3" name="swagger-jaxrs2-servlet-initializer" rev="2.2.2"/>
+        <dependency org="javax.servlet" name="javax.servlet-api" rev="3.0.1" conf="compile"/>
+        <dependency org="org.postgresql" name="postgresql" rev="42.2.23"/>
+        <dependency org="org.glassfish.jersey.containers" name="jersey-container-servlet" rev="2.36"/>
+        <dependency org="org.glassfish.jersey.media" name="jersey-media-multipart" rev="2.36"/>
+        <dependency org="org.glassfish.jersey.core" name="jersey-client" rev="2.36"/>        
+        <dependency org="org.glassfish.jersey.core" name="jersey-common" rev="2.36"/>
+        <dependency org="org.glassfish.jersey.core" name="jersey-server" rev="2.36"/>
+        <dependency org="javax.ws.rs" name="javax.ws.rs-api" rev="2.1.1"/>
+        <dependency org="org.glassfish.hk2" name="hk2-api" rev="2.5.0"/>
+        <dependency org="org.glassfish.hk2" name="hk2-locator" rev="2.5.0"/>
+        <dependency org="org.glassfish.hk2" name="hk2-utils" rev="2.5.0"/>
+        <dependency org="org.glassfish.jersey.inject" name="jersey-hk2" rev="2.28"/>
+        <dependency org="opendcs" name="opendcs" rev="7.0.1"/>
+            
+        <!-- test dependencies -->
+        <!--
+        <dependency org="org.junit.platform" name="junit-platform-launcher" rev="1.8.2" conf="test_platform->default"/>
+        <dependency org="org.junit.platform" name="junit-platform-engine" rev="1.8.2" conf="test_platform->default"/>
+        <dependency org="org.junit.platform" name="junit-platform-commons" rev="1.8.2" conf="test_platform->default"/>
+        <dependency org="org.junit.jupiter" name="junit-jupiter-api" rev="5.8.1" conf="test->default"/>
+        <dependency org="org.junit.jupiter" name="junit-jupiter-engine" rev="5.8.1" conf="test->default"/>
+        -->                
+
+        <!-- groovy deps for biuld script -->
+        <dependency org="org.codehaus.groovy" name="groovy-ant" rev="3.0.10" conf="build->default"/>
+        <dependency org="org.codehaus.groovy" name="groovy" rev="3.0.10" conf="build->default"/>
+        <dependency org="org.codehaus.groovy" name="groovy-xml" rev="3.0.10" conf="build->default"/>
+
+        <!-- other build dependencies -->
+        <dependency org="ant-contrib" name="ant-contrib" rev="1.0b3" conf="build->default"/>
+        <!-- for some reason the github action build requires classes built for java 8 but my local environment 
+            does not. Downgrade for now to people can review.-->
+        <dependency org="com.puppycrawl.tools" name="checkstyle" rev="9.3" conf="build->default"/>
+        <!-- keep unused transient dependencies out -->
+      
+
+    </dependencies>
+</ivy-module>

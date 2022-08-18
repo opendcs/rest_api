@@ -1,1 +1,8 @@
-/build/
+build
+bin
+.externalToolBuilders
+.project
+.vscode
+.project
+.classpath
+.settings

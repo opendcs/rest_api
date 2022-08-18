@@ -1,0 +1,126 @@
+<project name="opendcs-rest-api">
+    <include file="common.xml"/>
+
+    <target name="compile" depends="common.resolve">
+        <mkdir dir="${build.classes}"/>
+        <path id="war.classpath">            
+            <path refid="compile.classpath"/>
+            <path refid="runtime.classpath"/>
+        </path>
+        <javac srcdir="src"
+               destdir="${build.classes}"
+               classpathref="war.classpath"
+               includeantruntime="false"                
+                source="1.8"
+                target="1.8"
+        />        
+    </target>
+
+    <target name="war" depends="compile,common.resolve">
+        <mkdir dir="deps"/>
+        <copy todir="${build.dir}/deps" flatten="true">
+            <fileset refid="runtime.fileset"/>
+        </copy>
+        <war destfile="${build.dir}/opendcs-rest-api.war" needxmlfile="false">
+            <fileset dir="html"/>            
+            <lib dir="${build.dir}/deps"/>
+            <classes dir="${build.classes}"/>
+            <webinf dir="${webcontent.dir}/WEB-INF"/>                
+            <metainf dir="${webcontent.dir}/META-INF"/>
+        </war>
+
+    </target>
+
+    <target name="clean">
+        <delete dir="${build.dir}"/>
+    </target>
+
+    <target name="eclipse-ide-files" depends="common.resolve,common.resolve.build">
+		<!-- 
+			Derived Directly from Mark O'Connors stackoverflow answer. Thank you for
+			coming up with this!
+			https://stackoverflow.com/a/11617592
+		-->
+		<!-- resolve -->		
+		
+		<taskdef name="groovy" classname="org.codehaus.groovy.ant.Groovy" classpathref="build.classpath"/>
+
+		<groovy>		
+			import groovy.xml.MarkupBuilder
+		
+			//
+			// Generate the project file
+			//
+			project.log("Creating .project")
+		
+			new File(".project").withWriter { writer ->
+				def xml = new MarkupBuilder(writer)
+		
+				xml.projectDescription() {
+					name(project.name)
+					comment()
+					projects()
+					buildSpec() {
+						buildCommand() {
+							name("org.eclipse.jdt.core.javabuilder")
+							arguments()
+						}
+						buildCommand() {
+							name("org.eclipse.ui.externaltools.ExternalToolBuilder")
+							triggers("full,incremental")
+							arguments() {
+								dictionary() {
+									key("LaunchConfigHandle")
+			                  		value("&lt;project&gt;/.externalToolBuilders/jar.launch")
+								}
+							}
+						}
+					}
+					natures() {
+						nature("org.eclipse.jdt.core.javanature")
+					}
+				}
+			}
+		
+			//
+			// Generate the classpath file
+			//
+			// The "lib" classpathentry fields are populated using the ivy artifact report
+			//
+			project.log("Creating .classpath")
+		
+			new File(".classpath").withWriter { writer ->
+				def xml = new MarkupBuilder(writer)
+		
+				xml.classpath() {
+					classpathentry(kind:"src",    path:"src", output="bin/main")
+					//classpathentry(kind:"src",    path:"src/main/resources", output="bin/main")
+					//classpathentry(kind:"src",    path:"src/test/java", output="bin/test")					
+					//classpathentry(kind:"output", path:"bin")
+					classpathentry(kind:"con",    path:"org.eclipse.jdt.launching.JRE_CONTAINER")
+		
+					project.getReference("runtime.classpath").each {
+						classpathentry(kind:"lib", path:it)
+					}
+
+					project.getReference("compile.classpath").each {
+						classpathentry(kind:"lib", path:it)
+					}
+				}
+			}
+		</groovy>
+        <mkdir dir=".externalToolBuilders"/>
+        <mkdir dir=".settings"/>
+        <!--<copy file="ide-support/eclipse/jar.launch" todir=".externalToolBuilders"/>-->
+        <!--<copy file="ide-support/eclipse/org.eclipse.jdt.core.prefs" todir=".settings"/>-->
+        <echo>
+            As it is impossible to know everyone's configuration and preferences this target does the bear minimum 
+            to get Eclipse going. You will have to do a "build all" or run ant jar on the command line to make
+            sure dependencies are in place.
+
+            The project currently requires Java 8 due to a dependencies on tools.jar. It is left to the eclipse user
+            to make sure a JDK is available and configured correctly for that need.
+        </echo>
+	</target>
+
+</project>

@@ -6,9 +6,9 @@
 	maxActive="100"
 	maxIdle="30"
 	maxWait="10000"
-	username="tsdbadmin" 
-	password="tsdbadmin"
+	username="opendcs_admin" 
+	password="opendcs_admin"
 	driverClassName="org.postgresql.Driver"
-	url="jdbc:postgresql://localhost/open_tsdb"/>
+	url="jdbc:postgresql://localhost:5432/opendcs-dev"/>
 	
 </Context>

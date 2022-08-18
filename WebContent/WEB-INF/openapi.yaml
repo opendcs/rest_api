@@ -1,0 +1,13 @@
+resourcePackages:
+  - opendcs.opentsdb.hydrojson
+prettyPrint: true
+cacheTTL: 0
+openAPI:
+  info:
+    version: '1.0'
+    title: OpenDCS REST API
+    description: 'This is the web API for accessing on an OpenDCS configuration.'
+    termsOfService: This is hosted locally.  
+    license:
+      name: Apache 2.0
+      url: http://www.apache.org/licenses/LICENSE-2.0.html
