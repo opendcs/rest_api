@@ -1,3 +1,4 @@
 repositories {
     mavenCentral()
+    mavenLocal() // TODO: remove after initial testing and setup.
 }
