@@ -21,8 +21,12 @@ dependencies {
     implementation(libs.jaxb.runtime)
 
     testImplementation(libs.opendcs.test.extension) {
-        exclude group: '*', module: '*'
+        exclude group: 'mil.army.usace.hec', module: '*'
+        exclude group: 'lobobrowser', module: '*'
     }
+    testImplementation(libs.opendcs.test.data)
+    testImplementation(libs.database.postgres)
+    //testImplementation(libs.system.stubs)
 }
 
 publishing {
@@ -40,4 +44,12 @@ if (JavaVersion.current() != JavaVersion.VERSION_1_8) {
             property 'sonar.exclusions', 'src/main/resources/swaggerui/**'
         }
     }
+}
+
+test {
+    systemProperties += project.properties.findAll { k, v -> k.startsWith("opendcs")}
+    systemProperties += project.properties.findAll { k, v -> k.startsWith("testcontainers")}
+    // In Java 9+ this can be handled with a service provider.
+    // However, we are still targeting 8 for the time being.
+    jvmArgs += "-Djava.protocol.handler.pkgs=org.opendcs.spi.url"
 }
