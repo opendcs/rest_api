@@ -20,7 +20,11 @@ dependencies {
 }
 
 test {
-    useJUnitPlatform()
+    useJUnitPlatform() {
+        testLogging {
+            events "PASSED", "SKIPPED", "FAILED"
+        }
+    }
     finalizedBy jacocoTestReport
 }
 
