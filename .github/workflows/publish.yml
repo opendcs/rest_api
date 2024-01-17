@@ -21,6 +21,8 @@ jobs:
           restore-keys: ${{ runner.os }}-gradle
       - name: Build
         run: ./gradlew build
+      - name: Generate SBOM
+        run: ./gradlew cyclonedxBom
       - name: Bundle tarballs
         run: ./gradlew bundle
       - name: Attach OpenDCS REST API WAR file
@@ -41,5 +43,10 @@ jobs:
       - name: Attach OpenDCS Web Client Jetty Tarball file
         run: |
           gh release upload ${{ github.event.release.tag_name }} opendcs-web-client-jetty/build/distributions/opendcs-web-client-jetty-${{ github.event.release.tag_name }}.tar.gz --repo ${{ github.repository }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Attach SBOM
+        run: |
+          gh release upload ${{ github.event.release.tag_name }} build/reports/opendcs-rest-api-parent-bom.json --repo ${{ github.repository }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

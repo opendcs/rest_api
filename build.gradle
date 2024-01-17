@@ -1,3 +1,5 @@
+import org.cyclonedx.model.*
+
 buildscript {
     repositories {
         maven {
@@ -8,6 +10,7 @@ buildscript {
         if (JavaVersion.current() != JavaVersion.VERSION_1_8) {
             classpath "org.sonarsource.scanner.gradle:sonarqube-gradle-plugin:4.4.1.3373"
         }
+        classpath "org.cyclonedx:cyclonedx-gradle-plugin:1.8.1"
     }
 }
 
@@ -32,7 +35,9 @@ allprojects {
         apply plugin: "org.sonarqube"
     }
 }
-subprojects {
+
+allprojects {
+    apply plugin: "org.cyclonedx.bom"
     if (JavaVersion.current() != JavaVersion.VERSION_1_8) {
         sonarqube {
             properties {
@@ -40,6 +45,26 @@ subprojects {
                 property "sonar.tests", "src/test/java"
                 property 'sonar.coverage.jacoco.xmlReportPaths', "${buildDir}/reports/jacoco/test/jacocoTestReport.xml"
             }
+        }
+    }
+    cyclonedxBom {
+        includeConfigs = ["runtimeClasspath"]
+        projectType = "application"
+        destination = file("build/reports/sbom")
+        outputFormat = "json"
+        outputName = "${project.name}-bom"
+        setOrganizationalEntity {oe->
+            oe.name = 'OpenDCS Consortium'
+            oe.url = ['https://github.com/opendcs', 'https://github.com/opendcs/rest_api']
+        }
+        AttachmentText attachmentText = new AttachmentText()
+        attachmentText.setText(rootProject.file('LICENSE.md').getText('UTF-8'))
+        License license = new License()
+        license.setId("Apache-2.0")
+        license.setUrl("https://www.apache.org/licenses/LICENSE-2.0")
+        license.setLicenseText(attachmentText)
+        setLicenseChoice{lc->
+            lc.addLicense(license)
         }
     }
 }

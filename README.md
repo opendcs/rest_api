@@ -99,6 +99,12 @@ OpenDCS REST API targets JDK 8 compatibility for distribution.
 In order to ensure compatibility with future versions of Java, the GitHub workflow [java_compatibility.yml](./.github/workflows/java_compatibility.yml)
 will run a matrix build against the project to ensure compatibility with other JDK versions.
 
+## Software Bill of Materials (SBOM)
+The `./gradlew cyclonedxBom` task generates JSON formatted [CycloneDX SBOM](https://cyclonedx.org/) 
+files for each gradle project.
+The task utilizes the [Cyclone DX Gradle Plugin](https://github.com/CycloneDX/cyclonedx-gradle-plugin)
+to analyze the project dependencies. The SBOMs are generated through the CI/CD pipeline and uploaded as artifacts in GitHub Releases.
+
 # Releases
 Artifact releases from this repository are found in the GitHub Releases page for the repository. 
 

@@ -35,6 +35,8 @@ jobs:
           restore-keys: ${{ runner.os }}-gradle
       - name: Build
         run: ./gradlew build
+      - name: Generate SBOM
+        run: ./gradlew cyclonedxBom
       - name: Analyze
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
@@ -45,14 +47,21 @@ jobs:
       - name: Upload WAR files
         uses: actions/upload-artifact@v4.1.0
         with:
-          name: warfile
+          name: warfiles
           path: ./**/build/libs/*.war
           retention-days: 1
           if-no-files-found: error
       - name: Upload Tarballs
         uses: actions/upload-artifact@v4.1.0
         with:
-          name: opendcs-rest-api-artifacts
+          name: tarballs
           path: ./**/build/distributions/*.tar.gz
+          retention-days: 1
+          if-no-files-found: error
+      - name: Upload SBOM
+        uses: actions/upload-artifact@v4.1.0
+        with:
+          name: sboms
+          path: ./**/build/reports/sbom/*-bom.json
           retention-days: 1
           if-no-files-found: error

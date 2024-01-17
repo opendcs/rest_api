@@ -1,4 +1,4 @@
-rootProject.name = "opendcs_rest_api"
+rootProject.name = "opendcs-rest-api-parent"
 
 include "opendcs-rest-api"
 include "opendcs-rest-api-jetty"
