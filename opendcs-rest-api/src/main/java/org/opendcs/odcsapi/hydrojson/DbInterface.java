@@ -33,8 +33,7 @@ import javax.sql.DataSource;
 
 import org.opendcs.odcsapi.dao.ApiDaoBase;
 import org.opendcs.odcsapi.dao.DbException;
-import org.opendcs.odcsapi.lrgsclient.StaleClientChecker;
-import org.opendcs.odcsapi.sec.TokenManager;
+import org.opendcs.odcsapi.sec.basicauth.TokenManager;
 import org.opendcs.odcsapi.start.StartException;
 import org.opendcs.odcsapi.util.ApiConstants;
 
@@ -43,8 +42,7 @@ import org.opendcs.odcsapi.util.ApiConstants;
  * @author mmaloney
  *
  */
-public class DbInterface
-	implements AutoCloseable
+public final class DbInterface implements AutoCloseable
 {
 	static final String module = "DbInterface";
 	static public String dbType = "opentsdb";
@@ -56,7 +54,6 @@ public class DbInterface
 	private static final String sequenceSuffix = "IdSeq";
 	static public String siteNameTypePreference = "CWMS";
 	static public Properties decodesProperties = new Properties();
-	static public boolean secureMode = false;
 	
 	/** Provides reason for last error return. */
 	private String reason = null;
@@ -65,7 +62,6 @@ public class DbInterface
 	private Connection connection = null;
 	
 	private static TokenManager tokenManager = null;
-	private static StaleClientChecker staleClientChecker = null;
 
 	
 	public DbInterface() 
@@ -99,16 +95,10 @@ public class DbInterface
 			throw new DbException(module, ex, msg);
 		}
 
-		if (staleClientChecker == null)
-		{
-			staleClientChecker = new StaleClientChecker();
-			staleClientChecker.start();
-		}
-
 		Logger.getLogger(ApiConstants.loggerName).info("isHdb=" + isHdb + ", isCwms=" + isCwms 
 			+ ", isOpenTsdb=" + isOpenTsdb + ", isOracle=" + isOracle);
 	}
-	
+
 	public boolean isUserValid(String username, String password)
 			throws DbException, SQLException
 	{
@@ -288,7 +278,7 @@ public class DbInterface
 	public static TokenManager getTokenManager()
 	{
 		if (tokenManager == null)
-			tokenManager = new TokenManager(secureMode);
+			tokenManager = new TokenManager();
 		
 		return tokenManager;
 	}

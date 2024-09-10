@@ -16,7 +16,6 @@
 package org.opendcs.odcsapi.res;
 
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.logging.Logger;
 
 import javax.ws.rs.Consumes;
@@ -37,6 +36,7 @@ import org.opendcs.odcsapi.dao.DbException;
 import org.opendcs.odcsapi.errorhandling.ErrorCodes;
 import org.opendcs.odcsapi.errorhandling.WebAppException;
 import org.opendcs.odcsapi.hydrojson.DbInterface;
+import org.opendcs.odcsapi.sec.Public;
 import org.opendcs.odcsapi.util.ApiConstants;
 import org.opendcs.odcsapi.util.ApiHttpUtil;
 
@@ -48,13 +48,9 @@ public class DataSourceResources
 	@GET
 	@Path("datasourcerefs")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response getDataSourceRefs(
-		@QueryParam("token") String token
-		)
-		throws WebAppException, DbException
+	@Public
+	public Response getDataSourceRefs() throws DbException
 	{
-		DbInterface.getTokenManager().checkToken(httpHeaders, token);
-		
 		Logger.getLogger(ApiConstants.loggerName).fine("getDataSourceRefs");
 		try (DbInterface dbi = new DbInterface();
 			ApiDataSourceDAO dao = new ApiDataSourceDAO(dbi))
@@ -66,16 +62,9 @@ public class DataSourceResources
 	@GET
 	@Path("datasource")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response geDataSource(
-		@QueryParam("datasourceid") Long dataSourceId,
-		@QueryParam("token") String token
-		)
+	public Response geDataSource(@QueryParam("datasourceid") Long dataSourceId)
 		throws WebAppException, DbException, SQLException
 	{
-		if (!DbInterface.getTokenManager().checkToken(httpHeaders, token))
-			throw new WebAppException(ErrorCodes.TOKEN_REQUIRED, 
-				"Valid token is required for this operation.");
-		
 		if (dataSourceId == null)
 			throw new WebAppException(ErrorCodes.MISSING_ID, 
 				"Missing required datasourceid parameter.");
@@ -96,17 +85,11 @@ public class DataSourceResources
 	@Path("datasource")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response postDatasource(@QueryParam("token") String token, 
-			ApiDataSource datasource)
-		throws WebAppException, DbException, SQLException
+	public Response postDatasource(ApiDataSource datasource) throws WebAppException, DbException, SQLException
 	{
 		Logger.getLogger(ApiConstants.loggerName).fine(
 			"post datasource received datasource " + datasource.getName() 
 			+ " with ID=" + datasource.getDataSourceId());
-		
-		if (!DbInterface.getTokenManager().checkToken(httpHeaders, token))
-			throw new WebAppException(ErrorCodes.TOKEN_REQUIRED, 
-				"Valid token is required for this operation.");
 		
 		try (DbInterface dbi = new DbInterface();
 			ApiDataSourceDAO dsDao = new ApiDataSourceDAO(dbi))
@@ -120,18 +103,10 @@ public class DataSourceResources
 	@Path("datasource")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response deleteDatasource(
-		@QueryParam("token") String token, 
-		@QueryParam("datasourceid") Long datasourceId)
-		throws WebAppException, DbException
+	public Response deleteDatasource(@QueryParam("datasourceid") Long datasourceId) throws WebAppException, DbException
 	{
 		Logger.getLogger(ApiConstants.loggerName).fine(
-			"DELETE datasource received datasourceid=" + datasourceId
-			+ ", token=" + token);
-		
-		if (!DbInterface.getTokenManager().checkToken(httpHeaders, token))
-			throw new WebAppException(ErrorCodes.TOKEN_REQUIRED, 
-				"Valid token is required for this operation.");
+			"DELETE datasource received datasourceid=" + datasourceId);
 		
 		// Use username and password to attempt to connect to the database
 		try (DbInterface dbi = new DbInterface();

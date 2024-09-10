@@ -19,10 +19,16 @@ import java.io.IOException;
 import java.net.ConnectException;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Optional;
 
+import org.opendcs.odcsapi.lrgsclient.ClientConnectionCache;
+import org.opendcs.odcsapi.sec.Public;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.inject.Inject;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -45,7 +51,6 @@ import org.opendcs.odcsapi.dao.DbException;
 import org.opendcs.odcsapi.errorhandling.ErrorCodes;
 import org.opendcs.odcsapi.errorhandling.WebAppException;
 import org.opendcs.odcsapi.hydrojson.DbInterface;
-import org.opendcs.odcsapi.sec.UserToken;
 import org.opendcs.odcsapi.util.ApiEnvExpander;
 import org.opendcs.odcsapi.util.ApiHttpUtil;
 import org.opendcs.odcsapi.util.ApiPropertiesUtil;
@@ -58,17 +63,24 @@ import org.opendcs.odcsapi.util.ProcWaiterThread;
 @Path("/")
 public class AppResources
 {
-	private static final String NO_TOKEN_MSG = "Valid token is required for this operation.";
 	private static final Logger LOGGER = LoggerFactory.getLogger(AppResources.class);
+	@Context
+	private HttpServletRequest request;
 	@Context HttpHeaders httpHeaders;
+	private final ClientConnectionCache clientConnectionCache;
+
+	@Inject
+	public AppResources(ClientConnectionCache clientConnectionCache)
+	{
+		this.clientConnectionCache = clientConnectionCache;
+	}
 
 	@GET
 	@Path("apprefs")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response getAppRefs(@QueryParam("token") String token)
-		throws WebAppException, DbException
+	@Public
+	public Response getAppRefs() throws DbException
 	{
-		DbInterface.getTokenManager().checkToken(httpHeaders, token);
 		LOGGER.trace("Getting App Refs.");
 		try (DbInterface dbi = new DbInterface();
 			ApiAppDAO dao = new ApiAppDAO(dbi))
@@ -82,14 +94,10 @@ public class AppResources
 	@GET
 	@Path("app")
 	@Produces(MediaType.APPLICATION_JSON)
- 	public Response getApp(
-		@QueryParam("appid") Long appId,
-		@QueryParam("token") String token
-		)
+	@Public
+ 	public Response getApp(@QueryParam("appid") Long appId)
 		throws WebAppException, DbException, SQLException
 	{
-		DbInterface.getTokenManager().checkToken(httpHeaders, token);
-		
 		if (appId == null)
 			throw new WebAppException(ErrorCodes.MISSING_ID, 
 				"Missing required appid parameter.");
@@ -105,15 +113,10 @@ public class AppResources
 	@Path("app")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response postApp(@QueryParam("token") String token, 
-			ApiLoadingApp app)
+	public Response postApp(ApiLoadingApp app)
 		throws WebAppException, DbException, SQLException
 	{
 		LOGGER.debug("Post app received app {} with id {}", app.getAppName(), app.getAppId());
-		
-		if (!DbInterface.getTokenManager().checkToken(httpHeaders, token))
-			throw new WebAppException(ErrorCodes.TOKEN_REQUIRED, NO_TOKEN_MSG);
-		
 		try (DbInterface dbi = new DbInterface();
 			ApiAppDAO dao = new ApiAppDAO(dbi))
 		{
@@ -126,15 +129,10 @@ public class AppResources
 	@Path("app")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response deletApp(
-		@QueryParam("token") String token, 
-		@QueryParam("appid") Long appId)
+	public Response deletApp(@QueryParam("appid") Long appId)
 		throws WebAppException, DbException, SQLException
 	{
-		LOGGER.debug("Delete app received request to delete app with id {}", appId);
-		
-		if (!DbInterface.getTokenManager().checkToken(httpHeaders, token))
-			throw new WebAppException(ErrorCodes.TOKEN_REQUIRED, NO_TOKEN_MSG);
+		LOGGER.debug("Delete app received request to delete app with id {}", appId);;
 		
 		// Use username and password to attempt to connect to the database
 		try (DbInterface dbi = new DbInterface();
@@ -148,12 +146,8 @@ public class AppResources
 	@GET
 	@Path("appstat")
 	@Produces(MediaType.APPLICATION_JSON)
- 	public Response getAppStat(
-		@QueryParam("token") String token
-		)
-		throws WebAppException, DbException
+ 	public Response getAppStat() throws DbException
 	{
-		DbInterface.getTokenManager().checkToken(httpHeaders, token);
 		LOGGER.debug("Getting app stats");
 		try (DbInterface dbi = new DbInterface();
 			ApiAppDAO dao = new ApiAppDAO(dbi))
@@ -166,69 +160,68 @@ public class AppResources
 	@GET
 	@Path("appevents")
 	@Produces(MediaType.APPLICATION_JSON)
- 	public Response getAppEvents(
-		@QueryParam("token") String token, @QueryParam("appid") Long appId)
+ 	public Response getAppEvents(@QueryParam("appid") Long appId)
 		throws WebAppException, DbException, SQLException
 	{
-		LOGGER.debug("Gettin app events for app with id {}", appId);
-		
-		UserToken userToken = DbInterface.getTokenManager().getToken(httpHeaders, token);
-		if (userToken == null)
-			throw new WebAppException(ErrorCodes.TOKEN_REQUIRED, NO_TOKEN_MSG);
-
-		ApiEventClient cli = userToken.getEventClient(appId);
+		LOGGER.debug("Getting app events for app with id {}", appId);
+		HttpSession session = request.getSession(true);
+		Optional<ApiEventClient> cli = clientConnectionCache.getApiEventClient(appId, session.getId());
 		ApiAppStatus appStat = null;
 		try (DbInterface dbi = new DbInterface();
 			ApiAppDAO dao = new ApiAppDAO(dbi))
 		{
+			ApiEventClient apiEventClient = null;
 			appStat = dao.getAppStatus(appId);
 			if (appStat.getPid() == null)
 			{
-				if (cli != null)
+				cli.ifPresent(c ->
 				{
-					cli.disconnect();
-					userToken.setEventClient(appId, null);
-				}
+					c.disconnect();
+					clientConnectionCache.removeApiEventClient(c, session.getId());
+				});
 				throw new WebAppException(ErrorCodes.NO_SUCH_OBJECT, "appid " + appId 
 					+ " (" + appStat.getAppName() + ") is not running.");
 			}
 			else if (System.currentTimeMillis() - appStat.getHeartbeat().getTime() > 20000L)
 			{
-				if (cli != null)
+				cli.ifPresent(c ->
 				{
-					cli.disconnect();
-					userToken.setEventClient(appId, null);
-				}
+					c.disconnect();
+					clientConnectionCache.removeApiEventClient(c, session.getId());
+				});
 				throw new WebAppException(ErrorCodes.NO_SUCH_OBJECT, "appid " + appId 
 					+ " (" + appStat.getAppName() + ") is not running (stale heartbeat).");
 
 			}
-			else if (cli == null)
+			else if (!cli.isPresent())
 			{
 				Integer port = appStat.getEventPort();
 				if (port == null)
 					return ApiHttpUtil.createResponse(new ArrayList<ApiAppEvent>());
-				cli = new ApiEventClient(appId, appStat.getHostname(), port, appStat.getAppName(), appStat.getPid());
-				cli.connect();
+				apiEventClient = new ApiEventClient(appId, appStat.getHostname(), port, appStat.getAppName(), appStat.getPid());
+				apiEventClient.connect();
 				LOGGER.debug("Connected to {}:{}", appStat.getHostname(), port);
-				userToken.setEventClient(appId, cli);
+				clientConnectionCache.addApiEventClient(apiEventClient, session.getId());
 			}
-			else if (appStat.getPid() != null && appStat.getPid() != cli.getPid())
+			else if (appStat.getPid() != null && appStat.getPid() != cli.get().getPid())
 			{
 				// This means that the app was stopped and restarted since we last checked for events.
 				// Close the old client and open a new one with the correct PID.
-				cli.disconnect();
-				userToken.setEventClient(appId, null);
+				cli.ifPresent(c ->
+				{
+					c.disconnect();
+					clientConnectionCache.removeApiEventClient(c, session.getId());
+				});
 				
 				Integer port = appStat.getEventPort();
 				if (port == null)
 					return ApiHttpUtil.createResponse(new ArrayList<ApiAppEvent>()); // app not running
-				cli = new ApiEventClient(appId, appStat.getHostname(), port, appStat.getAppName(), appStat.getPid());
-				cli.connect();
+				apiEventClient = new ApiEventClient(appId, appStat.getHostname(), port, appStat.getAppName(), appStat.getPid());
+				apiEventClient.connect();
 				LOGGER.debug("Connected to {}:{}", appStat.getHostname(), port);
-				userToken.setEventClient(appId, cli);
+				clientConnectionCache.addApiEventClient(apiEventClient, session.getId());
 			}
-			return ApiHttpUtil.createResponse(cli.getNewEvents());
+			return ApiHttpUtil.createResponse(apiEventClient.getNewEvents());
 		}
 		catch(ConnectException ex)
 		{			
@@ -238,8 +231,11 @@ public class AppResources
 		}
 		catch(IOException ex)
 		{
-			cli.disconnect();
-			userToken.setEventClient(appId, null);
+			cli.ifPresent(c ->
+			{
+				c.disconnect();
+				clientConnectionCache.removeApiEventClient(c, session.getId());
+			});
 			throw new WebAppException(ErrorCodes.IO_ERROR,
 					String.format("Event socket to %s closed by app", appStat.getAppId()), ex);
 		}
@@ -249,16 +245,12 @@ public class AppResources
 	@Path("appstart")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response postAppStart(@QueryParam("token") String token,
-			@QueryParam("appid") Long appId)
+	public Response postAppStart(@QueryParam("appid") Long appId)
 		throws WebAppException, DbException, SQLException
 	{
 		LOGGER.debug("Post for appstart received with appId={}", appId);
 		if (appId == null)
 			throw new WebAppException(ErrorCodes.MISSING_ID, "appId parameter required for this operation.");
-		
-		if (!DbInterface.getTokenManager().checkToken(httpHeaders, token))
-			throw new WebAppException(ErrorCodes.TOKEN_REQUIRED, NO_TOKEN_MSG);
 		
 		try (DbInterface dbi = new DbInterface();
 			ApiAppDAO dao = new ApiAppDAO(dbi))
@@ -309,16 +301,12 @@ public class AppResources
 	@Path("appstop")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response postAppStop(@QueryParam("token") String token,
-		@QueryParam("appid") Long appId)
+	public Response postAppStop(@QueryParam("appid") Long appId)
 		throws WebAppException, DbException, SQLException
 	{
 		LOGGER.debug("Post appstop received on app with id {}", appId);
 		if (appId == null)
 			throw new WebAppException(ErrorCodes.MISSING_ID, "appId parameter required for this operation.");
-		
-		if (!DbInterface.getTokenManager().checkToken(httpHeaders, token))
-			throw new WebAppException(ErrorCodes.TOKEN_REQUIRED, NO_TOKEN_MSG);
 		
 		try (DbInterface dbi = new DbInterface();
 			ApiAppDAO dao = new ApiAppDAO(dbi))

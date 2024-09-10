@@ -25,7 +25,6 @@ import java.util.EnumSet;
 import java.util.Properties;
 import java.util.Scanner;
 
-import org.opendcs.odcsapi.start.StartException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -79,7 +78,6 @@ public class Start
 		LOGGER.info("Listening Https Port={}", apiCmdLineArgs.getHttpsPort());
 		LOGGER.info("Top Context={}", apiCmdLineArgs.getContext());
 		LOGGER.info("Cors File={}", apiCmdLineArgs.getCorsFile());
-		LOGGER.info("Secure Mode={}", apiCmdLineArgs.isSecureMode());
 
 		// Initialize the JETTY server and servlet holders.
 		org.eclipse.jetty.server.Server server = new org.eclipse.jetty.server.Server();
@@ -165,7 +163,6 @@ public class Start
 				DbInterface.siteNameTypePreference = n;
 		}
 		ApiPropertiesUtil.copyProps(DbInterface.decodesProperties, decodesProps);
-		DbInterface.secureMode = apiCmdLineArgs.isSecureMode();
 
 		PGSimpleDataSource ds = new PGSimpleDataSource();
 		ds.setURL(dbUrl);

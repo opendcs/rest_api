@@ -46,7 +46,7 @@ The `start.sh` script can be configured with the following arguments:
         export DCSTOOL_HOME=/home/opendcs/OPENDCS
         export DCSTOOL_USERDIR=/home/opendcs
         export JAVA_OPTS="-DDCSTOOL_HOME=$DCSTOOL_HOME -DDCSTOOL_USERDIR=$DCSTOOL_USERDIR"
-        export JAVA_ARGS="-p 8081 -c odcsapi -cors /home/testuser/OPENDCS/opendcs_web_cors.cfg -s"
+        export JAVA_ARGS="-p 8081 -c odcsapi -cors /home/testuser/OPENDCS/opendcs_web_cors.cfg"
         ./start.sh
         ```
 - The java args help configure the server
@@ -69,8 +69,6 @@ The `start.sh` script can be configured with the following arguments:
     - Key Password (the password that was used to generate the key).
   - -P
     - Decodes Properties file path (by default it’s at $DCSTOOL_HOME/decodes.properties.
-  - -s
-    - Secure mode.  The authentication is done via the header, rather than as parameters passed through parameters.
 
 Additionally, the build can run from a developer environment using the gradle task `./gradlew :opendcs-rest-api-jetty:startJetty`.
 Properties read from gradle.properties will be used to configure the server.

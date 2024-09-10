@@ -16,7 +16,6 @@
 package org.opendcs.odcsapi.res;
 
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.logging.Logger;
 
 import javax.ws.rs.Consumes;
@@ -37,6 +36,7 @@ import org.opendcs.odcsapi.dao.DbException;
 import org.opendcs.odcsapi.errorhandling.ErrorCodes;
 import org.opendcs.odcsapi.errorhandling.WebAppException;
 import org.opendcs.odcsapi.hydrojson.DbInterface;
+import org.opendcs.odcsapi.sec.Public;
 import org.opendcs.odcsapi.util.ApiConstants;
 import org.opendcs.odcsapi.util.ApiHttpUtil;
 
@@ -48,11 +48,9 @@ public class PresentationResources
 	@GET
 	@Path("presentationrefs")
 	@Produces(MediaType.APPLICATION_JSON)
- 	public Response getPresentationRefs(@QueryParam("token") String token)
-		throws WebAppException, DbException
+	@Public
+ 	public Response getPresentationRefs() throws DbException
 	{
-		DbInterface.getTokenManager().checkToken(httpHeaders, token);
-		
 		Logger.getLogger(ApiConstants.loggerName).fine("getPresentationRefs");
 		try (DbInterface dbi = new DbInterface();
 			ApiPresentationDAO dao = new ApiPresentationDAO(dbi))
@@ -64,14 +62,10 @@ public class PresentationResources
 	@GET
 	@Path("presentation")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response getPresentation(
-		@QueryParam("groupid") Long groupId,
-		@QueryParam("token") String token
-		)
+	@Public
+	public Response getPresentation(@QueryParam("groupid") Long groupId)
 		throws WebAppException, DbException, SQLException
 	{
-		DbInterface.getTokenManager().checkToken(httpHeaders, token);
-		
 		if (groupId == null)
 			throw new WebAppException(ErrorCodes.MISSING_ID, 
 				"Missing required groupid parameter.");
@@ -88,17 +82,12 @@ public class PresentationResources
 	@Path("presentation")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response postPresentation(@QueryParam("token") String token, 
-			ApiPresentationGroup presGrp)
-		throws WebAppException, DbException, SQLException
+	public Response postPresentation(ApiPresentationGroup presGrp) throws WebAppException, DbException, SQLException
 	{
-		Logger.getLogger(ApiConstants.loggerName).fine("post presentation received presentation " + presGrp.getName() 
-			+ " with ID=" + presGrp.getGroupId());
-		
-		if (!DbInterface.getTokenManager().checkToken(httpHeaders, token))
-			throw new WebAppException(ErrorCodes.TOKEN_REQUIRED, 
-				"Valid token is required for this operation.");
-		
+		Logger.getLogger(ApiConstants.loggerName)
+				.fine("post presentation received presentation " + presGrp.getName()
+						+ " with ID=" + presGrp.getGroupId());
+
 		try (DbInterface dbi = new DbInterface();
 			ApiPresentationDAO dao = new ApiPresentationDAO(dbi))
 		{
@@ -111,18 +100,10 @@ public class PresentationResources
 	@Path("presentation")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response deletePresentation(
-		@QueryParam("token") String token, 
-		@QueryParam("groupid") Long groupId)
-		throws WebAppException, DbException, SQLException
+	public Response deletePresentation(@QueryParam("groupid") Long groupId) throws DbException, SQLException
 	{
-		Logger.getLogger(ApiConstants.loggerName).fine(
-			"DELETE presentation received groupid=" + groupId
-			+ ", token=" + token);
-		
-		if (!DbInterface.getTokenManager().checkToken(httpHeaders, token))
-			throw new WebAppException(ErrorCodes.TOKEN_REQUIRED, 
-				"Valid token is required for this operation.");
+		Logger.getLogger(ApiConstants.loggerName)
+				.fine("DELETE presentation received groupid=" + groupId);
 		
 		// Use username and password to attempt to connect to the database
 		try (DbInterface dbi = new DbInterface();

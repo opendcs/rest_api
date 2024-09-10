@@ -139,8 +139,7 @@ tasks.register('startJettyOdcsApi', JavaExec) { ->
     args(
             "-p", project.findProperty("REST_API_PORT") ?: "8081",
             "-c", project.findProperty("REST_API_CONTEXT") ?: "odcsapi",
-            "-cors", project.findProperty("REST_API_CORS") ?: "config/opendcs_web_cors.cfg",
-            "-s")
+            "-cors", project.findProperty("REST_API_CORS") ?: "config/opendcs_web_cors.cfg")
     doFirst {
         if (project.findProperty("postgresdb.url") == null) {
             environment 'OPENDCS_USERNAME', "tsdbadm"

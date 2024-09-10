@@ -1,7 +1,7 @@
 /*
- *  Copyright 2023 OpenDCS Consortium
+ *  Copyright 2024 OpenDCS Consortium
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  Licensed under the Apache License, Version 2.0 (the "License")
  *  you may not use this file except in compliance with the License.
  *  You may obtain a copy of the License at
  *       http://www.apache.org/licenses/LICENSE-2.0
@@ -13,7 +13,7 @@
  *  limitations under the License.
  */
 
-package org.opendcs.odcsapi.sec;
+package org.opendcs.odcsapi.sec.basicauth;
 
 import java.security.SecureRandom;
 import java.sql.Connection;
@@ -23,7 +23,9 @@ import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.logging.Logger;
 
 import javax.ws.rs.core.HttpHeaders;
@@ -42,17 +44,8 @@ import org.opendcs.odcsapi.util.Base64;
 
 public class TokenManager
 {
-	private static String module = "TokenManager";
-	private ArrayList<UserToken> activeTokens = new ArrayList<UserToken>();
-	private boolean secureMode = false;
-	private SecureRandom rand = new SecureRandom();
-	private static final long TOKEN_MAX_AGE = 1000L * 3600 * 3; // A session is only valid for 3 hrs.
-
-	public TokenManager(boolean secureMode)
-	{
-		// Set secureMode from info in the dbi, which is set from cmdline args or props file.
-		this.secureMode = secureMode;
-	}
+	private static final String module = "TokenManager";
+	private final SecureRandom rand = new SecureRandom();
 	
 	public synchronized UserToken makeToken(Credentials creds, DbInterface dbi, HttpHeaders hdrs)
 		throws WebAppException
@@ -141,7 +134,6 @@ public class TokenManager
 		// Make a UserToken and token string. Place in Hashmap & return string.
 		String tokstr = Long.toHexString(rand.nextLong());
 		UserToken userTok = new UserToken(tokstr, creds.getUsername());
-		activeTokens.add(userTok);
 		Logger.getLogger(ApiConstants.loggerName).fine("Added new token for user '" 
 			+ creds.getUsername() + "'=" + tokstr);
 		
@@ -150,39 +142,35 @@ public class TokenManager
 	
 	/**
 	 * Check token from header or URL. If one is found, update its lastUsed time.
-	 * @param hdrs the HTTP header
-	 * @param urlToken the token string from the URL, or null if not provided.
+	 * @param headers the HTTP header
 	 * @return true if token is valid, false if not.
 	 * @throws WebAppException if an invalid token is provided.
 	 */
-	public boolean checkToken(HttpHeaders hdrs, String urlToken)
-		throws WebAppException
+	boolean checkToken(HttpHeaders headers, UserToken userToken)
 	{
-		UserToken userToken = getToken(hdrs, urlToken);
-		return (userToken != null);
+		String token = getToken(headers);
+		return Objects.equals(userToken.getToken(), token);
 	}
 	
 	/**
 	 * Performs the check operation, but also returns the UserToken being
 	 * cached for the current session.
-	 * @param hdrs
-	 * @param urlToken
-	 * @return
+	 * @param headers HTTP Request headers
+	 * @return UserToken with client identifying information for the session
 	 * @throws WebAppException
 	 */
-	public synchronized UserToken getToken(HttpHeaders hdrs, String urlToken)
-		throws WebAppException
+	private String getToken(HttpHeaders headers)
 	{
 		String tokstr = null;
 
 		// try to get tokstr from header Authentication - Bearer
-		String authString = hdrs.getHeaderString(HttpHeaders.AUTHORIZATION);
-		if (authString != null && authString.length() > 0)
+		String authString = headers.getHeaderString(HttpHeaders.AUTHORIZATION);
+		if (authString != null && !authString.isEmpty())
 		{
-			String authHdrs[] = authString.split(",");
-			for(int idx = 0; idx < authHdrs.length; idx++)
+			String[] authHeaders = authString.split(",");
+			for(int idx = 0; idx < authHeaders.length; idx++)
 			{
-				String x = authHdrs[idx].trim();
+				String x = authHeaders[idx].trim();
 				Logger.getLogger(ApiConstants.loggerName).info(module + ".checkToken authHdrs[" + idx + "] = " + x);
 				if (x.startsWith("Bearer"))
 				{
@@ -196,91 +184,6 @@ public class TokenManager
 				}
 			}
 		}
-	
-		if (tokstr == null) // i.e. not in the HTTP header.
-		{
-			if (secureMode)
-			{
-				Logger.getLogger(ApiConstants.loggerName).warning(module 
-					+ ".checkToken Secure Mode requires token in HTTP Authorization Bearer header.");
-				return null;
-			}
-			else if (urlToken == null)
-			{
-				Logger.getLogger(ApiConstants.loggerName).warning(module 
-					+ ".checkToken Token not provided, neither in URL or HTTP Header..");
-				return null;
-			}
-			tokstr = urlToken;
-		}
-		
-		// Search for requested token, and cull the list of expired tokens.
-		UserToken userToken = null;
-		long now = System.currentTimeMillis();
-		for(Iterator<UserToken> tokit = activeTokens.iterator(); tokit.hasNext(); )
-		{
-			UserToken t = tokit.next();
-			if (now - t.getLastUsed() > TOKEN_MAX_AGE)
-				tokit.remove();
-			else if (tokstr.equals(t.getToken()))
-				userToken = t;
-		}
-		if (userToken == null)
-			throw new WebAppException(ErrorCodes.NO_SUCH_OBJECT, "Invalid token string provided.");
-		
-		userToken.touch();
-		return userToken;
-	}
-	
-	public static final long STALE_THRESHOLD_MS = 90000L;
-	
-	/**
-	 * Called periodically from StaleClientChecker to hang up any DDS clients or event clients
-	 * that have gone stale, e.g. client starts a message retrieval and never completes it, or
-	 * event clients with a stale heartbeat.
-	 */
-	public synchronized void checkStaleConnections() throws DbException {
-		for(UserToken tok : activeTokens)
-		{
-			ApiLddsClient cli = tok.getLddsClient();
-			if (cli != null && System.currentTimeMillis() - cli.getLastActivity() > STALE_THRESHOLD_MS)
-			{
-				cli.info("Hanging up due to " + (STALE_THRESHOLD_MS/1000) + " seconds of inactivity.");
-				cli.disconnect();
-				tok.setLddsClient(null);
-				tok.setSearchCrit(null);
-			}
-			
-			try(DbInterface dbi = new DbInterface();
-				ApiAppDAO appDao = new ApiAppDAO(dbi))
-			{
-				ArrayList<ApiAppStatus> appStatii = appDao.getAppStatus();
-				HashMap<Long,ApiEventClient> evclients = tok.getEventClients();
-				for(Iterator<Map.Entry<Long,ApiEventClient>> eit = evclients.entrySet().iterator();
-					eit.hasNext(); )
-				{
-					Map.Entry<Long,ApiEventClient> entry = eit.next();
-					Long appId = entry.getKey();
-					ApiEventClient evcli = entry.getValue();
-					for(ApiAppStatus appStat : appStatii)
-					{
-						if (appId == appStat.getAppId())
-						{
-							if (appStat.getPid() == null || appStat.getHeartbeat() == null
-							 || System.currentTimeMillis() - appStat.getHeartbeat().getTime() > 20000L)
-							{
-								evcli.disconnect();
-								eit.remove();
-							}
-							break;
-						}
-					}
-				}
-			}
-			catch(DbException ex)
-			{
-				throw new DbException(module, ex, "Error checking event clients.");
-			}
-		}
+		return tokstr;
 	}
 }

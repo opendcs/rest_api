@@ -50,6 +50,7 @@ jar {
 
 war {
     dependsOn extractWebJars
+    from 'src/main/webapp'
 }
 
 publishing {
