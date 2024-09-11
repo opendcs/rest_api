@@ -15,10 +15,7 @@
 
 package org.opendcs.odcsapi.sec.basicauth;
 
-import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Properties;
-import java.util.logging.Logger;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
@@ -27,23 +24,17 @@ import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import org.opendcs.odcsapi.beans.DecodeRequest;
 import org.opendcs.odcsapi.beans.TokenBean;
-import org.opendcs.odcsapi.dao.ApiTsDAO;
 import org.opendcs.odcsapi.dao.DbException;
 import org.opendcs.odcsapi.errorhandling.ErrorCodes;
 import org.opendcs.odcsapi.errorhandling.WebAppException;
 import org.opendcs.odcsapi.hydrojson.DbInterface;
-import org.opendcs.odcsapi.opendcs_dep.PropSpecHelper;
-import org.opendcs.odcsapi.opendcs_dep.TestDecoder;
 import org.opendcs.odcsapi.sec.Public;
-import org.opendcs.odcsapi.util.ApiConstants;
 import org.opendcs.odcsapi.util.ApiHttpUtil;
 
 @Path("/")
@@ -66,9 +57,15 @@ public class BasicAuthResource
 	@Path("credentials")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
+	@Public
 	public Response postCredentials(Credentials credentials)
 			throws WebAppException, DbException
 	{
+		if(credentials == null)
+		{
+			throw new WebAppException(HttpServletResponse.SC_NOT_ACCEPTABLE,
+					"Credentials may not be null.");
+		}
 		String u = credentials.getUsername();
 		String p = credentials.getPassword();
 		if (u == null || u.trim().isEmpty() || p == null || p.trim().isEmpty())
@@ -94,13 +91,13 @@ public class BasicAuthResource
 		// Use username and password to attempt to connect to the database
 		try (DbInterface dbi = new DbInterface())
 		{
-			UserToken userToken = DbInterface.getTokenManager().makeToken(credentials, dbi, httpHeaders);
+			String authorizationHeader = httpHeaders.getHeaderString(HttpHeaders.AUTHORIZATION);
+			UserToken userToken = TokenManager.makeToken(credentials, dbi, authorizationHeader);
 			HttpSession session = request.getSession(true);
 			session.setAttribute(UserToken.USER_TOKEN_ATTRIBUTE, userToken);
 			TokenBean ret = new TokenBean();
 			ret.setUsername(userToken.getUsername());
 			ret.setToken(userToken.getToken());
-			ret.setLastUsed(System.currentTimeMillis());
 			return ApiHttpUtil.createResponse(ret);
 		}
 	}
@@ -114,22 +111,20 @@ public class BasicAuthResource
 		// Use username and password to attempt to connect to the database
 		try (DbInterface dbi = new DbInterface())
 		{
-			UserToken userToken = DbInterface.getTokenManager().makeToken(null, dbi, httpHeaders);
+			String authorizationHeader = httpHeaders.getHeaderString(HttpHeaders.AUTHORIZATION);
+			UserToken userToken = TokenManager.makeToken(null, dbi, authorizationHeader);
 			HttpSession session = request.getSession(true);
 			session.setAttribute(UserToken.USER_TOKEN_ATTRIBUTE, userToken);
 			TokenBean ret = new TokenBean();
 			ret.setUsername(userToken.getUsername());
 			ret.setToken(userToken.getToken());
-			ret.setLastUsed(System.currentTimeMillis());
 
 			// Place the new token in the return JSON and in the header.
 			String[] tokenHeader = new String[]{HttpHeaders.AUTHORIZATION, "Bearer " + userToken.getToken()};
-			ArrayList<String[]> hdrs = new ArrayList<String[]>();
+			ArrayList<String[]> hdrs = new ArrayList<>();
 			hdrs.add(tokenHeader);
 			return ApiHttpUtil.createResponseWithHeaders(ret, HttpServletResponse.SC_OK, hdrs);
 		}
 	}
-
-
 
 }

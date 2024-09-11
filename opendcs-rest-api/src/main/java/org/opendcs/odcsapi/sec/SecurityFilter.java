@@ -1,5 +1,5 @@
 /*
- *  Copyright 2024 OpenDCS Consortium
+ *  Copyright 2024 OpenDCS Consortium and its Contributors
  *
  *  Licensed under the Apache License, Version 2.0 (the "License")
  *  you may not use this file except in compliance with the License.
@@ -13,29 +13,31 @@
  *  limitations under the License.
  */
 
-package org.opendcs.odcsapi.sec.basicauth;
+package org.opendcs.odcsapi.sec;
 
 import java.io.IOException;
 import javax.annotation.Priority;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
+import javax.ws.rs.ForbiddenException;
 import javax.ws.rs.Priorities;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.ResourceInfo;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.Provider;
 
-import org.opendcs.odcsapi.errorhandling.ErrorCodes;
 import org.opendcs.odcsapi.hydrojson.DbInterface;
-import org.opendcs.odcsapi.sec.Public;
+import org.opendcs.odcsapi.sec.basicauth.TokenAuthCheck;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Provider
 @Priority(Priorities.AUTHENTICATION)
-public final class TokenAuthenticatorFilter implements ContainerRequestFilter
+public final class SecurityFilter implements ContainerRequestFilter
 {
+
+	private static final Logger LOGGER = LoggerFactory.getLogger(SecurityFilter.class);
 	@Context
 	private ResourceInfo resourceInfo;
 	@Context
@@ -48,36 +50,29 @@ public final class TokenAuthenticatorFilter implements ContainerRequestFilter
 	{
 		if(isPublicEndpoint())
 		{
-			return;
-		}
-		HttpSession session = httpServletRequest.getSession(false);
-		if(session == null)
-		{
-			requestContext.abortWith(Response.status(ErrorCodes.TOKEN_REQUIRED,
-					"Valid token is required for this operation. No client session found.").build());
+			if(LOGGER.isDebugEnabled())
+			{
+				LOGGER.debug("Public endpoint identified: {}", resourceInfo.getResourceMethod().toGenericString());
+			}
 		}
 		else
 		{
-			Object attribute = session.getAttribute(UserToken.USER_TOKEN_ATTRIBUTE);
-			if(attribute instanceof UserToken)
+			if(LOGGER.isDebugEnabled())
 			{
-				boolean validToken = DbInterface.getTokenManager().checkToken(httpHeaders, (UserToken) attribute);
-				if(validToken)
-				{
-					return;
-				}
+				LOGGER.debug("Secured endpoint identified: {}", resourceInfo.getResourceMethod().toGenericString());
 			}
-			requestContext.abortWith(Response.status(ErrorCodes.TOKEN_REQUIRED,
-					"Valid token is required for this operation.").build());
+			SecurityCheck securityCheck = new TokenAuthCheck();
+			securityCheck.authenticate(requestContext, httpServletRequest);
+			if(!requestContext.getSecurityContext().isUserInRole(DbInterface.getAuthenticatedRole()))
+			{
+				throw new ForbiddenException("User does not have the correct roles");
+			}
 		}
 	}
 
 	private boolean isPublicEndpoint()
 	{
-		if(resourceInfo.getResourceClass().isAnnotationPresent(Public.class))
-		{
-			return true;
-		}
-		return resourceInfo.getResourceMethod().isAnnotationPresent(Public.class);
+		return resourceInfo.getResourceClass().isAnnotationPresent(Public.class)
+				|| resourceInfo.getResourceMethod().isAnnotationPresent(Public.class);
 	}
 }

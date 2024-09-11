@@ -17,6 +17,8 @@ dependencies {
     implementation(libs.servlet.api)
     implementation(libs.json.jackson)
     implementation(libs.jersey.container.servlet)
+    implementation 'com.nimbusds:nimbus-jose-jwt:9.22'
+    implementation 'com.auth0:java-jwt:3.18.2'
     implementation(libs.jersey.hk2)
     implementation(libs.slf4j.jdk)
     runtimeOnly(libs.jaxb.runtime)

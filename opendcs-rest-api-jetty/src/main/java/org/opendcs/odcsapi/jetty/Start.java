@@ -25,6 +25,8 @@ import java.util.EnumSet;
 import java.util.Properties;
 import java.util.Scanner;
 
+import org.glassfish.jersey.servlet.ServletProperties;
+import org.opendcs.odcsapi.res.RestServices;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -140,6 +142,7 @@ public class Start
 		serHol.setInitOrder(1);
 		serHol.setInitParameter("jersey.config.server.provider.packages",
 				"org.opendcs.odcsapi.res");
+		serHol.setInitParameter(ServletProperties.JAXRS_APPLICATION_CLASS, RestServices.class.getName());
 
 		// Get whatever is needed from decodes properties.
 		Properties decodesProps = new Properties();

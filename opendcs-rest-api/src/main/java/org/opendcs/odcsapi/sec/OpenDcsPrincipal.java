@@ -1,5 +1,5 @@
 /*
- *  Copyright 2024 OpenDCS Consortium
+ *  Copyright 2024 OpenDCS Consortium and its Contributors
  *
  *  Licensed under the Apache License, Version 2.0 (the "License")
  *  you may not use this file except in compliance with the License.
@@ -15,28 +15,20 @@
 
 package org.opendcs.odcsapi.sec;
 
-import javax.inject.Inject;
-import javax.servlet.annotation.WebListener;
-import javax.servlet.http.HttpSessionEvent;
-import javax.servlet.http.HttpSessionListener;
+import java.security.Principal;
 
-import org.opendcs.odcsapi.lrgsclient.ClientConnectionCache;
-
-@WebListener
-public class SessionDisconnect implements HttpSessionListener
+public final class OpenDcsPrincipal implements Principal
 {
-	@Inject
-	private ClientConnectionCache clientConnectionCache;
+	private final String name;
 
-	@Override
-	public void sessionCreated(HttpSessionEvent se)
+	public OpenDcsPrincipal(String name)
 	{
-		//No-op
+		this.name = name;
 	}
 
 	@Override
-	public void sessionDestroyed(HttpSessionEvent se)
+	public String getName()
 	{
-		clientConnectionCache.removeSession(se.getSession().getId());
+		return name;
 	}
 }

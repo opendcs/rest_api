@@ -18,8 +18,6 @@ package org.opendcs.odcsapi.hydrojson;
 import java.util.logging.Logger;
 
 import java.sql.Connection;
-import java.sql.DatabaseMetaData;
-import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -31,9 +29,7 @@ import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import javax.sql.DataSource;
 
-import org.opendcs.odcsapi.dao.ApiDaoBase;
 import org.opendcs.odcsapi.dao.DbException;
-import org.opendcs.odcsapi.sec.basicauth.TokenManager;
 import org.opendcs.odcsapi.start.StartException;
 import org.opendcs.odcsapi.util.ApiConstants;
 
@@ -45,23 +41,18 @@ import org.opendcs.odcsapi.util.ApiConstants;
 public final class DbInterface implements AutoCloseable
 {
 	static final String module = "DbInterface";
-	static public String dbType = "opentsdb";
-	static public boolean isOracle = false;
-	static public boolean isCwms = false;
-	static public boolean isHdb = false;
-	static public boolean isOpenTsdb = false;
+	public static String dbType = "opentsdb";
+	public static boolean isOracle = false;
+	public static boolean isCwms = false;
+	public static boolean isHdb = false;
+	public static boolean isOpenTsdb = false;
 	private static DataSource dataSource = null;
 	private static final String sequenceSuffix = "IdSeq";
-	static public String siteNameTypePreference = "CWMS";
-	static public Properties decodesProperties = new Properties();
-	
-	/** Provides reason for last error return. */
-	private String reason = null;
+	public static String siteNameTypePreference = "CWMS";
+	public static Properties decodesProperties = new Properties();
 	
 	/** The Connection used by this instance of DbInterface. */
 	private Connection connection = null;
-	
-	private static TokenManager tokenManager = null;
 
 	
 	public DbInterface() 
@@ -99,69 +90,22 @@ public final class DbInterface implements AutoCloseable
 			+ ", isOpenTsdb=" + isOpenTsdb + ", isOracle=" + isOracle);
 	}
 
-	public boolean isUserValid(String username, String password)
-			throws DbException, SQLException
+	public static String getAuthenticatedRole()
 	{
-		if (isOracle)
-			throw new DbException(module, null, "User validation not implemented for Oracle.");
-		
-		Connection poolCon = getConnection();
-		Connection userCon = null;
-
-		try (ApiDaoBase daoBase = new ApiDaoBase(this, "DbInterface"))
+		if (isCwms)
 		{
-			// The only way to verify that user/pw is valid is to attempt to establish a connection:
-			DatabaseMetaData metaData = poolCon.getMetaData();
-			String url = metaData.getURL();
-			
-			// This validates the username & password.
-			userCon = DriverManager.getConnection(url, username, password);
-			// Above with throw SQLException if user/pw is not valid.
-			
-			// Now verify that user has appropriate privilege. This only works on Postgress currently:
-			String q = "select pm.roleid, pr.rolname from pg_auth_members pm, pg_roles pr "
-				//+ "where pm.member = (select oid from pg_roles where rolname = '" + username + "') "
-				+ "where pm.member = (select oid from pg_roles where rolname = '?') "
-				+ "and pm.roleid = pr.oid";
-			//ResultSet rs = daoBase.doQuery(q);
-			Connection conn = null;
-			ResultSet rs = daoBase.doQueryPs(conn, q, username);
-			while(rs.next())
-			{
-				int roleid = rs.getInt(1);
-				String role = rs.getString(2);
-				Logger.getLogger(ApiConstants.loggerName).info("User '" + username + "' has role " + roleid + "=" + role);
-				if (role.equalsIgnoreCase("OTSDB_ADMIN") || role.equalsIgnoreCase("OTSDB_MGR"))
-					return true;
-			}
-			reason = "User " + username + " does not have OTSDB_ADMIN or OTSDB_MGR privilege "
-					+ "- Not Authorized.";
-			Logger.getLogger(ApiConstants.loggerName).warning("isUserValid(" + username + ") failed: " + reason);
-			userCon.close();
-			return false;
+			return "CCP Mgr";
 		}
-		catch (Exception e)
+		else if(isOpenTsdb)
 		{
-			Logger.getLogger(ApiConstants.loggerName).warning("isUserValid - Authentication failed: " + e);
-			if (userCon != null)
-			{
-                try
-				{
-                    userCon.close();
-                }
-				catch (SQLException ex)
-				{
-                    throw new SQLException("There was an issue closing the connection.", ex);
-                }
-            }
-			reason = e.getMessage();
-			return false;
+			return "OTSDB_MGR";
 		}
+		throw new IllegalStateException("Authenticated roles are only setup for CWMS and OpenTSDB.");
 	}
 
-	public String getReason()
+	public static String getOidcAuthenticatedUrl()
 	{
-		return reason;
+		throw new UnsupportedOperationException("Authentication URL for OIDC not yet implemented.");
 	}
 
 	public static void setDataSource(DataSource dataSource)
@@ -273,14 +217,6 @@ public final class DbInterface implements AutoCloseable
 		if (d == null)
 			return null;
 		return d.getTime();
-	}
-
-	public static TokenManager getTokenManager()
-	{
-		if (tokenManager == null)
-			tokenManager = new TokenManager();
-		
-		return tokenManager;
 	}
 
 	/*

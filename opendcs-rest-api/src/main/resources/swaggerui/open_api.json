@@ -166,6 +166,22 @@
         ]
       }
     },
+    "/logout": {
+      "summary": "Remove access tokens and clear the client's session.",
+      "description": "Clear client session",
+      "get": {
+        "summary": "Remove access tokens and clear the client's session.",
+        "description": "Session variables for the client will be cleared. The auth token will be invalidated.",
+        "responses": {
+          "200": {
+            "description": "Session was cleared."
+          }
+        },
+        "tags": [
+          "REST - Authentication and Authorization"
+        ]
+      }
+    },
     "/check": {
       "get": {
         "security": [
@@ -3388,10 +3404,6 @@
           "username": {
             "type": "string",
             "example": "xyz"
-          },
-          "lastUsed": {
-            "type": "integer",
-            "example": 1596807452610
           },
           "token": {
             "type": "string",

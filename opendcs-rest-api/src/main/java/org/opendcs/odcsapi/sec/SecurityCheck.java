@@ -1,7 +1,7 @@
 /*
- *  Copyright 2023 OpenDCS Consortium
+ *  Copyright 2024 OpenDCS Consortium and its Contributors
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  Licensed under the Apache License, Version 2.0 (the "License")
  *  you may not use this file except in compliance with the License.
  *  You may obtain a copy of the License at
  *       http://www.apache.org/licenses/LICENSE-2.0
@@ -13,28 +13,12 @@
  *  limitations under the License.
  */
 
-package org.opendcs.odcsapi.beans;
+package org.opendcs.odcsapi.sec;
 
-public class TokenBean
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.container.ContainerRequestContext;
+
+public interface SecurityCheck
 {
-	private String token = "";
-	private String username = "";
-	
-	public String getToken()
-	{
-		return token;
-	}
-	public void setToken(String token)
-	{
-		this.token = token;
-	}
-	public String getUsername()
-	{
-		return username;
-	}
-	public void setUsername(String username)
-	{
-		this.username = username;
-	}
-
+	void authenticate(ContainerRequestContext requestContext, HttpServletRequest httpServletRequest);
 }
