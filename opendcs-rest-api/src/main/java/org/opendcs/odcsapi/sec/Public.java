@@ -29,47 +29,6 @@ import javax.ws.rs.NameBinding;
  * Jakarta RESTful Web Services (JAX-RS) resources to indicate that the
  * endpoint does not require any form of authentication to be accessed.</p>
  *
- * <p><b>Example usage:</b></p>
- * <pre>{@code
- * @Public
- * @Path("/public-endpoint")
- * public class PublicEndpoint {
- *
- *     @GET
- *     @Produces(MediaType.APPLICATION_JSON)
- *     public Response getPublicData() {
- *		 // implementation details
- *		 return Response.ok(data).build();
- *     }
- *
- * }
- * }</pre>
- *
- * <p>Alternatively, it can be applied to individual methods:</p>
- * <pre>{@code
- * @Path("/some-resource")
- * public class SomeResource {
- *
- *     @GET
- *     @Public
- *     @Path("/public-data")
- *     @Produces(MediaType.APPLICATION_JSON)
- *     public Response getPublicData() {
- *		 // implementation details
- *		 return Response.ok(data).build();
- *     }
- *
- *     @GET
- *     @Path("/private-data")
- *     @Produces(MediaType.APPLICATION_JSON)
- *     public Response getPrivateData() {
- *		 // Requires authentication
- *		 // implementation details
- *		 return Response.ok(data).build();
- *     }
- * }
- * }</pre>
- *
  * <p>This annotation is a custom name binding, which means it can be used
  * in conjunction with Jakarta EE filters to create specific behaviors for
  * public endpoints, such as bypassing security checks.</p>
@@ -80,5 +39,6 @@ import javax.ws.rs.NameBinding;
 @NameBinding
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.TYPE, ElementType.METHOD})
-public @interface Public {
+public @interface Public
+{
 }
