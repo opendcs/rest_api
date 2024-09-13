@@ -21,16 +21,14 @@ import javax.ws.rs.core.SecurityContext;
 
 public final class OpenDcsSecurityContext implements SecurityContext
 {
-	private final Set<String> roles;
 	private final boolean secure;
-	private final Principal principal;
+	private final OpenDcsPrincipal principal;
 	private final String scheme;
 
-	public OpenDcsSecurityContext(Principal principal, Set<String> roles, boolean secure,
+	public OpenDcsSecurityContext(OpenDcsPrincipal principal, boolean secure,
 			String scheme)
 	{
 		this.principal = principal;
-		this.roles = roles;
 		this.secure = secure;
 		this.scheme = scheme;
 	}
@@ -44,7 +42,9 @@ public final class OpenDcsSecurityContext implements SecurityContext
 	@Override
 	public boolean isUserInRole(String role)
 	{
-		return roles.contains(role);
+		return principal.getRoles()
+				.stream()
+				.anyMatch(e -> e.name().equals(role));
 	}
 
 	@Override

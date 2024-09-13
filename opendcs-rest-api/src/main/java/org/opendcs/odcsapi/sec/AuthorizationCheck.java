@@ -15,31 +15,14 @@
 
 package org.opendcs.odcsapi.sec;
 
-import java.io.Serializable;
-import java.security.Principal;
-import java.util.Set;
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.container.ContainerRequestContext;
 
-public final class OpenDcsPrincipal implements Principal, Serializable
+public interface AuthorizationCheck
 {
-	public static final String USER_PRINCIPAL_SESSION_ATTRIBUTE = "opendcs-user-principal";
-	private static final long serialVersionUID = -2116796045388257540L;
-	private final String name;
-	private final Set<OpenDcsApiRoles> roles;
+	String ODCS_API_GUEST = "ODCS_API_GUEST";
+	String ODCS_API_USER = "ODCS_API_USER";
+	String ODCS_API_ADMIN = "ODCS_API_ADMIN";
 
-	public OpenDcsPrincipal(String name, Set<OpenDcsApiRoles> roles)
-	{
-		this.name = name;
-		this.roles = roles;
-	}
-
-	@Override
-	public String getName()
-	{
-		return name;
-	}
-
-	public Set<OpenDcsApiRoles> getRoles()
-	{
-		return roles;
-	}
+	void authorize(ContainerRequestContext requestContext, HttpServletRequest httpServletRequest);
 }

@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.logging.Logger;
 
+import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -39,7 +40,7 @@ import org.opendcs.odcsapi.dao.DbException;
 import org.opendcs.odcsapi.errorhandling.ErrorCodes;
 import org.opendcs.odcsapi.errorhandling.WebAppException;
 import org.opendcs.odcsapi.hydrojson.DbInterface;
-import org.opendcs.odcsapi.sec.Public;
+import org.opendcs.odcsapi.sec.AuthorizationCheck;
 import org.opendcs.odcsapi.util.ApiConstants;
 import org.opendcs.odcsapi.util.ApiHttpUtil;
 
@@ -51,7 +52,7 @@ public class PlatformResources
 	@GET
 	@Path("platformrefs")
 	@Produces(MediaType.APPLICATION_JSON)
-	@Public
+	@RolesAllowed({AuthorizationCheck.ODCS_API_GUEST})
 	public Response gePlatformRefs(@QueryParam("tmtype") String tmtype)
 		throws DbException, SQLException
 	{
@@ -71,7 +72,7 @@ public class PlatformResources
 	@GET
 	@Path("platform")
 	@Produces(MediaType.APPLICATION_JSON)
-	@Public
+	@RolesAllowed({AuthorizationCheck.ODCS_API_GUEST})
 	public Response getPlatform(@QueryParam("platformid") Long platformId)
 		throws WebAppException, DbException, SQLException
 	{
@@ -91,6 +92,7 @@ public class PlatformResources
 	@Path("platform")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
+	@RolesAllowed({AuthorizationCheck.ODCS_API_ADMIN, AuthorizationCheck.ODCS_API_USER})
 	public Response postPlatform(ApiPlatform platform)
 		throws WebAppException, DbException, SQLException
 	{
@@ -109,6 +111,7 @@ public class PlatformResources
 	@Path("platform")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
+	@RolesAllowed({AuthorizationCheck.ODCS_API_ADMIN, AuthorizationCheck.ODCS_API_USER})
 	public Response deletePlatform(@QueryParam("platformid") Long platformId)
 		throws WebAppException, DbException
 	{
@@ -127,7 +130,7 @@ public class PlatformResources
 	@GET
 	@Path("platformstat")
 	@Produces(MediaType.APPLICATION_JSON)
-	@Public
+	@RolesAllowed({AuthorizationCheck.ODCS_API_GUEST})
 	public Response gePlatformStats(@QueryParam("netlistid") Long netlistId)
 		throws DbException, SQLException
 	{

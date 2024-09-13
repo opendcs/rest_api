@@ -18,6 +18,7 @@ package org.opendcs.odcsapi.res;
 import java.sql.SQLException;
 import java.util.logging.Logger;
 
+import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -36,7 +37,7 @@ import org.opendcs.odcsapi.dao.DbException;
 import org.opendcs.odcsapi.errorhandling.ErrorCodes;
 import org.opendcs.odcsapi.errorhandling.WebAppException;
 import org.opendcs.odcsapi.hydrojson.DbInterface;
-import org.opendcs.odcsapi.sec.Public;
+import org.opendcs.odcsapi.sec.AuthorizationCheck;
 import org.opendcs.odcsapi.util.ApiConstants;
 import org.opendcs.odcsapi.util.ApiHttpUtil;
 
@@ -48,7 +49,7 @@ public class PresentationResources
 	@GET
 	@Path("presentationrefs")
 	@Produces(MediaType.APPLICATION_JSON)
-	@Public
+	@RolesAllowed({AuthorizationCheck.ODCS_API_GUEST})
  	public Response getPresentationRefs() throws DbException
 	{
 		Logger.getLogger(ApiConstants.loggerName).fine("getPresentationRefs");
@@ -62,7 +63,7 @@ public class PresentationResources
 	@GET
 	@Path("presentation")
 	@Produces(MediaType.APPLICATION_JSON)
-	@Public
+	@RolesAllowed({AuthorizationCheck.ODCS_API_GUEST})
 	public Response getPresentation(@QueryParam("groupid") Long groupId)
 		throws WebAppException, DbException, SQLException
 	{
@@ -82,6 +83,7 @@ public class PresentationResources
 	@Path("presentation")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
+	@RolesAllowed({AuthorizationCheck.ODCS_API_ADMIN, AuthorizationCheck.ODCS_API_USER})
 	public Response postPresentation(ApiPresentationGroup presGrp) throws WebAppException, DbException, SQLException
 	{
 		Logger.getLogger(ApiConstants.loggerName)
@@ -100,6 +102,7 @@ public class PresentationResources
 	@Path("presentation")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
+	@RolesAllowed({AuthorizationCheck.ODCS_API_ADMIN, AuthorizationCheck.ODCS_API_USER})
 	public Response deletePresentation(@QueryParam("groupid") Long groupId) throws DbException, SQLException
 	{
 		Logger.getLogger(ApiConstants.loggerName)

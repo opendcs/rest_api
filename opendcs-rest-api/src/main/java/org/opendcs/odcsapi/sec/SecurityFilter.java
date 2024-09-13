@@ -16,19 +16,24 @@
 package org.opendcs.odcsapi.sec;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collections;
 import javax.annotation.Priority;
+import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
 import javax.ws.rs.ForbiddenException;
+import javax.ws.rs.NotAuthorizedException;
 import javax.ws.rs.Priorities;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.ResourceInfo;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.ext.Provider;
 
-import org.opendcs.odcsapi.hydrojson.DbInterface;
-import org.opendcs.odcsapi.sec.basicauth.TokenAuthCheck;
+import org.opendcs.odcsapi.sec.cwms.CwmsAuthCheck;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,6 +59,9 @@ public final class SecurityFilter implements ContainerRequestFilter
 			{
 				LOGGER.debug("Public endpoint identified: {}", resourceInfo.getResourceMethod().toGenericString());
 			}
+			OpenDcsPrincipal principal = new OpenDcsPrincipal("guest", Collections.singleton(OpenDcsApiRoles.ODCS_API_GUEST));
+			requestContext.setSecurityContext(new OpenDcsSecurityContext(principal,
+					httpServletRequest.isSecure(), ""));
 		}
 		else
 		{
@@ -61,9 +69,26 @@ public final class SecurityFilter implements ContainerRequestFilter
 			{
 				LOGGER.debug("Secured endpoint identified: {}", resourceInfo.getResourceMethod().toGenericString());
 			}
-			SecurityCheck securityCheck = new TokenAuthCheck();
-			securityCheck.authenticate(requestContext, httpServletRequest);
-			if(!requestContext.getSecurityContext().isUserInRole(DbInterface.getAuthenticatedRole()))
+			HttpSession session = httpServletRequest.getSession(false);
+			if(session == null)
+			{
+				throw new NotAuthorizedException("No session found");
+			}
+			Object attribute = session.getAttribute(OpenDcsPrincipal.USER_PRINCIPAL_SESSION_ATTRIBUTE);
+			if(attribute instanceof OpenDcsPrincipal)
+			{
+				OpenDcsPrincipal principal = (OpenDcsPrincipal) attribute;
+				requestContext.setSecurityContext(new OpenDcsSecurityContext(principal,
+						httpServletRequest.isSecure(), SecurityContext.BASIC_AUTH));
+			}
+			else
+			{
+				AuthorizationCheck authorizationCheck = new CwmsAuthCheck();
+				authorizationCheck.authorize(requestContext, httpServletRequest);
+			}
+			SecurityContext securityContext = requestContext.getSecurityContext();
+			if(!securityContext.isUserInRole(OpenDcsApiRoles.ODCS_API_USER.name())
+					|| !securityContext.isUserInRole(OpenDcsApiRoles.ODCS_API_ADMIN.name()))
 			{
 				throw new ForbiddenException("User does not have the correct roles");
 			}
@@ -72,7 +97,17 @@ public final class SecurityFilter implements ContainerRequestFilter
 
 	private boolean isPublicEndpoint()
 	{
-		return resourceInfo.getResourceClass().isAnnotationPresent(Public.class)
-				|| resourceInfo.getResourceMethod().isAnnotationPresent(Public.class);
+		boolean retval = false;
+		RolesAllowed annotation = resourceInfo.getResourceMethod().getAnnotation(RolesAllowed.class);
+		if(annotation != null)
+		{
+			String[] roles = annotation.value();
+			if(roles != null
+					&& Arrays.asList(roles).contains(OpenDcsApiRoles.ODCS_API_GUEST.name()))
+			{
+				retval = true;
+			}
+		}
+		return retval;
 	}
 }

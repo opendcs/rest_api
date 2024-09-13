@@ -23,6 +23,7 @@ import java.util.Optional;
 import java.util.Properties;
 import java.util.logging.Logger;
 
+import javax.annotation.security.RolesAllowed;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
@@ -56,7 +57,7 @@ import org.opendcs.odcsapi.lrgsclient.DdsProtocolError;
 import org.opendcs.odcsapi.lrgsclient.DdsServerError;
 import org.opendcs.odcsapi.lrgsclient.LrgsErrorCode;
 import org.opendcs.odcsapi.lrgsclient.ClientConnectionCache;
-import org.opendcs.odcsapi.sec.Public;
+import org.opendcs.odcsapi.sec.AuthorizationCheck;
 import org.opendcs.odcsapi.util.ApiConstants;
 import org.opendcs.odcsapi.util.ApiHttpUtil;
 import org.opendcs.odcsapi.util.ApiPropertiesUtil;
@@ -83,6 +84,7 @@ public class LrgsResources
 	@Path("searchcrit")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
+	@RolesAllowed({AuthorizationCheck.ODCS_API_ADMIN, AuthorizationCheck.ODCS_API_USER})
 	public Response postSearchCrit(ApiSearchCrit searchcrit)
 	{
 		Logger.getLogger(ApiConstants.loggerName).fine("post searchcrit");
@@ -108,6 +110,7 @@ public class LrgsResources
 	@GET
 	@Path("searchcrit")
 	@Produces(MediaType.APPLICATION_JSON)
+	@RolesAllowed({AuthorizationCheck.ODCS_API_ADMIN, AuthorizationCheck.ODCS_API_USER})
 	public ApiSearchCrit getSearchCrit() throws WebAppException
 	{
 		Logger.getLogger(ApiConstants.loggerName).fine("getSearchCrit");
@@ -127,6 +130,7 @@ public class LrgsResources
 	@GET
 	@Path("messages")
 	@Produces(MediaType.APPLICATION_JSON)
+	@RolesAllowed({AuthorizationCheck.ODCS_API_ADMIN, AuthorizationCheck.ODCS_API_USER})
 	public ApiRawMessageBlock getMessages() throws WebAppException, SQLException
 	{
 		Logger.getLogger(ApiConstants.loggerName).fine("getMessages");
@@ -339,6 +343,7 @@ public class LrgsResources
 	@GET
 	@Path("message")
 	@Produces(MediaType.APPLICATION_JSON)
+	@RolesAllowed({AuthorizationCheck.ODCS_API_ADMIN, AuthorizationCheck.ODCS_API_USER})
 	public ApiRawMessage getMessage(@QueryParam("tmid") String tmid, @QueryParam("tmtype") String tmtype)
 		throws WebAppException, SQLException
 	{
@@ -375,7 +380,7 @@ public class LrgsResources
 	@GET
 	@Path("lrgsstatus")
 	@Produces(MediaType.APPLICATION_JSON)
-	@Public
+	@RolesAllowed({AuthorizationCheck.ODCS_API_GUEST})
 	public Response getLrgsStatus(@QueryParam("source") String source)
 		throws WebAppException, SQLException
 	{

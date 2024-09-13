@@ -17,6 +17,7 @@ package org.opendcs.odcsapi.res;
 
 import java.util.logging.Logger;
 
+import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -35,7 +36,7 @@ import org.opendcs.odcsapi.dao.DbException;
 import org.opendcs.odcsapi.errorhandling.ErrorCodes;
 import org.opendcs.odcsapi.errorhandling.WebAppException;
 import org.opendcs.odcsapi.hydrojson.DbInterface;
-import org.opendcs.odcsapi.sec.Public;
+import org.opendcs.odcsapi.sec.AuthorizationCheck;
 import org.opendcs.odcsapi.util.ApiConstants;
 import org.opendcs.odcsapi.util.ApiHttpUtil;
 
@@ -47,7 +48,7 @@ public class SiteResources
 	@GET
 	@Path("siterefs")
 	@Produces(MediaType.APPLICATION_JSON)
-	@Public
+	@RolesAllowed({AuthorizationCheck.ODCS_API_GUEST})
 	public Response geSiteRefs()
 		throws DbException
 	{
@@ -62,7 +63,7 @@ public class SiteResources
 	@GET
 	@Path("site")
 	@Produces(MediaType.APPLICATION_JSON)
-	@Public
+	@RolesAllowed({AuthorizationCheck.ODCS_API_GUEST})
 	public Response geSiteFull(@QueryParam("siteid") Long siteId)
 		throws WebAppException, DbException
 	{
@@ -82,6 +83,7 @@ public class SiteResources
 	@Path("site")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
+	@RolesAllowed({AuthorizationCheck.ODCS_API_ADMIN, AuthorizationCheck.ODCS_API_USER})
 	public Response postSite(ApiSite site)
 		throws WebAppException, DbException
 	{
@@ -107,6 +109,7 @@ public class SiteResources
 	@Path("site")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
+	@RolesAllowed({AuthorizationCheck.ODCS_API_ADMIN, AuthorizationCheck.ODCS_API_USER})
 	public Response deleteSite(@QueryParam("siteid") Long siteId) throws WebAppException, DbException
 	{
 		Logger.getLogger(ApiConstants.loggerName)

@@ -18,6 +18,7 @@ package org.opendcs.odcsapi.res;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -37,7 +38,7 @@ import org.opendcs.odcsapi.dao.DbException;
 import org.opendcs.odcsapi.errorhandling.ErrorCodes;
 import org.opendcs.odcsapi.errorhandling.WebAppException;
 import org.opendcs.odcsapi.hydrojson.DbInterface;
-import org.opendcs.odcsapi.sec.Public;
+import org.opendcs.odcsapi.sec.AuthorizationCheck;
 import org.opendcs.odcsapi.util.ApiHttpUtil;
 
 /**
@@ -53,7 +54,7 @@ public class ReflistResources
 	@GET
 	@Path("reflists")
 	@Produces(MediaType.APPLICATION_JSON)
-	@Public
+	@RolesAllowed({AuthorizationCheck.ODCS_API_GUEST})
 	public Response getRefLists(@QueryParam("name") String listNames) throws DbException
 	{
 		
@@ -85,6 +86,7 @@ public class ReflistResources
 	@Path("reflist")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
+	@RolesAllowed({AuthorizationCheck.ODCS_API_ADMIN, AuthorizationCheck.ODCS_API_USER})
 	public Response postRefList(ApiRefList reflist) throws DbException
 	{
 		try (DbInterface dbi = new DbInterface();
@@ -98,6 +100,7 @@ public class ReflistResources
 	@Path("reflist")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
+	@RolesAllowed({AuthorizationCheck.ODCS_API_ADMIN, AuthorizationCheck.ODCS_API_USER})
 	public Response deleReflist(@QueryParam("reflistid") Long reflistId) throws DbException
 	{
 		
@@ -113,7 +116,7 @@ public class ReflistResources
 	@GET
 	@Path("seasons")
 	@Produces(MediaType.APPLICATION_JSON)
-	@Public
+	@RolesAllowed({AuthorizationCheck.ODCS_API_GUEST})
 	public Response getSeasons() throws WebAppException, DbException
 	{
 		try (DbInterface dbi = new DbInterface(); 
@@ -126,7 +129,7 @@ public class ReflistResources
 	@GET
 	@Path("season")
 	@Produces(MediaType.APPLICATION_JSON)
-	@Public
+	@RolesAllowed({AuthorizationCheck.ODCS_API_GUEST})
 	public Response getSeason(@QueryParam("abbr") String abbr)
 		throws WebAppException, DbException
 	{
@@ -141,6 +144,7 @@ public class ReflistResources
 	@Path("season")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
+	@RolesAllowed({AuthorizationCheck.ODCS_API_ADMIN, AuthorizationCheck.ODCS_API_USER})
 	public Response postSeason(@QueryParam("fromabbr") String fromAbbr, ApiSeason season)
 		throws WebAppException, DbException
 	{
@@ -158,6 +162,7 @@ public class ReflistResources
 	@Path("season")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
+	@RolesAllowed({AuthorizationCheck.ODCS_API_ADMIN, AuthorizationCheck.ODCS_API_USER})
 	public Response deleteSeason(@QueryParam("abbr") String abbr)
 		throws WebAppException, DbException
 	{

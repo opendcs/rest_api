@@ -90,19 +90,6 @@ public final class DbInterface implements AutoCloseable
 			+ ", isOpenTsdb=" + isOpenTsdb + ", isOracle=" + isOracle);
 	}
 
-	public static String getAuthenticatedRole()
-	{
-		if (isCwms)
-		{
-			return "CCP Mgr";
-		}
-		else if(isOpenTsdb)
-		{
-			return "OTSDB_MGR";
-		}
-		throw new IllegalStateException("Authenticated roles are only setup for CWMS and OpenTSDB.");
-	}
-
 	public static String getOidcAuthenticatedUrl()
 	{
 		throw new UnsupportedOperationException("Authentication URL for OIDC not yet implemented.");

@@ -25,11 +25,12 @@ import org.opendcs.odcsapi.errorhandling.ErrorCodes;
 import org.opendcs.odcsapi.errorhandling.WebAppException;
 import org.opendcs.odcsapi.opendcs_dep.PropSpecHelper;
 import org.opendcs.odcsapi.opendcs_dep.TestDecoder;
-import org.opendcs.odcsapi.sec.Public;
+import org.opendcs.odcsapi.sec.AuthorizationCheck;
 import org.opendcs.odcsapi.util.ApiConstants;
 import org.opendcs.odcsapi.util.ApiHttpUtil;
 import org.opendcs.odcsapi.hydrojson.DbInterface;
 
+import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -49,7 +50,7 @@ public class OdcsapiResource
 	@GET
 	@Path("tsdb_properties")
 	@Produces(MediaType.APPLICATION_JSON)
-	@Public
+	@RolesAllowed({AuthorizationCheck.ODCS_API_GUEST})
 	public Response getTsdbProperties() throws DbException
 	{
 		Logger.getLogger(ApiConstants.loggerName).fine("getTsdbProperties");
@@ -64,6 +65,7 @@ public class OdcsapiResource
 	@Path("tsdb_properties")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
+	@RolesAllowed({AuthorizationCheck.ODCS_API_ADMIN, AuthorizationCheck.ODCS_API_USER})
 	public Response postTsdbProperties(Properties props)
 		throws WebAppException, DbException
 	{
@@ -79,7 +81,7 @@ public class OdcsapiResource
 	@GET
 	@Path("propspecs")
 	@Produces(MediaType.APPLICATION_JSON)
-	@Public
+	@RolesAllowed({AuthorizationCheck.ODCS_API_GUEST})
 	public Response getPropSpecs(@QueryParam("class") String className)
 		throws WebAppException
 	{
@@ -95,6 +97,7 @@ public class OdcsapiResource
 	@Path("decode")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
+	@RolesAllowed({AuthorizationCheck.ODCS_API_ADMIN, AuthorizationCheck.ODCS_API_USER})
 	public Response postDecode(@QueryParam("script") String scriptName, DecodeRequest request)
 		throws WebAppException, DbException
 	{

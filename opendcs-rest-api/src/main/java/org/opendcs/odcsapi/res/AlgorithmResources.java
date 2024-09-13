@@ -18,6 +18,7 @@ package org.opendcs.odcsapi.res;
 import java.sql.SQLException;
 import java.util.logging.Logger;
 
+import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -36,7 +37,7 @@ import org.opendcs.odcsapi.dao.DbException;
 import org.opendcs.odcsapi.errorhandling.ErrorCodes;
 import org.opendcs.odcsapi.errorhandling.WebAppException;
 import org.opendcs.odcsapi.hydrojson.DbInterface;
-import org.opendcs.odcsapi.sec.Public;
+import org.opendcs.odcsapi.sec.AuthorizationCheck;
 import org.opendcs.odcsapi.util.ApiConstants;
 import org.opendcs.odcsapi.util.ApiHttpUtil;
 
@@ -48,7 +49,7 @@ public class AlgorithmResources
 	@GET
 	@Path("algorithmrefs")
 	@Produces(MediaType.APPLICATION_JSON)
-	@Public
+	@RolesAllowed(AuthorizationCheck.ODCS_API_GUEST)
 	public Response getAlgorithmRefs() throws DbException
 	{
 		Logger.getLogger(ApiConstants.loggerName).fine("getAlgorithmRefs");
@@ -62,17 +63,19 @@ public class AlgorithmResources
 	@GET
 	@Path("algorithm")
 	@Produces(MediaType.APPLICATION_JSON)
-	@Public
+	@RolesAllowed(AuthorizationCheck.ODCS_API_GUEST)
 	public Response getAlgorithm(@QueryParam("algorithmid") Long algoId)
-		throws WebAppException, DbException
+			throws WebAppException, DbException
 	{
-		if (algoId == null)
-			throw new WebAppException(ErrorCodes.MISSING_ID, 
-				"Missing required algorithmid parameter.");
-		
+		if(algoId == null)
+		{
+			throw new WebAppException(ErrorCodes.MISSING_ID,
+					"Missing required algorithmid parameter.");
+		}
+
 		Logger.getLogger(ApiConstants.loggerName).fine("getAlgorithm algorithmid=" + algoId);
 
-		try (DbInterface dbi = new DbInterface();
+		try(DbInterface dbi = new DbInterface();
 			ApiAlgorithmDAO dao = new ApiAlgorithmDAO(dbi))
 		{
 			return ApiHttpUtil.createResponse(dao.getAlgorithm(algoId));
@@ -84,6 +87,7 @@ public class AlgorithmResources
 	@Path("algorithm")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
+	@RolesAllowed({AuthorizationCheck.ODCS_API_ADMIN, AuthorizationCheck.ODCS_API_USER})
 	public Response postAlgorithm(ApiAlgorithm algo)
 		throws WebAppException, DbException, SQLException
 	{
@@ -101,6 +105,7 @@ public class AlgorithmResources
 	@Path("algorithm")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
+	@RolesAllowed({AuthorizationCheck.ODCS_API_ADMIN, AuthorizationCheck.ODCS_API_USER})
 	public Response deletAlgorithm(@QueryParam("algorithmid") Long algorithmId)
 		throws WebAppException, DbException, SQLException
 	{

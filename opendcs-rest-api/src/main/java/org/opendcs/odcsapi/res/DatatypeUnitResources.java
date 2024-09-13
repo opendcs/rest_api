@@ -16,9 +16,9 @@
 package org.opendcs.odcsapi.res;
 
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.logging.Logger;
 
+import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -35,10 +35,9 @@ import org.opendcs.odcsapi.beans.ApiUnit;
 import org.opendcs.odcsapi.beans.ApiUnitConverter;
 import org.opendcs.odcsapi.dao.ApiUnitDAO;
 import org.opendcs.odcsapi.dao.DbException;
-import org.opendcs.odcsapi.errorhandling.ErrorCodes;
 import org.opendcs.odcsapi.errorhandling.WebAppException;
 import org.opendcs.odcsapi.hydrojson.DbInterface;
-import org.opendcs.odcsapi.sec.Public;
+import org.opendcs.odcsapi.sec.AuthorizationCheck;
 import org.opendcs.odcsapi.util.ApiConstants;
 import org.opendcs.odcsapi.util.ApiHttpUtil;
 
@@ -55,7 +54,7 @@ public class DatatypeUnitResources
 	@GET
 	@Path("datatypelist")
 	@Produces(MediaType.APPLICATION_JSON)
-	@Public
+	@RolesAllowed({AuthorizationCheck.ODCS_API_GUEST})
 	public Response getDataTypeList(@QueryParam("standard") String std) throws DbException
 	{
 		Logger.getLogger(ApiConstants.loggerName).fine("getDataTypeList");
@@ -70,7 +69,7 @@ public class DatatypeUnitResources
 	@GET
 	@Path("unitlist")
 	@Produces(MediaType.APPLICATION_JSON)
-	@Public
+	@RolesAllowed({AuthorizationCheck.ODCS_API_GUEST})
 	public Response getUnitList() throws DbException
 	{
 		
@@ -86,6 +85,7 @@ public class DatatypeUnitResources
 	@Path("eu")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
+	@RolesAllowed({AuthorizationCheck.ODCS_API_ADMIN, AuthorizationCheck.ODCS_API_USER})
 	public Response postEU(@QueryParam("fromabbr") String fromabbr, ApiUnit eu)
 		throws WebAppException, DbException, SQLException
 	{
@@ -104,6 +104,7 @@ public class DatatypeUnitResources
 	@Path("eu")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
+	@RolesAllowed({AuthorizationCheck.ODCS_API_ADMIN, AuthorizationCheck.ODCS_API_USER})
 	public Response deleteEU(@QueryParam("abbr") String abbr) throws DbException
 	{
 		Logger.getLogger(ApiConstants.loggerName).fine(
@@ -121,7 +122,7 @@ public class DatatypeUnitResources
 	@GET
 	@Path("euconvlist")
 	@Produces(MediaType.APPLICATION_JSON)
-	@Public
+	@RolesAllowed({AuthorizationCheck.ODCS_API_GUEST})
 	public Response getUnitConvList() throws DbException
 	{
 		Logger.getLogger(ApiConstants.loggerName).fine("getUnitConvList");
@@ -136,6 +137,7 @@ public class DatatypeUnitResources
 	@Path("euconv")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
+	@RolesAllowed({AuthorizationCheck.ODCS_API_ADMIN, AuthorizationCheck.ODCS_API_USER})
 	public Response postEUConv(ApiUnitConverter euc) throws WebAppException, DbException
 	{
 		Logger.getLogger(ApiConstants.loggerName).fine("postEUConv from=" 
@@ -153,6 +155,7 @@ public class DatatypeUnitResources
 	@Path("euconv")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
+	@RolesAllowed({AuthorizationCheck.ODCS_API_ADMIN, AuthorizationCheck.ODCS_API_USER})
 	public Response deleteEUConv(@QueryParam("euconvid") Long id) throws DbException
 	{
 		Logger.getLogger(ApiConstants.loggerName).fine(

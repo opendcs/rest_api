@@ -15,6 +15,7 @@
 
 package org.opendcs.odcsapi.sec;
 
+import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import javax.ws.rs.GET;
@@ -27,17 +28,27 @@ import javax.ws.rs.core.Response;
 import org.opendcs.odcsapi.util.ApiHttpUtil;
 
 @Path("/")
-public final class LogoutResource
+public final class SessionResource
 {
 
 	@Context
-	private HttpServletRequest request;
+	HttpServletRequest request;
+
+	@GET
+	@Path("check")
+	@Produces(MediaType.APPLICATION_JSON)
+	@RolesAllowed({AuthorizationCheck.ODCS_API_ADMIN, AuthorizationCheck.ODCS_API_USER})
+	public Response checkSessionAuthorization()
+	{
+		//Security filters will ensure this method is only accessible via an authenticated client
+		return ApiHttpUtil.createResponse("Token Valid");
+	}
 
 	@GET
 	@Path("logout")
 	@Produces(MediaType.APPLICATION_JSON)
-	@Public
-	public Response checkToken()
+	@RolesAllowed({AuthorizationCheck.ODCS_API_GUEST})
+	public Response logout()
 	{
 		HttpSession session = request.getSession(false);
 		if(session != null)

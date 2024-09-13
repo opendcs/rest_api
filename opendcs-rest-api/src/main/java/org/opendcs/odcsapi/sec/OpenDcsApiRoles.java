@@ -15,10 +15,21 @@
 
 package org.opendcs.odcsapi.sec;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.container.ContainerRequestContext;
-
-public interface SecurityCheck
+public enum OpenDcsApiRoles
 {
-	void authenticate(ContainerRequestContext requestContext, HttpServletRequest httpServletRequest);
+	ODCS_API_GUEST(AuthorizationCheck.ODCS_API_GUEST),
+	ODCS_API_USER(AuthorizationCheck.ODCS_API_USER),
+	ODCS_API_ADMIN(AuthorizationCheck.ODCS_API_ADMIN);
+
+	private final String role;
+
+	OpenDcsApiRoles(String role)
+	{
+		this.role = role;
+	}
+
+	public String getRole()
+	{
+		return role;
+	}
 }
