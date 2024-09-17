@@ -135,7 +135,7 @@ public class AppResources
 	public Response deletApp(@QueryParam("appid") Long appId)
 		throws WebAppException, DbException, SQLException
 	{
-		LOGGER.debug("Delete app received request to delete app with id {}", appId);;
+		LOGGER.debug("Delete app received request to delete app with id {}", appId);
 		
 		// Use username and password to attempt to connect to the database
 		try (DbInterface dbi = new DbInterface();
@@ -196,7 +196,6 @@ public class AppResources
 				});
 				throw new WebAppException(ErrorCodes.NO_SUCH_OBJECT, "appid " + appId 
 					+ " (" + appStat.getAppName() + ") is not running (stale heartbeat).");
-
 			}
 			else if (!cli.isPresent())
 			{
@@ -225,6 +224,10 @@ public class AppResources
 				apiEventClient.connect();
 				LOGGER.debug("Connected to {}:{}", appStat.getHostname(), port);
 				clientConnectionCache.addApiEventClient(apiEventClient, session.getId());
+			}
+			if(apiEventClient == null)
+			{
+				throw new WebAppException(ErrorCodes.NO_SUCH_OBJECT, "No API Event Client found or created");
 			}
 			return ApiHttpUtil.createResponse(apiEventClient.getNewEvents());
 		}
@@ -278,18 +281,12 @@ public class AppResources
 					"App id=" + appId + " (" + loadingApp.getAppName() + ") has no 'startCmd' property.");
 
 			// ProcWaiterThread runBackground to execute command, use callback.
-			ProcWaiterCallback pwcb =
-				new ProcWaiterCallback()
-				{
-					@Override
-					public void procFinished(String procName, Object obj, int exitStatus)
+			ProcWaiterCallback pwcb = (procName, obj, exitStatus) ->
 					{
-						ApiLoadingApp loadingApp = (ApiLoadingApp)obj;
+						ApiLoadingApp loadingApp1 = (ApiLoadingApp)obj;
 						LOGGER.info("App Termination: app {} was terminated with exit status {}",
-								loadingApp.getAppName(), exitStatus);
-					}
-
-				};
+								loadingApp1.getAppName(), exitStatus);
+					};
 
 			ProcWaiterThread.runBackground(ApiEnvExpander.expand(startCmd), "App:" + loadingApp.getAppName(), 
 				pwcb, loadingApp);
