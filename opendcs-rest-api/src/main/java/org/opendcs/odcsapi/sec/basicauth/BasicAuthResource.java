@@ -1,5 +1,5 @@
 /*
- *  Copyright 2024 OpenDCS Consortium
+ *  Copyright 2024 OpenDCS Consortium and its Contributors
  *
  *  Licensed under the Apache License, Version 2.0 (the "License")
  *  you may not use this file except in compliance with the License.
@@ -15,6 +15,12 @@
 
 package org.opendcs.odcsapi.sec.basicauth;
 
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.util.Base64;
+import java.util.Set;
 import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -28,18 +34,28 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import org.opendcs.odcsapi.dao.DbException;
 import org.opendcs.odcsapi.errorhandling.ErrorCodes;
 import org.opendcs.odcsapi.errorhandling.WebAppException;
-import org.opendcs.odcsapi.sec.OpenDcsPrincipal;
+import org.opendcs.odcsapi.hydrojson.DbInterface;
 import org.opendcs.odcsapi.sec.AuthorizationCheck;
+import org.opendcs.odcsapi.sec.OpenDcsApiRoles;
+import org.opendcs.odcsapi.sec.OpenDcsPrincipal;
 import org.opendcs.odcsapi.util.ApiHttpUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Path("/")
 public class BasicAuthResource
 {
 
-	@Context private HttpServletRequest request;
-	@Context private HttpHeaders httpHeaders;
+	private static final Logger LOGGER = LoggerFactory.getLogger(BasicAuthResource.class);
+	private static final String MODULE = "BasicAuthResource";
+
+	@Context
+	private HttpServletRequest request;
+	@Context
+	private HttpHeaders httpHeaders;
 
 	@POST
 	@Path("credentials")
@@ -51,11 +67,14 @@ public class BasicAuthResource
 		//If credentials are null, Authorization header will be checked.
 		if(credentials != null)
 		{
-			validateCredentials(credentials);
+			verifyCredentials(credentials);
 		}
 
 		String authorizationHeader = httpHeaders.getHeaderString(HttpHeaders.AUTHORIZATION);
-		OpenDcsPrincipal principal = BasicAuthenticationUtil.makeUserPrincipal(credentials, authorizationHeader);
+		credentials = getCredentials(credentials, authorizationHeader);
+		validateDbCredentials(credentials);
+		Set<OpenDcsApiRoles> roles = BasicAuthCheck.getUserRoles(credentials.getUsername());
+		OpenDcsPrincipal principal = new OpenDcsPrincipal(credentials.getUsername(), roles);
 		HttpSession oldSession = request.getSession(false);
 		if(oldSession != null)
 		{
@@ -66,7 +85,7 @@ public class BasicAuthResource
 		return ApiHttpUtil.createResponse("Authentication Successful.");
 	}
 
-	private static void validateCredentials(Credentials credentials) throws WebAppException
+	private static void verifyCredentials(Credentials credentials) throws WebAppException
 	{
 		String u = credentials.getUsername();
 		String p = credentials.getPassword();
@@ -79,16 +98,116 @@ public class BasicAuthResource
 		{
 			char c = u.charAt(i);
 			if(!Character.isLetterOrDigit(c) && c != '_' && c != '.')
+			{
 				throw new WebAppException(ErrorCodes.AUTH_FAILED,
 						"Username may only contain alphanumeric, underscore, or period.");
+			}
 		}
 		for(int i = 0; i < p.length(); i++)
 		{
 			char c = p.charAt(i);
 			if(Character.isWhitespace(c) || c == '\'')
+			{
 				throw new WebAppException(ErrorCodes.AUTH_FAILED,
 						"Password may not contain whitespace or quote.");
+			}
 		}
 	}
 
+	private static Credentials getCredentials(Credentials postBody, String authorizationHeader)
+			throws WebAppException
+	{
+		if(postBody != null)
+		{
+			return postBody;
+		}
+		if(authorizationHeader == null || authorizationHeader.isEmpty())
+		{
+			throw newAuthException();
+		}
+		return parseAuthorizationHeader(authorizationHeader);
+	}
+
+	private static WebAppException newAuthException()
+	{
+		return new WebAppException(ErrorCodes.AUTH_FAILED, "Credentials not provided.");
+	}
+
+	private static Credentials parseAuthorizationHeader(String authString) throws WebAppException
+	{
+		String[] authHeaders = authString.split(",");
+		for(String header : authHeaders)
+		{
+			String trimmedHeader = header.trim();
+			LOGGER.info(MODULE + ".makeToken authHdr = {}", trimmedHeader);
+			if(trimmedHeader.startsWith("Basic"))
+			{
+				return extractCredentials(trimmedHeader.substring(6).trim());
+			}
+		}
+		throw newAuthException();
+	}
+
+	private static Credentials extractCredentials(String base64Credentials) throws WebAppException
+	{
+		String decodedCredentials = new String(Base64.getDecoder().decode(base64Credentials.getBytes()));
+		String[] parts = decodedCredentials.split(":", 2);
+
+		if(parts.length < 2 || parts[0] == null || parts[1] == null)
+		{
+			throw newAuthException();
+		}
+
+		Credentials credentials = new Credentials();
+		credentials.setUsername(parts[0]);
+		credentials.setPassword(parts[1]);
+
+		LOGGER.info(MODULE + ".checkToken found tokstr in header.");
+		return credentials;
+	}
+
+	private static String getDatabaseUrl(DbInterface dbi) throws WebAppException
+	{
+		try
+		{
+			Connection poolCon = dbi.getConnection();
+			// The only way to verify that user/pw is valid is to attempt to establish a connection:
+			DatabaseMetaData metaData = poolCon.getMetaData();
+			return metaData.getURL();
+		}
+		catch(SQLException e)
+		{
+			throw new WebAppException(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+					"Failed to obtain database URL.", e);
+		}
+	}
+
+	private static void validateDbCredentials(Credentials creds) throws WebAppException
+	{
+
+		// Use username and password to attempt to connect to the database
+		try(DbInterface dbi = new DbInterface())
+		{
+			String url = getDatabaseUrl(dbi);
+			/*
+			 Intentional unused connection. Makes a new db connection using passed credentials
+			 This validates the username & password and will throw SQLException if user/pw is not valid.
+			*/
+			//noinspection EmptyTryBlock
+			try(Connection ignored = DriverManager.getConnection(url, creds.getUsername(), creds.getPassword()))
+			{// NOSONAR
+
+			}
+		}
+		catch(SQLException e)
+		{
+			throw new WebAppException(HttpServletResponse.SC_FORBIDDEN,
+					"Unable to authorize user.", e);
+		}
+		catch(DbException e)
+		{
+			throw new WebAppException(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+					"Failed to obtain database URL.", e);
+		}
+	}
 }

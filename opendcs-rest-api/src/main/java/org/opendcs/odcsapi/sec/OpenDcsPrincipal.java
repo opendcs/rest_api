@@ -17,6 +17,7 @@ package org.opendcs.odcsapi.sec;
 
 import java.io.Serializable;
 import java.security.Principal;
+import java.util.Collections;
 import java.util.Set;
 
 public final class OpenDcsPrincipal implements Principal, Serializable
@@ -29,7 +30,7 @@ public final class OpenDcsPrincipal implements Principal, Serializable
 	public OpenDcsPrincipal(String name, Set<OpenDcsApiRoles> roles)
 	{
 		this.name = name;
-		this.roles = roles;
+		this.roles = Collections.unmodifiableSet(roles);
 	}
 
 	@Override

@@ -29,7 +29,10 @@ import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import javax.sql.DataSource;
 
+import org.opendcs.odcsapi.dao.ApiAuthorizationDAI;
 import org.opendcs.odcsapi.dao.DbException;
+import org.opendcs.odcsapi.sec.basicauth.OpenTsdbAuthorizationDAO;
+import org.opendcs.odcsapi.sec.cwms.CwmsAuthorizationDAO;
 import org.opendcs.odcsapi.start.StartException;
 import org.opendcs.odcsapi.util.ApiConstants;
 
@@ -49,7 +52,7 @@ public final class DbInterface implements AutoCloseable
 	private static DataSource dataSource = null;
 	private static final String sequenceSuffix = "IdSeq";
 	public static String siteNameTypePreference = "CWMS";
-	public static Properties decodesProperties = new Properties();
+	public static final Properties decodesProperties = new Properties();
 	
 	/** The Connection used by this instance of DbInterface. */
 	private Connection connection = null;
@@ -99,7 +102,12 @@ public final class DbInterface implements AutoCloseable
 	{
 		DbInterface.dataSource = dataSource;
 	}
-	
+
+	public static String getProperty(String propertyKey)
+	{
+		return decodesProperties.getProperty(propertyKey);
+	}
+
 	public Connection getConnection()
 	{
 		return connection;
@@ -204,6 +212,19 @@ public final class DbInterface implements AutoCloseable
 		if (d == null)
 			return null;
 		return d.getTime();
+	}
+
+	public ApiAuthorizationDAI getAuthorizationDao()
+	{
+		if(isCwms)
+		{
+			return new CwmsAuthorizationDAO(this);
+		}
+		else if(isOpenTsdb)
+		{
+			return new OpenTsdbAuthorizationDAO(this);
+		}
+		throw new IllegalStateException("ApiAuthorizationDAI currently only supports OpenTSDB and CWMS");
 	}
 
 	/*

@@ -13,31 +13,13 @@
  *  limitations under the License.
  */
 
-package org.opendcs.odcsapi.sec.basicauth;
+package org.opendcs.odcsapi.dao;
 
-public class Credentials
+import java.util.Set;
+
+import org.opendcs.odcsapi.sec.OpenDcsApiRoles;
+
+public interface ApiAuthorizationDAI extends AutoCloseable
 {
-	private String username = null;
-	private String password = null;
-
-	public String getUsername()
-	{
-		return username;
-	}
-
-	public void setUsername(String username)
-	{
-		this.username = username;
-	}
-
-	public String getPassword()
-	{
-		return password;
-	}
-
-	public void setPassword(String password)
-	{
-		this.password = password;
-	}
-
+	Set<OpenDcsApiRoles> getRoles(String username) throws DbException;
 }

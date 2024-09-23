@@ -20,11 +20,12 @@ import java.net.URL;
 import java.text.ParseException;
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.NotAuthorizedException;
+import javax.ws.rs.ServerErrorException;
 import javax.ws.rs.container.ContainerRequestContext;
+import javax.ws.rs.core.Response;
 
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JOSEObjectType;
@@ -41,6 +42,8 @@ import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.proc.ConfigurableJWTProcessor;
 import com.nimbusds.jwt.proc.DefaultJWTClaimsVerifier;
 import com.nimbusds.jwt.proc.DefaultJWTProcessor;
+import org.opendcs.odcsapi.dao.ApiAuthorizationDAI;
+import org.opendcs.odcsapi.hydrojson.DbInterface;
 import org.opendcs.odcsapi.sec.OpenDcsApiRoles;
 import org.opendcs.odcsapi.sec.OpenDcsPrincipal;
 import org.opendcs.odcsapi.sec.OpenDcsSecurityContext;
@@ -68,7 +71,6 @@ public final class OidcAuthCheck implements AuthorizationCheck
 				.create(new URL(jwkSetUrl))
 				.retrying(true)
 				.build();
-
 		// The expected JWS algorithm of the access tokens (agreed out-of-band)
 		JWSAlgorithm expectedJWSAlg = JWSAlgorithm.RS256;
 		JWSKeySelector<SecurityContext> keySelector = new JWSVerificationKeySelector<>(expectedJWSAlg, keySource);
@@ -82,15 +84,13 @@ public final class OidcAuthCheck implements AuthorizationCheck
 						JWTClaimNames.EXPIRATION_TIME,
 						"scp",
 						"cid",
-						"roles",
 						JWTClaimNames.JWT_ID))));
-		SecurityContext ctx = null; // optional context parameter, not required here
-		return jwtProcessor.process(accessToken, ctx);
+		return jwtProcessor.process(accessToken, null);
 	}
 
 
 	@Override
-	public void authorize(ContainerRequestContext requestContext, HttpServletRequest httpServletRequest)
+	public OpenDcsSecurityContext authorize(ContainerRequestContext requestContext, HttpServletRequest httpServletRequest)
 	{
 		String authorizationHeader = requestContext.getHeaderString(AUTHORIZATION_HEADER);
 		if(authorizationHeader == null || !authorizationHeader.startsWith(BEARER_PREFIX))
@@ -99,20 +99,16 @@ public final class OidcAuthCheck implements AuthorizationCheck
 		}
 		else
 		{
-			try
+			try(DbInterface dbInterface = new DbInterface();
+				ApiAuthorizationDAI authorizationDao = dbInterface.getAuthorizationDao())
 			{
 				String token = authorizationHeader.substring(BEARER_PREFIX.length());
 				JWTClaimsSet claimsSet = getClaimsSet(token);
 				String subject = claimsSet.getSubject();
-				Set<OpenDcsApiRoles> roles = new HashSet<>();
-				roles.add(OpenDcsApiRoles.ODCS_API_GUEST);
-				//TODO: map JWT roles to OPENDCS Roles
-				List<String> jwtRoles = claimsSet.getStringListClaim("roles");
+				Set<OpenDcsApiRoles> roles = authorizationDao.getRoles(subject);
 				OpenDcsPrincipal openDcsPrincipal = new OpenDcsPrincipal(subject, roles);
-				requestContext.setSecurityContext(new OpenDcsSecurityContext(openDcsPrincipal,
-						httpServletRequest.isSecure(), BEARER_PREFIX));
-				httpServletRequest.getSession(true)
-						.setAttribute(OpenDcsPrincipal.USER_PRINCIPAL_SESSION_ATTRIBUTE, openDcsPrincipal);
+				return new OpenDcsSecurityContext(openDcsPrincipal,
+						httpServletRequest.isSecure(), BEARER_PREFIX);
 			}
 			catch(ParseException | JOSEException | BadJOSEException e)
 			{
@@ -122,6 +118,11 @@ public final class OidcAuthCheck implements AuthorizationCheck
 			catch(MalformedURLException e)
 			{
 				throw new IllegalStateException("Invalid OIDC authentication URL", e);
+			}
+			catch(Exception e)
+			{
+				throw new ServerErrorException("Error accessing database to determine user roles",
+						Response.Status.INTERNAL_SERVER_ERROR, e);
 			}
 		}
 	}

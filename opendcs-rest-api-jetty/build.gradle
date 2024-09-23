@@ -135,7 +135,8 @@ tasks.register('startJettyOdcsApi', JavaExec) { ->
     classpath = sourceSets.test.runtimeClasspath
     mainClass = "org.opendcs.odcsapi.jetty.Start"
     jvmArgs("-DDCSTOOL_HOME=" + (project.findProperty("DCSTOOL_HOME") ?: "${project.layout.buildDirectory.get()}/opendcs"),
-            "-DDCSTOOL_USERDIR=" + (project.findProperty("DCSTOOL_USERDIR") ?: "${project.layout.buildDirectory.get()}/opendcs"))
+            "-DDCSTOOL_USERDIR=" + (project.findProperty("DCSTOOL_USERDIR") ?: "${project.layout.buildDirectory.get()}/opendcs"),
+            "-Dopendcs.rest.api.authorization=basic")
     args(
             "-p", project.findProperty("REST_API_PORT") ?: "8081",
             "-c", project.findProperty("REST_API_CONTEXT") ?: "odcsapi",

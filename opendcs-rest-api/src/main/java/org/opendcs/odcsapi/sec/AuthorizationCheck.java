@@ -17,6 +17,7 @@ package org.opendcs.odcsapi.sec;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.container.ContainerRequestContext;
+import javax.ws.rs.core.SecurityContext;
 
 public interface AuthorizationCheck
 {
@@ -24,5 +25,11 @@ public interface AuthorizationCheck
 	String ODCS_API_USER = "ODCS_API_USER";
 	String ODCS_API_ADMIN = "ODCS_API_ADMIN";
 
-	void authorize(ContainerRequestContext requestContext, HttpServletRequest httpServletRequest);
+	/**
+	 * Authorizes the current session returning the SecurityContext that will check user roles.
+	 *
+	 * @param requestContext     context for the current session.
+	 * @param httpServletRequest context for the current request.
+	 */
+	SecurityContext authorize(ContainerRequestContext requestContext, HttpServletRequest httpServletRequest);
 }

@@ -19,6 +19,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.SecurityContext;
 
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
 import org.glassfish.jersey.server.ResourceConfig;
@@ -27,6 +28,8 @@ import org.junit.jupiter.api.Test;
 import org.opendcs.odcsapi.res.RestServices;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -35,6 +38,7 @@ class SessionResourceTest extends JerseyTest
 {
 
 	private HttpSession httpSession;
+	private SecurityContext securityContext;
 
 	@Override
 	protected Application configure()
@@ -48,9 +52,13 @@ class SessionResourceTest extends JerseyTest
 					protected void configure()
 					{
 						httpSession = mock(HttpSession.class);
+						AuthorizationCheck authCheck = mock(AuthorizationCheck.class);
+						securityContext = mock(SecurityContext.class);
+						when(authCheck.authorize(any(), any())).thenReturn(securityContext);
 						HttpServletRequest mockRequest = mock(HttpServletRequest.class);
-						when(mockRequest.getSession(false)).thenReturn(httpSession);
+						when(mockRequest.getSession(anyBoolean())).thenReturn(httpSession);
 						bind(mockRequest).to(HttpServletRequest.class);
+						bind(authCheck).to(AuthorizationCheck.class);
 					}
 				});
 	}
@@ -58,13 +66,15 @@ class SessionResourceTest extends JerseyTest
 	@Test
 	void testCheckRequiresAuthentication()
 	{
+		when(securityContext.isUserInRole(any())).thenReturn(false);
 		Response response = target("/check").request().get();
-		assertEquals(401, response.getStatus(), "Check should return 401 since user is unauthenticated");
+		assertEquals(403, response.getStatus(), "Check should return 401 since user is unauthenticated");
 	}
 
 	@Test
 	void testLogout()
 	{
+		when(securityContext.isUserInRole(any())).thenReturn(true);
 		Response response = target("/logout").request().get();
 		assertEquals(200, response.getStatus(), "Logout should return 200");
 		verify(httpSession).invalidate();

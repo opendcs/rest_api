@@ -18,6 +18,11 @@ package org.opendcs.odcsapi.res;
 import javax.ws.rs.ApplicationPath;
 import org.glassfish.jersey.server.ResourceConfig;
 
+import org.opendcs.odcsapi.hydrojson.DbInterface;
+import org.opendcs.odcsapi.sec.AuthorizationCheck;
+import org.opendcs.odcsapi.sec.basicauth.BasicAuthCheck;
+import org.opendcs.odcsapi.sec.cwms.ServletSsoAuthCheck;
+import org.opendcs.odcsapi.sec.openid.OidcAuthCheck;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,6 +35,22 @@ public class RestServices extends ResourceConfig
 	{
 		LOGGER.debug("Initializing odcsapi RestServices.");
 		packages("org.opendcs.odcsapi");
-
+		String authorizationType = DbInterface.getProperty("opendcs.rest.api.authorization");
+		if("basic".equals(authorizationType))
+		{
+			register(AuthorizationCheck.class, BasicAuthCheck.class);
+		}
+		else if("openid".equals(authorizationType))
+		{
+			register(AuthorizationCheck.class, OidcAuthCheck.class);
+		}
+		else if("sso".equals(authorizationType))
+		{
+			register(AuthorizationCheck.class, ServletSsoAuthCheck.class);
+		}
+		else
+		{
+			throw new IllegalStateException("Property opendcs.rest.api.authorization must be configured to one of 'basic', 'openid', or 'sso'.");
+		}
 	}
 }
