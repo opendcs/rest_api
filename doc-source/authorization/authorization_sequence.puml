@@ -1,0 +1,87 @@
+@startuml
+actor Client
+participant "Servlet" as Servlet
+control "ContainerRequestFilter" as Filter
+participant "AuthorizationCheck" as AuthCheck
+participant "JWT Validator" as JWT
+database "Database" as Database
+participant "Resource" as Resource
+
+Client -> Servlet: Request (endpoint)
+Servlet -> Filter: Pre-process request
+
+alt Endpoint guest role only
+    Filter -> Servlet: Allow access
+    Servlet -> Resource: proceed with request
+    Resource -> Resource: perform endpoint operations
+    Resource -> Servlet: response
+    Servlet -> Client: response
+else Endpoint requires authorized role
+    alt Servlet session Principal is valid for role and authorization is not expired
+        Filter -> Servlet: Allow access
+        Servlet -> Resource
+        Resource -> Resource: perform endpoint operations
+        Resource -> Servlet: response
+        Servlet -> Client: response
+
+    else No session or authorization expired
+        Filter -> AuthCheck: Authorization check
+        alt #PowderBlue Container Single Sign-On Check (CWMS AAA)
+            AuthCheck -> AuthCheck: check for JSESSIONIDSSO cookie
+            AuthCheck -> Database: request db specific roles for SSO principal
+            Database -> AuthCheck: database specific roles
+            AuthCheck -> Filter: SecurityContext with Principal\nand normalized OpenDCS Roles
+            Filter -> Filter: check SecurityContext against endpoint roles
+            alt Roles are valid
+                Filter -> Servlet: Roles valid
+                Servlet -> Resource: Client authorized
+                Resource -> Resource: perform endpoint operations
+                Resource -> Servlet: response
+                Servlet -> Client: response
+            else Roles are invalid
+                Filter -> Servlet: Reject access
+                Servlet -> Client: Error response: 403 Status
+            end
+        else #Wheat Check user roles in Database (use-case Username/Password authentication endpoint)
+            AuthCheck -> Database: Request user roles based on session\nPrincipal set from authentication endpoint
+            Database -> AuthCheck: database specific roles
+            AuthCheck -> Filter: SecurityContext with Principal\nand normalized OpenDCS Roles
+            Filter -> Filter: check SecurityContext against endpoint roles
+            alt Roles are valid
+                Filter -> Servlet: Roles valid
+                Servlet -> Resource: Client authorized
+                Resource -> Resource: perform endpoint operations
+                Resource -> Servlet: response
+                Servlet -> Client: response
+            else Roles are invalid
+                Filter -> Servlet: Reject access
+                Servlet -> Client: Error response: 403 Status
+            end
+        end
+        else #Plum Check JWT in Authorization header (use-case OpenID Connect)
+            AuthCheck -> AuthCheck: Validate JWT
+            alt JWT is valid
+                AuthCheck -> AuthCheck: Extract subject
+                AuthCheck -> Database: Request user roles based on JWT subject
+                Database -> AuthCheck: database specific roles
+                AuthCheck -> Filter: SecurityContext with Principal\nand normalized OpenDCS Roles
+                Filter -> Filter: check SecurityContext against endpoint roles
+                alt Roles are valid
+                    Filter -> Servlet: Roles valid
+                    Servlet -> Resource: Client authorized
+                    Resource -> Resource: perform endpoint operations
+                    Resource -> Servlet: response
+                    Servlet -> Client: response
+                else Roles are invalid
+                    Filter -> Servlet: Reject access
+                    Servlet -> Client: Error response: 403 Status
+                end
+            else JWT is invalid
+                AuthCheck -> Filter: Client not authorized
+                Filter -> Servlet: Reject access
+                Servlet -> Client: Error response: 401 Status
+            end
+    end
+end
+
+@enduml
