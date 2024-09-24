@@ -17,6 +17,7 @@ package org.opendcs.odcsapi.sec;
 
 public enum OpenDcsApiRoles
 {
+
 	ODCS_API_GUEST(AuthorizationCheck.ODCS_API_GUEST),
 	ODCS_API_USER(AuthorizationCheck.ODCS_API_USER),
 	ODCS_API_ADMIN(AuthorizationCheck.ODCS_API_ADMIN);

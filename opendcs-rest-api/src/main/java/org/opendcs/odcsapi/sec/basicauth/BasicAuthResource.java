@@ -62,6 +62,7 @@ public class BasicAuthResource
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({AuthorizationCheck.ODCS_API_GUEST})
+	//TODO check basic auth from web xml to enable/disable
 	public Response postCredentials(Credentials credentials) throws WebAppException
 	{
 		//If credentials are null, Authorization header will be checked.

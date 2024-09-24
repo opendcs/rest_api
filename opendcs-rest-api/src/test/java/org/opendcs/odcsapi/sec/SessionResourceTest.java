@@ -15,6 +15,7 @@
 
 package org.opendcs.odcsapi.sec;
 
+import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import javax.ws.rs.core.Application;
@@ -54,11 +55,14 @@ class SessionResourceTest extends JerseyTest
 						httpSession = mock(HttpSession.class);
 						AuthorizationCheck authCheck = mock(AuthorizationCheck.class);
 						securityContext = mock(SecurityContext.class);
-						when(authCheck.authorize(any(), any(), servletContext)).thenReturn(securityContext);
+						when(authCheck.authorize(any(), any())).thenReturn(securityContext);
 						HttpServletRequest mockRequest = mock(HttpServletRequest.class);
 						when(mockRequest.getSession(anyBoolean())).thenReturn(httpSession);
 						bind(mockRequest).to(HttpServletRequest.class);
 						bind(authCheck).to(AuthorizationCheck.class);
+						ServletContext mock = mock(ServletContext.class);
+						when(mock.getInitParameter("opendcs.rest.api.authorization.type")).thenReturn("basic");
+						bind(mock).to(ServletContext.class);
 					}
 				});
 	}
@@ -68,7 +72,7 @@ class SessionResourceTest extends JerseyTest
 	{
 		when(securityContext.isUserInRole(any())).thenReturn(false);
 		Response response = target("/check").request().get();
-		assertEquals(403, response.getStatus(), "Check should return 401 since user is unauthenticated");
+		assertEquals(401, response.getStatus(), "Check should return 401 since user is unauthenticated");
 	}
 
 	@Test

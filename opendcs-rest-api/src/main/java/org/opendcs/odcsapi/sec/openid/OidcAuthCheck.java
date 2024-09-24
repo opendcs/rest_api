@@ -68,7 +68,7 @@ public final class OidcAuthCheck implements AuthorizationCheck
 		ConfigurableJWTProcessor<SecurityContext> jwtProcessor = new DefaultJWTProcessor<>();
 		// Set the required "typ" header "at+jwt" for access tokens
 		jwtProcessor.setJWSTypeVerifier(new DefaultJOSEObjectTypeVerifier<>(new JOSEObjectType("at+jwt")));
-		String jwkSetUrl = System.getenv("OIDC_JWK_SET_URL");
+		String jwkSetUrl = DbInterface.decodesProperties.getProperty("opendcs.rest.api.authorization.jwt.jwkset.url");
 		JWKSource<SecurityContext> keySource = JWKSourceBuilder
 				.create(new URL(jwkSetUrl))
 				.retrying(true)
@@ -77,7 +77,7 @@ public final class OidcAuthCheck implements AuthorizationCheck
 		JWSAlgorithm expectedJWSAlg = JWSAlgorithm.RS256;
 		JWSKeySelector<SecurityContext> keySelector = new JWSVerificationKeySelector<>(expectedJWSAlg, keySource);
 		jwtProcessor.setJWSKeySelector(keySelector);
-		String issuer = System.getenv("OIDC_ISSUER");
+		String issuer = DbInterface.decodesProperties.getProperty("opendcs.rest.api.authorization.jwt.issuer.url");
 		jwtProcessor.setJWTClaimsSetVerifier(new DefaultJWTClaimsVerifier<>(
 				new JWTClaimsSet.Builder().issuer(issuer).build(),
 				new HashSet<>(Arrays.asList(

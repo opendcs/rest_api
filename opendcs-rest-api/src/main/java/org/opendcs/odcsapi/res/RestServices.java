@@ -19,7 +19,6 @@ import javax.servlet.ServletContext;
 import javax.ws.rs.ApplicationPath;
 import javax.ws.rs.core.Context;
 
-import org.glassfish.hk2.utilities.binding.AbstractBinder;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.opendcs.odcsapi.hydrojson.DbInterface;
 import org.slf4j.Logger;
@@ -36,9 +35,10 @@ public class RestServices extends ResourceConfig
 		LOGGER.debug("Initializing odcsapi RestServices.");
 		packages("org.opendcs.odcsapi");
 		String officeId = servletContext.getInitParameter("opendcs.rest.api.cwms.office");
+		String databaseType = servletContext.getInitParameter("editDatabaseType");
 		if(officeId != null)
 		{
-			DbInterface.decodesProperties.setProperty("CwmsOfficeId", officeId);
+			DbInterface.decodesProperties.setProperty("editDatabaseType", databaseType);
 		}
 	}
 }

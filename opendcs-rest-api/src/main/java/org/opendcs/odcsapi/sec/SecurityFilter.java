@@ -23,7 +23,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import javax.annotation.Priority;
 import javax.annotation.security.RolesAllowed;
-import javax.inject.Inject;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
@@ -55,30 +54,6 @@ public final class SecurityFilter implements ContainerRequestFilter
 	@Context private HttpHeaders httpHeaders;
 	@Context private HttpServletRequest httpServletRequest;
 	@Context private ServletContext servletContext;
-
-	private AuthorizationCheck lookupAuthCheck()
-	{
-		AuthorizationCheck check;
-		String authorizationType = servletContext.getInitParameter("opendcs.rest.api.authorization.type");
-		LOGGER.info("Initializing odcsapi RestServices with authorization type '{}'.", authorizationType);
-		if("basic".equals(authorizationType))
-		{
-			check = new BasicAuthCheck();
-		}
-		else if("openid".equals(authorizationType))
-		{
-			check = new OidcAuthCheck();
-		}
-		else if("sso".equals(authorizationType))
-		{
-			check = new ServletSsoAuthCheck();
-		}
-		else
-		{
-			throw new IllegalStateException("Property opendcs.rest.api.authorization must be configured to one of 'basic', 'openid', or 'sso'.");
-		}
-		return check;
-	}
 
 	@Override
 	public void filter(ContainerRequestContext requestContext)
@@ -142,7 +117,7 @@ public final class SecurityFilter implements ContainerRequestFilter
 
 	private void authorizeSession(ContainerRequestContext requestContext, HttpSession session)
 	{
-		SecurityContext securityContext = lookupAuthCheck().authorize(requestContext, httpServletRequest, servletContext);
+		SecurityContext securityContext = lookupAuthCheck().authorize(requestContext, httpServletRequest);
 		requestContext.setSecurityContext(securityContext);
 		Principal principal = securityContext.getUserPrincipal();
 		session.setAttribute(OpenDcsPrincipal.USER_PRINCIPAL_SESSION_ATTRIBUTE, principal);//NOSONAR impl is Serializable
@@ -159,7 +134,7 @@ public final class SecurityFilter implements ContainerRequestFilter
 		}
 		long expirationSeconds = Duration.parse(expirationMinutes).get(ChronoUnit.SECONDS);
 		return lastAuthorizationCheck == null
-				|| Duration.between(lastAuthorizationCheck, Instant.now()).abs().get(ChronoUnit.SECONDS) < expirationSeconds;
+				|| Duration.between(lastAuthorizationCheck, Instant.now()).abs().get(ChronoUnit.SECONDS) >= expirationSeconds;
 	}
 
 	private boolean isPublicEndpoint()
@@ -176,5 +151,29 @@ public final class SecurityFilter implements ContainerRequestFilter
 			}
 		}
 		return retval;
+	}
+
+	private AuthorizationCheck lookupAuthCheck()
+	{
+		AuthorizationCheck check;
+		String authorizationType = servletContext.getInitParameter("opendcs.rest.api.authorization.type");
+		LOGGER.info("Initializing odcsapi RestServices with authorization type '{}'.", authorizationType);
+		if("basic".equals(authorizationType))
+		{
+			check = new BasicAuthCheck();
+		}
+		else if("openid".equals(authorizationType))
+		{
+			check = new OidcAuthCheck();
+		}
+		else if("sso".equals(authorizationType))
+		{
+			check = new ServletSsoAuthCheck();
+		}
+		else
+		{
+			throw new IllegalStateException("Property opendcs.rest.api.authorization must be configured to one of 'basic', 'openid', or 'sso'.");
+		}
+		return check;
 	}
 }

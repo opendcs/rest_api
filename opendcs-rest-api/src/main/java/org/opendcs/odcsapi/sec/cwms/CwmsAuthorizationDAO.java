@@ -43,12 +43,12 @@ public final class CwmsAuthorizationDAO extends ApiDaoBase implements ApiAuthori
 	{
 		Set<OpenDcsApiRoles> roles = EnumSet.noneOf(OpenDcsApiRoles.class);
 		roles.add(OpenDcsApiRoles.ODCS_API_GUEST);
-		String cwmsOfficeId = dbi.decodesProperties.getProperty("CwmsOfficeId");
 		String q = "SELECT user_group_id" +
 				" FROM av_sec_users" +
 				" WHERE db_office_code = cwms_util.get_db_office_code(?)" +
 				" AND username = ?" +
 				" AND is_member = 'T'";
+		String cwmsOfficeId = dbi.decodesProperties.getProperty("CwmsOfficeId");
 		try(ResultSet rs = doQueryPs(null, q, cwmsOfficeId, username))
 		{
 			while(rs.next())
