@@ -15,8 +15,8 @@
 
 package org.opendcs.odcsapi.sec;
 
-import javax.inject.Inject;
 import javax.servlet.annotation.WebListener;
+import javax.servlet.http.HttpSession;
 import javax.servlet.http.HttpSessionEvent;
 import javax.servlet.http.HttpSessionListener;
 
@@ -25,8 +25,6 @@ import org.opendcs.odcsapi.lrgsclient.ClientConnectionCache;
 @WebListener
 public class SessionDisconnect implements HttpSessionListener
 {
-	@Inject
-	private ClientConnectionCache clientConnectionCache;
 
 	@Override
 	public void sessionCreated(HttpSessionEvent se)
@@ -37,6 +35,7 @@ public class SessionDisconnect implements HttpSessionListener
 	@Override
 	public void sessionDestroyed(HttpSessionEvent se)
 	{
-		clientConnectionCache.removeSession(se.getSession().getId());
+		HttpSession session = se.getSession();
+		ClientConnectionCache.getInstance().removeSession(session.getId());
 	}
 }

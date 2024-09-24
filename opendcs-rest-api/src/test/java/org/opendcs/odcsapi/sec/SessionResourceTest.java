@@ -54,7 +54,7 @@ class SessionResourceTest extends JerseyTest
 						httpSession = mock(HttpSession.class);
 						AuthorizationCheck authCheck = mock(AuthorizationCheck.class);
 						securityContext = mock(SecurityContext.class);
-						when(authCheck.authorize(any(), any())).thenReturn(securityContext);
+						when(authCheck.authorize(any(), any(), servletContext)).thenReturn(securityContext);
 						HttpServletRequest mockRequest = mock(HttpServletRequest.class);
 						when(mockRequest.getSession(anyBoolean())).thenReturn(httpSession);
 						bind(mockRequest).to(HttpServletRequest.class);

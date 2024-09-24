@@ -24,6 +24,7 @@ import javax.ws.rs.ServerErrorException;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.ext.Provider;
 
 import org.opendcs.odcsapi.dao.ApiAuthorizationDAI;
 import org.opendcs.odcsapi.hydrojson.DbInterface;
@@ -32,6 +33,7 @@ import org.opendcs.odcsapi.sec.OpenDcsApiRoles;
 import org.opendcs.odcsapi.sec.OpenDcsPrincipal;
 import org.opendcs.odcsapi.sec.OpenDcsSecurityContext;
 
+@Provider
 public final class ServletSsoAuthCheck implements AuthorizationCheck
 {
 	private static final String SESSION_COOKIE_NAME = "JSESSIONIDSSO";

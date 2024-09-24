@@ -21,21 +21,11 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-import javax.servlet.ServletContextEvent;
-import javax.servlet.ServletContextListener;
-import javax.servlet.annotation.WebListener;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.opendcs.odcsapi.appmon.ApiEventClient;
 import org.opendcs.odcsapi.beans.ApiAppStatus;
-import org.opendcs.odcsapi.dao.ApiAppDAO;
-import org.opendcs.odcsapi.dao.DbException;
-import org.opendcs.odcsapi.hydrojson.DbInterface;
 import org.opendcs.odcsapi.util.ApiBasicClient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import static java.util.stream.Collectors.toList;
 
@@ -43,25 +33,22 @@ import static java.util.stream.Collectors.toList;
  * This runs a continuous thread to check periodically for stale LDDS client connections
  * and close them.
  */
-@WebListener
-public class ClientConnectionCache implements ServletContextListener
+public final class ClientConnectionCache
 {
-	private static final long STALE_THRESHOLD_MS = 90000L;
-	private static final Logger LOGGER = LoggerFactory.getLogger(ClientConnectionCache.class);
+	private static final long STALE_LDDS_THRESHOLD_MS = 90_000L;
+	private static final long STALE_API_CLIENT_THRESHOLD_MS = 20_000L;
+	private static final ClientConnectionCache instance = new ClientConnectionCache();
 
-	private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
 	private final Map<String, CacheRecord> cache = new ConcurrentHashMap<>();
 
-	@Override
-	public void contextInitialized(ServletContextEvent sce)
+	private ClientConnectionCache()
 	{
-		executor.scheduleAtFixedRate(this::checkClients, 0, 30, TimeUnit.SECONDS);
+		//private constructor
 	}
 
-	@Override
-	public void contextDestroyed(ServletContextEvent sce)
+	public static ClientConnectionCache getInstance()
 	{
-		executor.shutdown();
+		return instance;
 	}
 
 	public void removeSession(String sessionId)
@@ -69,143 +56,95 @@ public class ClientConnectionCache implements ServletContextListener
 		CacheRecord remove = cache.remove(sessionId);
 		if(remove != null)
 		{
-			synchronized(remove)
+			ApiLddsClient cli = remove.getLddsClient();
+			if(cli != null)
 			{
-				ApiLddsClient cli = remove.getLddsClient();
-				if(cli != null)
-				{
-					cli.info("Disconnecting LDDS Client due to session termination.");
-					cli.disconnect();
-				}
-				remove.getApiEventClients().forEach(ApiBasicClient::disconnect);
+				cli.info("Disconnecting LDDS Client due to session termination.");
+				cli.disconnect();
 			}
+			remove.getApiEventClients().forEach(ApiBasicClient::disconnect);
 		}
 	}
 
 	public void setApiLddsClient(ApiLddsClient client, String sessionId)
 	{
 		CacheRecord cacheRecord = cache.computeIfAbsent(sessionId, s -> new CacheRecord());
-		synchronized(cacheRecord)
-		{
-			cacheRecord.setLddsClient(client);
-		}
+		cacheRecord.setLddsClient(client);
 	}
 
 	public void addApiEventClient(ApiEventClient client, String sessionId)
 	{
 		CacheRecord cacheRecord = cache.computeIfAbsent(sessionId, s -> new CacheRecord());
-		synchronized(cacheRecord)
-		{
-			cacheRecord.getApiEventClients().add(client);
-		}
+		cacheRecord.getApiEventClients().add(client);
 	}
 
 	public void removeApiEventClient(ApiEventClient client, String sessionId)
 	{
 		CacheRecord cacheRecord = cache.computeIfAbsent(sessionId, s -> new CacheRecord());
-		synchronized(cacheRecord)
-		{
-			cacheRecord.getApiEventClients().remove(client);
-		}
+		cacheRecord.getApiEventClients().remove(client);
 	}
 
 	public Optional<ApiLddsClient> getApiLddsClient(String sessionId)
 	{
 		CacheRecord cacheRecord = cache.computeIfAbsent(sessionId, s -> new CacheRecord());
-		synchronized(cacheRecord)
-		{
-			return Optional.ofNullable(cacheRecord.getLddsClient());
-		}
+		return Optional.ofNullable(cacheRecord.getLddsClient());
 	}
 
 	public Optional<ApiEventClient> getApiEventClient(Long appId, String sessionId)
 	{
 		CacheRecord cacheRecord = cache.computeIfAbsent(sessionId, s -> new CacheRecord());
-		synchronized(cacheRecord)
+		return cacheRecord.getApiEventClients().stream()
+				.filter(a -> Objects.equals(a.getAppId(), appId))
+				.findAny();
+	}
+
+	void removeExpiredApiEventClients(ArrayList<ApiAppStatus> appStatii)
+	{
+		for(ClientConnectionCache.CacheRecord entry : cache.values())
 		{
-			return cacheRecord.getApiEventClients().stream()
-					.filter(a -> Objects.equals(a.getAppId(), appId))
-					.findAny();
+			List<ApiEventClient> apiEventClients = entry.getApiEventClients();
+			List<ApiEventClient> clientsToDisconnect = apiEventClients.stream()
+					.filter(e -> appStatii.stream()
+							.filter(a -> Objects.equals(e.getAppId(), a.getAppId()))
+							.anyMatch(a -> a.getPid() == null
+									|| a.getHeartbeat() == null
+									|| System.currentTimeMillis() - a.getHeartbeat().getTime() > STALE_API_CLIENT_THRESHOLD_MS))
+					.collect(toList());
+			apiEventClients.removeAll(clientsToDisconnect);
 		}
 	}
 
-	/**
-	 * Called periodically to hang up any DDS clients or event clients
-	 * that have gone stale, e.g. client starts a message retrieval and never completes it, or
-	 * event clients with a stale heartbeat.
-	 */
-	private void checkClients()
+	public void removeExpiredLddsClients()
 	{
-		checkLddsClients();
-		try
+		for(ClientConnectionCache.CacheRecord cacheRecord : cache.values())
 		{
-			checkApiEventClients();
-		}
-		catch(DbException e)
-		{
-			LOGGER.error("There was an error checking for stale clients.", e);
-		}
-	}
-
-	private void checkApiEventClients() throws DbException
-	{
-		ArrayList<ApiAppStatus> appStatii;
-		try(DbInterface dbi = new DbInterface();
-			ApiAppDAO appDao = new ApiAppDAO(dbi))
-		{
-			appStatii = appDao.getAppStatus();
-		}
-		for(CacheRecord entry : cache.values())
-		{
-			synchronized(entry)
+			if(cacheRecord.getLddsClient() != null
+					&& System.currentTimeMillis() - cacheRecord.getLddsClient().getLastActivity() > STALE_LDDS_THRESHOLD_MS)
 			{
-				List<ApiEventClient> apiEventClients = entry.getApiEventClients();
-				List<ApiEventClient> clientsToDisconnect = apiEventClients.stream()
-						.filter(e -> appStatii.stream()
-								.filter(a -> Objects.equals(e.getAppId(), a.getAppId()))
-								.anyMatch(a -> a.getPid() == null
-										|| a.getHeartbeat() == null
-										|| System.currentTimeMillis() - a.getHeartbeat().getTime() > 20000L))
-						.collect(toList());
-				apiEventClients.removeAll(clientsToDisconnect);
+				ApiLddsClient cli = cacheRecord.getLddsClient();
+				cli.info("Hanging up due to " + (STALE_LDDS_THRESHOLD_MS / 1000) + " seconds of inactivity.");
+				cli.disconnect();
+				cacheRecord.setLddsClient(null);
 			}
 		}
 	}
 
-	private void checkLddsClients()
+	static final class CacheRecord
 	{
-		for(CacheRecord cacheRecord : cache.values())
-		{
-			synchronized(cacheRecord)
-			{
-				if(cacheRecord.getLddsClient() != null
-						&& System.currentTimeMillis() - cacheRecord.getLddsClient().getLastActivity() > STALE_THRESHOLD_MS)
-				{
-					ApiLddsClient cli = cacheRecord.getLddsClient();
-					cli.info("Hanging up due to " + (STALE_THRESHOLD_MS / 1000) + " seconds of inactivity.");
-					cli.disconnect();
-					cacheRecord.setLddsClient(null);
-				}
-			}
-		}
-	}
-
-	private static final class CacheRecord
-	{
-		private final List<ApiEventClient> apiEventClients = new ArrayList<>();
+		private final List<ApiEventClient> apiEventClients = new CopyOnWriteArrayList<>();
 		private ApiLddsClient lddsClient;
 
-		private List<ApiEventClient> getApiEventClients()
+		List<ApiEventClient> getApiEventClients()
 		{
 			return apiEventClients;
 		}
 
-		private ApiLddsClient getLddsClient()
+		synchronized ApiLddsClient getLddsClient()
 		{
 			return lddsClient;
 		}
 
-		private void setLddsClient(ApiLddsClient lddsClient)
+		synchronized void setLddsClient(ApiLddsClient lddsClient)
 		{
 			this.lddsClient = lddsClient;
 		}

@@ -15,14 +15,13 @@
 
 package org.opendcs.odcsapi.res;
 
+import javax.servlet.ServletContext;
 import javax.ws.rs.ApplicationPath;
-import org.glassfish.jersey.server.ResourceConfig;
+import javax.ws.rs.core.Context;
 
+import org.glassfish.hk2.utilities.binding.AbstractBinder;
+import org.glassfish.jersey.server.ResourceConfig;
 import org.opendcs.odcsapi.hydrojson.DbInterface;
-import org.opendcs.odcsapi.sec.AuthorizationCheck;
-import org.opendcs.odcsapi.sec.basicauth.BasicAuthCheck;
-import org.opendcs.odcsapi.sec.cwms.ServletSsoAuthCheck;
-import org.opendcs.odcsapi.sec.openid.OidcAuthCheck;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,27 +29,16 @@ import org.slf4j.LoggerFactory;
 public class RestServices extends ResourceConfig
 {
 	private static final Logger LOGGER = LoggerFactory.getLogger(RestServices.class);
+	@Context private ServletContext servletContext;
 
 	public RestServices()
 	{
 		LOGGER.debug("Initializing odcsapi RestServices.");
 		packages("org.opendcs.odcsapi");
-		String authorizationType = DbInterface.getProperty("opendcs.rest.api.authorization");
-		if("basic".equals(authorizationType))
+		String officeId = servletContext.getInitParameter("opendcs.rest.api.cwms.office");
+		if(officeId != null)
 		{
-			register(AuthorizationCheck.class, BasicAuthCheck.class);
-		}
-		else if("openid".equals(authorizationType))
-		{
-			register(AuthorizationCheck.class, OidcAuthCheck.class);
-		}
-		else if("sso".equals(authorizationType))
-		{
-			register(AuthorizationCheck.class, ServletSsoAuthCheck.class);
-		}
-		else
-		{
-			throw new IllegalStateException("Property opendcs.rest.api.authorization must be configured to one of 'basic', 'openid', or 'sso'.");
+			DbInterface.decodesProperties.setProperty("CwmsOfficeId", officeId);
 		}
 	}
 }

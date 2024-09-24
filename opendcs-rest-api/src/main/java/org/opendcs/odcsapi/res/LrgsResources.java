@@ -24,7 +24,6 @@ import java.util.Properties;
 import java.util.logging.Logger;
 
 import javax.annotation.security.RolesAllowed;
-import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import javax.ws.rs.Consumes;
@@ -71,13 +70,12 @@ import javax.servlet.http.HttpServletResponse;
 public class LrgsResources
 {
 	@Context private HttpServletRequest request;
-	@Context HttpHeaders httpHeaders;
+	@Context private HttpHeaders httpHeaders;
 	private final ClientConnectionCache clientConnectionCache;
 
-	@Inject
-	public LrgsResources(ClientConnectionCache clientConnectionCache)
+	public LrgsResources()
 	{
-		this.clientConnectionCache = clientConnectionCache;
+		this.clientConnectionCache = ClientConnectionCache.getInstance();
 	}
 
 	@POST

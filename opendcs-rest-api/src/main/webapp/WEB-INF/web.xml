@@ -31,4 +31,8 @@
     <session-config>
         <session-timeout>180</session-timeout> <!-- Timeout after 3 hours of inactivity -->
     </session-config>
+    <context-param>
+        <param-name>opendcs.rest.api.authorization.type</param-name>
+        <param-value>basic</param-value>
+    </context-param>
 </web-app>

@@ -45,21 +45,20 @@ public final class DbInterface implements AutoCloseable
 {
 	static final String module = "DbInterface";
 	public static String dbType = "opentsdb";
-	public static boolean isOracle = false;
 	public static boolean isCwms = false;
 	public static boolean isHdb = false;
-	public static boolean isOpenTsdb = false;
+	public static boolean isOpenTsdb = true;
 	private static DataSource dataSource = null;
 	private static final String sequenceSuffix = "IdSeq";
 	public static String siteNameTypePreference = "CWMS";
 	public static final Properties decodesProperties = new Properties();
-	
+	private final boolean isOracle;
+
 	/** The Connection used by this instance of DbInterface. */
 	private Connection connection = null;
 
 	
-	public DbInterface() 
-		throws DbException
+	public DbInterface() throws DbException
 	{
 		try
 		{
@@ -101,11 +100,6 @@ public final class DbInterface implements AutoCloseable
 	public static void setDataSource(DataSource dataSource)
 	{
 		DbInterface.dataSource = dataSource;
-	}
-
-	public static String getProperty(String propertyKey)
-	{
-		return decodesProperties.getProperty(propertyKey);
 	}
 
 	public Connection getConnection()

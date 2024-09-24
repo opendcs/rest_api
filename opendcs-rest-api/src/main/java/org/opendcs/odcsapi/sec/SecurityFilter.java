@@ -24,9 +24,11 @@ import java.util.Collections;
 import javax.annotation.Priority;
 import javax.annotation.security.RolesAllowed;
 import javax.inject.Inject;
+import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import javax.ws.rs.ForbiddenException;
+import javax.ws.rs.InternalServerErrorException;
 import javax.ws.rs.Priorities;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
@@ -36,6 +38,9 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.ext.Provider;
 
+import org.opendcs.odcsapi.sec.basicauth.BasicAuthCheck;
+import org.opendcs.odcsapi.sec.cwms.ServletSsoAuthCheck;
+import org.opendcs.odcsapi.sec.openid.OidcAuthCheck;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,18 +51,33 @@ public final class SecurityFilter implements ContainerRequestFilter
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(SecurityFilter.class);
 	private static final String LAST_AUTHORIZATION_CHECK = "opendcs-last-authorization-check";
-	@Context
-	private ResourceInfo resourceInfo;
-	@Context
-	private HttpHeaders httpHeaders;
-	@Context
-	private HttpServletRequest httpServletRequest;
-	private final AuthorizationCheck authorizationCheck;
+	@Context private ResourceInfo resourceInfo;
+	@Context private HttpHeaders httpHeaders;
+	@Context private HttpServletRequest httpServletRequest;
+	@Context private ServletContext servletContext;
 
-	@Inject
-	public SecurityFilter(AuthorizationCheck authorizationCheck)
+	private AuthorizationCheck lookupAuthCheck()
 	{
-		this.authorizationCheck = authorizationCheck;
+		AuthorizationCheck check;
+		String authorizationType = servletContext.getInitParameter("opendcs.rest.api.authorization.type");
+		LOGGER.info("Initializing odcsapi RestServices with authorization type '{}'.", authorizationType);
+		if("basic".equals(authorizationType))
+		{
+			check = new BasicAuthCheck();
+		}
+		else if("openid".equals(authorizationType))
+		{
+			check = new OidcAuthCheck();
+		}
+		else if("sso".equals(authorizationType))
+		{
+			check = new ServletSsoAuthCheck();
+		}
+		else
+		{
+			throw new IllegalStateException("Property opendcs.rest.api.authorization must be configured to one of 'basic', 'openid', or 'sso'.");
+		}
+		return check;
 	}
 
 	@Override
@@ -74,23 +94,16 @@ public final class SecurityFilter implements ContainerRequestFilter
 				LOGGER.debug("Secured endpoint identified: {}", resourceInfo.getResourceMethod().toGenericString());
 			}
 			HttpSession session = httpServletRequest.getSession(true);
-			if(isAuthorizationExpired(session))
+			Object sessionPrincipal = session.getAttribute(OpenDcsPrincipal.USER_PRINCIPAL_SESSION_ATTRIBUTE);
+			if(isAuthorizationExpired(session) || !(sessionPrincipal instanceof OpenDcsPrincipal))
 			{
 				authorizeSession(requestContext, session);
 			}
 			else
 			{
-				Object attribute = session.getAttribute(OpenDcsPrincipal.USER_PRINCIPAL_SESSION_ATTRIBUTE);
-				if(attribute instanceof OpenDcsPrincipal)
-				{
-					OpenDcsPrincipal principal = (OpenDcsPrincipal) attribute;
-					requestContext.setSecurityContext(new OpenDcsSecurityContext(principal,
-							httpServletRequest.isSecure(), SecurityContext.BASIC_AUTH));
-				}
-				else
-				{
-					authorizeSession(requestContext, session);
-				}
+				OpenDcsPrincipal principal = (OpenDcsPrincipal) sessionPrincipal;
+				requestContext.setSecurityContext(new OpenDcsSecurityContext(principal,
+						httpServletRequest.isSecure(), SecurityContext.BASIC_AUTH));
 			}
 			verifyRoles(requestContext);
 		}
@@ -107,30 +120,46 @@ public final class SecurityFilter implements ContainerRequestFilter
 				httpServletRequest.isSecure(), ""));
 	}
 
-	private static void verifyRoles(ContainerRequestContext requestContext)
+	private void verifyRoles(ContainerRequestContext requestContext)
 	{
 		SecurityContext securityContext = requestContext.getSecurityContext();
-		if(!securityContext.isUserInRole(OpenDcsApiRoles.ODCS_API_USER.name())
-				|| !securityContext.isUserInRole(OpenDcsApiRoles.ODCS_API_ADMIN.name()))
+		RolesAllowed annotation = resourceInfo.getResourceMethod().getAnnotation(RolesAllowed.class);
+		String endpoint = requestContext.getMethod() + " " + requestContext.getUriInfo().getPath();
+		if(annotation == null)
 		{
-			throw new ForbiddenException("User does not have the correct roles");
+			throw new InternalServerErrorException("Endpoint " + endpoint + " does not have the @RolesAllowed annotation");
 		}
+		String[] value = annotation.value();
+		for(String role : value)
+		{
+			if(securityContext.isUserInRole(role))
+			{
+				return;
+			}
+		}
+		throw new ForbiddenException("User does not have the correct roles for endpoint: " + endpoint);
 	}
 
 	private void authorizeSession(ContainerRequestContext requestContext, HttpSession session)
 	{
-		SecurityContext securityContext = authorizationCheck.authorize(requestContext, httpServletRequest);
+		SecurityContext securityContext = lookupAuthCheck().authorize(requestContext, httpServletRequest, servletContext);
 		requestContext.setSecurityContext(securityContext);
 		Principal principal = securityContext.getUserPrincipal();
 		session.setAttribute(OpenDcsPrincipal.USER_PRINCIPAL_SESSION_ATTRIBUTE, principal);//NOSONAR impl is Serializable
 		session.setAttribute(LAST_AUTHORIZATION_CHECK, Instant.now());
 	}
 
-	private static boolean isAuthorizationExpired(HttpSession session)
+	private boolean isAuthorizationExpired(HttpSession session)
 	{
 		Instant lastAuthorizationCheck = (Instant) session.getAttribute(LAST_AUTHORIZATION_CHECK);
+		String expirationMinutes = servletContext.getInitParameter("opendcs.rest.api.authorization.expiration.duration");
+		if(expirationMinutes == null)
+		{
+			expirationMinutes = "PT15M";
+		}
+		long expirationSeconds = Duration.parse(expirationMinutes).get(ChronoUnit.SECONDS);
 		return lastAuthorizationCheck == null
-				|| Duration.between(lastAuthorizationCheck, Instant.now()).abs().get(ChronoUnit.MINUTES) < 15;
+				|| Duration.between(lastAuthorizationCheck, Instant.now()).abs().get(ChronoUnit.SECONDS) < expirationSeconds;
 	}
 
 	private boolean isPublicEndpoint()

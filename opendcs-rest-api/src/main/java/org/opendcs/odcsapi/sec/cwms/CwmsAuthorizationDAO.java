@@ -43,8 +43,7 @@ public final class CwmsAuthorizationDAO extends ApiDaoBase implements ApiAuthori
 	{
 		Set<OpenDcsApiRoles> roles = EnumSet.noneOf(OpenDcsApiRoles.class);
 		roles.add(OpenDcsApiRoles.ODCS_API_GUEST);
-		String cwmsOfficeId = DbInterface.getProperty("CwmsOfficeId");
-		// Now verify that user has appropriate privilege. This only works on Postgress currently:
+		String cwmsOfficeId = dbi.decodesProperties.getProperty("CwmsOfficeId");
 		String q = "SELECT user_group_id" +
 				" FROM av_sec_users" +
 				" WHERE db_office_code = cwms_util.get_db_office_code(?)" +

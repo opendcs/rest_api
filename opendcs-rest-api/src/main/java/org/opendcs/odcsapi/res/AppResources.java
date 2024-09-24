@@ -27,7 +27,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.security.RolesAllowed;
-import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import javax.ws.rs.Consumes;
@@ -65,15 +64,13 @@ import org.opendcs.odcsapi.util.ProcWaiterThread;
 public class AppResources
 {
 	private static final Logger LOGGER = LoggerFactory.getLogger(AppResources.class);
-	@Context
-	private HttpServletRequest request;
-	@Context HttpHeaders httpHeaders;
 	private final ClientConnectionCache clientConnectionCache;
+	@Context private HttpServletRequest request;
+	@Context private HttpHeaders httpHeaders;
 
-	@Inject
-	public AppResources(ClientConnectionCache clientConnectionCache)
+	public AppResources()
 	{
-		this.clientConnectionCache = clientConnectionCache;
+		this.clientConnectionCache = ClientConnectionCache.getInstance();
 	}
 
 	@GET
