@@ -28,6 +28,7 @@ dependencies {
     testImplementation(libs.jersey.test)
     testImplementation(libs.mockito.core)
     testImplementation(libs.mockito.inline)
+    testRuntimeOnly(libs.byte.buddy)
     testImplementation(libs.mockito.junit.jupiter)
     dependencies {
     def tomcatVersion = '9.0.30'

@@ -19,6 +19,7 @@ jwt = "4.4.0"
 #Test Dependencies
 junit = "5.10.1"
 mockito = "3.12.4"
+byte-buddy = "1.15.1"
 
 [libraries]
 opendcs = { module = "org.opendcs:opendcs", version.ref = "opendcs" }
@@ -55,5 +56,6 @@ junit-api = { module = "org.junit.jupiter:junit-jupiter-api" }
 junit-engine = { module = "org.junit.jupiter:junit-jupiter-engine" }
 mockito-core = { module = "org.mockito:mockito-core", version.ref = "mockito" }
 mockito-inline = { module = "org.mockito:mockito-inline", version.ref = "mockito" }
+byte-buddy = { module = "net.bytebuddy:byte-buddy", version.ref = "byte-buddy" }
 mockito-junit-jupiter = { module = "org.mockito:mockito-junit-jupiter", version.ref = "mockito" }
 jersey-test = { module = "org.glassfish.jersey.test-framework.providers:jersey-test-framework-provider-inmemory", version.ref = "jersey" }
