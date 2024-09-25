@@ -32,4 +32,6 @@ public interface AuthorizationCheck
 	 * @param httpServletRequest context for the current request.
 	 */
 	SecurityContext authorize(ContainerRequestContext requestContext, HttpServletRequest httpServletRequest);
+
+	boolean supports(String type, ContainerRequestContext requestContext);
 }

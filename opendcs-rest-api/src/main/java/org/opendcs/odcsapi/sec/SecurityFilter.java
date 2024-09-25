@@ -21,6 +21,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.ServiceLoader;
 import javax.annotation.Priority;
 import javax.annotation.security.RolesAllowed;
 import javax.servlet.ServletContext;
@@ -37,9 +38,6 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.ext.Provider;
 
-import org.opendcs.odcsapi.sec.basicauth.BasicAuthCheck;
-import org.opendcs.odcsapi.sec.cwms.ServletSsoAuthCheck;
-import org.opendcs.odcsapi.sec.openid.OidcAuthCheck;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -64,10 +62,6 @@ public final class SecurityFilter implements ContainerRequestFilter
 		}
 		else
 		{
-			if(LOGGER.isDebugEnabled())
-			{
-				LOGGER.debug("Secured endpoint identified: {}", resourceInfo.getResourceMethod().toGenericString());
-			}
 			HttpSession session = httpServletRequest.getSession(true);
 			Object sessionPrincipal = session.getAttribute(OpenDcsPrincipal.USER_PRINCIPAL_SESSION_ATTRIBUTE);
 			if(isAuthorizationExpired(session) || !(sessionPrincipal instanceof OpenDcsPrincipal))
@@ -80,8 +74,8 @@ public final class SecurityFilter implements ContainerRequestFilter
 				requestContext.setSecurityContext(new OpenDcsSecurityContext(principal,
 						httpServletRequest.isSecure(), SecurityContext.BASIC_AUTH));
 			}
-			verifyRoles(requestContext);
 		}
+		verifyRoles(requestContext);
 	}
 
 	private void setupGuestContext(ContainerRequestContext requestContext)
@@ -117,7 +111,7 @@ public final class SecurityFilter implements ContainerRequestFilter
 
 	private void authorizeSession(ContainerRequestContext requestContext, HttpSession session)
 	{
-		SecurityContext securityContext = lookupAuthCheck().authorize(requestContext, httpServletRequest);
+		SecurityContext securityContext = lookupAuthCheck(requestContext).authorize(requestContext, httpServletRequest);
 		requestContext.setSecurityContext(securityContext);
 		Principal principal = securityContext.getUserPrincipal();
 		session.setAttribute(OpenDcsPrincipal.USER_PRINCIPAL_SESSION_ATTRIBUTE, principal);//NOSONAR impl is Serializable
@@ -153,27 +147,27 @@ public final class SecurityFilter implements ContainerRequestFilter
 		return retval;
 	}
 
-	private AuthorizationCheck lookupAuthCheck()
+	private AuthorizationCheck lookupAuthCheck(ContainerRequestContext requestContext)
 	{
-		AuthorizationCheck check;
-		String authorizationType = servletContext.getInitParameter("opendcs.rest.api.authorization.type");
-		LOGGER.info("Initializing odcsapi RestServices with authorization type '{}'.", authorizationType);
-		if("basic".equals(authorizationType))
+		String parameterKey = "opendcs.rest.api.authorization.type";
+		String initParameter = servletContext.getInitParameter(parameterKey);
+		if(initParameter == null)
 		{
-			check = new BasicAuthCheck();
+			LOGGER.atInfo().log("Configuration parameter: '" + parameterKey + "' not setting. Defaulting to `openid`");
+			initParameter = "openid";
 		}
-		else if("openid".equals(authorizationType))
+		String[] authorizationType = initParameter.split(",");
+		ServiceLoader<AuthorizationCheck> serviceLoader = ServiceLoader.load(AuthorizationCheck.class);
+		for(AuthorizationCheck authType : serviceLoader)
 		{
-			check = new OidcAuthCheck();
+			for(String type : authorizationType)
+			{
+				if(authType.supports(type, requestContext))
+				{
+					return authType;
+				}
+			}
 		}
-		else if("sso".equals(authorizationType))
-		{
-			check = new ServletSsoAuthCheck();
-		}
-		else
-		{
-			throw new IllegalStateException("Property opendcs.rest.api.authorization must be configured to one of 'basic', 'openid', or 'sso'.");
-		}
-		return check;
+		throw new UnsupportedOperationException("DAO valid AuthorizationType for " + parameterKey);
 	}
 }

@@ -24,8 +24,8 @@ import javax.ws.rs.ServerErrorException;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.ext.Provider;
 
+import com.google.auto.service.AutoService;
 import org.opendcs.odcsapi.dao.ApiAuthorizationDAI;
 import org.opendcs.odcsapi.hydrojson.DbInterface;
 import org.opendcs.odcsapi.sec.AuthorizationCheck;
@@ -33,7 +33,7 @@ import org.opendcs.odcsapi.sec.OpenDcsApiRoles;
 import org.opendcs.odcsapi.sec.OpenDcsPrincipal;
 import org.opendcs.odcsapi.sec.OpenDcsSecurityContext;
 
-@Provider
+@AutoService(AuthorizationCheck.class)
 public final class ServletSsoAuthCheck implements AuthorizationCheck
 {
 	static final String SESSION_COOKIE_NAME = "JSESSIONIDSSO";
@@ -41,7 +41,7 @@ public final class ServletSsoAuthCheck implements AuthorizationCheck
 	@Override
 	public OpenDcsSecurityContext authorize(ContainerRequestContext requestContext, HttpServletRequest httpServletRequest)
 	{
-		verifySingleSignOn(requestContext);
+		hasSessionCookie(requestContext);
 		//User Principal is set by the single sign-on (e.g. CWMS AAA) web app for the servlet container (e.g. Tomcat)
 		Principal userPrincipal = requestContext.getSecurityContext().getUserPrincipal();
 		if(userPrincipal == null)
@@ -63,13 +63,16 @@ public final class ServletSsoAuthCheck implements AuthorizationCheck
 		}
 	}
 
-	private void verifySingleSignOn(ContainerRequestContext request)
+	@Override
+	public boolean supports(String type, ContainerRequestContext requestContext)
+	{
+		return "sso".equals(type) && hasSessionCookie(requestContext);
+	}
+
+	private boolean hasSessionCookie(ContainerRequestContext request)
 	{
 		Map<String, Cookie> cookies = request.getCookies();
 		Cookie cookie = cookies.get(SESSION_COOKIE_NAME);
-		if(cookie == null)
-		{
-			throw new NotAuthorizedException("User has not established a Single Sign-On session.");
-		}
+		return cookie != null;
 	}
 }

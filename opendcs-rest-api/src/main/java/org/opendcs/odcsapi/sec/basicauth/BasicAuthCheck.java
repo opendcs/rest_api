@@ -21,8 +21,8 @@ import javax.servlet.http.HttpSession;
 import javax.ws.rs.NotAuthorizedException;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.SecurityContext;
-import javax.ws.rs.ext.Provider;
 
+import com.google.auto.service.AutoService;
 import org.opendcs.odcsapi.dao.ApiAuthorizationDAI;
 import org.opendcs.odcsapi.hydrojson.DbInterface;
 import org.opendcs.odcsapi.sec.AuthorizationCheck;
@@ -30,7 +30,7 @@ import org.opendcs.odcsapi.sec.OpenDcsApiRoles;
 import org.opendcs.odcsapi.sec.OpenDcsPrincipal;
 import org.opendcs.odcsapi.sec.OpenDcsSecurityContext;
 
-@Provider
+@AutoService(AuthorizationCheck.class)
 public final class BasicAuthCheck implements AuthorizationCheck
 {
 
@@ -52,6 +52,12 @@ public final class BasicAuthCheck implements AuthorizationCheck
 		OpenDcsPrincipal principal = new OpenDcsPrincipal(username, roles);
 		return new OpenDcsSecurityContext(principal,
 				httpServletRequest.isSecure(), SecurityContext.BASIC_AUTH);
+	}
+
+	@Override
+	public boolean supports(String type, ContainerRequestContext ignored)
+	{
+		return "basic".equals(type) && DbInterface.isOpenTsdb;
 	}
 
 	static Set<OpenDcsApiRoles> getUserRoles(String username)

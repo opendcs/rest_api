@@ -26,8 +26,8 @@ import javax.ws.rs.NotAuthorizedException;
 import javax.ws.rs.ServerErrorException;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.ext.Provider;
 
+import com.google.auto.service.AutoService;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JOSEObjectType;
 import com.nimbusds.jose.JWSAlgorithm;
@@ -52,7 +52,7 @@ import org.opendcs.odcsapi.sec.OpenDcsSecurityContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@Provider
+@AutoService(AuthorizationCheck.class)
 public final class OidcAuthCheck implements AuthorizationCheck
 {
 
@@ -109,45 +109,46 @@ public final class OidcAuthCheck implements AuthorizationCheck
 		return jwtProcessor.process(accessToken, null);
 	}
 
-
 	@Override
 	public OpenDcsSecurityContext authorize(ContainerRequestContext requestContext, HttpServletRequest httpServletRequest)
 	{
 		String authorizationHeader = requestContext.getHeaderString(AUTHORIZATION_HEADER);
-		if(authorizationHeader == null || !authorizationHeader.startsWith(BEARER_PREFIX))
+		try
 		{
-			throw new NotAuthorizedException("No authorization header.");
+			String token = authorizationHeader.substring(BEARER_PREFIX.length());
+			JWTClaimsSet claimsSet = getClaimsSet(token);
+			String usernameWithEdipi = claimsSet.getStringClaim("preferred_username");
+			String edipi = usernameWithEdipi.substring(usernameWithEdipi.lastIndexOf(".") + 1);
+			OpenDcsPrincipal principal = createPrincipal(edipi);
+			return new OpenDcsSecurityContext(principal, httpServletRequest.isSecure(), BEARER_PREFIX);
 		}
-		else
+		catch(ParseException | JOSEException | BadJOSEException e)
 		{
-			try(DbInterface dbInterface = new DbInterface();
-				ApiAuthorizationDAI authorizationDao = dbInterface.getDao(ApiAuthorizationDAI.class))
-			{
-				String token = authorizationHeader.substring(BEARER_PREFIX.length());
-				JWTClaimsSet claimsSet = getClaimsSet(token);
-				String usernameWithEdipi = claimsSet.getStringClaim("preferred_username");
-				String edipi = usernameWithEdipi.substring(usernameWithEdipi.lastIndexOf(".") + 1);
-				String username = authorizationDao.getUsernameForEdipi(Long.parseLong(edipi));
-				Set<OpenDcsApiRoles> roles = authorizationDao.getRoles(username);
-				OpenDcsPrincipal openDcsPrincipal = new OpenDcsPrincipal(username, roles);
-				return new OpenDcsSecurityContext(openDcsPrincipal,
-						httpServletRequest.isSecure(), BEARER_PREFIX);
-			}
-			catch(ParseException | JOSEException | BadJOSEException e)
-			{
-				LOGGER.warn("Token processing error: ", e);
-				throw new NotAuthorizedException("Invalid JWT.");
-			}
-			catch(MalformedURLException e)
-			{
-				throw new ServerErrorException("Error in JWT processing configuration.",
-						Response.Status.INTERNAL_SERVER_ERROR, e);
-			}
-			catch(Exception e)
-			{
-				throw new ServerErrorException("Error accessing database to determine user roles",
-						Response.Status.INTERNAL_SERVER_ERROR, e);
-			}
+			LOGGER.warn("Token processing error: ", e);
+			throw new NotAuthorizedException("Invalid JWT.");
 		}
+	}
+
+	private static OpenDcsPrincipal createPrincipal(String edipi)
+	{
+		try(DbInterface dbInterface = new DbInterface();
+			ApiAuthorizationDAI authorizationDao = dbInterface.getDao(ApiAuthorizationDAI.class))
+		{
+			String username = authorizationDao.getUsernameForEdipi(Long.parseLong(edipi));
+			Set<OpenDcsApiRoles> roles = authorizationDao.getRoles(username);
+			return new OpenDcsPrincipal(username, roles);
+		}
+		catch(Exception e)
+		{
+			throw new ServerErrorException("Error accessing database to determine user roles",
+					Response.Status.INTERNAL_SERVER_ERROR, e);
+		}
+	}
+
+	@Override
+	public boolean supports(String type, ContainerRequestContext requestContext)
+	{
+		String authorizationHeader = requestContext.getHeaderString(AUTHORIZATION_HEADER);
+		return "openid".equals(type) && authorizationHeader != null && authorizationHeader.startsWith(BEARER_PREFIX);
 	}
 }
