@@ -20,6 +20,7 @@ import java.sql.SQLException;
 import java.util.EnumSet;
 import java.util.Set;
 
+import com.google.auto.service.AutoService;
 import org.opendcs.odcsapi.dao.ApiAuthorizationDAI;
 import org.opendcs.odcsapi.dao.ApiDaoBase;
 import org.opendcs.odcsapi.dao.DAOProvider;
@@ -28,8 +29,6 @@ import org.opendcs.odcsapi.hydrojson.DbInterface;
 import org.opendcs.odcsapi.sec.OpenDcsApiRoles;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import rma.services.annotations.ServiceProvider;
 
 public final class OpenTsdbAuthorizationDAO extends ApiDaoBase implements ApiAuthorizationDAI
 {
@@ -79,9 +78,14 @@ public final class OpenTsdbAuthorizationDAO extends ApiDaoBase implements ApiAut
 		throw new UnsupportedOperationException("OpenTSDB does not support EDIPI");
 	}
 
-	@ServiceProvider(service = DAOProvider.class, path = DbInterface.OPENTSDB)
+	@AutoService(value = DAOProvider.class)
 	public static final class AuthorizationDAOProvider implements DAOProvider<ApiAuthorizationDAI>
 	{
+		@Override
+		public String dbType()
+		{
+			return DbInterface.OPENTSDB;
+		}
 
 		@Override
 		public Class<ApiAuthorizationDAI> provides()

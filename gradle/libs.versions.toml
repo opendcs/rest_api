@@ -15,8 +15,7 @@ websocket = "1.1"
 javax-validation = "2.0.1.Final"
 nimbus = "9.41.1"
 jwt = "4.4.0"
-lookup = "1.1"
-service-annotations = "1.2.2"
+auto-service = "1.1.1"
 
 #Test Dependencies
 junit = "5.10.1"
@@ -48,8 +47,7 @@ jaxb-runtime = { module = "org.glassfish.jaxb:jaxb-runtime", version.ref = "glas
 websocket = { module = "javax.websocket:javax.websocket-api", version.ref = "websocket" }
 nimbus = { module = "com.nimbusds:nimbus-jose-jwt", version.ref = "nimbus"}
 jwt = { module = "com.auth0:java-jwt", version.ref = "jwt"}
-service-annotations = { module = "mil.army.usace.hec:service-annotations", version.ref = "service-annotations"}
-lookup = { module = "mil.army.usace.hec:lookup", version.ref = "lookup" }
+auto-service = { module = "com.google.auto.service:auto-service", version.ref = "auto-service"}
 
 # webjars
 swagger-ui = { module = "org.webjars:swagger-ui", version.ref="swagger-ui" }

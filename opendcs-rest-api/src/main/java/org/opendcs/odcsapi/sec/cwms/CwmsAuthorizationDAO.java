@@ -20,6 +20,7 @@ import java.sql.SQLException;
 import java.util.EnumSet;
 import java.util.Set;
 
+import com.google.auto.service.AutoService;
 import org.opendcs.odcsapi.dao.ApiAuthorizationDAI;
 import org.opendcs.odcsapi.dao.ApiDaoBase;
 import org.opendcs.odcsapi.dao.DAOProvider;
@@ -28,8 +29,6 @@ import org.opendcs.odcsapi.hydrojson.DbInterface;
 import org.opendcs.odcsapi.sec.OpenDcsApiRoles;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import rma.services.annotations.ServiceProvider;
 
 public final class CwmsAuthorizationDAO extends ApiDaoBase implements ApiAuthorizationDAI
 {
@@ -96,9 +95,15 @@ public final class CwmsAuthorizationDAO extends ApiDaoBase implements ApiAuthori
 		}
 	}
 
-	@ServiceProvider(service = DAOProvider.class, path = DbInterface.CWMS)
+	@AutoService(value = DAOProvider.class)
 	public static final class AuthorizationDAOProvider implements DAOProvider<ApiAuthorizationDAI>
 	{
+
+		@Override
+		public String dbType()
+		{
+			return DbInterface.CWMS;
+		}
 
 		@Override
 		public Class<ApiAuthorizationDAI> provides()

@@ -15,7 +15,7 @@
 
 package org.opendcs.odcsapi.hydrojson;
 
-import java.util.Collection;
+import java.util.ServiceLoader;
 import java.util.logging.Logger;
 
 import java.sql.Connection;
@@ -30,15 +30,10 @@ import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import javax.sql.DataSource;
 
-import org.opendcs.odcsapi.dao.ApiAuthorizationDAI;
 import org.opendcs.odcsapi.dao.DAOProvider;
 import org.opendcs.odcsapi.dao.DbException;
-import org.opendcs.odcsapi.sec.basicauth.OpenTsdbAuthorizationDAO;
-import org.opendcs.odcsapi.sec.cwms.CwmsAuthorizationDAO;
 import org.opendcs.odcsapi.start.StartException;
 import org.opendcs.odcsapi.util.ApiConstants;
-
-import rma.util.lookup.Lookups;
 
 /**
  * This class is constructed for each request and is used to access the TSDB.
@@ -216,28 +211,31 @@ public final class DbInterface implements AutoCloseable
 
 	public <T> T getDao(Class<T> daoType)
 	{
-		String path;
+		String databaseType;
 		if(isCwms)
 		{
-			path = CWMS;
+			databaseType = CWMS;
 		}
 		else if(isOpenTsdb)
 		{
-			path = OPENTSDB;
+			databaseType = OPENTSDB;
 		}
 		else
 		{
 			throw new UnsupportedOperationException("DAO Lookup currently only supported by OpenTSDB and CWMS");
 		}
-		for(DAOProvider<?> daoProvider : Lookups.forPath(path).lookupAll(DAOProvider.class))
+
+		@SuppressWarnings("rawtypes")
+		ServiceLoader<DAOProvider> serviceLoader = ServiceLoader.load(DAOProvider.class);
+		for(DAOProvider<?> daoProvider : serviceLoader)
 		{
-			if(daoProvider.provides().equals(daoType))
+			if(daoProvider.provides().equals(daoType) && daoProvider.dbType().equals(databaseType))
 			{
 				//noinspection unchecked
 				return (T) daoProvider.createDAO(this);
 			}
 		}
-		throw new UnsupportedOperationException("DAO Lookup for " + path + " not supported for type " + daoType);
+		throw new UnsupportedOperationException("DAO Lookup for " + databaseType + " not supported for type " + daoType);
 	}
 
 	/*
