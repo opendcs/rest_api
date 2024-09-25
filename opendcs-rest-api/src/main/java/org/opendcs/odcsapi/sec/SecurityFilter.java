@@ -49,7 +49,7 @@ public final class SecurityFilter implements ContainerRequestFilter
 {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(SecurityFilter.class);
-	private static final String LAST_AUTHORIZATION_CHECK = "opendcs-last-authorization-check";
+	static final String LAST_AUTHORIZATION_CHECK = "opendcs-last-authorization-check";
 	@Context private ResourceInfo resourceInfo;
 	@Context private HttpHeaders httpHeaders;
 	@Context private HttpServletRequest httpServletRequest;
@@ -145,7 +145,7 @@ public final class SecurityFilter implements ContainerRequestFilter
 		{
 			String[] roles = annotation.value();
 			if(roles != null
-					&& Arrays.asList(roles).contains(OpenDcsApiRoles.ODCS_API_GUEST.name()))
+					&& Arrays.asList(roles).contains(OpenDcsApiRoles.ODCS_API_GUEST.getRole()))
 			{
 				retval = true;
 			}

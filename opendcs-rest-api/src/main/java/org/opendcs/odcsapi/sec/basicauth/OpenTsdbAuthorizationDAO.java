@@ -70,4 +70,10 @@ public final class OpenTsdbAuthorizationDAO extends ApiDaoBase implements ApiAut
 			throw new DbException(module, ex, "Unable to determine user roles in the database.");
 		}
 	}
+
+	@Override
+	public String getUsernameForEdipi(long edipi)
+	{
+		throw new UnsupportedOperationException("OpenTSDB does not support EDIPI");
+	}
 }

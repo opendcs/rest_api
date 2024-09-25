@@ -19,7 +19,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.EnumSet;
 import java.util.Set;
-import javax.ws.rs.NotAuthorizedException;
 
 import org.opendcs.odcsapi.dao.ApiAuthorizationDAI;
 import org.opendcs.odcsapi.dao.ApiDaoBase;
@@ -48,7 +47,7 @@ public final class CwmsAuthorizationDAO extends ApiDaoBase implements ApiAuthori
 				" WHERE db_office_code = cwms_util.get_db_office_code(?)" +
 				" AND username = ?" +
 				" AND is_member = 'T'";
-		String cwmsOfficeId = dbi.decodesProperties.getProperty("CwmsOfficeId");
+		String cwmsOfficeId = DbInterface.decodesProperties.getProperty("CwmsOfficeId");
 		try(ResultSet rs = doQueryPs(null, q, cwmsOfficeId, username))
 		{
 			while(rs.next())
@@ -69,6 +68,28 @@ public final class CwmsAuthorizationDAO extends ApiDaoBase implements ApiAuthori
 		catch(SQLException ex)
 		{
 			throw new DbException(module, ex, "Unable to determine user roles in the database.");
+		}
+	}
+
+	@Override
+	public String getUsernameForEdipi(long edipi) throws DbException
+	{
+		String q = "select userid from cwms_20.at_sec_cwms_users where edipi = ?";
+		String cwmsOfficeId = DbInterface.decodesProperties.getProperty("CwmsOfficeId");
+		try(ResultSet rs = doQueryPs(null, q, cwmsOfficeId, edipi))
+		{
+			if(rs.next())
+			{
+				return rs.getString(1);
+			}
+			else
+			{
+				throw new DbException("No user found for provided EDIPI.");
+			}
+		}
+		catch(SQLException ex)
+		{
+			throw new DbException(module, ex, "Unknown error determining user for EDIPI.");
 		}
 	}
 }

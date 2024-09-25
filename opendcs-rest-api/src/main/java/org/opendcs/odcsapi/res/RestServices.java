@@ -34,9 +34,14 @@ public class RestServices extends ResourceConfig
 	{
 		LOGGER.debug("Initializing odcsapi RestServices.");
 		packages("org.opendcs.odcsapi");
+		//Move this information to the database. https://github.com/opendcs/rest_api/issues/191
 		String officeId = servletContext.getInitParameter("opendcs.rest.api.cwms.office");
-		String databaseType = servletContext.getInitParameter("editDatabaseType");
 		if(officeId != null)
+		{
+			DbInterface.decodesProperties.setProperty("CwmsOfficeId", officeId);
+		}
+		String databaseType = servletContext.getInitParameter("editDatabaseType");
+		if(databaseType != null)
 		{
 			DbInterface.decodesProperties.setProperty("editDatabaseType", databaseType);
 		}

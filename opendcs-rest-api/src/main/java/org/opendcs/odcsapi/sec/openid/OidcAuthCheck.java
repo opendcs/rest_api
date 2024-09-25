@@ -57,22 +57,40 @@ public final class OidcAuthCheck implements AuthorizationCheck
 {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(OidcAuthCheck.class);
-	private static final String AUTHORIZATION_HEADER = "Authorization";
-	private static final String BEARER_PREFIX = "Bearer ";
+	static final String AUTHORIZATION_HEADER = "Authorization";
+	static final String BEARER_PREFIX = "Bearer ";
+	private final JWKSource<SecurityContext> keySource;
 
-	private JWTClaimsSet getClaimsSet(String accessToken)
-			throws MalformedURLException, BadJOSEException, ParseException, JOSEException
+	public OidcAuthCheck()
+	{
+		try
+		{
+			String jwkSetUrl = DbInterface.decodesProperties.getProperty("opendcs.rest.api.authorization.jwt.jwkset.url");
+			keySource = JWKSourceBuilder
+					.create(new URL(jwkSetUrl))
+					.retrying(true)
+					.build();
+		}
+		catch(MalformedURLException e)
+		{
+			throw new IllegalStateException(e);
+		}
+	}
+
+	//Used by unit tests
+	OidcAuthCheck(JWKSource<SecurityContext> keySource)
+	{
+		this.keySource = keySource;
+	}
+
+	private JWTClaimsSet getClaimsSet(String accessToken) throws BadJOSEException, ParseException, JOSEException
 	{
 		// Nimbus API documentation taken from:
 		// https://connect2id.com/products/nimbus-jose-jwt/examples/validating-jwt-access-tokens
 		ConfigurableJWTProcessor<SecurityContext> jwtProcessor = new DefaultJWTProcessor<>();
 		// Set the required "typ" header "at+jwt" for access tokens
-		jwtProcessor.setJWSTypeVerifier(new DefaultJOSEObjectTypeVerifier<>(new JOSEObjectType("at+jwt")));
-		String jwkSetUrl = DbInterface.decodesProperties.getProperty("opendcs.rest.api.authorization.jwt.jwkset.url");
-		JWKSource<SecurityContext> keySource = JWKSourceBuilder
-				.create(new URL(jwkSetUrl))
-				.retrying(true)
-				.build();
+		jwtProcessor.setJWSTypeVerifier(new DefaultJOSEObjectTypeVerifier<>(JOSEObjectType.JWT));
+
 		// The expected JWS algorithm of the access tokens (agreed out-of-band)
 		JWSAlgorithm expectedJWSAlg = JWSAlgorithm.RS256;
 		JWSKeySelector<SecurityContext> keySelector = new JWSVerificationKeySelector<>(expectedJWSAlg, keySource);
@@ -86,6 +104,7 @@ public final class OidcAuthCheck implements AuthorizationCheck
 						JWTClaimNames.EXPIRATION_TIME,
 						"scp",
 						"cid",
+						"preferred_username",
 						JWTClaimNames.JWT_ID))));
 		return jwtProcessor.process(accessToken, null);
 	}
@@ -106,9 +125,11 @@ public final class OidcAuthCheck implements AuthorizationCheck
 			{
 				String token = authorizationHeader.substring(BEARER_PREFIX.length());
 				JWTClaimsSet claimsSet = getClaimsSet(token);
-				String subject = claimsSet.getSubject();
-				Set<OpenDcsApiRoles> roles = authorizationDao.getRoles(subject);
-				OpenDcsPrincipal openDcsPrincipal = new OpenDcsPrincipal(subject, roles);
+				String usernameWithEdipi = claimsSet.getStringClaim("preferred_username");
+				String edipi = usernameWithEdipi.substring(usernameWithEdipi.lastIndexOf(".") + 1);
+				String username = authorizationDao.getUsernameForEdipi(Long.parseLong(edipi));
+				Set<OpenDcsApiRoles> roles = authorizationDao.getRoles(username);
+				OpenDcsPrincipal openDcsPrincipal = new OpenDcsPrincipal(username, roles);
 				return new OpenDcsSecurityContext(openDcsPrincipal,
 						httpServletRequest.isSecure(), BEARER_PREFIX);
 			}
@@ -119,7 +140,8 @@ public final class OidcAuthCheck implements AuthorizationCheck
 			}
 			catch(MalformedURLException e)
 			{
-				throw new IllegalStateException("Invalid OIDC authentication URL", e);
+				throw new ServerErrorException("Error in JWT processing configuration.",
+						Response.Status.INTERNAL_SERVER_ERROR, e);
 			}
 			catch(Exception e)
 			{

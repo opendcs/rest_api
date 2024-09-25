@@ -15,6 +15,8 @@
 
 package org.opendcs.odcsapi.sec;
 
+import java.time.Instant;
+import java.util.EnumSet;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
@@ -26,26 +28,25 @@ import org.glassfish.hk2.utilities.binding.AbstractBinder;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 import org.junit.jupiter.api.Test;
+import org.mockito.internal.verification.NoInteractions;
 import org.opendcs.odcsapi.res.RestServices;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 class SessionResourceTest extends JerseyTest
 {
-
 	private HttpSession httpSession;
 	private SecurityContext securityContext;
+	private HttpServletRequest mockRequest;
 
 	@Override
 	protected Application configure()
 	{
 		return new ResourceConfig(SessionResource.class)
-				.register(RestServices.class)
 				.register(SecurityFilter.class)
 				.register(new AbstractBinder()
 				{
@@ -56,19 +57,19 @@ class SessionResourceTest extends JerseyTest
 						AuthorizationCheck authCheck = mock(AuthorizationCheck.class);
 						securityContext = mock(SecurityContext.class);
 						when(authCheck.authorize(any(), any())).thenReturn(securityContext);
-						HttpServletRequest mockRequest = mock(HttpServletRequest.class);
-						when(mockRequest.getSession(anyBoolean())).thenReturn(httpSession);
+						mockRequest = mock(HttpServletRequest.class);
+						when(mockRequest.getSession(true)).thenReturn(httpSession);
 						bind(mockRequest).to(HttpServletRequest.class);
 						bind(authCheck).to(AuthorizationCheck.class);
-						ServletContext mock = mock(ServletContext.class);
-						when(mock.getInitParameter("opendcs.rest.api.authorization.type")).thenReturn("basic");
-						bind(mock).to(ServletContext.class);
+						ServletContext contextMock = mock(ServletContext.class);
+						when(contextMock.getInitParameter("opendcs.rest.api.authorization.type")).thenReturn("basic");
+						bind(contextMock).to(ServletContext.class);
 					}
 				});
 	}
 
 	@Test
-	void testCheckRequiresAuthentication()
+	void testCheckUnauthenticated()
 	{
 		when(securityContext.isUserInRole(any())).thenReturn(false);
 		Response response = target("/check").request().get();
@@ -76,10 +77,36 @@ class SessionResourceTest extends JerseyTest
 	}
 
 	@Test
-	void testLogout()
+	void testChecksAuthenticated()
 	{
 		when(securityContext.isUserInRole(any())).thenReturn(true);
+		OpenDcsPrincipal principal = new OpenDcsPrincipal("unit test", EnumSet.allOf(OpenDcsApiRoles.class));
+		when(httpSession.getAttribute(OpenDcsPrincipal.USER_PRINCIPAL_SESSION_ATTRIBUTE)).thenReturn(principal);
+		when(httpSession.getAttribute(SecurityFilter.LAST_AUTHORIZATION_CHECK)).thenReturn(Instant.now());
+		Response response = target("/check").request().get();
+		assertEquals(200, response.getStatus(), "Check should return 401 since user is unauthenticated");
+	}
+
+	@Test
+	void testLogoutUnauthenticated()
+	{
+		when(mockRequest.getSession(false)).thenReturn(null);
 		Response response = target("/logout").request().get();
+		assertEquals(200, response.getStatus(), "Logout should return 200 even when unauthenticated");
+		verify(httpSession, new NoInteractions()).invalidate();
+	}
+
+	@Test
+	void testLogoutAuthenticated()
+	{
+		when(mockRequest.getSession(false)).thenReturn(httpSession);
+		when(securityContext.isUserInRole(any())).thenReturn(true);
+		OpenDcsPrincipal principal = new OpenDcsPrincipal("unit test", EnumSet.allOf(OpenDcsApiRoles.class));
+		when(httpSession.getAttribute(OpenDcsPrincipal.USER_PRINCIPAL_SESSION_ATTRIBUTE)).thenReturn(principal);
+		when(httpSession.getAttribute(SecurityFilter.LAST_AUTHORIZATION_CHECK)).thenReturn(Instant.now());
+		Response response = target("/check").request().get();
+		assertEquals(200, response.getStatus(), "Check should return 200 since user is authenticated");
+		response = target("/logout").request().get();
 		assertEquals(200, response.getStatus(), "Logout should return 200");
 		verify(httpSession).invalidate();
 	}

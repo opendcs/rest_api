@@ -25,7 +25,9 @@ import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+import javax.ws.rs.BadRequestException;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.NotAuthorizedException;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -52,10 +54,8 @@ public class BasicAuthResource
 	private static final Logger LOGGER = LoggerFactory.getLogger(BasicAuthResource.class);
 	private static final String MODULE = "BasicAuthResource";
 
-	@Context
-	private HttpServletRequest request;
-	@Context
-	private HttpHeaders httpHeaders;
+	@Context private HttpServletRequest request;
+	@Context private HttpHeaders httpHeaders;
 
 	@POST
 	@Path("credentials")
@@ -92,16 +92,14 @@ public class BasicAuthResource
 		String p = credentials.getPassword();
 		if(u == null || u.trim().isEmpty() || p == null || p.trim().isEmpty())
 		{
-			throw new WebAppException(HttpServletResponse.SC_NOT_ACCEPTABLE,
-					"Neither username nor password may be null.");
+			throw new BadRequestException("Neither username nor password may be null.");
 		}
 		for(int i = 0; i < u.length(); i++)
 		{
 			char c = u.charAt(i);
 			if(!Character.isLetterOrDigit(c) && c != '_' && c != '.')
 			{
-				throw new WebAppException(ErrorCodes.AUTH_FAILED,
-						"Username may only contain alphanumeric, underscore, or period.");
+				throw new BadRequestException("Username may only contain alphanumeric, underscore, or period.");
 			}
 		}
 		for(int i = 0; i < p.length(); i++)
@@ -109,8 +107,7 @@ public class BasicAuthResource
 			char c = p.charAt(i);
 			if(Character.isWhitespace(c) || c == '\'')
 			{
-				throw new WebAppException(ErrorCodes.AUTH_FAILED,
-						"Password may not contain whitespace or quote.");
+				throw new BadRequestException("Password may not contain whitespace or quote.");
 			}
 		}
 	}
@@ -129,12 +126,12 @@ public class BasicAuthResource
 		return parseAuthorizationHeader(authorizationHeader);
 	}
 
-	private static WebAppException newAuthException()
+	private static BadRequestException newAuthException()
 	{
-		return new WebAppException(ErrorCodes.AUTH_FAILED, "Credentials not provided.");
+		return new BadRequestException("Credentials not provided.");
 	}
 
-	private static Credentials parseAuthorizationHeader(String authString) throws WebAppException
+	private static Credentials parseAuthorizationHeader(String authString)
 	{
 		String[] authHeaders = authString.split(",");
 		for(String header : authHeaders)
@@ -149,12 +146,13 @@ public class BasicAuthResource
 		throw newAuthException();
 	}
 
-	private static Credentials extractCredentials(String base64Credentials) throws WebAppException
+	private static Credentials extractCredentials(String base64Credentials)
 	{
 		String decodedCredentials = new String(Base64.getDecoder().decode(base64Credentials.getBytes()));
 		String[] parts = decodedCredentials.split(":", 2);
 
-		if(parts.length < 2 || parts[0] == null || parts[1] == null)
+		if(parts.length < 2 || parts[0] == null || parts[1] == null
+				|| parts[0].isEmpty() || parts[1].isEmpty())
 		{
 			throw newAuthException();
 		}

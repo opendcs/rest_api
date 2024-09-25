@@ -36,7 +36,7 @@ import org.opendcs.odcsapi.sec.OpenDcsSecurityContext;
 @Provider
 public final class ServletSsoAuthCheck implements AuthorizationCheck
 {
-	private static final String SESSION_COOKIE_NAME = "JSESSIONIDSSO";
+	static final String SESSION_COOKIE_NAME = "JSESSIONIDSSO";
 
 	@Override
 	public OpenDcsSecurityContext authorize(ContainerRequestContext requestContext, HttpServletRequest httpServletRequest)
