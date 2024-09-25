@@ -22,17 +22,20 @@ import java.util.Set;
 
 import org.opendcs.odcsapi.dao.ApiAuthorizationDAI;
 import org.opendcs.odcsapi.dao.ApiDaoBase;
+import org.opendcs.odcsapi.dao.DAOProvider;
 import org.opendcs.odcsapi.dao.DbException;
 import org.opendcs.odcsapi.hydrojson.DbInterface;
 import org.opendcs.odcsapi.sec.OpenDcsApiRoles;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import rma.services.annotations.ServiceProvider;
+
 public final class CwmsAuthorizationDAO extends ApiDaoBase implements ApiAuthorizationDAI
 {
 	private static final Logger LOGGER = LoggerFactory.getLogger(CwmsAuthorizationDAO.class);
 
-	public CwmsAuthorizationDAO(DbInterface dbi)
+	private CwmsAuthorizationDAO(DbInterface dbi)
 	{
 		super(dbi, "CwmsAuthorizationDAO");
 	}
@@ -90,6 +93,23 @@ public final class CwmsAuthorizationDAO extends ApiDaoBase implements ApiAuthori
 		catch(SQLException ex)
 		{
 			throw new DbException(module, ex, "Unknown error determining user for EDIPI.");
+		}
+	}
+
+	@ServiceProvider(service = DAOProvider.class, path = DbInterface.CWMS)
+	public static final class AuthorizationDAOProvider implements DAOProvider<ApiAuthorizationDAI>
+	{
+
+		@Override
+		public Class<ApiAuthorizationDAI> provides()
+		{
+			return ApiAuthorizationDAI.class;
+		}
+
+		@Override
+		public ApiAuthorizationDAI createDAO(DbInterface dbInterface)
+		{
+			return new CwmsAuthorizationDAO(dbInterface);
 		}
 	}
 }

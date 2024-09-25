@@ -33,6 +33,8 @@ import javax.ws.rs.core.Response;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -54,6 +56,22 @@ final class BasicAuthResourceTest extends JerseyTest
 	private HttpSession httpSession;
 	@Mock
 	private HttpServletRequest mockRequest;
+
+	@BeforeEach
+	void setup()
+	{
+		DbInterface.isOpenTsdb = true;
+		DbInterface.isCwms = false;
+		DbInterface.isHdb = false;
+	}
+
+	@AfterEach
+	void reset()
+	{
+		DbInterface.isOpenTsdb = true;
+		DbInterface.isCwms = false;
+		DbInterface.isHdb = false;
+	}
 
 	private void setupDataSource() throws Exception
 	{
@@ -182,6 +200,19 @@ final class BasicAuthResourceTest extends JerseyTest
 				.post(Entity.entity("", MediaType.APPLICATION_JSON)))
 		{
 			assertEquals(HttpServletResponse.SC_BAD_REQUEST, response.getStatus(), "Check should return 400 due to missing username");
+		}
+	}
+
+	@Test
+	void testCredentialsNotOpenTsdb()
+	{
+		DbInterface.isOpenTsdb = false;
+		DbInterface.isCwms = true;
+		String credentials = Base64.getEncoder().encodeToString("user:password".getBytes());
+		try(Response response = target("/credentials").request().header("Authorization", "Basic " + credentials)
+				.post(Entity.entity("", MediaType.APPLICATION_JSON)))
+		{
+			assertEquals(HttpServletResponse.SC_NOT_IMPLEMENTED, response.getStatus(), "Check should return 400 due to missing 'Basic ' prefix");
 		}
 	}
 }

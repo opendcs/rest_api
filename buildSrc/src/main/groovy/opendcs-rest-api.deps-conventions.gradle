@@ -1,3 +1,6 @@
 repositories {
     mavenCentral()
+    maven {
+        url 'https://www.hec.usace.army.mil/nexus/repository/maven-public'
+    }
 }

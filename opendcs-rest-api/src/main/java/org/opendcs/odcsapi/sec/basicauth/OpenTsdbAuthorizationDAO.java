@@ -22,17 +22,20 @@ import java.util.Set;
 
 import org.opendcs.odcsapi.dao.ApiAuthorizationDAI;
 import org.opendcs.odcsapi.dao.ApiDaoBase;
+import org.opendcs.odcsapi.dao.DAOProvider;
 import org.opendcs.odcsapi.dao.DbException;
 import org.opendcs.odcsapi.hydrojson.DbInterface;
 import org.opendcs.odcsapi.sec.OpenDcsApiRoles;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import rma.services.annotations.ServiceProvider;
+
 public final class OpenTsdbAuthorizationDAO extends ApiDaoBase implements ApiAuthorizationDAI
 {
 	private static final Logger LOGGER = LoggerFactory.getLogger(OpenTsdbAuthorizationDAO.class);
 
-	public OpenTsdbAuthorizationDAO(DbInterface dbi)
+	private OpenTsdbAuthorizationDAO(DbInterface dbi)
 	{
 		super(dbi, "OpenTsdbAuthorizationDAO");
 	}
@@ -74,5 +77,22 @@ public final class OpenTsdbAuthorizationDAO extends ApiDaoBase implements ApiAut
 	public String getUsernameForEdipi(long edipi)
 	{
 		throw new UnsupportedOperationException("OpenTSDB does not support EDIPI");
+	}
+
+	@ServiceProvider(service = DAOProvider.class, path = DbInterface.OPENTSDB)
+	public static final class AuthorizationDAOProvider implements DAOProvider<ApiAuthorizationDAI>
+	{
+
+		@Override
+		public Class<ApiAuthorizationDAI> provides()
+		{
+			return ApiAuthorizationDAI.class;
+		}
+
+		@Override
+		public ApiAuthorizationDAI createDAO(DbInterface dbInterface)
+		{
+			return new OpenTsdbAuthorizationDAO(dbInterface);
+		}
 	}
 }

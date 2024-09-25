@@ -121,7 +121,7 @@ public final class OidcAuthCheck implements AuthorizationCheck
 		else
 		{
 			try(DbInterface dbInterface = new DbInterface();
-				ApiAuthorizationDAI authorizationDao = dbInterface.getAuthorizationDao())
+				ApiAuthorizationDAI authorizationDao = dbInterface.getDao(ApiAuthorizationDAI.class))
 			{
 				String token = authorizationHeader.substring(BEARER_PREFIX.length());
 				JWTClaimsSet claimsSet = getClaimsSet(token);

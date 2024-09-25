@@ -49,7 +49,7 @@ public final class ServletSsoAuthCheck implements AuthorizationCheck
 			throw new NotAuthorizedException("User has not established a Single Sign-On session.");
 		}
 		try(DbInterface dbInterface = new DbInterface();
-			ApiAuthorizationDAI authorizationDao = dbInterface.getAuthorizationDao())
+			ApiAuthorizationDAI authorizationDao = dbInterface.getDao(ApiAuthorizationDAI.class))
 		{
 			Set<OpenDcsApiRoles> roles = authorizationDao.getRoles(userPrincipal.getName());
 			OpenDcsPrincipal openDcsPrincipal = new OpenDcsPrincipal(userPrincipal.getName(), roles);

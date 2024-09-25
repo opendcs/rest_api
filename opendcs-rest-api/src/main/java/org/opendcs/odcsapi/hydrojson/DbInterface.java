@@ -15,6 +15,7 @@
 
 package org.opendcs.odcsapi.hydrojson;
 
+import java.util.Collection;
 import java.util.logging.Logger;
 
 import java.sql.Connection;
@@ -30,11 +31,14 @@ import javax.naming.NamingException;
 import javax.sql.DataSource;
 
 import org.opendcs.odcsapi.dao.ApiAuthorizationDAI;
+import org.opendcs.odcsapi.dao.DAOProvider;
 import org.opendcs.odcsapi.dao.DbException;
 import org.opendcs.odcsapi.sec.basicauth.OpenTsdbAuthorizationDAO;
 import org.opendcs.odcsapi.sec.cwms.CwmsAuthorizationDAO;
 import org.opendcs.odcsapi.start.StartException;
 import org.opendcs.odcsapi.util.ApiConstants;
+
+import rma.util.lookup.Lookups;
 
 /**
  * This class is constructed for each request and is used to access the TSDB.
@@ -43,6 +47,8 @@ import org.opendcs.odcsapi.util.ApiConstants;
  */
 public final class DbInterface implements AutoCloseable
 {
+	public static final String CWMS = "CWMS";
+	public static final String OPENTSDB = "OPENTSDB";
 	static final String module = "DbInterface";
 	public static String dbType = "opentsdb";
 	public static boolean isCwms = false;
@@ -208,17 +214,30 @@ public final class DbInterface implements AutoCloseable
 		return d.getTime();
 	}
 
-	public ApiAuthorizationDAI getAuthorizationDao()
+	public <T> T getDao(Class<T> daoType)
 	{
+		String path;
 		if(isCwms)
 		{
-			return new CwmsAuthorizationDAO(this);
+			path = CWMS;
 		}
 		else if(isOpenTsdb)
 		{
-			return new OpenTsdbAuthorizationDAO(this);
+			path = OPENTSDB;
 		}
-		throw new IllegalStateException("ApiAuthorizationDAI currently only supports OpenTSDB and CWMS");
+		else
+		{
+			throw new UnsupportedOperationException("DAO Lookup currently only supported by OpenTSDB and CWMS");
+		}
+		for(DAOProvider<?> daoProvider : Lookups.forPath(path).lookupAll(DAOProvider.class))
+		{
+			if(daoProvider.provides().equals(daoType))
+			{
+				//noinspection unchecked
+				return (T) daoProvider.createDAO(this);
+			}
+		}
+		throw new UnsupportedOperationException("DAO Lookup for " + path + " not supported for type " + daoType);
 	}
 
 	/*

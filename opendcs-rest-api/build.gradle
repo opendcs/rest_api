@@ -22,6 +22,7 @@ dependencies {
     implementation(libs.jwt)
     implementation(libs.jersey.hk2)
     implementation(libs.slf4j.jdk)
+    implementation(libs.lookup)
     runtimeOnly(libs.jaxb.runtime)
     runtimeOnly(libs.postgresql)
     webjars(libs.swagger.ui)
@@ -36,6 +37,8 @@ dependencies {
             "org.apache.tomcat.embed:tomcat-embed-jasper:${tomcatVersion}",
             "org.apache.tomcat:tomcat-jdbc:${tomcatVersion}"
     }
+    implementation(libs.service.annotations)
+    annotationProcessor(libs.service.annotations)
 }
 
 task extractWebJars(type: Copy) {

@@ -30,6 +30,7 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.ServerErrorException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
@@ -60,9 +61,13 @@ public class BasicAuthResource
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({AuthorizationCheck.ODCS_API_GUEST})
-	//TODO check basic auth from web xml to enable/disable
 	public Response postCredentials(Credentials credentials) throws WebAppException
 	{
+		if(!DbInterface.isOpenTsdb)
+		{
+			throw new ServerErrorException("Basic Auth is not supported", Response.Status.NOT_IMPLEMENTED);
+		}
+
 		//If credentials are null, Authorization header will be checked.
 		if(credentials != null)
 		{

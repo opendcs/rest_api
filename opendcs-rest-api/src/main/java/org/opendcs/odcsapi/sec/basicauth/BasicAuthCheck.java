@@ -23,6 +23,7 @@ import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.ext.Provider;
 
+import org.opendcs.odcsapi.dao.ApiAuthorizationDAI;
 import org.opendcs.odcsapi.hydrojson.DbInterface;
 import org.opendcs.odcsapi.sec.AuthorizationCheck;
 import org.opendcs.odcsapi.sec.OpenDcsApiRoles;
@@ -57,7 +58,7 @@ public final class BasicAuthCheck implements AuthorizationCheck
 	{
 		try(DbInterface dbi = new DbInterface())
 		{
-			return dbi.getAuthorizationDao().getRoles(username);
+			return dbi.getDao(ApiAuthorizationDAI.class).getRoles(username);
 		}
 		catch(Exception e)
 		{
