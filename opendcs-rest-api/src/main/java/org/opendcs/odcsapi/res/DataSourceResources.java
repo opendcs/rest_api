@@ -107,7 +107,7 @@ public class DataSourceResources
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({AuthorizationCheck.ODCS_API_ADMIN, AuthorizationCheck.ODCS_API_USER})
-	public Response deleteDatasource(@QueryParam("datasourceid") Long datasourceId) throws WebAppException, DbException
+	public Response deleteDatasource(@QueryParam("datasourceid") Long datasourceId) throws DbException
 	{
 		Logger.getLogger(ApiConstants.loggerName).fine(
 			"DELETE datasource received datasourceid=" + datasourceId);

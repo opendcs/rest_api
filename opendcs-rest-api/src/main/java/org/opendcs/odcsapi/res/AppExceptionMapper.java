@@ -23,7 +23,6 @@ import javax.ws.rs.ext.Provider;
 import org.opendcs.odcsapi.dao.DbException;
 import org.opendcs.odcsapi.errorhandling.ErrorCodes;
 import org.opendcs.odcsapi.errorhandling.WebAppException;
-import org.opendcs.odcsapi.util.ApiConstants;
 import org.opendcs.odcsapi.util.ApiHttpUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

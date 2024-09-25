@@ -29,7 +29,6 @@ import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 import org.junit.jupiter.api.Test;
 import org.mockito.internal.verification.NoInteractions;
-import org.opendcs.odcsapi.res.RestServices;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;

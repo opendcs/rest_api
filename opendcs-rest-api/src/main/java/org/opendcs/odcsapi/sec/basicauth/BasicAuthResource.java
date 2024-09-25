@@ -27,7 +27,6 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.Consumes;
-import javax.ws.rs.NotAuthorizedException;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -37,7 +36,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.opendcs.odcsapi.dao.DbException;
-import org.opendcs.odcsapi.errorhandling.ErrorCodes;
 import org.opendcs.odcsapi.errorhandling.WebAppException;
 import org.opendcs.odcsapi.hydrojson.DbInterface;
 import org.opendcs.odcsapi.sec.AuthorizationCheck;
@@ -86,7 +84,7 @@ public class BasicAuthResource
 		return ApiHttpUtil.createResponse("Authentication Successful.");
 	}
 
-	private static void verifyCredentials(Credentials credentials) throws WebAppException
+	private static void verifyCredentials(Credentials credentials)
 	{
 		String u = credentials.getUsername();
 		String p = credentials.getPassword();
@@ -113,7 +111,6 @@ public class BasicAuthResource
 	}
 
 	private static Credentials getCredentials(Credentials postBody, String authorizationHeader)
-			throws WebAppException
 	{
 		if(postBody != null)
 		{
