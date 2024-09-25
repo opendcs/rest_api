@@ -19,7 +19,6 @@ import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 import javax.servlet.annotation.WebListener;
-import javax.ws.rs.core.Context;
 
 import org.opendcs.odcsapi.hydrojson.DbInterface;
 import org.opendcs.odcsapi.start.StartException;
@@ -27,12 +26,11 @@ import org.opendcs.odcsapi.start.StartException;
 @WebListener
 public final class ContextPropertySetup implements ServletContextListener
 {
-	@Context
-	private ServletContext servletContext;
 
 	@Override
 	public void contextInitialized(ServletContextEvent sce)
 	{
+		ServletContext servletContext = sce.getServletContext();
 		//Move this information to the database. https://github.com/opendcs/rest_api/issues/191
 		String officeId = servletContext.getInitParameter("opendcs.rest.api.cwms.office");
 		if(officeId != null)

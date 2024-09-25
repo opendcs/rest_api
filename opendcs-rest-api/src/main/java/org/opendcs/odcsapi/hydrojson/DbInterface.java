@@ -1,7 +1,7 @@
 /*
- *  Copyright 2023 OpenDCS Consortium
+ *  Copyright 2024 OpenDCS Consortium and its Contributors
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  Licensed under the Apache License, Version 2.0 (the "License")
  *  you may not use this file except in compliance with the License.
  *  You may obtain a copy of the License at
  *       http://www.apache.org/licenses/LICENSE-2.0
@@ -15,16 +15,14 @@
 
 package org.opendcs.odcsapi.hydrojson;
 
-import java.util.ServiceLoader;
-import java.util.logging.Logger;
-
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Date;
 import java.util.Properties;
-
+import java.util.ServiceLoader;
+import java.util.logging.Logger;
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
@@ -225,11 +223,10 @@ public final class DbInterface implements AutoCloseable
 			throw new UnsupportedOperationException("DAO Lookup currently only supported by OpenTSDB and CWMS");
 		}
 
-		@SuppressWarnings("rawtypes")
 		ServiceLoader<DAOProvider> serviceLoader = ServiceLoader.load(DAOProvider.class);
-		for(DAOProvider<?> daoProvider : serviceLoader)
+		for(DAOProvider daoProvider : serviceLoader)
 		{
-			if(daoProvider.provides().equals(daoType) && daoProvider.dbType().equals(databaseType))
+			if(daoProvider.provides(daoType, databaseType))
 			{
 				//noinspection unchecked
 				return (T) daoProvider.createDAO(this);

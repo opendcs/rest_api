@@ -17,11 +17,10 @@ package org.opendcs.odcsapi.dao;
 
 import org.opendcs.odcsapi.hydrojson.DbInterface;
 
-public interface DAOProvider<T>
+public interface DAOProvider
 {
-	String dbType();
 
-	Class<T> provides();
+	boolean provides(Class<?> type, String dbType);
 
-	T createDAO(DbInterface dbInterface);
+	ApiDaiBase createDAO(DbInterface dbInterface);
 }

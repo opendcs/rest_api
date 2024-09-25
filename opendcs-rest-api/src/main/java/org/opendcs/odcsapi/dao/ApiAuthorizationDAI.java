@@ -19,7 +19,7 @@ import java.util.Set;
 
 import org.opendcs.odcsapi.sec.OpenDcsApiRoles;
 
-public interface ApiAuthorizationDAI extends AutoCloseable
+public interface ApiAuthorizationDAI extends ApiDaiBase
 {
 	Set<OpenDcsApiRoles> getRoles(String username) throws DbException;
 

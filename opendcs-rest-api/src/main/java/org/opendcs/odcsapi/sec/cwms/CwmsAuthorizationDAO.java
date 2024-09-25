@@ -96,23 +96,17 @@ public final class CwmsAuthorizationDAO extends ApiDaoBase implements ApiAuthori
 	}
 
 	@AutoService(value = DAOProvider.class)
-	public static final class AuthorizationDAOProvider implements DAOProvider<ApiAuthorizationDAI>
+	public static final class AuthorizationDAOProvider implements DAOProvider
 	{
 
 		@Override
-		public String dbType()
+		public boolean provides(Class<?> type, String dbType)
 		{
-			return DbInterface.CWMS;
+			return ApiAuthorizationDAI.class.equals(type) && DbInterface.CWMS.equals(dbType);
 		}
 
 		@Override
-		public Class<ApiAuthorizationDAI> provides()
-		{
-			return ApiAuthorizationDAI.class;
-		}
-
-		@Override
-		public ApiAuthorizationDAI createDAO(DbInterface dbInterface)
+		public CwmsAuthorizationDAO createDAO(DbInterface dbInterface)
 		{
 			return new CwmsAuthorizationDAO(dbInterface);
 		}

@@ -79,22 +79,16 @@ public final class OpenTsdbAuthorizationDAO extends ApiDaoBase implements ApiAut
 	}
 
 	@AutoService(value = DAOProvider.class)
-	public static final class AuthorizationDAOProvider implements DAOProvider<ApiAuthorizationDAI>
+	public static final class AuthorizationDAOProvider implements DAOProvider
 	{
 		@Override
-		public String dbType()
+		public boolean provides(Class<?> type, String dbType)
 		{
-			return DbInterface.OPENTSDB;
+			return ApiAuthorizationDAI.class.equals(type) && DbInterface.OPENTSDB.equals(dbType);
 		}
 
 		@Override
-		public Class<ApiAuthorizationDAI> provides()
-		{
-			return ApiAuthorizationDAI.class;
-		}
-
-		@Override
-		public ApiAuthorizationDAI createDAO(DbInterface dbInterface)
+		public OpenTsdbAuthorizationDAO createDAO(DbInterface dbInterface)
 		{
 			return new OpenTsdbAuthorizationDAO(dbInterface);
 		}
