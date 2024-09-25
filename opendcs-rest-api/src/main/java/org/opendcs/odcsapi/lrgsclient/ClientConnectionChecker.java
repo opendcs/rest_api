@@ -35,9 +35,9 @@ import org.slf4j.LoggerFactory;
  * and close them.
  */
 @WebListener
-public class ClientConnectionCacheChecker implements ServletContextListener
+public class ClientConnectionChecker implements ServletContextListener
 {
-	private static final Logger LOGGER = LoggerFactory.getLogger(ClientConnectionCacheChecker.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(ClientConnectionChecker.class);
 
 	private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
 

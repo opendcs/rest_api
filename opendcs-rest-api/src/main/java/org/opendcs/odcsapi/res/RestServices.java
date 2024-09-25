@@ -15,12 +15,9 @@
 
 package org.opendcs.odcsapi.res;
 
-import javax.servlet.ServletContext;
 import javax.ws.rs.ApplicationPath;
-import javax.ws.rs.core.Context;
 
 import org.glassfish.jersey.server.ResourceConfig;
-import org.opendcs.odcsapi.hydrojson.DbInterface;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,22 +25,10 @@ import org.slf4j.LoggerFactory;
 public class RestServices extends ResourceConfig
 {
 	private static final Logger LOGGER = LoggerFactory.getLogger(RestServices.class);
-	@Context private ServletContext servletContext;
 
 	public RestServices()
 	{
 		LOGGER.debug("Initializing odcsapi RestServices.");
 		packages("org.opendcs.odcsapi");
-		//Move this information to the database. https://github.com/opendcs/rest_api/issues/191
-		String officeId = servletContext.getInitParameter("opendcs.rest.api.cwms.office");
-		if(officeId != null)
-		{
-			DbInterface.decodesProperties.setProperty("CwmsOfficeId", officeId);
-		}
-		String databaseType = servletContext.getInitParameter("editDatabaseType");
-		if(databaseType != null)
-		{
-			DbInterface.decodesProperties.setProperty("editDatabaseType", databaseType);
-		}
 	}
 }
