@@ -104,7 +104,6 @@ public final class OidcAuthCheck implements AuthorizationCheck
 						JWTClaimNames.EXPIRATION_TIME,
 						"scp",
 						"cid",
-						"preferred_username",
 						JWTClaimNames.JWT_ID))));
 		return jwtProcessor.process(accessToken, null);
 	}
@@ -117,9 +116,18 @@ public final class OidcAuthCheck implements AuthorizationCheck
 		{
 			String token = authorizationHeader.substring(BEARER_PREFIX.length());
 			JWTClaimsSet claimsSet = getClaimsSet(token);
+			OpenDcsPrincipal principal;
 			String usernameWithEdipi = claimsSet.getStringClaim("preferred_username");
-			String edipi = usernameWithEdipi.substring(usernameWithEdipi.lastIndexOf(".") + 1);
-			OpenDcsPrincipal principal = createPrincipal(edipi);
+			if(usernameWithEdipi != null)
+			{
+				//CWMS only
+				String edipi = usernameWithEdipi.substring(usernameWithEdipi.lastIndexOf(".") + 1);
+				principal = createPrincipalFromEdipi(edipi);
+			}
+			else
+			{
+				principal = createPrincipalFromSubject(claimsSet.getSubject());
+			}
 			return new OpenDcsSecurityContext(principal, httpServletRequest.isSecure(), BEARER_PREFIX);
 		}
 		catch(ParseException | JOSEException | BadJOSEException e)
@@ -129,7 +137,7 @@ public final class OidcAuthCheck implements AuthorizationCheck
 		}
 	}
 
-	private static OpenDcsPrincipal createPrincipal(String edipi)
+	private static OpenDcsPrincipal createPrincipalFromEdipi(String edipi)
 	{
 		try(DbInterface dbInterface = new DbInterface();
 			ApiAuthorizationDAI authorizationDao = dbInterface.getDao(ApiAuthorizationDAI.class))
@@ -137,6 +145,21 @@ public final class OidcAuthCheck implements AuthorizationCheck
 			String username = authorizationDao.getUsernameForEdipi(Long.parseLong(edipi));
 			Set<OpenDcsApiRoles> roles = authorizationDao.getRoles(username);
 			return new OpenDcsPrincipal(username, roles);
+		}
+		catch(Exception e)
+		{
+			throw new ServerErrorException("Error accessing database to determine user roles",
+					Response.Status.INTERNAL_SERVER_ERROR, e);
+		}
+	}
+
+	private static OpenDcsPrincipal createPrincipalFromSubject(String subject)
+	{
+		try(DbInterface dbInterface = new DbInterface();
+			ApiAuthorizationDAI authorizationDao = dbInterface.getDao(ApiAuthorizationDAI.class))
+		{
+			Set<OpenDcsApiRoles> roles = authorizationDao.getRoles(subject);
+			return new OpenDcsPrincipal(subject, roles);
 		}
 		catch(Exception e)
 		{

@@ -25,6 +25,15 @@ Assuming the context is 'odcsapi', an example of the SwaggerUI location is http:
 These files are being served up from the resource file 'SwaggerResources.java' file located at 
 'src/main/java/org/opendcs/odcsapi/res/SwaggerResources.java'.
 
+### web.xml configurations
+The bundled [web.xml](opendcs-rest-api/src/main/webapp/WEB-INF/web.xml) contains the following
+properties that should be configured for your system.
+- `opendcs.rest.api.authorization.type` - supports a comma separated list of authorization types. These can include basic,sso,openid. See section on authorization for details.
+- `opendcs.rest.api.authorization.expiration.duration` - denotes the duration that an authorization attempt is valid for. Defaults to 15 minutes.
+- `opendcs.rest.api.cwms.office` - office id specific to CWMS systems. This is the office the authorizing user will check privileges for.
+- `opendcs.rest.api.authorization.jwt.jwkset.url` - for openid authorization this is the JWK Set URL
+- `opendcs.rest.api.authorization.jwt.issuer.url`  - for openid authorization this is the Issuer URL
+
 ## OPENDCS Web Client
 The gradle task `./gradlew :opendcs-web-client:war` will create a war file in the `build/libs` directory.
 
@@ -126,3 +135,8 @@ The Codespaces are intended for the easy and consistent onboarding of developers
 heavy-weight development IDE's.
 
 Configuration for the dev container is found in [devcontainer.json](./.devcontainer/devcontainer.json)
+
+# Authorization
+The OpenDCS REST API supports three authorization mechanisms Basic Authentication, Container Single Sign-On, and OpenID Connect.
+
+When the client attempts to access endpoints that are not marked with the Guest role
