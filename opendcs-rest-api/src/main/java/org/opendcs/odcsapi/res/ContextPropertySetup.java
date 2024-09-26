@@ -59,5 +59,15 @@ public final class ContextPropertySetup implements ServletContextListener
 		{
 			DbInterface.decodesProperties.setProperty("opendcs.rest.api.authorization.expiration.duration", expireDuration);
 		}
+		String openIdJwkSetUrl = servletContext.getInitParameter("opendcs.rest.api.authorization.jwt.jwkset.url");
+		if(openIdJwkSetUrl != null)
+		{
+			DbInterface.decodesProperties.setProperty("opendcs.rest.api.authorization.jwt.jwkset.url", openIdJwkSetUrl);
+		}
+		String openIdIssuerUrl = servletContext.getInitParameter("opendcs.rest.api.authorization.jwt.issuer.url");
+		if(openIdIssuerUrl != null)
+		{
+			DbInterface.decodesProperties.setProperty("opendcs.rest.api.authorization.jwt.issuer.url", openIdIssuerUrl);
+		}
 	}
 }

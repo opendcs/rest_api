@@ -17,7 +17,9 @@ package org.opendcs.odcsapi.sec;
 
 import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -44,7 +46,7 @@ public final class SessionResource
 		return ApiHttpUtil.createResponse("Token Valid");
 	}
 
-	@GET
+	@DELETE
 	@Path("logout")
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({AuthorizationCheck.ODCS_API_GUEST})
@@ -55,6 +57,6 @@ public final class SessionResource
 		{
 			session.invalidate();
 		}
-		return ApiHttpUtil.createResponse("Session invalidated.");
+		return Response.status(HttpServletResponse.SC_NO_CONTENT).build();
 	}
 }

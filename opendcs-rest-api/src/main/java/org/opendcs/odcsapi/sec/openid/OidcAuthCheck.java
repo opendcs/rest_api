@@ -102,8 +102,6 @@ public final class OidcAuthCheck implements AuthorizationCheck
 						JWTClaimNames.SUBJECT,
 						JWTClaimNames.ISSUED_AT,
 						JWTClaimNames.EXPIRATION_TIME,
-						"scp",
-						"cid",
 						JWTClaimNames.JWT_ID))));
 		return jwtProcessor.process(accessToken, null);
 	}
