@@ -174,6 +174,8 @@ public class BasicAuthResource
 			Connection poolCon = dbi.getConnection();
 			// The only way to verify that user/pw is valid is to attempt to establish a connection:
 			DatabaseMetaData metaData = poolCon.getMetaData();
+			String driverName = metaData.getDriverName();
+			LOGGER.atInfo().log("Driver name: " + driverName);
 			return metaData.getURL();
 		}
 		catch(SQLException e)
@@ -190,6 +192,12 @@ public class BasicAuthResource
 		try(DbInterface dbi = new DbInterface())
 		{
 			String url = getDatabaseUrl(dbi);
+			if(DbInterface.isOpenTsdb)
+			{
+				//Workaround for driver not automatically registering. Not adding basic auth to other databases
+				//And this one will get removed in a future update.
+				Class.forName("org.postgresql.Driver");//NOSONAR
+			}
 			/*
 			 Intentional unused connection. Makes a new db connection using passed credentials
 			 This validates the username & password and will throw SQLException if user/pw is not valid.
@@ -205,7 +213,7 @@ public class BasicAuthResource
 			throw new WebAppException(HttpServletResponse.SC_FORBIDDEN,
 					"Unable to authorize user.", e);
 		}
-		catch(DbException e)
+		catch(DbException | ClassNotFoundException e)
 		{
 			throw new WebAppException(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
 					"Failed to obtain database URL.", e);

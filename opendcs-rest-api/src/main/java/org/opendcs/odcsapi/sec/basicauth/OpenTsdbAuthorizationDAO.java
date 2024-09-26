@@ -46,7 +46,7 @@ public final class OpenTsdbAuthorizationDAO extends ApiDaoBase implements ApiAut
 		roles.add(OpenDcsApiRoles.ODCS_API_GUEST);
 		// Now verify that user has appropriate privilege. This only works on Postgress currently:
 		String q = "select pm.roleid, pr.rolname from pg_auth_members pm, pg_roles pr"
-				+ " where pm.member = (select oid from pg_roles where rolname = '?')"
+				+ " where pm.member = (select oid from pg_roles where rolname = ?)"
 				+ " and pm.roleid = pr.oid";
 		try(ResultSet rs = doQueryPs(null, q, username))
 		{

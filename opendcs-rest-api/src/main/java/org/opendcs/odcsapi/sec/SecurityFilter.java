@@ -38,6 +38,7 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.ext.Provider;
 
+import org.opendcs.odcsapi.hydrojson.DbInterface;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,10 +49,14 @@ public final class SecurityFilter implements ContainerRequestFilter
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(SecurityFilter.class);
 	static final String LAST_AUTHORIZATION_CHECK = "opendcs-last-authorization-check";
-	@Context private ResourceInfo resourceInfo;
-	@Context private HttpHeaders httpHeaders;
-	@Context private HttpServletRequest httpServletRequest;
-	@Context private ServletContext servletContext;
+	@Context
+	private ResourceInfo resourceInfo;
+	@Context
+	private HttpHeaders httpHeaders;
+	@Context
+	private HttpServletRequest httpServletRequest;
+	@Context
+	private ServletContext servletContext;
 
 	@Override
 	public void filter(ContainerRequestContext requestContext)
@@ -121,11 +126,7 @@ public final class SecurityFilter implements ContainerRequestFilter
 	private boolean isAuthorizationExpired(HttpSession session)
 	{
 		Instant lastAuthorizationCheck = (Instant) session.getAttribute(LAST_AUTHORIZATION_CHECK);
-		String expirationMinutes = servletContext.getInitParameter("opendcs.rest.api.authorization.expiration.duration");
-		if(expirationMinutes == null)
-		{
-			expirationMinutes = "PT15M";
-		}
+		String expirationMinutes = DbInterface.decodesProperties.getProperty("opendcs.rest.api.authorization.expiration.duration", "PT15M");
 		long expirationSeconds = Duration.parse(expirationMinutes).get(ChronoUnit.SECONDS);
 		return lastAuthorizationCheck == null
 				|| Duration.between(lastAuthorizationCheck, Instant.now()).abs().get(ChronoUnit.SECONDS) >= expirationSeconds;
@@ -150,17 +151,13 @@ public final class SecurityFilter implements ContainerRequestFilter
 	private AuthorizationCheck lookupAuthCheck(ContainerRequestContext requestContext)
 	{
 		String parameterKey = "opendcs.rest.api.authorization.type";
-		String initParameter = servletContext.getInitParameter(parameterKey);
-		if(initParameter == null)
-		{
-			LOGGER.atInfo().log("Configuration parameter: '" + parameterKey + "' not setting. Defaulting to `openid`");
-			initParameter = "openid";
-		}
+		String initParameter = DbInterface.decodesProperties.getProperty(parameterKey, "openid");
 		String[] authorizationType = initParameter.split(",");
 		ServiceLoader<AuthorizationCheck> serviceLoader = ServiceLoader.load(AuthorizationCheck.class);
-		for(AuthorizationCheck authType : serviceLoader)
+		//Order of authorization type establishes priority
+		for(String type : authorizationType)
 		{
-			for(String type : authorizationType)
+			for(AuthorizationCheck authType : serviceLoader)
 			{
 				if(authType.supports(type, requestContext))
 				{

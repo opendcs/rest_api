@@ -68,7 +68,7 @@ public final class DbInterface implements AutoCloseable
 				dataSource = (DataSource)envCtx.lookup("jdbc/opentsdb");
 			}
 			else
-				Logger.getLogger(ApiConstants.loggerName).info("Using DataSource provided by Jetty main class.");
+				Logger.getLogger(ApiConstants.loggerName).config("Using DataSource provided by Jetty main class.");
 			connection = dataSource.getConnection();
 			isOracle = connection.getMetaData().getDatabaseProductName().toLowerCase().contains("oracle");
 		}
@@ -87,7 +87,7 @@ public final class DbInterface implements AutoCloseable
 			throw new DbException(module, ex, msg);
 		}
 
-		Logger.getLogger(ApiConstants.loggerName).info("isHdb=" + isHdb + ", isCwms=" + isCwms 
+		Logger.getLogger(ApiConstants.loggerName).config("isHdb=" + isHdb + ", isCwms=" + isCwms
 			+ ", isOpenTsdb=" + isOpenTsdb + ", isOracle=" + isOracle);
 	}
 
@@ -112,6 +112,7 @@ public final class DbInterface implements AutoCloseable
 		{
 			//TODO if I'm using a connection pool, return the connection to the pool here.
 			connection.close();
+			Logger.getLogger(ApiConstants.loggerName).config("DbInterface connection was closed.");
 		}
 		catch(Exception ex)
 		{

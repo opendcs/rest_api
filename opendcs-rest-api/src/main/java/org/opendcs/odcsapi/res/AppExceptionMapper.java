@@ -1,7 +1,7 @@
 /*
- *  Copyright 2023 OpenDCS Consortium
+ *  Copyright 2024 OpenDCS Consortium and its Contributors
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  Licensed under the Apache License, Version 2.0 (the "License")
  *  you may not use this file except in compliance with the License.
  *  You may obtain a copy of the License at
  *       http://www.apache.org/licenses/LICENSE-2.0
@@ -15,6 +15,8 @@
 
 package org.opendcs.odcsapi.res;
 
+import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.InternalServerErrorException;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
@@ -26,8 +28,6 @@ import org.opendcs.odcsapi.errorhandling.WebAppException;
 import org.opendcs.odcsapi.util.ApiHttpUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.servlet.http.HttpServletResponse;
 
 
 @Provider
@@ -88,7 +88,15 @@ public class AppExceptionMapper implements ExceptionMapper<Throwable>
 		else if( ex instanceof WebApplicationException)
 		{
 			LOGGER.warn("Error in request", ex);
-			return ((WebApplicationException) ex).getResponse();
+			String message = ex.getMessage();
+			if(ex instanceof InternalServerErrorException)
+			{
+				message = "Internal Server Error";
+			}
+			int status = ((WebApplicationException) ex).getResponse().getStatus();
+			String errmsg = "{ \"status\": " + status + ", "
+					+ "\"message\": \"" + message + "\" }";
+			return ApiHttpUtil.createResponse(errmsg, status);
 		}
 		else
 		{

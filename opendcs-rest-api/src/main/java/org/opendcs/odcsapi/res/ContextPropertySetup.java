@@ -49,5 +49,15 @@ public final class ContextPropertySetup implements ServletContextListener
 				throw new IllegalStateException("Error setting database type: " + databaseType, e);
 			}
 		}
+		String authCheck = servletContext.getInitParameter("opendcs.rest.api.authorization.type");
+		if(authCheck != null)
+		{
+			DbInterface.decodesProperties.setProperty("opendcs.rest.api.authorization.type", authCheck);
+		}
+		String expireDuration = servletContext.getInitParameter("opendcs.rest.api.authorization.expiration.duration");
+		if(expireDuration != null)
+		{
+			DbInterface.decodesProperties.setProperty("opendcs.rest.api.authorization.expiration.duration", expireDuration);
+		}
 	}
 }
