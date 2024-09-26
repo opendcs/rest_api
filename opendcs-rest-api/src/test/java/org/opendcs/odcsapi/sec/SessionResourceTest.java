@@ -27,8 +27,11 @@ import javax.ws.rs.core.SecurityContext;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.internal.verification.NoInteractions;
+import org.opendcs.odcsapi.hydrojson.DbInterface;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
@@ -41,6 +44,18 @@ class SessionResourceTest extends JerseyTest
 	private HttpSession httpSession;
 	private SecurityContext securityContext;
 	private HttpServletRequest mockRequest;
+
+	@BeforeEach
+	void setup()
+	{
+		DbInterface.decodesProperties.setProperty("opendcs.rest.api.authorization.type", "basic");
+	}
+
+	@AfterEach
+	void clearProperty()
+	{
+		DbInterface.decodesProperties.remove("opendcs.rest.api.authorization.type");
+	}
 
 	@Override
 	protected Application configure()
