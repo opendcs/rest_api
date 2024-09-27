@@ -1,7 +1,7 @@
 /*
- *  Copyright 2023 OpenDCS Consortium
+ *  Copyright 2024 OpenDCS Consortium and its Contributors
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  Licensed under the Apache License, Version 2.0 (the "License")
  *  you may not use this file except in compliance with the License.
  *  You may obtain a copy of the License at
  *       http://www.apache.org/licenses/LICENSE-2.0
@@ -19,12 +19,11 @@ import java.io.IOException;
 import java.net.UnknownHostException;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Optional;
 import java.util.Properties;
 import java.util.logging.Logger;
-
 import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -52,16 +51,14 @@ import org.opendcs.odcsapi.errorhandling.ErrorCodes;
 import org.opendcs.odcsapi.errorhandling.WebAppException;
 import org.opendcs.odcsapi.hydrojson.DbInterface;
 import org.opendcs.odcsapi.lrgsclient.ApiLddsClient;
+import org.opendcs.odcsapi.lrgsclient.ClientConnectionCache;
 import org.opendcs.odcsapi.lrgsclient.DdsProtocolError;
 import org.opendcs.odcsapi.lrgsclient.DdsServerError;
 import org.opendcs.odcsapi.lrgsclient.LrgsErrorCode;
-import org.opendcs.odcsapi.lrgsclient.ClientConnectionCache;
 import org.opendcs.odcsapi.sec.AuthorizationCheck;
 import org.opendcs.odcsapi.util.ApiConstants;
 import org.opendcs.odcsapi.util.ApiHttpUtil;
 import org.opendcs.odcsapi.util.ApiPropertiesUtil;
-
-import javax.servlet.http.HttpServletResponse;
 
 /**
  * Resources for interacting with an LRGS for DCP messages and status.
@@ -89,15 +86,10 @@ public class LrgsResources
 
 
 		HttpSession session = request.getSession(true);
-		Optional<ApiLddsClient> client = clientConnectionCache.getApiLddsClient(session.getId());
 		// If session already contains an LddsClient, close and delete it.
 		// I.e., if a message retrieval is already in progress, the new searchcrit
 		// cancels it. A new client will have to be started on the next GET messages.
-		if (client.isPresent())
-		{
-			client.get().disconnect();
-			clientConnectionCache.setApiLddsClient(null, session.getId());
-		}
+		clientConnectionCache.removeApiLddsClient(session.getId());
 		String searchCritSessionAttribute = ApiSearchCrit.ATTRIBUTE;
 		session.setAttribute(searchCritSessionAttribute, searchcrit);
 
@@ -200,52 +192,32 @@ public class LrgsResources
 			}
 			catch (DbException ex)
 			{
-				if(client != null)
-				{
-					client.disconnect();
-				}
-				clientConnectionCache.setApiLddsClient(null, session.getId());
+				clientConnectionCache.removeApiLddsClient(session.getId());
 				throw new WebAppException(ErrorCodes.DATABASE_ERROR,
 						"There was an error getting messages from the LRGS client: ", ex);
 			}
 			catch (UnknownHostException ex)
 			{
-				if(client != null)
-				{
-					client.disconnect();
-				}
-				clientConnectionCache.setApiLddsClient(null, session.getId());
+				clientConnectionCache.removeApiLddsClient(session.getId());
 				throw new WebAppException(ErrorCodes.BAD_CONFIG, "Cannot connect to LRGS data source "
 					+ dataSource.getName() + ": " + ex);
 			}
 			catch (IOException ex)
 			{
-				if(client != null)
-				{
-					client.disconnect();
-				}
-				clientConnectionCache.setApiLddsClient(null, session.getId());
+				clientConnectionCache.removeApiLddsClient(session.getId());
 				throw new WebAppException(ErrorCodes.BAD_CONFIG, "IO Error on LRGS data source "
 					+ dataSource.getName() + ": " + ex);
 			}
 			catch (DdsProtocolError ex)
 			{
-				if(client != null)
-				{
-					client.disconnect();
-				}
-				clientConnectionCache.setApiLddsClient(null, session.getId());
+				clientConnectionCache.removeApiLddsClient(session.getId());
 				String em = "Error while " + action + ": " + ex;
 				Logger.getLogger(ApiConstants.loggerName).warning("getMessages " + em);
 				throw new WebAppException(ErrorCodes.IO_ERROR, em);
 			}
 			catch (DdsServerError ex)
 			{
-				if(client != null)
-				{
-					client.disconnect();
-				}
-				clientConnectionCache.setApiLddsClient(null, session.getId());
+				clientConnectionCache.removeApiLddsClient(session.getId());
 				String em = "Error while " + action + ": " + ex;
 				Logger.getLogger(ApiConstants.loggerName).warning("getMessages " + em);
 				throw new WebAppException(ErrorCodes.IO_ERROR, em);
@@ -260,15 +232,13 @@ public class LrgsResources
 		}
 		catch (IOException ex)
 		{
-			client.disconnect();
-			clientConnectionCache.setApiLddsClient(null, session.getId());
+			clientConnectionCache.removeApiLddsClient(session.getId());
 			throw new WebAppException(ErrorCodes.BAD_CONFIG, "IO Error on LRGS data source "
 				+ dataSource.getName() + ": " + ex);
 		}
 		catch (DdsProtocolError ex)
 		{
-			client.disconnect();
-			clientConnectionCache.setApiLddsClient(null, session.getId());
+			clientConnectionCache.removeApiLddsClient(session.getId());
 			throw new WebAppException(ErrorCodes.IO_ERROR, "Error while " + action + ": " + ex);
 		}
 		catch (DdsServerError ex)
@@ -276,16 +246,14 @@ public class LrgsResources
 			if (ex.Derrno == LrgsErrorCode.DUNTIL)
 			{
 				// The retrieval is now finished. Close the client
-				client.disconnect();
-				clientConnectionCache.setApiLddsClient(null, session.getId());
+				clientConnectionCache.removeApiLddsClient(session.getId());
 				
 				ApiRawMessageBlock ret = new ApiRawMessageBlock();
 				ret.setMoreToFollow(false);
 				return ret;
 			}
 			// Any other server error returns an error.
-			client.disconnect();
-			clientConnectionCache.setApiLddsClient(null, session.getId());
+			clientConnectionCache.removeApiLddsClient(session.getId());
 			throw new WebAppException(ErrorCodes.IO_ERROR, "Error while " + action + ": " + ex);
 		}
 	}
@@ -357,20 +325,17 @@ public class LrgsResources
 		
 		// Get a message block and return the first (most recent) message in it.
 		ApiRawMessageBlock mb = getMessages();
-		if (mb.getMessages().size() == 0)
+		if (mb.getMessages().isEmpty())
+		{
 			throw new WebAppException(ErrorCodes.NO_SUCH_OBJECT, "No message for '"
-				+ tmid + "' in last 12 hours.");
+					+ tmid + "' in last 12 hours.");
+		}
 		
 		// This method gets a SINGLE message, so we're finished with client now.
 		HttpSession session = request.getSession(false);
 		if(session != null)
 		{
-			clientConnectionCache.getApiLddsClient(session.getId())
-					.ifPresent(c ->
-					{
-						c.disconnect();
-						clientConnectionCache.setApiLddsClient(null, session.getId());
-					});
+			clientConnectionCache.removeApiLddsClient(session.getId());
 		}
 		return mb.getMessages().get(0);		
 	}

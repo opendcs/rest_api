@@ -1,7 +1,7 @@
 /*
- *  Copyright 2023 OpenDCS Consortium
+ *  Copyright 2024 OpenDCS Consortium and its Contributors
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  Licensed under the Apache License, Version 2.0 (the "License")
  *  you may not use this file except in compliance with the License.
  *  You may obtain a copy of the License at
  *       http://www.apache.org/licenses/LICENSE-2.0
@@ -69,7 +69,26 @@ public final class ClientConnectionCache
 	public void setApiLddsClient(ApiLddsClient client, String sessionId)
 	{
 		CacheRecord cacheRecord = cache.computeIfAbsent(sessionId, s -> new CacheRecord());
+		ApiLddsClient lddsClient = cacheRecord.getLddsClient();
+		if(lddsClient != null)
+		{
+			lddsClient.disconnect();
+		}
 		cacheRecord.setLddsClient(client);
+	}
+
+	public void removeApiLddsClient(String sessionId)
+	{
+		CacheRecord cacheRecord = cache.get(sessionId);
+		if(cacheRecord != null)
+		{
+			ApiLddsClient lddsClient = cacheRecord.getLddsClient();
+			if(lddsClient != null)
+			{
+				lddsClient.disconnect();
+			}
+			cacheRecord.setLddsClient(null);
+		}
 	}
 
 	public void addApiEventClient(ApiEventClient client, String sessionId)
@@ -81,6 +100,7 @@ public final class ClientConnectionCache
 	public void removeApiEventClient(ApiEventClient client, String sessionId)
 	{
 		CacheRecord cacheRecord = cache.computeIfAbsent(sessionId, s -> new CacheRecord());
+		client.disconnect();
 		cacheRecord.getApiEventClients().remove(client);
 	}
 
@@ -110,6 +130,7 @@ public final class ClientConnectionCache
 									|| a.getHeartbeat() == null
 									|| System.currentTimeMillis() - a.getHeartbeat().getTime() > STALE_API_CLIENT_THRESHOLD_MS))
 					.collect(toList());
+			apiEventClients.forEach(ApiEventClient::disconnect);
 			apiEventClients.removeAll(clientsToDisconnect);
 		}
 	}
