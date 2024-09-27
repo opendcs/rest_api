@@ -99,8 +99,8 @@ public final class ClientConnectionCache
 
 	public void removeApiEventClient(ApiEventClient client, String sessionId)
 	{
-		CacheRecord cacheRecord = cache.computeIfAbsent(sessionId, s -> new CacheRecord());
 		client.disconnect();
+		CacheRecord cacheRecord = cache.computeIfAbsent(sessionId, s -> new CacheRecord());
 		cacheRecord.getApiEventClients().remove(client);
 	}
 

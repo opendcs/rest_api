@@ -1,7 +1,7 @@
 /*
- *  Copyright 2023 OpenDCS Consortium
+ *  Copyright 2024 OpenDCS Consortium and its Contributors
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  Licensed under the Apache License, Version 2.0 (the "License")
  *  you may not use this file except in compliance with the License.
  *  You may obtain a copy of the License at
  *       http://www.apache.org/licenses/LICENSE-2.0
@@ -20,12 +20,6 @@ import java.net.ConnectException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Optional;
-
-import org.opendcs.odcsapi.lrgsclient.ClientConnectionCache;
-import org.opendcs.odcsapi.sec.AuthorizationCheck;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
@@ -41,21 +35,25 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import org.opendcs.odcsapi.beans.ApiAppStatus;
-import org.opendcs.odcsapi.beans.ApiLoadingApp;
 import org.opendcs.odcsapi.appmon.ApiEventClient;
 import org.opendcs.odcsapi.beans.ApiAppEvent;
 import org.opendcs.odcsapi.beans.ApiAppRef;
+import org.opendcs.odcsapi.beans.ApiAppStatus;
+import org.opendcs.odcsapi.beans.ApiLoadingApp;
 import org.opendcs.odcsapi.dao.ApiAppDAO;
 import org.opendcs.odcsapi.dao.DbException;
 import org.opendcs.odcsapi.errorhandling.ErrorCodes;
 import org.opendcs.odcsapi.errorhandling.WebAppException;
 import org.opendcs.odcsapi.hydrojson.DbInterface;
+import org.opendcs.odcsapi.lrgsclient.ClientConnectionCache;
+import org.opendcs.odcsapi.sec.AuthorizationCheck;
 import org.opendcs.odcsapi.util.ApiEnvExpander;
 import org.opendcs.odcsapi.util.ApiHttpUtil;
 import org.opendcs.odcsapi.util.ApiPropertiesUtil;
 import org.opendcs.odcsapi.util.ProcWaiterCallback;
 import org.opendcs.odcsapi.util.ProcWaiterThread;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Resources for editing, monitoring, stopping, and starting processes.
@@ -176,21 +174,13 @@ public class AppResources
 			appStat = dao.getAppStatus(appId);
 			if (appStat.getPid() == null)
 			{
-				cli.ifPresent(c ->
-				{
-					c.disconnect();
-					clientConnectionCache.removeApiEventClient(c, session.getId());
-				});
+				cli.ifPresent(c -> clientConnectionCache.removeApiEventClient(c, session.getId()));
 				throw new WebAppException(ErrorCodes.NO_SUCH_OBJECT, "appid " + appId 
 					+ " (" + appStat.getAppName() + ") is not running.");
 			}
 			else if (System.currentTimeMillis() - appStat.getHeartbeat().getTime() > 20000L)
 			{
-				cli.ifPresent(c ->
-				{
-					c.disconnect();
-					clientConnectionCache.removeApiEventClient(c, session.getId());
-				});
+				cli.ifPresent(c -> clientConnectionCache.removeApiEventClient(c, session.getId()));
 				throw new WebAppException(ErrorCodes.NO_SUCH_OBJECT, "appid " + appId 
 					+ " (" + appStat.getAppName() + ") is not running (stale heartbeat).");
 			}
@@ -208,11 +198,7 @@ public class AppResources
 			{
 				// This means that the app was stopped and restarted since we last checked for events.
 				// Close the old client and open a new one with the correct PID.
-				cli.ifPresent(c ->
-				{
-					c.disconnect();
-					clientConnectionCache.removeApiEventClient(c, session.getId());
-				});
+				cli.ifPresent(c -> clientConnectionCache.removeApiEventClient(c, session.getId()));
 				
 				Integer port = appStat.getEventPort();
 				if (port == null)
@@ -236,11 +222,7 @@ public class AppResources
 		}
 		catch(IOException ex)
 		{
-			cli.ifPresent(c ->
-			{
-				c.disconnect();
-				clientConnectionCache.removeApiEventClient(c, session.getId());
-			});
+			cli.ifPresent(c -> clientConnectionCache.removeApiEventClient(c, session.getId()));
 			throw new WebAppException(ErrorCodes.IO_ERROR,
 					String.format("Event socket to %s closed by app", appStat.getAppId()), ex);
 		}
