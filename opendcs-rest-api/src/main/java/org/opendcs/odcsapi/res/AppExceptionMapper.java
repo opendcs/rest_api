@@ -41,7 +41,14 @@ public class AppExceptionMapper implements ExceptionMapper<Throwable>
 	{
 		if (ex instanceof WebAppException)
 		{
-			LOGGER.info("Client error",  ex);
+			if(((WebAppException) ex).getStatus() >= 500)
+			{
+				LOGGER.warn("Server error",  ex);
+			}
+			else
+			{
+				LOGGER.info("Client error",  ex);
+			}
 			WebAppException wae = (WebAppException)ex;
 			String errmsg = "{ \"status\": " + wae.getStatus() + ", "
 				+ "\"message\": \"" + wae.getErrMessage() + "\" }";
