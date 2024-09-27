@@ -174,8 +174,6 @@ public class BasicAuthResource
 			Connection poolCon = dbi.getConnection();
 			// The only way to verify that user/pw is valid is to attempt to establish a connection:
 			DatabaseMetaData metaData = poolCon.getMetaData();
-			String driverName = metaData.getDriverName();
-			LOGGER.atInfo().log("Driver name: " + driverName);
 			return metaData.getURL();
 		}
 		catch(SQLException e)

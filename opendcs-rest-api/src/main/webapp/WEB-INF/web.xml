@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  ~  Copyright 2023 OpenDCS Consortium
+  ~  Copyright 2024 OpenDCS Consortium and its Contributors
   ~
-  ~  Licensed under the Apache License, Version 2.0 (the "License");
+  ~  Licensed under the Apache License, Version 2.0 (the "License")
   ~  you may not use this file except in compliance with the License.
   ~  You may obtain a copy of the License at
   ~       http://www.apache.org/licenses/LICENSE-2.0
@@ -15,9 +15,9 @@
   -->
 
 <web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xmlns="http://java.sun.com/xml/ns/javaee" xmlns:web="http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd"
-    xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd"
-    version="3.0">
+         xmlns="http://java.sun.com/xml/ns/javaee"
+         xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd"
+         version="3.0">
     <display-name>OpenDCS REST API</display-name>
     <servlet>
         <servlet-name>jersey-servlet</servlet-name>
@@ -33,7 +33,7 @@
     </session-config>
     <context-param>
         <param-name>opendcs.rest.api.authorization.type</param-name>
-        <param-value>basic</param-value>
+        <param-value>openid,sso,basic</param-value>
     </context-param>
     <context-param>
         <param-name>opendcs.rest.api.authorization.expiration.duration</param-name>

@@ -22,6 +22,4 @@ import org.opendcs.odcsapi.sec.OpenDcsApiRoles;
 public interface ApiAuthorizationDAI extends ApiDaiBase
 {
 	Set<OpenDcsApiRoles> getRoles(String username) throws DbException;
-
-	String getUsernameForEdipi(long edipi) throws DbException;
 }

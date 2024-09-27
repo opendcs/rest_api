@@ -63,24 +63,39 @@ public final class OidcAuthCheck implements AuthorizationCheck
 
 	public OidcAuthCheck()
 	{
-		try
-		{
-			String jwkSetUrl = DbInterface.decodesProperties.getProperty("opendcs.rest.api.authorization.jwt.jwkset.url");
-			keySource = JWKSourceBuilder
-					.create(new URL(jwkSetUrl))
-					.retrying(true)
-					.build();
-		}
-		catch(MalformedURLException e)
-		{
-			throw new IllegalStateException(e);
-		}
+		this.keySource = setupJwkSource();
 	}
 
 	//Used by unit tests
 	OidcAuthCheck(JWKSource<SecurityContext> keySource)
 	{
 		this.keySource = keySource;
+	}
+
+	private static JWKSource<SecurityContext> setupJwkSource()
+	{
+		JWKSource<SecurityContext> keySource = null;
+		String property = "opendcs.rest.api.authorization.jwt.jwkset.url";
+		try
+		{
+			String jwkSetUrl = DbInterface.decodesProperties.getProperty(property);
+			if(jwkSetUrl == null)
+			{
+				LOGGER.atWarn().log("Property: " + property + " not set. OpenID Authorization is disabled.");
+			}
+			else
+			{
+				keySource = JWKSourceBuilder
+						.create(new URL(jwkSetUrl))
+						.retrying(true)
+						.build();
+			}
+		}
+		catch(MalformedURLException e)
+		{
+			LOGGER.atWarn().setCause(e).log("Property: " + property + " is invalid. OpenID Authorization is disabled.");
+		}
+		return keySource;
 	}
 
 	private JWTClaimsSet getClaimsSet(String accessToken) throws BadJOSEException, ParseException, JOSEException
@@ -114,40 +129,14 @@ public final class OidcAuthCheck implements AuthorizationCheck
 		{
 			String token = authorizationHeader.substring(BEARER_PREFIX.length());
 			JWTClaimsSet claimsSet = getClaimsSet(token);
-			OpenDcsPrincipal principal;
-			String usernameWithEdipi = claimsSet.getStringClaim("preferred_username");
-			if(usernameWithEdipi != null)
-			{
-				//CWMS only
-				String edipi = usernameWithEdipi.substring(usernameWithEdipi.lastIndexOf(".") + 1);
-				principal = createPrincipalFromEdipi(edipi);
-			}
-			else
-			{
-				principal = createPrincipalFromSubject(claimsSet.getSubject());
-			}
+			String username = claimsSet.getStringClaim("preferred_username");
+			OpenDcsPrincipal principal = createPrincipalFromSubject(username);
 			return new OpenDcsSecurityContext(principal, httpServletRequest.isSecure(), BEARER_PREFIX);
 		}
 		catch(ParseException | JOSEException | BadJOSEException e)
 		{
 			LOGGER.warn("Token processing error: ", e);
 			throw new NotAuthorizedException("Invalid JWT.");
-		}
-	}
-
-	private static OpenDcsPrincipal createPrincipalFromEdipi(String edipi)
-	{
-		try(DbInterface dbInterface = new DbInterface();
-			ApiAuthorizationDAI authorizationDao = dbInterface.getDao(ApiAuthorizationDAI.class))
-		{
-			String username = authorizationDao.getUsernameForEdipi(Long.parseLong(edipi));
-			Set<OpenDcsApiRoles> roles = authorizationDao.getRoles(username);
-			return new OpenDcsPrincipal(username, roles);
-		}
-		catch(Exception e)
-		{
-			throw new ServerErrorException("Error accessing database to determine user roles",
-					Response.Status.INTERNAL_SERVER_ERROR, e);
 		}
 	}
 
@@ -170,6 +159,6 @@ public final class OidcAuthCheck implements AuthorizationCheck
 	public boolean supports(String type, ContainerRequestContext requestContext)
 	{
 		String authorizationHeader = requestContext.getHeaderString(AUTHORIZATION_HEADER);
-		return "openid".equals(type) && authorizationHeader != null && authorizationHeader.startsWith(BEARER_PREFIX);
+		return keySource != null && "openid".equals(type) && authorizationHeader != null && authorizationHeader.startsWith(BEARER_PREFIX);
 	}
 }
