@@ -62,14 +62,8 @@ import org.slf4j.LoggerFactory;
 public class AppResources
 {
 	private static final Logger LOGGER = LoggerFactory.getLogger(AppResources.class);
-	private final ClientConnectionCache clientConnectionCache;
 	@Context private HttpServletRequest request;
 	@Context private HttpHeaders httpHeaders;
-
-	public AppResources()
-	{
-		this.clientConnectionCache = ClientConnectionCache.getInstance();
-	}
 
 	@GET
 	@Path("apprefs")
@@ -165,6 +159,7 @@ public class AppResources
 	{
 		LOGGER.debug("Getting app events for app with id {}", appId);
 		HttpSession session = request.getSession(true);
+		ClientConnectionCache clientConnectionCache = ClientConnectionCache.getInstance();
 		Optional<ApiEventClient> cli = clientConnectionCache.getApiEventClient(appId, session.getId());
 		ApiAppStatus appStat = null;
 		try (DbInterface dbi = new DbInterface();

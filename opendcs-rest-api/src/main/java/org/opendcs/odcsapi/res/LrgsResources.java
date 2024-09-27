@@ -68,12 +68,6 @@ public class LrgsResources
 {
 	@Context private HttpServletRequest request;
 	@Context private HttpHeaders httpHeaders;
-	private final ClientConnectionCache clientConnectionCache;
-
-	public LrgsResources()
-	{
-		this.clientConnectionCache = ClientConnectionCache.getInstance();
-	}
 
 	@POST
 	@Path("searchcrit")
@@ -89,7 +83,7 @@ public class LrgsResources
 		// If session already contains an LddsClient, close and delete it.
 		// I.e., if a message retrieval is already in progress, the new searchcrit
 		// cancels it. A new client will have to be started on the next GET messages.
-		clientConnectionCache.removeApiLddsClient(session.getId());
+		ClientConnectionCache.getInstance().removeApiLddsClient(session.getId());
 		String searchCritSessionAttribute = ApiSearchCrit.ATTRIBUTE;
 		session.setAttribute(searchCritSessionAttribute, searchcrit);
 
@@ -133,6 +127,7 @@ public class LrgsResources
 				"POST searchcrit required prior to GET messages.");
 		
 		ApiDataSource dataSource = null;
+		ClientConnectionCache clientConnectionCache = ClientConnectionCache.getInstance();
 		ApiLddsClient client = clientConnectionCache.getApiLddsClient(session.getId())
 				.orElse(null);
 		
@@ -335,7 +330,7 @@ public class LrgsResources
 		HttpSession session = request.getSession(false);
 		if(session != null)
 		{
-			clientConnectionCache.removeApiLddsClient(session.getId());
+			ClientConnectionCache.getInstance().removeApiLddsClient(session.getId());
 		}
 		return mb.getMessages().get(0);		
 	}
