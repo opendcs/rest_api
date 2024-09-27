@@ -50,6 +50,8 @@ public final class DbInterface implements AutoCloseable
 	private static DataSource dataSource = null;
 	private static final String sequenceSuffix = "IdSeq";
 	public static String siteNameTypePreference = "CWMS";
+	//Will remove with issue: https://github.com/opendcs/rest_api/issues/191
+	@Deprecated
 	public static final Properties decodesProperties = new Properties();
 	private final boolean isOracle;
 
