@@ -139,4 +139,5 @@ Configuration for the dev container is found in [devcontainer.json](./.devcontai
 # Authorization
 The OpenDCS REST API supports three authorization mechanisms Basic Authentication, Container Single Sign-On, and OpenID Connect.
 
-When the client attempts to access endpoints that are not marked with the Guest role
+When the client attempts to access endpoints that are not marked with the Guest role the authorization mechanisms are checked to determine
+which roles are currently granted to the client. See [./opendcs-rest-api/README.md](opendcs-rest-api/README.md) for more info.

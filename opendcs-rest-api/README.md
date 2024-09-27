@@ -39,7 +39,7 @@ When the client makes a request against an endpoint requiring authorization, thi
 checks the user principal for appropriate roles in the database.
 
 ### OpenID Connect - OpenTSDB and CWMS
-The user must authenticate against a service providing JWT authorization tokens. 
+The user must authenticate against a trusted service providing JWT authorization tokens. 
 When the client makes a request against an endpoint requiring authorization, the token will be validated
 against the JWK Set URL and expiration date. 
 
