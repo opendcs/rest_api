@@ -105,8 +105,8 @@ class SessionResourceTest extends JerseyTest
 	void testLogoutUnauthenticated()
 	{
 		when(mockRequest.getSession(false)).thenReturn(null);
-		Response response = target("/logout").request().get();
-		assertEquals(200, response.getStatus(), "Logout should return 200 even when unauthenticated");
+		Response response = target("/logout").request().delete();
+		assertEquals(204, response.getStatus(), "Logout should return 204 even when unauthenticated");
 		verify(httpSession, new NoInteractions()).invalidate();
 	}
 
@@ -120,8 +120,8 @@ class SessionResourceTest extends JerseyTest
 		when(httpSession.getAttribute(SecurityFilter.LAST_AUTHORIZATION_CHECK)).thenReturn(Instant.now());
 		Response response = target("/check").request().get();
 		assertEquals(200, response.getStatus(), "Check should return 200 since user is authenticated");
-		response = target("/logout").request().get();
-		assertEquals(200, response.getStatus(), "Logout should return 200");
+		response = target("/logout").request().delete();
+		assertEquals(204, response.getStatus(), "Logout should return 204");
 		verify(httpSession).invalidate();
 	}
 }
