@@ -62,9 +62,10 @@ public final class BasicAuthCheck implements AuthorizationCheck
 
 	static Set<OpenDcsApiRoles> getUserRoles(String username)
 	{
-		try(DbInterface dbi = new DbInterface())
+		try(DbInterface dbi = new DbInterface();
+			ApiAuthorizationDAI dao = dbi.getDao(ApiAuthorizationDAI.class))
 		{
-			return dbi.getDao(ApiAuthorizationDAI.class).getRoles(username);
+			return dao.getRoles(username);
 		}
 		catch(Exception e)
 		{

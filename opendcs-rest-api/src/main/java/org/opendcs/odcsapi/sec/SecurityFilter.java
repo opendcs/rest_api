@@ -165,6 +165,6 @@ public final class SecurityFilter implements ContainerRequestFilter
 				}
 			}
 		}
-		throw new UnsupportedOperationException("DAO valid AuthorizationType for " + parameterKey);
+		throw new UnsupportedOperationException("DAO AuthorizationType: " + parameterKey + "=" + initParameter + " is not supported.");
 	}
 }

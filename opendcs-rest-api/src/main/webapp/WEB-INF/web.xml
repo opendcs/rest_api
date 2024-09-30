@@ -41,7 +41,7 @@
     </context-param>
     <context-param>
         <param-name>opendcs.rest.api.cwms.office</param-name>
-        <param-value>SPK</param-value>
+        <param-value></param-value>
     </context-param>
     <context-param>
         <param-name>opendcs.rest.api.authorization.jwt.jwkset.url</param-name>

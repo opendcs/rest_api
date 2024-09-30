@@ -139,7 +139,7 @@ public class BasicAuthResource
 		for(String header : authHeaders)
 		{
 			String trimmedHeader = header.trim();
-			LOGGER.info(MODULE + ".makeToken authHdr = {}", trimmedHeader);
+			LOGGER.debug(MODULE + ".makeToken authHdr = {}", trimmedHeader);
 			if(trimmedHeader.startsWith("Basic"))
 			{
 				return extractCredentials(trimmedHeader.substring(6).trim());

@@ -30,7 +30,6 @@ public class ApiHttpUtil {
 		//return Response.ok(obj).header("X-Content-Type-Options", "nosniff").header("aaaa", "aaaa").status(HttpServletResponse.SC_OK).build();
 		return Response.status(HttpServletResponse.SC_OK).entity(obj)
 				.header("Strict-Transport-Security", "max-age=63072000")
-				.header("Access-Control-Allow-Origin", "http://192.168.99.62,localhost")
 				.header("Access-Control-Allow-Credentials", "true")
 				//.header("Access-Control-Allow-Methods", "POST, GET")
 				.header("Access-Control-Allow-Headers", "Content-Type")
@@ -43,7 +42,6 @@ public class ApiHttpUtil {
 	{
 		return Response.status(status).entity(obj)
 				.header("Strict-Transport-Security", "max-age=63072000")
-				.header("Access-Control-Allow-Origin", "http://192.168.99.62,localhost")
 				.header("Access-Control-Allow-Credentials", "true")
 				.header("Access-Control-Allow-Headers", "Content-Type")
 				.header("Content-Type", "application/json")
@@ -57,7 +55,6 @@ public class ApiHttpUtil {
 		Status status = new Status(message);
 		return Response.status(HttpServletResponse.SC_OK).entity(status)
 				.header("Strict-Transport-Security", "max-age=63072000")
-				.header("Access-Control-Allow-Origin", "http://192.168.99.62,localhost")
 				.header("Access-Control-Allow-Credentials", "true")
 				.header("Access-Control-Allow-Headers", "Content-Type")
 				.header("Content-Type", "application/json")
@@ -69,7 +66,6 @@ public class ApiHttpUtil {
 		//return Response.ok(message).header("X-Content-Type-Options", "nosniff").header("bbbb", "bbbb").status(status).build();
 		return Response.status(status).entity(message)
 				.header("Strict-Transport-Security", "max-age=63072000")
-				.header("Access-Control-Allow-Origin", "http://192.168.99.62,localhost")
 				.header("Access-Control-Allow-Credentials", "true")
 				//.header("Access-Control-Allow-Methods", "POST, GET")
 				.header("Access-Control-Allow-Headers", "Content-Type")
@@ -82,7 +78,6 @@ public class ApiHttpUtil {
 	{
 		ResponseBuilder rb = Response.status(status).entity(obj)
 				.header("Strict-Transport-Security", "max-age=63072000")
-				.header("Access-Control-Allow-Origin", "http://192.168.99.62,localhost")
 				.header("Access-Control-Allow-Credentials", "true")
 				//.header("Access-Control-Allow-Methods", "POST, GET")
 				.header("Access-Control-Allow-Headers", "Content-Type")

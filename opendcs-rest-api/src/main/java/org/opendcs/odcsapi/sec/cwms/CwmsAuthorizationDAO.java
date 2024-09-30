@@ -19,7 +19,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.EnumSet;
 import java.util.Set;
-import java.util.regex.Pattern;
 
 import com.google.auto.service.AutoService;
 import org.opendcs.odcsapi.dao.ApiAuthorizationDAI;
@@ -34,7 +33,6 @@ import org.slf4j.LoggerFactory;
 public final class CwmsAuthorizationDAO extends ApiDaoBase implements ApiAuthorizationDAI
 {
 	private static final Logger LOGGER = LoggerFactory.getLogger(CwmsAuthorizationDAO.class);
-	private static final Pattern EDIPI_USERNAME = Pattern.compile(".*\\.d*");
 
 	private CwmsAuthorizationDAO(DbInterface dbi)
 	{
@@ -44,21 +42,22 @@ public final class CwmsAuthorizationDAO extends ApiDaoBase implements ApiAuthori
 	@Override
 	public Set<OpenDcsApiRoles> getRoles(String username) throws DbException
 	{
-		String cwmsUsername = username;
-		if(EDIPI_USERNAME.matcher(username).matches())
-		{
-			String edipi = username.substring(username.lastIndexOf(".") + 1);
-			cwmsUsername = getUsernameForEdipi(Long.parseLong(edipi));
-		}
 		Set<OpenDcsApiRoles> roles = EnumSet.noneOf(OpenDcsApiRoles.class);
 		roles.add(OpenDcsApiRoles.ODCS_API_GUEST);
-		String q = "SELECT user_group_id" +
-				" FROM av_sec_users" +
-				" WHERE db_office_code = cwms_util.get_db_office_code(?)" +
-				" AND upper(username) = upper(?)" +
-				" AND is_member = 'T'";
+		String q = "select user_group_id " +
+				"from cwms_20.av_sec_users " +
+				"where db_office_code = cwms_20.cwms_util.get_db_office_code(:input_db_office_code) " +
+				"  and upper(username) = case " +
+				"     when instr(:username_str, '.', -1) > 0 then " +
+				"        (select userid " +
+				"           from cwms_20.at_sec_cwms_users " +
+				"           where edipi = substr(:username_str, instr(:username_str, '.', -1) + 1)) " +
+				"         else " +
+				"            upper(:username_str) " +
+				"      end " +
+				"  and is_member = 'T';";
 		String cwmsOfficeId = DbInterface.decodesProperties.getProperty("CwmsOfficeId");
-		try(ResultSet rs = doQueryPs(null, q, cwmsOfficeId, cwmsUsername))
+		try(ResultSet rs = doQueryPs(null, q, cwmsOfficeId, username))
 		{
 			while(rs.next())
 			{
@@ -77,28 +76,8 @@ public final class CwmsAuthorizationDAO extends ApiDaoBase implements ApiAuthori
 		}
 		catch(SQLException ex)
 		{
-			throw new DbException(module, ex, "Unable to determine user roles in the database.");
-		}
-	}
-
-	private String getUsernameForEdipi(long edipi) throws DbException
-	{
-		String q = "select userid from cwms_20.at_sec_cwms_users where edipi = ?";
-		String cwmsOfficeId = DbInterface.decodesProperties.getProperty("CwmsOfficeId");
-		try(ResultSet rs = doQueryPs(null, q, cwmsOfficeId, edipi))
-		{
-			if(rs.next())
-			{
-				return rs.getString(1);
-			}
-			else
-			{
-				throw new DbException("No user found for provided EDIPI.");
-			}
-		}
-		catch(SQLException ex)
-		{
-			throw new DbException(module, ex, "Unknown error determining user for EDIPI.");
+			throw new DbException(module, ex, "Unable to determine user roles for user: " + username
+					+ " and office: " + cwmsOfficeId);
 		}
 	}
 
