@@ -150,22 +150,22 @@ public final class ClientConnectionCache
 		}
 	}
 
-	static final class CacheRecord
+	private static final class CacheRecord
 	{
 		private final List<ApiEventClient> apiEventClients = new CopyOnWriteArrayList<>();
 		private ApiLddsClient lddsClient;
 
-		List<ApiEventClient> getApiEventClients()
+		private List<ApiEventClient> getApiEventClients()
 		{
 			return apiEventClients;
 		}
 
-		synchronized ApiLddsClient getLddsClient()
+		private synchronized ApiLddsClient getLddsClient()
 		{
 			return lddsClient;
 		}
 
-		synchronized void setLddsClient(ApiLddsClient lddsClient)
+		private synchronized void setLddsClient(ApiLddsClient lddsClient)
 		{
 			this.lddsClient = lddsClient;
 		}
