@@ -33,6 +33,8 @@ jobs:
           dependency-graph: generate-and-submit
       - name: Build
         run: ./gradlew build
+      - name: Integration Tests
+        run: ./gradlew integrationTest
       - name: Analyze
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
