@@ -40,7 +40,7 @@ jobs:
       - name: Verify Docker Compose installation
         run: docker-compose --version
       - name: Integration Tests
-        run: ./gradlew integrationTest --stacktrace
+        run: ./gradlew integrationTest --stacktrace --info
       - name: Analyze
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
