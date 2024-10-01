@@ -127,14 +127,13 @@ tasks.register('integrationTest', Test) {
     jvmArgs += "-Dcatalina.base=$buildDir/tomcat"
     systemProperties += project.properties.findAll { k, v -> k.startsWith("opendcs") }
     systemProperties += project.properties.findAll { k, v -> k.startsWith("postgresdb") }
-
     if (!project.hasProperty("postgresdb.url")) {
-        dependsOn(":opendcs-rest-api-jetty:startPostgresContainer")
         systemProperties.put("postgresdb.url", "jdbc:postgresql://localhost:5432/open_tsdb")
         systemProperties.put("opendcs.db.username", "tsdbadm")
         systemProperties.put("opendcs.db.password", "postgres_pass")
-        finalizedBy(":opendcs-rest-api-jetty:stopPostgresContainer")
     }
+    dependsOn(":opendcs-rest-api-jetty:startPostgresContainer")
+    finalizedBy(":opendcs-rest-api-jetty:stopPostgresContainer")
 }
 
 test {
