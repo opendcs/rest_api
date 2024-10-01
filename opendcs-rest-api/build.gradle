@@ -121,7 +121,6 @@ tasks.register('integrationTest', Test) {
     shouldRunAfter test
     dependsOn war
     dependsOn generateConfig
-    jvmArgs += "-DwarFile=$buildDir/libs/${project.name}-${project.version}.war"
     jvmArgs += "-DwarContext=/opendcs-rest-api"
     jvmArgs += "-Djava.util.logging.config.file=$projectDir/test/resources/logging.properties"
     jvmArgs += "-Dorg.apache.tomcat.util.digester.PROPERTY_SOURCE=org.apache.tomcat.util.digester.EnvironmentPropertySource"

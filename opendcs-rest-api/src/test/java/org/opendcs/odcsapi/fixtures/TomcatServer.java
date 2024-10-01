@@ -15,7 +15,8 @@
 
 package org.opendcs.odcsapi.fixtures;
 
-import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Paths;
 
 import org.apache.catalina.Engine;
@@ -46,14 +47,11 @@ public final class TomcatServer
 	/**
 	 * Setups the baseline for tomcat to run.
 	 *
-	 * @param baseDir     set to the CATALINA_BASE directory the build has setup
-	 * @param cdaWar      points to the actual WAR file to load
+	 * @param baseDir     set to the CATALINA_BASE directory the build has set up
 	 * @param port        Network port to listen on
-	 * @param contextName url prefix to use, can be "/","/cwms-data","/spk-data"
-	 *                    etc
-	 * @throws Exception any error that gets thrown
+	 * @param contextName url prefix to use, can be "/","/odcsapi" etc
 	 */
-	public TomcatServer(String baseDir, String cdaWar, int port, String contextName) throws Exception
+	public TomcatServer(String baseDir, int port, String contextName) throws IOException
 	{
 
 		tomcatInstance = new Tomcat();
@@ -62,8 +60,9 @@ public final class TomcatServer
 
 
 		host.setAppBase("webapps");
-		new File(tomcatInstance.getServer().getCatalinaBase(), "temp").mkdirs();
-		new File(tomcatInstance.getServer().getCatalinaBase(), "webapps").mkdirs();
+		String catalinaBase = tomcatInstance.getServer().getCatalinaBase().toString();
+		Files.createDirectories(Paths.get(catalinaBase, "temp"));
+		Files.createDirectories(Paths.get(catalinaBase, "webapps"));
 		tomcatInstance.setPort(port);
 		Connector connector = tomcatInstance.getConnector();
 		connector.setSecure(true);
@@ -135,12 +134,11 @@ public final class TomcatServer
 	public static void main(String[] args)
 	{
 		String baseDir = args[0];
-		String cdaWar = args[1];
-		String contextName = args[2];
+		String contextName = args[1];
 		int port = Integer.parseInt(System.getProperty("OPENDCS_LISTEN_PORT", "0").trim());
 		try
 		{
-			TomcatServer tomcat = new TomcatServer(baseDir, cdaWar, port, contextName);
+			TomcatServer tomcat = new TomcatServer(baseDir, port, contextName);
 			tomcat.start();
 			tomcat.await();
 		}

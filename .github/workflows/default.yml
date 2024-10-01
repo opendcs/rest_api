@@ -33,6 +33,12 @@ jobs:
           dependency-graph: generate-and-submit
       - name: Build
         run: ./gradlew build
+      - name: Install Docker Compose
+        run: |
+           sudo apt-get update
+           sudo apt-get install -y docker-compose
+      - name: Verify Docker Compose installation
+        run: docker-compose --version
       - name: Integration Tests
         run: ./gradlew integrationTest
       - name: Analyze

@@ -38,10 +38,7 @@ public abstract class BaseIT
 	public static void setup() throws Exception
 	{
 		String warContext = System.getProperty("warContext", "odcsapi");
-		opendcsInstance = new TomcatServer("build/tomcat",
-				System.getProperty("warFile"),
-				0,
-				warContext);
+		opendcsInstance = new TomcatServer("build/tomcat",0, warContext);
 		opendcsInstance.start();
 		RestAssured.baseURI = "http://localhost";
 		RestAssured.port = opendcsInstance.getPort();
