@@ -91,7 +91,7 @@ tasks.register('startPostgresContainer', Exec) {
     dependsOn copyUserProperties
     doFirst() {
         if (!project.findProperty("postgresdb.url")) {
-            commandLine 'docker-compose', 'up', '-d', 'db'
+            commandLine 'docker-compose','--env-file', 'test.env', 'up', '-d', 'db'
         }
     }
 }
