@@ -13,30 +13,30 @@
  *  limitations under the License.
  */
 
-package org.opendcs.odcsapi.sec;
+package org.opendcs.odcsapi.fixtures;
 
 import javax.servlet.http.HttpServletResponse;
 
 import io.restassured.RestAssured;
 import io.restassured.filter.session.SessionFilter;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.opendcs.odcsapi.fixtures.TomcatServer;
+import org.junit.jupiter.api.extension.AfterAllCallback;
+import org.junit.jupiter.api.extension.BeforeAllCallback;
+import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.is;
 
-public abstract class BaseIT
+public final class EmbeddedTomcatExtension implements BeforeAllCallback, AfterAllCallback
 {
-	private static final Logger logger = org.slf4j.LoggerFactory.getLogger(BaseIT.class);
+	private static final Logger LOGGER = org.slf4j.LoggerFactory.getLogger(EmbeddedTomcatExtension.class);
 	protected static TomcatServer opendcsInstance;
 	protected SessionFilter sessionFilter;
 
-	@BeforeAll
-	public static void setup() throws Exception
+	@Override
+	public void beforeAll(ExtensionContext context) throws Exception
 	{
+
 		String warContext = System.getProperty("warContext", "odcsapi");
 		opendcsInstance = new TomcatServer("build/tomcat",0, warContext);
 		opendcsInstance.start();
@@ -44,8 +44,13 @@ public abstract class BaseIT
 		RestAssured.port = opendcsInstance.getPort();
 		RestAssured.basePath = warContext;
 		healthCheck();
+		sessionFilter = new SessionFilter();
 	}
 
+	public static TomcatServer getOpendcsInstance()
+	{
+		return opendcsInstance;
+	}
 
 	private static void healthCheck() throws InterruptedException {
 		int attempts = 0;
@@ -53,15 +58,15 @@ public abstract class BaseIT
 		for (; attempts < maxAttempts; attempts++) {
 			try {
 				given()
-					.when()
+						.when()
 						.delete("/logout")
-					.then()
-					.assertThat()
+						.then()
+						.assertThat()
 						.statusCode(is(HttpServletResponse.SC_NO_CONTENT));
-				logger.atInfo().log("Server is up!");
+				LOGGER.atInfo().log("Server is up!");
 				break;
 			} catch (Throwable e) {
-				logger.atInfo().log("Waiting for the server to start...");
+				LOGGER.atInfo().log("Waiting for the server to start...");
 				Thread.sleep(100);
 			}
 		}
@@ -70,14 +75,8 @@ public abstract class BaseIT
 		}
 	}
 
-	@BeforeEach
-	public void sessionFilter()
-	{
-		sessionFilter = new SessionFilter();
-	}
-
-	@AfterAll
-	public static void shutdown() throws Exception
+	@Override
+	public void afterAll(ExtensionContext context) throws Exception
 	{
 		opendcsInstance.stop();
 	}

@@ -35,12 +35,14 @@ import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import io.restassured.filter.log.LogDetail;
+import io.restassured.filter.session.SessionFilter;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.opendcs.odcsapi.fixtures.EmbeddedTomcatExtension;
 import org.opendcs.odcsapi.hydrojson.DbInterface;
-import org.opendcs.odcsapi.sec.BaseIT;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.is;
@@ -48,15 +50,18 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+@ExtendWith(EmbeddedTomcatExtension.class)
 @Tag("integration")
-final class OpenIdAuthIT extends BaseIT
+final class OpenIdAuthIT
 {
 
 	private JwtVerifier original;
+	private SessionFilter sessionFilter;
 
 	@BeforeEach
 	void setupMock() throws Exception
 	{
+		sessionFilter = new SessionFilter();
 		original = JwtVerifier.getInstance();
 		//Can remove if we get a testcontainers call going with a keycloak/authelia config
 		JwtVerifier verifier = mock(JwtVerifier.class);

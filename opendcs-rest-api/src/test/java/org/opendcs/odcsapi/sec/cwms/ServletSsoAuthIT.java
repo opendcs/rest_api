@@ -18,15 +18,16 @@ package org.opendcs.odcsapi.sec.cwms;
 import java.util.EnumSet;
 import javax.servlet.http.HttpServletResponse;
 
-import io.restassured.RestAssured;
-import io.restassured.config.RestAssuredConfig;
 import io.restassured.filter.log.LogDetail;
+import io.restassured.filter.session.SessionFilter;
 import org.apache.catalina.session.StandardSession;
-import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.opendcs.odcsapi.fixtures.EmbeddedTomcatExtension;
+import org.opendcs.odcsapi.fixtures.TomcatServer;
 import org.opendcs.odcsapi.hydrojson.DbInterface;
-import org.opendcs.odcsapi.sec.BaseIT;
 import org.opendcs.odcsapi.sec.OpenDcsApiRoles;
 import org.opendcs.odcsapi.sec.OpenDcsPrincipal;
 import org.slf4j.Logger;
@@ -35,17 +36,25 @@ import org.slf4j.LoggerFactory;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.is;
 
+@ExtendWith(EmbeddedTomcatExtension.class)
 @Tag("integration")
-final class ServletSsoAuthIT extends BaseIT
+final class ServletSsoAuthIT
 {
 	private static final Logger LOGGER = LoggerFactory.getLogger(ServletSsoAuthIT.class);
-	private RestAssuredConfig oldConfig;
 	private static final String COOKIE = "HelloWorld";
+	private SessionFilter sessionFilter;
+
+	@BeforeEach
+	void setup()
+	{
+		sessionFilter = new SessionFilter();
+	}
 
 	private static void setupSession()
 	{
 		String username = System.getProperty("opendcs.db.username");
-		StandardSession session = (StandardSession) opendcsInstance.getTestSessionManager()
+		TomcatServer tomcat = EmbeddedTomcatExtension.getOpendcsInstance();
+		StandardSession session = (StandardSession) tomcat.getTestSessionManager()
 				.createSession(COOKIE);
 		if(session == null) {
 			throw new RuntimeException("Test Session Manager is unusable.");
@@ -59,14 +68,8 @@ final class ServletSsoAuthIT extends BaseIT
 			LOGGER.atInfo().log("Got event of type: {}",event.getType());
 			LOGGER.atInfo().log("Session is: {}",event.getSession().toString());
 		});
-		opendcsInstance.getSsoValve()
+		tomcat.getSsoValve()
 				.wrappedRegister(COOKIE, mcup, "CLIENT-CERT", null,null);
-	}
-
-	@AfterEach
-	public void resetTls()
-	{
-		RestAssured.config = oldConfig;
 	}
 
 	@Test

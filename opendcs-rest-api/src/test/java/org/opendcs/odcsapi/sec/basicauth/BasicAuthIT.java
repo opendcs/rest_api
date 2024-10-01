@@ -18,18 +18,30 @@ package org.opendcs.odcsapi.sec.basicauth;
 import javax.servlet.http.HttpServletResponse;
 
 import io.restassured.filter.log.LogDetail;
+import io.restassured.filter.session.SessionFilter;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.opendcs.odcsapi.fixtures.EmbeddedTomcatExtension;
 import org.opendcs.odcsapi.hydrojson.DbInterface;
-import org.opendcs.odcsapi.sec.BaseIT;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 
+@ExtendWith(EmbeddedTomcatExtension.class)
 @Tag("integration")
-final class BasicAuthIT extends BaseIT
+final class BasicAuthIT
 {
+
+	private SessionFilter sessionFilter;
+
+	@BeforeEach
+	void setup()
+	{
+		sessionFilter = new SessionFilter();
+	}
 
 	@Test
 	void testBasicAuthFlow()
