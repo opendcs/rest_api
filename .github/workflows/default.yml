@@ -40,7 +40,7 @@ jobs:
       - name: Verify Docker Compose installation
         run: docker-compose --version
       - name: Validate docker-compose.yaml
-        run: docker-compose config -f opendcs-rest-api-jetty/docker-compose.yml
+        run: docker-compose -f opendcs-rest-api-jetty/docker-compose.yml config
       - name: Integration Tests
         run: ./gradlew integrationTest --stacktrace --info
       - name: Analyze
