@@ -44,8 +44,8 @@
                 <!--<Valve className="fixtures.TestAuthValve"/>-->
                 <Valve className="org.apache.catalina.authenticator.SingleSignOn"/>
                 <Valve className="org.apache.catalina.valves.ErrorReportValve"
-                    showReport="false" 
-                    showServerInfo="false" />
+                    showReport="true"
+                    showServerInfo="true" />
                 <!--
                 Access log processes all example.
                             Documentation at: /docs/config/valve.html
