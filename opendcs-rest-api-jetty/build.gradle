@@ -87,6 +87,8 @@ tasks.register('copyUserProperties', Copy) {
 }
 
 tasks.register('startPostgresContainer', Exec) {
+    dependsOn installOpenDcs
+    dependsOn copyUserProperties
     doFirst() {
         if (!project.findProperty("postgresdb.url")) {
             commandLine 'docker-compose', 'up', '-d', 'db'
