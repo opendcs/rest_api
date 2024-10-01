@@ -36,7 +36,7 @@ jobs:
       - name: Install Docker Compose
         run: |
            sudo apt-get update
-           sudo apt-get install -y docker-compose
+           sudo apt-get install -y docker-compose=2.29.7
       - name: Verify Docker Compose installation
         run: docker-compose --version
       - name: Validate docker-compose.yaml
