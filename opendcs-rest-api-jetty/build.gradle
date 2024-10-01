@@ -185,8 +185,6 @@ tasks.register('buildDockerImages', Exec) {
 
 tasks.register('runOwaspZap', Exec) {
     group = 'run'
-    dependsOn renameTarball
-    dependsOn downloadOpenDcsInstaller
     dependsOn buildDockerImages
     doFirst {
         commandLine 'docker-compose', 'up', '--abort-on-container-exit', 'zap'
