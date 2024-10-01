@@ -39,6 +39,8 @@ jobs:
            sudo apt-get install -y docker-compose
       - name: Verify Docker Compose installation
         run: docker-compose --version
+      - name: Validate docker-compose.yaml
+        run: docker-compose config -f opendcs-rest-api-jetty/docker-compose.yml
       - name: Integration Tests
         run: ./gradlew integrationTest --stacktrace --info
       - name: Analyze
