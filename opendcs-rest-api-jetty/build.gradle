@@ -86,12 +86,21 @@ tasks.register('copyUserProperties', Copy) {
     }
 }
 
-tasks.register('startPostgresContainer', Exec) {
+tasks.register('buildPostgresContainer', Exec) {
     dependsOn installOpenDcs
     dependsOn copyUserProperties
     doFirst() {
-        if (!project.findProperty("postgresdb.url")) {
-            commandLine 'docker-compose','--env-file', 'test.env', 'up', '-d', 'db'
+        if (!project.hasProperty("postgresdb.url")) {
+            commandLine 'docker-compose', 'build', '--no-cache', 'db'
+        }
+    }
+}
+
+tasks.register('startPostgresContainer', Exec) {
+    dependsOn buildPostgresContainer
+    doFirst() {
+        if (!project.hasProperty("postgresdb.url")) {
+            commandLine 'docker-compose', 'up', '-d', 'db'
         }
     }
 }

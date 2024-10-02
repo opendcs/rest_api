@@ -19,7 +19,7 @@ services:
       DCSTOOL_USERDIR: /opendcs
       DBHOST_JDBC: jdbc:postgresql://127.0.0.1/open_tsdb
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready", "-d", "open_tsdb" ]
+      test: [ "CMD-SHELL", "pg_isready -U postgres -d open_tsdb" ]
       interval: 30s
       timeout: 60s
       retries: 5
