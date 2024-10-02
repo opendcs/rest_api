@@ -98,9 +98,9 @@ tasks.register('buildPostgresContainer', Exec) {
 
 tasks.register('startPostgresContainer', Exec) {
     dependsOn buildPostgresContainer
-    doFirst() {
-        if (!project.hasProperty("postgresdb.url")) {
-            commandLine 'docker-compose', 'up', '-d', 'db'
+    if (!project.hasProperty("postgresdb.url")) {
+        doFirst() {
+            commandLine 'docker-compose', 'up', '-d', 'db', '--wait'
         }
     }
 }
