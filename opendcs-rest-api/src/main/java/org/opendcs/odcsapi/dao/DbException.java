@@ -18,28 +18,18 @@ package org.opendcs.odcsapi.dao;
 public class DbException extends Exception
 {
 	private static final long serialVersionUID = 4552935582551955795L;
-	private final String module;
-	
+
+	/**
+	 * @deprecated no need for the "module" parameter as the stack trace and other logging configuration is sufficient.
+	 */
+	@Deprecated
 	public DbException(String module, Exception cause, String msg)
 	{
 		super(msg, cause);
-		this.module = module;
 	}
 
-	public DbException(Exception cause, String msg)
+	public DbException(String message, Exception cause)
 	{
-		super(msg, cause);
-		this.module = null;
-	}
-
-	public DbException(String module, Exception cause)
-	{
-		super(cause);
-		this.module = module;
-	}
-
-	public String getModule()
-	{
-		return module;
+		super(message, cause);
 	}
 }
