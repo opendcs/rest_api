@@ -15,12 +15,12 @@
 
 package org.opendcs.odcsapi.res;
 
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Logger;
 import javax.annotation.security.RolesAllowed;
+import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -32,24 +32,22 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import decodes.sql.DbKey;
-import decodes.tsdb.ConstraintException;
 import decodes.tsdb.DbAlgoParm;
 import decodes.tsdb.DbCompAlgorithm;
 import decodes.tsdb.DbCompAlgorithmScript;
 import decodes.tsdb.DbIoException;
 import decodes.tsdb.NoSuchObjectException;
+import decodes.tsdb.TsdbException;
 import decodes.tsdb.compedit.AlgorithmInList;
 import opendcs.dai.AlgorithmDAI;
 import org.opendcs.odcsapi.beans.ApiAlgoParm;
 import org.opendcs.odcsapi.beans.ApiAlgorithm;
 import org.opendcs.odcsapi.beans.ApiAlgorithmRef;
 import org.opendcs.odcsapi.beans.ApiAlgorithmScript;
-import org.opendcs.odcsapi.dao.DbException;
 import org.opendcs.odcsapi.errorhandling.ErrorCodes;
 import org.opendcs.odcsapi.errorhandling.WebAppException;
 import org.opendcs.odcsapi.sec.AuthorizationCheck;
 import org.opendcs.odcsapi.util.ApiConstants;
-import org.opendcs.odcsapi.util.ApiHttpUtil;
 
 import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.toList;
@@ -62,9 +60,8 @@ public class AlgorithmResources extends OpenDcsResource
 	@Path("algorithmrefs")
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed(AuthorizationCheck.ODCS_API_GUEST)
-	public Response getAlgorithmRefs() throws DbException
+	public Response getAlgorithmRefs() throws DbIoException
 	{
-		Logger.getLogger(ApiConstants.loggerName).fine("getAlgorithmRefs");
 		try(AlgorithmDAI dai = getDb().getDao(AlgorithmDAI.class))
 		{
 			List<ApiAlgorithmRef> algorithmRefs = dai.listAlgorithmsForGui()
@@ -72,11 +69,8 @@ public class AlgorithmResources extends OpenDcsResource
 					.map(AlgorithmResources::map)
 					.sorted(comparing(ApiAlgorithmRef::getAlgorithmId))
 					.collect(toList());
-			return ApiHttpUtil.createResponse(algorithmRefs);
-		}
-		catch(DbIoException ex)
-		{
-			throw new DbException(ex, "getAlgorithmRefs error in query");
+			return Response.status(HttpServletResponse.SC_OK).entity(algorithmRefs)
+					.build();
 		}
 	}
 
@@ -95,8 +89,7 @@ public class AlgorithmResources extends OpenDcsResource
 	@Path("algorithm")
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed(AuthorizationCheck.ODCS_API_GUEST)
-	public Response getAlgorithm(@QueryParam("algorithmid") Long algoId)
-			throws WebAppException, DbException
+	public Response getAlgorithm(@QueryParam("algorithmid") Long algoId) throws WebAppException, DbIoException
 	{
 		if(algoId == null)
 		{
@@ -109,16 +102,14 @@ public class AlgorithmResources extends OpenDcsResource
 		try(AlgorithmDAI dai = getDb().getDao(AlgorithmDAI.class))
 		{
 			ApiAlgorithm apiAlgorithm = map(dai.getAlgorithmById(DbKey.createDbKey(algoId)));
-			return ApiHttpUtil.createResponse(apiAlgorithm);
+			return Response.status(HttpServletResponse.SC_OK)
+					.entity(apiAlgorithm)
+					.build();
 		}
 		catch(NoSuchObjectException e)
 		{
 			throw new WebAppException(ErrorCodes.NO_SUCH_OBJECT,
 					"No Computation Algorithm with id=" + algoId, e);
-		}
-		catch(DbIoException ex)
-		{
-			throw new DbException(ex, "getAlgorithm error in query");
 		}
 	}
 
@@ -166,19 +157,14 @@ public class AlgorithmResources extends OpenDcsResource
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({AuthorizationCheck.ODCS_API_ADMIN, AuthorizationCheck.ODCS_API_USER})
-	public Response postAlgorithm(ApiAlgorithm algo)
-			throws WebAppException, DbException, SQLException
+	public Response postAlgorithm(ApiAlgorithm algo) throws WebAppException, DbIoException
 	{
-		Logger.getLogger(ApiConstants.loggerName).fine("post algo received algo " + algo.getName()
-				+ " with ID=" + algo.getAlgorithmId());
 		try(AlgorithmDAI dai = getDb().getDao(AlgorithmDAI.class))
 		{
 			dai.writeAlgorithm(map(algo));
-			return ApiHttpUtil.createResponse(algo);
-		}
-		catch(DbIoException ex)
-		{
-			throw new DbException(ex, "postAlgorithm error in query");
+			return Response.status(HttpServletResponse.SC_CREATED)
+					.entity(algo)
+					.build();
 		}
 	}
 
@@ -198,23 +184,13 @@ public class AlgorithmResources extends OpenDcsResource
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({AuthorizationCheck.ODCS_API_ADMIN, AuthorizationCheck.ODCS_API_USER})
-	public Response deletAlgorithm(@QueryParam("algorithmid") Long algorithmId)
-			throws WebAppException, DbException, SQLException
+	public Response deletAlgorithm(@QueryParam("algorithmid") Long algorithmId) throws WebAppException, TsdbException
 	{
-		Logger.getLogger(ApiConstants.loggerName).fine("DELETE algorithm received algorithmId=" + algorithmId);
-
 		try(AlgorithmDAI dai = getDb().getDao(AlgorithmDAI.class))
 		{
 			dai.deleteAlgorithm(DbKey.createDbKey(algorithmId));
-			return ApiHttpUtil.createResponse("Algorithm with ID " + algorithmId + " deleted");
-		}
-		catch(ConstraintException ex)
-		{
-			throw new WebAppException(ErrorCodes.NOT_ALLOWED, ex.getMessage(), ex);
-		}
-		catch(DbIoException ex)
-		{
-			throw new DbException(ex, "deleteAlgorithm error in query");
+			return Response.status(HttpServletResponse.SC_NO_CONTENT)
+					.build();
 		}
 	}
 }
