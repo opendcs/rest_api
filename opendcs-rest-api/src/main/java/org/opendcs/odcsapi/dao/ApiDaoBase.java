@@ -1,7 +1,7 @@
 /*
- *  Copyright 2023 OpenDCS Consortium
+ *  Copyright 2024 OpenDCS Consortium and its Contributors
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  Licensed under the Apache License, Version 2.0 (the "License")
  *  you may not use this file except in compliance with the License.
  *  You may obtain a copy of the License at
  *       http://www.apache.org/licenses/LICENSE-2.0
@@ -15,46 +15,64 @@
 
 package org.opendcs.odcsapi.dao;
 
-import org.opendcs.odcsapi.hydrojson.DbInterface;
-import org.opendcs.odcsapi.util.ApiConstants;
-
-import decodes.sql.DbKey;
-
-import java.util.logging.Logger;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.logging.Logger;
 
-public class ApiDaoBase
-	implements ApiDaiBase
+import decodes.sql.SqlDatabaseIO;
+import org.opendcs.odcsapi.hydrojson.DbInterface;
+import org.opendcs.odcsapi.util.ApiConstants;
+
+public class ApiDaoBase implements ApiDaiBase
 {
+	private final SqlDatabaseIO dbio;
+	@Deprecated
 	protected DbInterface dbi = null;
+	@Deprecated
 	protected String module;
-	
+
+	@Deprecated
 	private Statement queryStmt1 = null;
+	@Deprecated
 	private ResultSet queryResults1 = null;
+	@Deprecated
 	private Statement queryStmt2 = null;
+	@Deprecated
 	private ResultSet queryResults2 = null;
+	@Deprecated
 	private int fetchSize = 0;
 
+	@Deprecated
 	private PreparedStatement prepStmnt;
+
+	public ApiDaoBase(SqlDatabaseIO dbio)
+	{
+		this.dbio = dbio;
+	}
 
 	public PreparedStatement getPrepStmnt()
 	{
 		return this.prepStmnt;
-	}
-
-	protected void setPrepStmnt(PreparedStatement prepStmnt)
-	{
-		this.prepStmnt = prepStmnt;
 	}
 	
 	public ApiDaoBase(DbInterface dbi, String module)
 	{
 		this.dbi = dbi;
 		this.module = module;
+		this.dbio = null;
+	}
+
+	public SqlDatabaseIO getDbio()
+	{
+		return dbio;
+	}
+
+	protected void setPrepStmnt(PreparedStatement prepStmnt)
+	{
+		this.prepStmnt = prepStmnt;
 	}
 	
 	/**
