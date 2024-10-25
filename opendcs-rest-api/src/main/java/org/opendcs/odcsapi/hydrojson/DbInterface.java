@@ -37,7 +37,10 @@ import org.opendcs.odcsapi.util.ApiConstants;
  * This class is constructed for each request and is used to access the TSDB.
  * @author mmaloney
  *
+ * @deprecated implementations will be replaced by those in OpenDCS itself to reduce
+ * redundant query maintenance and allow support for multiple database implementations.
  */
+@Deprecated
 public final class DbInterface implements AutoCloseable
 {
 	public static final String CWMS = "CWMS";
