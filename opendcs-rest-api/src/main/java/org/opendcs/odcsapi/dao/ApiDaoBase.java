@@ -22,57 +22,42 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.logging.Logger;
 
-import decodes.sql.SqlDatabaseIO;
 import org.opendcs.odcsapi.hydrojson.DbInterface;
 import org.opendcs.odcsapi.util.ApiConstants;
 
-public class ApiDaoBase implements ApiDaiBase
+/**
+ * @deprecated implementations will be replaced by those in OpenDCS itself to reduce
+ * redundant query maintenance and allow support for multiple database implementations.
+ */
+@Deprecated
+public class ApiDaoBase
+	implements ApiDaiBase
 {
-	private final SqlDatabaseIO dbio;
-	@Deprecated
 	protected DbInterface dbi = null;
-	@Deprecated
 	protected String module;
-
-	@Deprecated
+	
 	private Statement queryStmt1 = null;
-	@Deprecated
 	private ResultSet queryResults1 = null;
-	@Deprecated
 	private Statement queryStmt2 = null;
-	@Deprecated
 	private ResultSet queryResults2 = null;
-	@Deprecated
 	private int fetchSize = 0;
 
-	@Deprecated
 	private PreparedStatement prepStmnt;
-
-	public ApiDaoBase(SqlDatabaseIO dbio)
-	{
-		this.dbio = dbio;
-	}
 
 	public PreparedStatement getPrepStmnt()
 	{
 		return this.prepStmnt;
+	}
+
+	protected void setPrepStmnt(PreparedStatement prepStmnt)
+	{
+		this.prepStmnt = prepStmnt;
 	}
 	
 	public ApiDaoBase(DbInterface dbi, String module)
 	{
 		this.dbi = dbi;
 		this.module = module;
-		this.dbio = null;
-	}
-
-	public SqlDatabaseIO getDbio()
-	{
-		return dbio;
-	}
-
-	protected void setPrepStmnt(PreparedStatement prepStmnt)
-	{
-		this.prepStmnt = prepStmnt;
 	}
 	
 	/**
