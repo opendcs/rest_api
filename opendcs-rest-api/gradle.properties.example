@@ -1,0 +1,3 @@
+## Disable Specific Integration Test databases
+opendcs.test.integration.CWMS-Oracle.disabled=true
+opendcs.test.integration.OpenDCS-Postgres.disabled=true

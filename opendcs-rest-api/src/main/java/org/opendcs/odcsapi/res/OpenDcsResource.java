@@ -15,33 +15,35 @@
 
 package org.opendcs.odcsapi.res;
 
-import javax.naming.Context;
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
+import javax.servlet.ServletContext;
 import javax.sql.DataSource;
+import javax.ws.rs.core.Context;
+
+import decodes.db.DatabaseException;
+import org.opendcs.database.DatabaseService;
+import org.opendcs.database.OpenDcsDatabase;
+
+import static org.opendcs.odcsapi.res.DataSourceContextCreator.DATA_SOURCE_ATTRIBUTE_KEY;
 
 class OpenDcsResource
 {
-	private final OpenDcsDatabase db;
+	@Context
+	private ServletContext context;
 
-	protected OpenDcsResource()
+	protected OpenDcsDatabase createDb()
 	{
 		try
 		{
-			//TODO - need to iron out the correct way to handle data source.
-			Context initialCtx = new InitialContext();
-			Context envCtx = (Context)initialCtx.lookup("java:comp/env");
-			DataSource dataSource = (DataSource)envCtx.lookup("jdbc/opentsdb");
-			this.db = DatabaseService.getDatabaseFor(dataSource);
+			DataSource dataSource = (DataSource) context.getAttribute(DATA_SOURCE_ATTRIBUTE_KEY);
+			if(dataSource == null)
+			{
+				throw new IllegalStateException("No data source defined in context.xml");
+			}
+			return DatabaseService.getDatabaseFor(dataSource);
 		}
-		catch(NamingException e)
+		catch(DatabaseException e)
 		{
-			throw new IllegalStateException(e);
+			throw new IllegalStateException("Error connecting to the database via JNDI", e);
 		}
-	}
-
-	protected OpenDcsDatabase getDb()
-	{
-		return this.db;
 	}
 }

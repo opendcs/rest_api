@@ -1,7 +1,7 @@
 /*
- *  Copyright 2023 OpenDCS Consortium
+ *  Copyright 2024 OpenDCS Consortium and its Contributors
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  Licensed under the Apache License, Version 2.0 (the "License")
  *  you may not use this file except in compliance with the License.
  *  You may obtain a copy of the License at
  *       http://www.apache.org/licenses/LICENSE-2.0
@@ -15,14 +15,11 @@
 
 package org.opendcs.odcsapi.opendcs_dep;
 
+import decodes.db.DatabaseException;
+import decodes.tsdb.TimeSeriesDb;
+import org.opendcs.database.DatabaseService;
 import org.opendcs.odcsapi.dao.DbException;
 import org.opendcs.odcsapi.hydrojson.DbInterface;
-
-import decodes.cwms.CwmsTimeSeriesDb;
-import decodes.hdb.HdbTimeSeriesDb;
-import decodes.tsdb.BadConnectException;
-import decodes.tsdb.TimeSeriesDb;
-import opendcs.opentsdb.OpenTsdb;
 
 /**
  * A few operations require using the openDCS TimeSeriesDb subclasses.
@@ -43,30 +40,20 @@ public class TsdbManager
 	 * @param dbi
 	 * @return
 	 * @throws DbException
+	 * @deprecated access DAI objects through OpenDcsDatabase::getDao
 	 */
+	@Deprecated
 	public static TimeSeriesDb makeTsdb(DbInterface dbi)
 		throws DbException
 	{
-		TimeSeriesDb ret = null;
-		if (DbInterface.isCwms)
-			ret = new CwmsTimeSeriesDb();
-		else if (DbInterface.isHdb)
-			ret = new HdbTimeSeriesDb();
-		else
-			ret = new OpenTsdb();
-
-		// setConnection will also call determineTsdbVersion()
-		ret.setConnection(dbi.getConnection());
-
 		try
 		{
-			ret.postConnectInit("decodes", dbi.getConnection());
+			return DatabaseService.getDatabaseFor(DbInterface.getDataSource())
+					.getTimeSeriesDb();
 		}
-		catch (BadConnectException ex)
+		catch(DatabaseException ex)
 		{
-			throw new DbException(CompRunner.class.getName(), ex, "Error connecting to the decodes database: ");
+			throw new DbException("", ex);
 		}
-
-		return ret;
 	}
 }

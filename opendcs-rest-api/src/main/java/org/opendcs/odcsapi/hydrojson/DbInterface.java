@@ -110,7 +110,12 @@ public final class DbInterface implements AutoCloseable
 	{
 		return connection;
 	}
-	
+
+	public static DataSource getDataSource()
+	{
+		return dataSource;
+	}
+
 	public void close()
 	{
 		try
