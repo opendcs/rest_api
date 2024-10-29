@@ -18,7 +18,6 @@ package org.opendcs.odcsapi.res;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.logging.Logger;
 import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.Consumes;
@@ -31,6 +30,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import decodes.db.DatabaseException;
 import decodes.sql.DbKey;
 import decodes.tsdb.DbAlgoParm;
 import decodes.tsdb.DbCompAlgorithm;
@@ -47,7 +47,6 @@ import org.opendcs.odcsapi.beans.ApiAlgorithmScript;
 import org.opendcs.odcsapi.errorhandling.ErrorCodes;
 import org.opendcs.odcsapi.errorhandling.WebAppException;
 import org.opendcs.odcsapi.sec.AuthorizationCheck;
-import org.opendcs.odcsapi.util.ApiConstants;
 
 import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.toList;
@@ -60,9 +59,9 @@ public class AlgorithmResources extends OpenDcsResource
 	@Path("algorithmrefs")
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed(AuthorizationCheck.ODCS_API_GUEST)
-	public Response getAlgorithmRefs() throws DbIoException
+	public Response getAlgorithmRefs() throws DbIoException, DatabaseException
 	{
-		try(AlgorithmDAI dai = getDb().getDao(AlgorithmDAI.class))
+		try(AlgorithmDAI dai = createDb().getDao(AlgorithmDAI.class))
 		{
 			List<ApiAlgorithmRef> algorithmRefs = dai.listAlgorithmsForGui()
 					.stream()
@@ -89,17 +88,15 @@ public class AlgorithmResources extends OpenDcsResource
 	@Path("algorithm")
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed(AuthorizationCheck.ODCS_API_GUEST)
-	public Response getAlgorithm(@QueryParam("algorithmid") Long algoId) throws WebAppException, DbIoException
+	public Response getAlgorithm(@QueryParam("algorithmid") Long algoId)
+			throws WebAppException, DbIoException, DatabaseException
 	{
 		if(algoId == null)
 		{
 			throw new WebAppException(ErrorCodes.MISSING_ID,
 					"Missing required algorithmid parameter.");
 		}
-
-		Logger.getLogger(ApiConstants.loggerName).fine("getAlgorithm algorithmid=" + algoId);
-
-		try(AlgorithmDAI dai = getDb().getDao(AlgorithmDAI.class))
+		try(AlgorithmDAI dai = createDb().getDao(AlgorithmDAI.class))
 		{
 			ApiAlgorithm apiAlgorithm = map(dai.getAlgorithmById(DbKey.createDbKey(algoId)));
 			return Response.status(HttpServletResponse.SC_OK)
@@ -157,9 +154,9 @@ public class AlgorithmResources extends OpenDcsResource
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({AuthorizationCheck.ODCS_API_ADMIN, AuthorizationCheck.ODCS_API_USER})
-	public Response postAlgorithm(ApiAlgorithm algo) throws WebAppException, DbIoException
+	public Response postAlgorithm(ApiAlgorithm algo) throws DbIoException, DatabaseException
 	{
-		try(AlgorithmDAI dai = getDb().getDao(AlgorithmDAI.class))
+		try(AlgorithmDAI dai = createDb().getDao(AlgorithmDAI.class))
 		{
 			dai.writeAlgorithm(map(algo));
 			return Response.status(HttpServletResponse.SC_CREATED)
@@ -184,9 +181,9 @@ public class AlgorithmResources extends OpenDcsResource
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({AuthorizationCheck.ODCS_API_ADMIN, AuthorizationCheck.ODCS_API_USER})
-	public Response deletAlgorithm(@QueryParam("algorithmid") Long algorithmId) throws WebAppException, TsdbException
+	public Response deletAlgorithm(@QueryParam("algorithmid") Long algorithmId) throws TsdbException, DatabaseException
 	{
-		try(AlgorithmDAI dai = getDb().getDao(AlgorithmDAI.class))
+		try(AlgorithmDAI dai = createDb().getDao(AlgorithmDAI.class))
 		{
 			dai.deleteAlgorithm(DbKey.createDbKey(algorithmId));
 			return Response.status(HttpServletResponse.SC_NO_CONTENT)
