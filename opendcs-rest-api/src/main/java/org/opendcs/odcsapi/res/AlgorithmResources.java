@@ -37,6 +37,7 @@ import decodes.tsdb.DbCompAlgorithm;
 import decodes.tsdb.DbCompAlgorithmScript;
 import decodes.tsdb.DbIoException;
 import decodes.tsdb.NoSuchObjectException;
+import decodes.tsdb.ScriptType;
 import decodes.tsdb.TsdbException;
 import decodes.tsdb.compedit.AlgorithmInList;
 import opendcs.dai.AlgorithmDAI;
@@ -110,7 +111,7 @@ public class AlgorithmResources extends OpenDcsResource
 		}
 	}
 
-	private ApiAlgorithm map(DbCompAlgorithm algorithm)
+	static ApiAlgorithm map(DbCompAlgorithm algorithm)
 	{
 		ApiAlgorithm retval = new ApiAlgorithm();
 		retval.setAlgorithmId(algorithm.getId().getValue());
@@ -127,12 +128,12 @@ public class AlgorithmResources extends OpenDcsResource
 		}
 		retval.setParms(parameters);
 		retval.setAlgoScripts(algorithm.getScripts().stream()
-				.map(this::map)
+				.map(AlgorithmResources::map)
 				.collect(toList()));
 		return retval;
 	}
 
-	private ApiAlgorithmScript map(DbCompAlgorithmScript script)
+	private static ApiAlgorithmScript map(DbCompAlgorithmScript script)
 	{
 		ApiAlgorithmScript retval = new ApiAlgorithmScript();
 		retval.setText(script.getText());
@@ -140,7 +141,7 @@ public class AlgorithmResources extends OpenDcsResource
 		return retval;
 	}
 
-	private ApiAlgoParm map(DbAlgoParm parameter)
+	private static ApiAlgoParm map(DbAlgoParm parameter)
 	{
 		ApiAlgoParm retval = new ApiAlgoParm();
 		retval.setParmType(parameter.getParmType());
@@ -165,7 +166,7 @@ public class AlgorithmResources extends OpenDcsResource
 		}
 	}
 
-	private DbCompAlgorithm map(ApiAlgorithm algo)
+	static DbCompAlgorithm map(ApiAlgorithm algo)
 	{
 		DbCompAlgorithm retval = new DbCompAlgorithm(DbKey.createDbKey(algo.getAlgorithmId()),
 				algo.getName(), algo.getExecClass(), algo.getDescription());
@@ -173,6 +174,15 @@ public class AlgorithmResources extends OpenDcsResource
 		algo.getProps()
 				.forEach((key, value) -> retval.setProperty(String.valueOf(key), String.valueOf(value)));
 		algo.getParms().forEach(p -> retval.addParm(new DbAlgoParm(p.getRoleName(), p.getParmType())));
+		algo.getAlgoScripts().forEach(s -> retval.putScript(map(s, retval)));
+		return retval;
+	}
+
+	private static DbCompAlgorithmScript map(ApiAlgorithmScript script, DbCompAlgorithm parent)
+	{
+		ScriptType scriptType = ScriptType.fromDbChar(script.getScriptType());
+		DbCompAlgorithmScript retval = new DbCompAlgorithmScript(parent, scriptType);
+		retval.addToText(script.getText());
 		return retval;
 	}
 
