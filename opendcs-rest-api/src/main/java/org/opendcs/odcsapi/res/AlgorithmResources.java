@@ -60,8 +60,7 @@ public class AlgorithmResources extends OpenDcsResource
 	@RolesAllowed(AuthorizationCheck.ODCS_API_GUEST)
 	public Response getAlgorithmRefs() throws DbIoException
 	{
-		try(AlgorithmDAI dai = createDb().getDao(AlgorithmDAI.class)
-				.orElseThrow(() -> new DatabaseException("No AlgorithmDAI available.")))
+		try(AlgorithmDAI dai = getDao(AlgorithmDAI.class))
 		{
 			List<ApiAlgorithmRef> algorithmRefs = dai.listAlgorithmsForGui()
 					.stream()
@@ -96,8 +95,7 @@ public class AlgorithmResources extends OpenDcsResource
 			throw new WebAppException(HttpServletResponse.SC_BAD_REQUEST,
 					"Missing required algorithmid parameter.");
 		}
-		try(AlgorithmDAI dai = createDb().getDao(AlgorithmDAI.class)
-				.orElseThrow(() -> new DatabaseException("No AlgorithmDAI available.")))
+		try(AlgorithmDAI dai = getDao(AlgorithmDAI.class))
 		{
 			ApiAlgorithm apiAlgorithm = map(dai.getAlgorithmById(DbKey.createDbKey(algoId)));
 			return Response.status(HttpServletResponse.SC_OK)
@@ -157,8 +155,7 @@ public class AlgorithmResources extends OpenDcsResource
 	@RolesAllowed({AuthorizationCheck.ODCS_API_ADMIN, AuthorizationCheck.ODCS_API_USER})
 	public Response postAlgorithm(ApiAlgorithm algo) throws DbIoException
 	{
-		try(AlgorithmDAI dai = createDb().getDao(AlgorithmDAI.class)
-				.orElseThrow(() -> new DatabaseException("No AlgorithmDAI available.")))
+		try(AlgorithmDAI dai = getDao(AlgorithmDAI.class))
 		{
 			DbCompAlgorithm map = map(algo);
 			dai.writeAlgorithm(map);
@@ -201,8 +198,7 @@ public class AlgorithmResources extends OpenDcsResource
 	@RolesAllowed({AuthorizationCheck.ODCS_API_ADMIN, AuthorizationCheck.ODCS_API_USER})
 	public Response deleteAlgorithm(@QueryParam("algorithmid") Long algorithmId) throws TsdbException
 	{
-		try(AlgorithmDAI dai = createDb().getDao(AlgorithmDAI.class)
-				.orElseThrow(() -> new DatabaseException("No AlgorithmDAI available.")))
+		try(AlgorithmDAI dai = getDao(AlgorithmDAI.class))
 		{
 			dai.deleteAlgorithm(DbKey.createDbKey(algorithmId));
 			return Response.status(HttpServletResponse.SC_NO_CONTENT)
