@@ -21,7 +21,8 @@ import javax.ws.rs.core.Context;
 
 import decodes.db.DatabaseException;
 import org.opendcs.database.DatabaseService;
-import org.opendcs.database.OpenDcsDatabase;
+import org.opendcs.database.api.OpenDcsDao;
+import org.opendcs.database.api.OpenDcsDatabase;
 
 import static org.opendcs.odcsapi.res.DataSourceContextCreator.DATA_SOURCE_ATTRIBUTE_KEY;
 
@@ -30,7 +31,13 @@ class OpenDcsResource
 	@Context
 	private ServletContext context;
 
-	protected OpenDcsDatabase createDb()
+	final <T extends OpenDcsDao> T getDao(Class<T> daoClass)
+	{
+		return createDb().getDao(daoClass)
+				.orElseThrow(() -> new UnsupportedOperationException("Endpoint is unsupported by the OpenDCS REST API."));
+	}
+
+	final OpenDcsDatabase createDb()
 	{
 		try
 		{

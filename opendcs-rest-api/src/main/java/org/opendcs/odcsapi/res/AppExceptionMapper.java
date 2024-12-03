@@ -62,6 +62,10 @@ public class AppExceptionMapper implements ExceptionMapper<Throwable>
 		{
 			retval = handle((WebApplicationException) ex);
 		}
+		else if(ex instanceof UnsupportedOperationException)
+		{
+			retval = handle((UnsupportedOperationException) ex);
+		}
 		else
 		{
 			retval = handle(ex);
@@ -74,6 +78,12 @@ public class AppExceptionMapper implements ExceptionMapper<Throwable>
 		LOGGER.warn("Unknown Error", ex);
 		Status status = new Status("Bad Request.  There was an issue with the request, please try again or contact your system administrator.");
 		return ApiHttpUtil.createResponse(status, HttpServletResponse.SC_BAD_REQUEST);
+	}
+
+	private static Response handle(UnsupportedOperationException wae)
+	{
+		LOGGER.warn("Unsupported endpoint", wae);
+		return ApiHttpUtil.createResponse(new Status(wae.getMessage()), HttpServletResponse.SC_NOT_IMPLEMENTED);
 	}
 
 	private static Response handle(WebApplicationException wae)

@@ -1,5 +1,5 @@
 [versions]
-opendcs = "7.0.14-SNAPSHOT"
+opendcs = "main.99.devops-refactor-integration-fixtures-SNAPSHOT"
 
 jetty = "9.4.53.v20231009"
 jetty-jsp = "9.2.30.v20200428"
@@ -29,6 +29,7 @@ testcontainers = "1.20.3"
 
 [libraries]
 opendcs = { module = "org.opendcs:opendcs", version.ref = "opendcs" }
+opendcs-api = { module = "org.opendcs:opendcs-api", version.ref = "opendcs" }
 jetty-jsp = { module = "org.eclipse.jetty:jetty-jsp", version.ref = "jetty-jsp" }
 jetty-annotations = { module = "org.eclipse.jetty:jetty-annotations", version.ref = "jetty" }
 jetty-server = { module = "org.eclipse.jetty:jetty-server", version.ref = "jetty" }

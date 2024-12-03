@@ -25,10 +25,8 @@ configurations {
 }
 
 dependencies {
-    api(libs.opendcs) {
-        //Workaround for the excessive opendcs dependencies
-        exclude group: '*', module: '*'
-    }
+    api(libs.opendcs)
+    api(libs.opendcs.api)
     implementation(libs.servlet.api)
     implementation(libs.json.jackson)
     implementation(libs.jersey.container.servlet)
