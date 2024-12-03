@@ -15,9 +15,13 @@
 
 package org.opendcs.odcsapi.res;
 
-import java.util.logging.Logger;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
 
 import javax.annotation.security.RolesAllowed;
+import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -30,18 +34,24 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import decodes.db.DatabaseException;
+import decodes.db.Site;
+import decodes.db.SiteList;
+import decodes.db.SiteName;
+import decodes.sql.DbKey;
+import decodes.tsdb.DbIoException;
+import decodes.tsdb.NoSuchObjectException;
+import opendcs.dai.SiteDAI;
 import org.opendcs.odcsapi.beans.ApiSite;
-import org.opendcs.odcsapi.dao.ApiSiteDAO;
+import org.opendcs.odcsapi.beans.ApiSiteRef;
 import org.opendcs.odcsapi.dao.DbException;
 import org.opendcs.odcsapi.errorhandling.ErrorCodes;
 import org.opendcs.odcsapi.errorhandling.WebAppException;
-import org.opendcs.odcsapi.hydrojson.DbInterface;
 import org.opendcs.odcsapi.sec.AuthorizationCheck;
-import org.opendcs.odcsapi.util.ApiConstants;
 import org.opendcs.odcsapi.util.ApiHttpUtil;
 
 @Path("/")
-public class SiteResources
+public class SiteResources extends OpenDcsResource
 {
 	@Context HttpHeaders httpHeaders;
 
@@ -52,12 +62,40 @@ public class SiteResources
 	public Response geSiteRefs()
 		throws DbException
 	{
-		Logger.getLogger(ApiConstants.loggerName).fine("getSiteRefs");
-		try (DbInterface dbi = new DbInterface();
-			ApiSiteDAO dao = new ApiSiteDAO(dbi))
+		try (SiteDAI dai = createDb().getDao(SiteDAI.class)
+					 .orElseThrow(() -> new DbException("No SiteDAI available")))
 		{
-			return ApiHttpUtil.createResponse(dao.getSiteRefs());
+			SiteList sites = new SiteList();
+			dai.read(sites);
+			List<ApiSiteRef> siteRefs = map(sites);
+			return Response.status(HttpServletResponse.SC_OK).entity(siteRefs).build();
 		}
+		catch (DbIoException ex)
+		{
+			throw new DbException("Unable to retrieve sites", ex);
+		}
+	}
+
+	static List<ApiSiteRef> map(SiteList sites)
+	{
+		List<ApiSiteRef> retList = new ArrayList<>();
+		for(Iterator<Site> it = sites.iterator(); it.hasNext(); )
+		{
+			final Site site = it.next();
+			ApiSiteRef siteRef = new ApiSiteRef();
+			siteRef.setSiteId(site.getId().getValue());
+			siteRef.setPublicName(site.getPublicName());
+			siteRef.setDescription(site.getDescription());
+			HashMap<String, String> siteNames = new HashMap<>();
+			for(Iterator<SiteName> iter = site.getNames(); iter.hasNext(); )
+			{
+				final SiteName sn = iter.next();
+				siteNames.put(sn.getNameType(), sn.getNameValue());
+			}
+			siteRef.setSitenames(siteNames);
+			retList.add(siteRef);
+		}
+		return retList;
 	}
 
 	@GET
@@ -71,11 +109,15 @@ public class SiteResources
 			throw new WebAppException(ErrorCodes.MISSING_ID, 
 				"Missing required siteid parameter.");
 
-		Logger.getLogger(ApiConstants.loggerName).fine("getSite id=" + siteId);
-		try (DbInterface dbi = new DbInterface();
-			ApiSiteDAO dao = new ApiSiteDAO(dbi))
+		try (SiteDAI dai = createDb().getDao(SiteDAI.class)
+				.orElseThrow(() -> new DbException("No SiteDAI available")))
 		{
-			return ApiHttpUtil.createResponse(dao.getSite(siteId));
+			return Response.status(HttpServletResponse.SC_OK)
+					.entity(dai.getSiteById(DbKey.createDbKey(siteId))).build();
+		}
+		catch(DbIoException | NoSuchObjectException e)
+		{
+			throw new DbException("Unable to retrieve site by ID", e);
 		}
 	}
 
@@ -85,16 +127,15 @@ public class SiteResources
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({AuthorizationCheck.ODCS_API_ADMIN, AuthorizationCheck.ODCS_API_USER})
 	public Response postSite(ApiSite site)
-		throws WebAppException, DbException
+		throws DbException
 	{
-		Logger.getLogger(ApiConstants.loggerName)
-				.fine("POST site received site id=" + site.getSiteId());
-		
+
 		// Use username and password to attempt to connect to the database
-		try (DbInterface dbi = new DbInterface();
-			ApiSiteDAO dao = new ApiSiteDAO(dbi))
+		try (SiteDAI dai = createDb().getDao(SiteDAI.class)
+				.orElseThrow(() -> new DbException("No SiteDAI available")))
 		{
-			dao.writeSite(site);
+
+			dai.writeSite(map(site));
 			String sitePubName = site.getPublicName();
 			if (sitePubName == null)
 			{
@@ -103,6 +144,32 @@ public class SiteResources
 			String resp = String.format("{\"status\": 200, \"message\": \"The site (%s) has been saved successfully.\"}", sitePubName);
 			return ApiHttpUtil.createResponse(resp);
 		}
+		catch(DatabaseException | DbIoException e)
+		{
+			throw new DbException("Unable to store site", e);
+		}
+	}
+
+	static Site map(ApiSite site) throws DatabaseException
+	{
+		Site returnSite = new Site();
+		if (site.getSiteId() != null)
+		{
+			returnSite.setId(DbKey.createDbKey(site.getSiteId()));
+		}
+		returnSite.setLocationType(site.getLocationType());
+		returnSite.setElevation(site.getElevation());
+		returnSite.setPublicName(site.getPublicName());
+		returnSite.setElevationUnits(site.getElevUnits());
+		returnSite.setActive(site.isActive());
+		returnSite.setDescription(site.getDescription());
+		returnSite.setLastModifyTime(site.getLastModified());
+		for (String name : site.getProperties().stringPropertyNames())
+		{
+			SiteName sn = new SiteName(returnSite, name);
+			returnSite.addName(sn);
+		}
+		return returnSite;
 	}
 
 	@DELETE
@@ -110,17 +177,18 @@ public class SiteResources
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({AuthorizationCheck.ODCS_API_ADMIN, AuthorizationCheck.ODCS_API_USER})
-	public Response deleteSite(@QueryParam("siteid") Long siteId) throws WebAppException, DbException
+	public Response deleteSite(@QueryParam("siteid") Long siteId) throws DbException
 	{
-		Logger.getLogger(ApiConstants.loggerName)
-				.fine("DELETE site received site id=" + siteId);
-		
 		// Use username and password to attempt to connect to the database
-		try (DbInterface dbi = new DbInterface();
-			ApiSiteDAO siteDAO = new ApiSiteDAO(dbi))
+		try (SiteDAI dai = createDb().getDao(SiteDAI.class)
+				.orElseThrow(() -> new DbException("No SiteDAI available")))
 		{
-			siteDAO.deleteSite(siteId);
+			dai.deleteSite(DbKey.createDbKey(siteId));
 			return ApiHttpUtil.createResponse("ID " + siteId + " deleted");
+		}
+		catch(DbIoException e)
+		{
+			throw new DbException("Unable to delete site", e);
 		}
 	}
 	
