@@ -61,7 +61,8 @@ public class AlgorithmResources extends OpenDcsResource
 	@RolesAllowed(AuthorizationCheck.ODCS_API_GUEST)
 	public Response getAlgorithmRefs() throws DbIoException
 	{
-		try(AlgorithmDAI dai = getDao(AlgorithmDAI.class))
+		try(AlgorithmDAI dai = createDb().getDao(AlgorithmDAI.class)
+				.orElseThrow(() -> new DatabaseException("No AlgorithmDAI available.")))
 		{
 			List<ApiAlgorithmRef> algorithmRefs = dai.listAlgorithmsForGui()
 					.stream()
@@ -96,7 +97,8 @@ public class AlgorithmResources extends OpenDcsResource
 			throw new WebAppException(ErrorCodes.MISSING_ID,
 					"Missing required algorithmid parameter.");
 		}
-		try(AlgorithmDAI dai = getDao(AlgorithmDAI.class))
+		try(AlgorithmDAI dai = createDb().getDao(AlgorithmDAI.class)
+				.orElseThrow(() -> new DatabaseException("No AlgorithmDAI available.")))
 		{
 			ApiAlgorithm apiAlgorithm = map(dai.getAlgorithmById(DbKey.createDbKey(algoId)));
 			return Response.status(HttpServletResponse.SC_OK)
@@ -156,7 +158,8 @@ public class AlgorithmResources extends OpenDcsResource
 	@RolesAllowed({AuthorizationCheck.ODCS_API_ADMIN, AuthorizationCheck.ODCS_API_USER})
 	public Response postAlgorithm(ApiAlgorithm algo) throws DbIoException
 	{
-		try(AlgorithmDAI dai = getDao(AlgorithmDAI.class))
+		try(AlgorithmDAI dai = createDb().getDao(AlgorithmDAI.class)
+				.orElseThrow(() -> new DatabaseException("No AlgorithmDAI available.")))
 		{
 			dai.writeAlgorithm(map(algo));
 			return Response.status(HttpServletResponse.SC_CREATED)
@@ -192,7 +195,8 @@ public class AlgorithmResources extends OpenDcsResource
 	@RolesAllowed({AuthorizationCheck.ODCS_API_ADMIN, AuthorizationCheck.ODCS_API_USER})
 	public Response deletAlgorithm(@QueryParam("algorithmid") Long algorithmId) throws TsdbException
 	{
-		try(AlgorithmDAI dai = getDao(AlgorithmDAI.class))
+		try(AlgorithmDAI dai = createDb().getDao(AlgorithmDAI.class)
+				.orElseThrow(() -> new DatabaseException("No AlgorithmDAI available.")))
 		{
 			dai.deleteAlgorithm(DbKey.createDbKey(algorithmId));
 			return Response.status(HttpServletResponse.SC_NO_CONTENT)
