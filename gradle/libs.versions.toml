@@ -1,5 +1,5 @@
 [versions]
-opendcs = "7.0.14-SNAPSHOT"
+opendcs = "main.99.devops-refactor-integration-fixtures-SNAPSHOT"
 
 jetty = "9.4.53.v20231009"
 jetty-jsp = "9.2.30.v20200428"
