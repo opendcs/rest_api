@@ -16,9 +16,9 @@
 package org.opendcs.odcsapi.res;
 
 import java.sql.SQLException;
-import java.util.logging.Logger;
 
 import javax.annotation.security.RolesAllowed;
+import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -31,14 +31,21 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import decodes.db.DataTypeSet;
+import decodes.db.DatabaseException;
+import decodes.db.EngineeringUnit;
+import decodes.db.EngineeringUnitList;
+import decodes.db.UnitConverterDb;
+import decodes.db.UnitConverterSet;
+import decodes.sql.DbKey;
+import decodes.sql.EngineeringUnitIO;
+import decodes.sql.UnitConverterIO;
+import decodes.tsdb.DbIoException;
+import opendcs.dai.DataTypeDAI;
 import org.opendcs.odcsapi.beans.ApiUnit;
 import org.opendcs.odcsapi.beans.ApiUnitConverter;
-import org.opendcs.odcsapi.dao.ApiUnitDAO;
 import org.opendcs.odcsapi.dao.DbException;
-import org.opendcs.odcsapi.errorhandling.WebAppException;
-import org.opendcs.odcsapi.hydrojson.DbInterface;
 import org.opendcs.odcsapi.sec.AuthorizationCheck;
-import org.opendcs.odcsapi.util.ApiConstants;
 import org.opendcs.odcsapi.util.ApiHttpUtil;
 
 /**
@@ -47,7 +54,7 @@ import org.opendcs.odcsapi.util.ApiHttpUtil;
  *
  */
 @Path("/")
-public class DatatypeUnitResources
+public class DatatypeUnitResources extends OpenDcsResource
 {
 	@Context HttpHeaders httpHeaders;
 
@@ -57,11 +64,15 @@ public class DatatypeUnitResources
 	@RolesAllowed({AuthorizationCheck.ODCS_API_GUEST})
 	public Response getDataTypeList(@QueryParam("standard") String std) throws DbException
 	{
-		Logger.getLogger(ApiConstants.loggerName).fine("getDataTypeList");
-		try (DbInterface dbi = new DbInterface();
-			ApiUnitDAO dao = new ApiUnitDAO(dbi))
+		try (DataTypeDAI dai = getDao(DataTypeDAI.class))
 		{
-			return ApiHttpUtil.createResponse(dao.getDataTypeList(std));
+			DataTypeSet set = new DataTypeSet();
+			dai.readDataTypeSet(set);
+			return Response.status(HttpServletResponse.SC_OK).entity(set).build();
+		}
+		catch(DbIoException e)
+		{
+			throw new DbException("Unable to retrieve data type list", e);
 		}
 	}
 
@@ -72,12 +83,17 @@ public class DatatypeUnitResources
 	@RolesAllowed({AuthorizationCheck.ODCS_API_GUEST})
 	public Response getUnitList() throws DbException
 	{
-		
-		Logger.getLogger(ApiConstants.loggerName).fine("getUnitList");
-		try (DbInterface dbi = new DbInterface();
-			ApiUnitDAO dao = new ApiUnitDAO(dbi))
+		try
 		{
-			return ApiHttpUtil.createResponse(dao.getUnitList());
+			EngineeringUnitIO unitDao = createDb().getLegacyDatabase(EngineeringUnitIO.class)
+					.orElseThrow(() -> new DbException("No EngineeringUnitIO available."));
+			EngineeringUnitList euList = new EngineeringUnitList();
+			unitDao.read(euList);
+			return Response.status(HttpServletResponse.SC_OK).entity(euList).build();
+		}
+		catch(DatabaseException e)
+		{
+			throw new DbException("Unable to retrieve data type list", e);
 		}
 	}
 	
@@ -87,16 +103,22 @@ public class DatatypeUnitResources
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({AuthorizationCheck.ODCS_API_ADMIN, AuthorizationCheck.ODCS_API_USER})
 	public Response postEU(@QueryParam("fromabbr") String fromabbr, ApiUnit eu)
-		throws WebAppException, DbException, SQLException
+		throws DbException, SQLException
 	{
-		Logger.getLogger(ApiConstants.loggerName).fine("postEU abbr=" + eu.getAbbr()
-			+ ", fromabbr=" + fromabbr);
-		
-		try (DbInterface dbi = new DbInterface();
-			ApiUnitDAO dao = new ApiUnitDAO(dbi))
+		try
 		{
-			dao.writeEU(eu, fromabbr);
-			return ApiHttpUtil.createResponse("{\"message\": \"The Engineering Unit was Saved successfully.\"}");
+			EngineeringUnit unit = new EngineeringUnit(fromabbr, eu.getName(), eu.getAbbr(), eu.getMeasures());
+			EngineeringUnitIO unitDao = createDb().getLegacyDatabase(EngineeringUnitIO.class)
+					.orElseThrow(() -> new DbException("No EngineeringUnitIO available."));
+			EngineeringUnitList euList = new EngineeringUnitList();
+			euList.add(unit);
+			unitDao.write(euList);
+			return Response.status(HttpServletResponse.SC_OK)
+					.entity("{\"message\": \"The Engineering Unit was Saved successfully.\"}").build();
+		}
+		catch(DatabaseException e)
+		{
+			throw new DbException("Unable to store Engineering Unit list", e);
 		}
 	}
 
@@ -107,15 +129,19 @@ public class DatatypeUnitResources
 	@RolesAllowed({AuthorizationCheck.ODCS_API_ADMIN, AuthorizationCheck.ODCS_API_USER})
 	public Response deleteEU(@QueryParam("abbr") String abbr) throws DbException
 	{
-		Logger.getLogger(ApiConstants.loggerName).fine(
-			"DELETE EU abbr=" + abbr);
-		
-		// Use username and password to attempt to connect to the database
-		try (DbInterface dbi = new DbInterface();
-			ApiUnitDAO dao = new ApiUnitDAO(dbi))
+		try
 		{
-			dao.deleteEU(abbr);
-			return ApiHttpUtil.createResponse("EU with abbr " + abbr + " deleted");
+			EngineeringUnit unit = new EngineeringUnit(abbr, null, null, null);
+			EngineeringUnitIO unitDao = createDb().getLegacyDatabase(EngineeringUnitIO.class)
+					.orElseThrow(() -> new DbException("No EngineeringUnitIO available."));
+			EngineeringUnitList euList = new EngineeringUnitList();
+			euList.add(unit);
+			unitDao.write(euList);
+			return Response.status(HttpServletResponse.SC_OK).entity("EU with abbr " + abbr + " deleted").build();
+		}
+		catch(SQLException | DatabaseException e)
+		{
+			throw new DbException("Unable to store Engineering Unit list", e);
 		}
 	}
 
@@ -125,11 +151,17 @@ public class DatatypeUnitResources
 	@RolesAllowed({AuthorizationCheck.ODCS_API_GUEST})
 	public Response getUnitConvList() throws DbException
 	{
-		Logger.getLogger(ApiConstants.loggerName).fine("getUnitConvList");
-		try (DbInterface dbi = new DbInterface();
-			ApiUnitDAO dao = new ApiUnitDAO(dbi))
+		try
 		{
-			return ApiHttpUtil.createResponse(dao.getConverterList(false));
+			UnitConverterIO unitDao = createDb().getLegacyDatabase(UnitConverterIO.class)
+					.orElseThrow(() -> new DbException("No UnitConverterIO available."));
+			UnitConverterSet unitConverterSet = new UnitConverterSet();
+			unitDao.read(unitConverterSet);
+			return ApiHttpUtil.createResponse(unitConverterSet);
+		}
+		catch(DatabaseException e)
+		{
+			throw new DbException("Unable to retrieve Unit Converter list", e);
 		}
 	}
 	
@@ -138,16 +170,42 @@ public class DatatypeUnitResources
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({AuthorizationCheck.ODCS_API_ADMIN, AuthorizationCheck.ODCS_API_USER})
-	public Response postEUConv(ApiUnitConverter euc) throws WebAppException, DbException
+	public Response postEUConv(ApiUnitConverter euc) throws DbException
 	{
-		Logger.getLogger(ApiConstants.loggerName).fine("postEUConv from=" 
-			+ euc.getFromAbbr() + ", to=" + euc.getToAbbr());
-		
-		try (DbInterface dbi = new DbInterface();
-			ApiUnitDAO dao = new ApiUnitDAO(dbi))
+		try
 		{
-			dao.writeEUConv(euc);
+			UnitConverterIO unitDao = createDb().getLegacyDatabase(UnitConverterIO.class)
+					.orElseThrow(() -> new DbException("No UnitConverterIO available."));
+
+			unitDao.write(map(euc));
 			return ApiHttpUtil.createResponse("EUConv Saved");
+		}
+		catch(DatabaseException e)
+		{
+			throw new DbException("Unable to store Unit Converter list", e);
+		}
+	}
+
+	static UnitConverterSet map(ApiUnitConverter euc) throws DbException
+	{
+		try
+		{
+			UnitConverterSet unitConverterSet = new UnitConverterSet();
+			UnitConverterDb unitConverterDb = new UnitConverterDb(euc.getFromAbbr(), euc.getToAbbr());
+			unitConverterDb.setId(DbKey.createDbKey(euc.getUcId()));
+			unitConverterDb.algorithm = euc.getAlgorithm();
+			unitConverterDb.coefficients[0] = euc.getA();
+			unitConverterDb.coefficients[1] = euc.getB();
+			unitConverterDb.coefficients[2] = euc.getC();
+			unitConverterDb.coefficients[3] = euc.getD();
+			unitConverterDb.coefficients[4] = euc.getE();
+			unitConverterDb.coefficients[5] = euc.getF();
+			unitConverterSet.addDbConverter(unitConverterDb);
+			return unitConverterSet;
+		}
+		catch(DatabaseException e)
+		{
+			throw new DbException("Unable to map Unit Converter", e);
 		}
 	}
 
@@ -158,15 +216,18 @@ public class DatatypeUnitResources
 	@RolesAllowed({AuthorizationCheck.ODCS_API_ADMIN, AuthorizationCheck.ODCS_API_USER})
 	public Response deleteEUConv(@QueryParam("euconvid") Long id) throws DbException
 	{
-		Logger.getLogger(ApiConstants.loggerName).fine(
-			"DELETE EUConverter id=" + id);
-		
-		// Use username and password to attempt to connect to the database
-		try (DbInterface dbi = new DbInterface();
-			ApiUnitDAO dao = new ApiUnitDAO(dbi))
+		try
 		{
-			dao.deleteEUConv(id);
-			return ApiHttpUtil.createResponse("EUConv with id=" + id + " deleted");
+			UnitConverterIO unitDao = createDb().getLegacyDatabase(UnitConverterIO.class)
+					.orElseThrow(() -> new DbException("No UnitConverterIO available."));
+			UnitConverterDb unitConvDB = new UnitConverterDb("", "");
+			unitConvDB.setId(DbKey.createDbKey(id));
+			unitDao.delete(unitConvDB);
+			return Response.status(HttpServletResponse.SC_NOT_IMPLEMENTED).entity("EUConv with id=" + id + " deleted").build();
+		}
+		catch(SQLException | DatabaseException e)
+		{
+			throw new DbException("Unable to delete Unit Converter", e);
 		}
 	}
 }
