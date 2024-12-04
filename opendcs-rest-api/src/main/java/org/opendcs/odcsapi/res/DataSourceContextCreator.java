@@ -20,10 +20,10 @@ import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
+import javax.servlet.annotation.WebListener;
 import javax.sql.DataSource;
-import javax.ws.rs.ext.Provider;
 
-@Provider
+@WebListener
 public final class DataSourceContextCreator implements ServletContextListener
 {
 	public static final String DATA_SOURCE_ATTRIBUTE_KEY = "OPENDCS_DATA_SOURCE";

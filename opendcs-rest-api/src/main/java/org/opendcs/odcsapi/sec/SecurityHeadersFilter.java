@@ -25,7 +25,7 @@ import javax.ws.rs.ext.Provider;
 
 
 @Provider
-@Priority(Priorities.AUTHENTICATION)
+@Priority(Priorities.USER)
 public final class SecurityHeadersFilter implements ContainerResponseFilter
 {
 

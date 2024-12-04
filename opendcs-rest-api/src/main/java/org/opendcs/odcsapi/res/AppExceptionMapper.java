@@ -77,7 +77,7 @@ public class AppExceptionMapper implements ExceptionMapper<Throwable>
 	{
 		LOGGER.warn("Unknown Error", ex);
 		Status status = new Status("Bad Request.  There was an issue with the request, please try again or contact your system administrator.");
-		return ApiHttpUtil.createResponse(status, HttpServletResponse.SC_BAD_REQUEST);
+		return ApiHttpUtil.createResponse(status, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 	}
 
 	private static Response handle(UnsupportedOperationException wae)
