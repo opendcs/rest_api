@@ -86,12 +86,6 @@ public class AppExceptionMapper implements ExceptionMapper<Throwable>
 		return ApiHttpUtil.createResponse(new Status(wae.getMessage()), HttpServletResponse.SC_NOT_IMPLEMENTED);
 	}
 
-	private static Response handle(UnsupportedOperationException wae)
-	{
-		LOGGER.warn("Unsupported endpoint", wae);
-		return ApiHttpUtil.createResponse(new Status(wae.getMessage()), HttpServletResponse.SC_NOT_IMPLEMENTED);
-	}
-
 	private static Response handle(WebApplicationException wae)
 	{
 		LOGGER.warn("Error in request", wae);

@@ -30,7 +30,6 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import decodes.db.DatabaseException;
 import decodes.sql.DbKey;
 import decodes.tsdb.DbAlgoParm;
 import decodes.tsdb.DbCompAlgorithm;
@@ -60,7 +59,7 @@ public class AlgorithmResources extends OpenDcsResource
 	@Path("algorithmrefs")
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed(AuthorizationCheck.ODCS_API_GUEST)
-	public Response getAlgorithmRefs() throws DbIoException, DatabaseException
+	public Response getAlgorithmRefs() throws DbIoException
 	{
 		try(AlgorithmDAI dai = getDao(AlgorithmDAI.class))
 		{
@@ -90,7 +89,7 @@ public class AlgorithmResources extends OpenDcsResource
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed(AuthorizationCheck.ODCS_API_GUEST)
 	public Response getAlgorithm(@QueryParam("algorithmid") Long algoId)
-			throws WebAppException, DbIoException, DatabaseException
+			throws WebAppException, DbIoException
 	{
 		if(algoId == null)
 		{
@@ -155,7 +154,7 @@ public class AlgorithmResources extends OpenDcsResource
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({AuthorizationCheck.ODCS_API_ADMIN, AuthorizationCheck.ODCS_API_USER})
-	public Response postAlgorithm(ApiAlgorithm algo) throws DbIoException, DatabaseException
+	public Response postAlgorithm(ApiAlgorithm algo) throws DbIoException
 	{
 		try(AlgorithmDAI dai = getDao(AlgorithmDAI.class))
 		{
@@ -191,7 +190,7 @@ public class AlgorithmResources extends OpenDcsResource
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({AuthorizationCheck.ODCS_API_ADMIN, AuthorizationCheck.ODCS_API_USER})
-	public Response deletAlgorithm(@QueryParam("algorithmid") Long algorithmId) throws TsdbException, DatabaseException
+	public Response deletAlgorithm(@QueryParam("algorithmid") Long algorithmId) throws TsdbException
 	{
 		try(AlgorithmDAI dai = getDao(AlgorithmDAI.class))
 		{
