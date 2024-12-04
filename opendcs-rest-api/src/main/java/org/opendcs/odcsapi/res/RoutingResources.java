@@ -16,11 +16,14 @@
 package org.opendcs.odcsapi.res;
 
 import java.sql.SQLException;
-import java.util.logging.Logger;
+import java.time.ZoneId;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.TimeZone;
 
 import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
+import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -33,19 +36,27 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import decodes.db.DatabaseException;
+import decodes.db.RoutingSpec;
+import decodes.db.RoutingSpecList;
+import decodes.db.ScheduleEntry;
+import decodes.polling.DacqEvent;
+import decodes.sql.DbKey;
+import decodes.sql.RoutingSpecListIO;
+import decodes.tsdb.DbIoException;
+import opendcs.dai.DacqEventDAI;
+import opendcs.dai.ScheduleEntryDAI;
 import org.opendcs.odcsapi.beans.ApiRouting;
+import org.opendcs.odcsapi.beans.ApiRoutingRef;
 import org.opendcs.odcsapi.beans.ApiScheduleEntry;
-import org.opendcs.odcsapi.dao.ApiRoutingDAO;
+import org.opendcs.odcsapi.beans.ApiScheduleEntryRef;
 import org.opendcs.odcsapi.dao.DbException;
 import org.opendcs.odcsapi.errorhandling.ErrorCodes;
 import org.opendcs.odcsapi.errorhandling.WebAppException;
-import org.opendcs.odcsapi.hydrojson.DbInterface;
 import org.opendcs.odcsapi.sec.AuthorizationCheck;
-import org.opendcs.odcsapi.util.ApiConstants;
-import org.opendcs.odcsapi.util.ApiHttpUtil;
 
 @Path("/")
-public class RoutingResources
+public class RoutingResources extends OpenDcsResource
 {
 	@Context private HttpServletRequest request;
 	@Context private HttpHeaders httpHeaders;
@@ -56,12 +67,30 @@ public class RoutingResources
 	@RolesAllowed({AuthorizationCheck.ODCS_API_GUEST})
 	public Response getRoutingRefs() throws DbException
 	{
-		Logger.getLogger(ApiConstants.loggerName).fine("getRoutingRefs");
-		try (DbInterface dbi = new DbInterface();
-			ApiRoutingDAO dao = new ApiRoutingDAO(dbi))
+		try
 		{
-			return ApiHttpUtil.createResponse(dao.getRoutingRefs());
+			RoutingSpecListIO rsl = new RoutingSpecListIO(null, null, null, null);
+			RoutingSpecList rsList = new RoutingSpecList();
+			rsl.read(rsList);
+			return Response.status(HttpServletResponse.SC_OK)
+					.entity(map(rsList)).build();
 		}
+		catch(SQLException | DatabaseException e)
+		{
+			throw new DbException("Unable to retrieve routing reference list", e);
+		}
+	}
+
+	static List<ApiRoutingRef> map(RoutingSpecList rsList)
+	{
+		List<ApiRoutingRef> refs = new ArrayList<>();
+		rsList.getList().forEach(rs -> {
+			ApiRoutingRef ref = new ApiRoutingRef();
+			ref.setRoutingId(rs.getId().getValue());
+			ref.setName(rs.getName());
+			refs.add(ref);
+		});
+		return refs;
 	}
 
 	@GET
@@ -69,19 +98,41 @@ public class RoutingResources
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({AuthorizationCheck.ODCS_API_GUEST})
 	public Response getRouting(@QueryParam("routingid") Long routingId)
-			throws WebAppException, DbException, SQLException
+			throws WebAppException, DbException
 	{
 		
 		if (routingId == null)
 			throw new WebAppException(ErrorCodes.MISSING_ID, 
 				"Missing required routingid parameter.");
 		
-		Logger.getLogger(ApiConstants.loggerName).fine("getRouting id=" + routingId);
-		try (DbInterface dbi = new DbInterface();
-			ApiRoutingDAO dao = new ApiRoutingDAO(dbi))
+		try
 		{
-			return ApiHttpUtil.createResponse(dao.getRouting(routingId));
+			RoutingSpecListIO rsl = new RoutingSpecListIO(null, null, null, null);
+			RoutingSpec spec = new RoutingSpec();
+			spec.setId(DbKey.createDbKey(routingId));
+			rsl.readRoutingSpec(spec);
+			return Response.status(HttpServletResponse.SC_OK)
+					.entity(map(spec)).build();
 		}
+		catch(DatabaseException e)
+		{
+			throw new DbException("Unable to retrieve routing spec by ID", e);
+		}
+	}
+
+	static ApiRouting map(RoutingSpec spec) {
+		ApiRouting routing = new ApiRouting();
+		routing.setRoutingId(spec.getId().getValue());
+		routing.setName(spec.getName());
+		routing.setLastModified(spec.lastModifyTime);
+		if (spec.outputTimeZone != null)
+		{
+			routing.setOutputTZ(spec.outputTimeZone.toZoneId().getId());
+		}
+		routing.setNetlistNames(new ArrayList<>(spec.networkListNames));
+		routing.setOutputFormat(spec.outputFormat);
+		routing.setEnableEquations(spec.enableEquations);
+		return routing;
 	}
 
 	@POST
@@ -90,17 +141,44 @@ public class RoutingResources
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({AuthorizationCheck.ODCS_API_ADMIN, AuthorizationCheck.ODCS_API_USER})
 	public Response postRouting(ApiRouting routing)
-		throws WebAppException, DbException, SQLException
+		throws DbException, SQLException
 	{
-		Logger.getLogger(ApiConstants.loggerName).fine("post routing received routing " + routing.getName() 
-			+ " with ID=" + routing.getRoutingId());
-		
-		try (DbInterface dbi = new DbInterface();
-				ApiRoutingDAO dao = new ApiRoutingDAO(dbi))
+		try
 		{
-			dao.writeRouting(routing);
-			return ApiHttpUtil.createResponse(routing);
+			RoutingSpecListIO rsl = new RoutingSpecListIO(null, null, null, null);
+			RoutingSpec mappedRouting = map(routing);
+			rsl.write(mappedRouting);
+			return Response.status(HttpServletResponse.SC_OK)
+					.entity(mappedRouting).build();
 		}
+		catch(DatabaseException e)
+		{
+			throw new DbException("Unable to store routing spec", e);
+		}
+	}
+
+	static RoutingSpec map(ApiRouting routing) throws DbException
+	{
+		try
+		{
+			RoutingSpec spec = new RoutingSpec();
+			spec.setId(DbKey.createDbKey(routing.getRoutingId()));
+			spec.setName(routing.getName());
+			spec.lastModifyTime = routing.getLastModified();
+			if (routing.getOutputTZ() != null)
+			{
+				spec.outputTimeZone = TimeZone.getTimeZone(ZoneId.of(routing.getOutputTZ()));
+			}
+			routing.getNetlistNames().forEach(spec::addNetworkListName);
+			spec.outputFormat = routing.getOutputFormat();
+			spec.enableEquations = routing.isEnableEquations();
+			return spec;
+		}
+		catch(DatabaseException e)
+		{
+			throw new DbException("Unable to map routing spec", e);
+		}
+
 	}
 
 	@DELETE
@@ -108,17 +186,20 @@ public class RoutingResources
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response deleteRouting(@QueryParam("routingid") Long routingId)
-		throws WebAppException, DbException, SQLException
+		throws DbException, SQLException
 	{
-		Logger.getLogger(ApiConstants.loggerName)
-				.fine("DELETE routing received routingId=" + routingId);
-		
-		// Use username and password to attempt to connect to the database
-		try (DbInterface dbi = new DbInterface();
-			ApiRoutingDAO dao = new ApiRoutingDAO(dbi))
+		try
 		{
-			dao.deleteRouting(routingId);
-			return ApiHttpUtil.createResponse("RoutingSpec with ID " + routingId + " deleted");
+			RoutingSpecListIO rsl = new RoutingSpecListIO(null, null, null, null);
+			RoutingSpec spec = new RoutingSpec();
+			spec.setId(DbKey.createDbKey(routingId));
+			rsl.delete(spec);
+			return Response.status(HttpServletResponse.SC_OK)
+					.entity("RoutingSpec with ID " + routingId + " deleted").build();
+		}
+		catch(DatabaseException e)
+		{
+			throw new DbException("Unable to delete routing spec", e);
 		}
 	}
 
@@ -129,12 +210,33 @@ public class RoutingResources
 	public Response getScheduleRefs()
 		throws DbException
 	{
-		Logger.getLogger(ApiConstants.loggerName).fine("getScheduleRefs");
-		try (DbInterface dbi = new DbInterface();
-			ApiRoutingDAO dao = new ApiRoutingDAO(dbi))
+		try (ScheduleEntryDAI dai = createDb().getDao(ScheduleEntryDAI.class)
+				.orElseThrow(() -> new DbException("No ScheduleEntryDAI available")))
 		{
-			return ApiHttpUtil.createResponse(dao.getScheduleRefs());
+			List<ScheduleEntry> entries = dai.listScheduleEntries(null);
+			return Response.status(HttpServletResponse.SC_OK)
+					.entity(map(entries)).build();
 		}
+		catch(DbIoException e)
+		{
+			throw new DbException("Unable to retrieve schedule entry ref list", e);
+		}
+	}
+
+	static List<ApiScheduleEntryRef> map(List<ScheduleEntry> entries)
+	{
+		List<ApiScheduleEntryRef> refs = new ArrayList<>();
+		entries.forEach(entry -> {
+			ApiScheduleEntryRef ref = new ApiScheduleEntryRef();
+			ref.setSchedEntryId(entry.getId().getValue());
+			ref.setEnabled(entry.isEnabled());
+			ref.setAppName(entry.getLoadingAppName());
+			ref.setName(entry.getName());
+			ref.setLastModified(entry.getLastModified());
+			ref.setRoutingSpecName(entry.getRoutingSpecName());
+			refs.add(ref);
+		});
+		return refs;
 	}
 
 	@GET
@@ -148,12 +250,12 @@ public class RoutingResources
 			throw new WebAppException(ErrorCodes.MISSING_ID, 
 				"Missing required scheduleid parameter.");
 		
-		Logger.getLogger(ApiConstants.loggerName).fine("getSchedule id=" + scheduleId);
-		try (DbInterface dbi = new DbInterface();
-				ApiRoutingDAO dao = new ApiRoutingDAO(dbi))
-		{
-			return ApiHttpUtil.createResponse(dao.getSchedule(scheduleId));
-		}
+//		try (DbInterface dbi = new DbInterface();
+//				ApiRoutingDAO dao = new ApiRoutingDAO(dbi))
+//		{
+//			return ApiHttpUtil.createResponse(dao.getSchedule(scheduleId));
+//		}
+		return Response.status(HttpServletResponse.SC_NOT_IMPLEMENTED).build();
 	}
 
 	@POST
@@ -162,16 +264,42 @@ public class RoutingResources
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({AuthorizationCheck.ODCS_API_ADMIN, AuthorizationCheck.ODCS_API_USER})
 	public Response postSchedule(ApiScheduleEntry schedule)
-		throws WebAppException, DbException, SQLException
+		throws DbException
 	{
-		Logger.getLogger(ApiConstants.loggerName).fine("post schedule received sched " + schedule.getName() 
-			+ " with ID=" + schedule.getSchedEntryId());
-		
-		try (DbInterface dbi = new DbInterface();
-				ApiRoutingDAO dao = new ApiRoutingDAO(dbi))
+		try (ScheduleEntryDAI dai = createDb().getDao(ScheduleEntryDAI.class)
+				.orElseThrow(() -> new DbException("No ScheduleEntryDAI available")))
 		{
-			dao.writeSchedule(schedule);
-			return ApiHttpUtil.createResponse(schedule);
+			ScheduleEntry entry = map(schedule);
+			dai.writeScheduleEntry(entry);
+			return Response.status(HttpServletResponse.SC_OK)
+					.entity(entry).build();
+		}
+		catch (DbIoException e)
+		{
+			throw new DbException("Unable to store schedule entry", e);
+		}
+	}
+
+	static ScheduleEntry map(ApiScheduleEntry schedule) throws DbException
+	{
+		try
+		{
+			ScheduleEntry entry = new ScheduleEntry(DbKey.createDbKey(schedule.getSchedEntryId()));
+			entry.setStartTime(schedule.getStartTime());
+			entry.setTimezone(schedule.getTimeZone());
+			entry.setLoadingAppId(DbKey.createDbKey(schedule.getAppId()));
+			entry.setRoutingSpecId(DbKey.createDbKey(schedule.getRoutingSpecId()));
+			entry.setLoadingAppName(schedule.getAppName());
+			entry.setRoutingSpecName(schedule.getRoutingSpecName());
+			entry.setRunInterval(schedule.getRunInterval());
+			entry.setName(schedule.getName());
+			entry.setLastModified(schedule.getLastModified());
+			entry.setId(DbKey.createDbKey(schedule.getSchedEntryId()));
+			return entry;
+		}
+		catch (DatabaseException e)
+		{
+			throw new DbException("Unable to map schedule entry", e);
 		}
 	}
 
@@ -181,17 +309,20 @@ public class RoutingResources
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({AuthorizationCheck.ODCS_API_ADMIN, AuthorizationCheck.ODCS_API_USER})
 	public Response deleteSchedule(@QueryParam("scheduleid") Long scheduleId)
-		throws WebAppException, DbException
+		throws DbException
 	{
-		Logger.getLogger(ApiConstants.loggerName)
-				.fine("DELETE schedule received scheduleId=" + scheduleId);
-		
 		// Use username and password to attempt to connect to the database
-		try (DbInterface dbi = new DbInterface();
-				ApiRoutingDAO dao = new ApiRoutingDAO(dbi))
+		try (ScheduleEntryDAI dai = createDb().getDao(ScheduleEntryDAI.class)
+				.orElseThrow(() -> new DbException("No ScheduleEntryDAI available")))
 		{
-			dao.deleteSchedule(scheduleId);
-			return ApiHttpUtil.createResponse("schedulec with ID " + scheduleId + " deleted");
+			ScheduleEntry entry = new ScheduleEntry(DbKey.createDbKey(scheduleId));
+			dai.deleteScheduleEntry(entry);
+			return Response.status(HttpServletResponse.SC_OK)
+					.entity("schedulec with ID " + scheduleId + " deleted").build();
+		}
+		catch (DbIoException e)
+		{
+			throw new DbException(String.format("Unable to delete schedule entry by ID: %s", scheduleId), e);
 		}
 	}
 
@@ -203,12 +334,12 @@ public class RoutingResources
 	public Response getRoutingStats()
 		throws WebAppException, DbException
 	{
-		Logger.getLogger(ApiConstants.loggerName).fine("getRoutingStats");
-		try (DbInterface dbi = new DbInterface();
-			ApiRoutingDAO dao = new ApiRoutingDAO(dbi))
-		{
-			return ApiHttpUtil.createResponse(dao.getRsStatus());
-		}
+//		try (DbInterface dbi = new DbInterface();
+//			ApiRoutingDAO dao = new ApiRoutingDAO(dbi))
+//		{
+//			return ApiHttpUtil.createResponse(dao.getRsStatus());
+//		}
+		return Response.status(HttpServletResponse.SC_NOT_IMPLEMENTED).build();
 	}
 
 	@GET
@@ -221,12 +352,12 @@ public class RoutingResources
 		if (scheduleEntryId == null)
 			throw new WebAppException(ErrorCodes.MISSING_ID, "missing required scheduleentryid argument.");
 		
-		Logger.getLogger(ApiConstants.loggerName).fine("getRoutingExecStatus");
-		try (DbInterface dbi = new DbInterface();
-			ApiRoutingDAO dao = new ApiRoutingDAO(dbi))
-		{
-			return ApiHttpUtil.createResponse(dao.getRoutingExecStatus(scheduleEntryId));
-		}
+//		try (DbInterface dbi = new DbInterface();
+//			ApiRoutingDAO dao = new ApiRoutingDAO(dbi))
+//		{
+//			return ApiHttpUtil.createResponse(dao.getRoutingExecStatus(scheduleEntryId));
+//		}
+		return Response.status(HttpServletResponse.SC_NOT_IMPLEMENTED).build();
 	}
 
 	@GET
@@ -237,12 +368,36 @@ public class RoutingResources
 		@QueryParam("platformid") Long platformId, @QueryParam("backlog") String backlog)
 		throws DbException
 	{
-		Logger.getLogger(ApiConstants.loggerName).fine("getDacqEvents");
-		try (DbInterface dbi = new DbInterface();
-			ApiRoutingDAO dao = new ApiRoutingDAO(dbi))
+//		try (DbInterface dbi = new DbInterface();
+//			ApiRoutingDAO dao = new ApiRoutingDAO(dbi))
+//		{
+//			HttpSession session = request.getSession(true);
+//			return ApiHttpUtil.createResponse(dao.getDacqEvents(appId, routingExecId, platformId, backlog, session));
+//		}
+
+		try (DacqEventDAI dai = createDb().getDao(DacqEventDAI.class)
+				.orElseThrow(() -> new DbException("No DacqEventDAI available")))
 		{
-			HttpSession session = request.getSession(true);
-			return ApiHttpUtil.createResponse(dao.getDacqEvents(appId, routingExecId, platformId, backlog, session));
+			ArrayList<DacqEvent> platformEvents = new ArrayList<>();
+			if (platformId != null) {
+				dai.readEventsForPlatform(DbKey.createDbKey(platformId), platformEvents);
+			}
+			ArrayList<DacqEvent> routingExecEvents = new ArrayList<>();
+			if (routingExecId != null) {
+				dai.readEventsForScheduleStatus(DbKey.createDbKey(routingExecId), routingExecEvents);
+			}
+
+
+
+//			dai.getDacqEvents(appId, routingExecId, platformId, backlog);
+//			return Response.status(HttpServletResponse.SC_OK)
+//					.entity(events).build();
 		}
+		catch (DbIoException e)
+		{
+			throw new DbException("Unable to retrieve dacq events", e);
+		}
+
+		return Response.status(HttpServletResponse.SC_NOT_IMPLEMENTED).build();
 	}
 }
