@@ -46,7 +46,6 @@ import org.opendcs.odcsapi.beans.ApiUnit;
 import org.opendcs.odcsapi.beans.ApiUnitConverter;
 import org.opendcs.odcsapi.dao.DbException;
 import org.opendcs.odcsapi.sec.AuthorizationCheck;
-import org.opendcs.odcsapi.util.ApiHttpUtil;
 
 /**
  * HTTP Resources relating to DataTypes, Engineering Units, and Conversions
@@ -57,6 +56,8 @@ import org.opendcs.odcsapi.util.ApiHttpUtil;
 public class DatatypeUnitResources extends OpenDcsResource
 {
 	@Context HttpHeaders httpHeaders;
+	private static final String NO_UNIT_CONVERTER = "No UnitConverterIO available.";
+	private static final String NO_ENGINEERING_UNIT = "No EngineeringUnitIO available.";
 
 	@GET
 	@Path("datatypelist")
@@ -86,7 +87,7 @@ public class DatatypeUnitResources extends OpenDcsResource
 		try
 		{
 			EngineeringUnitIO unitDao = createDb().getLegacyDatabase(EngineeringUnitIO.class)
-					.orElseThrow(() -> new DbException("No EngineeringUnitIO available."));
+					.orElseThrow(() -> new DbException(NO_ENGINEERING_UNIT));
 			EngineeringUnitList euList = new EngineeringUnitList();
 			unitDao.read(euList);
 			return Response.status(HttpServletResponse.SC_OK).entity(euList).build();
@@ -109,7 +110,7 @@ public class DatatypeUnitResources extends OpenDcsResource
 		{
 			EngineeringUnit unit = new EngineeringUnit(fromabbr, eu.getName(), eu.getAbbr(), eu.getMeasures());
 			EngineeringUnitIO unitDao = createDb().getLegacyDatabase(EngineeringUnitIO.class)
-					.orElseThrow(() -> new DbException("No EngineeringUnitIO available."));
+					.orElseThrow(() -> new DbException(NO_ENGINEERING_UNIT));
 			EngineeringUnitList euList = new EngineeringUnitList();
 			euList.add(unit);
 			unitDao.write(euList);
@@ -133,7 +134,7 @@ public class DatatypeUnitResources extends OpenDcsResource
 		{
 			EngineeringUnit unit = new EngineeringUnit(abbr, null, null, null);
 			EngineeringUnitIO unitDao = createDb().getLegacyDatabase(EngineeringUnitIO.class)
-					.orElseThrow(() -> new DbException("No EngineeringUnitIO available."));
+					.orElseThrow(() -> new DbException(NO_ENGINEERING_UNIT));
 			EngineeringUnitList euList = new EngineeringUnitList();
 			euList.add(unit);
 			unitDao.write(euList);
@@ -154,10 +155,10 @@ public class DatatypeUnitResources extends OpenDcsResource
 		try
 		{
 			UnitConverterIO unitDao = createDb().getLegacyDatabase(UnitConverterIO.class)
-					.orElseThrow(() -> new DbException("No UnitConverterIO available."));
+					.orElseThrow(() -> new DbException(NO_UNIT_CONVERTER));
 			UnitConverterSet unitConverterSet = new UnitConverterSet();
 			unitDao.read(unitConverterSet);
-			return ApiHttpUtil.createResponse(unitConverterSet);
+			return Response.status(HttpServletResponse.SC_OK).entity(unitConverterSet).build();
 		}
 		catch(DatabaseException e)
 		{
@@ -175,10 +176,10 @@ public class DatatypeUnitResources extends OpenDcsResource
 		try
 		{
 			UnitConverterIO unitDao = createDb().getLegacyDatabase(UnitConverterIO.class)
-					.orElseThrow(() -> new DbException("No UnitConverterIO available."));
+					.orElseThrow(() -> new DbException(NO_UNIT_CONVERTER));
 
 			unitDao.write(map(euc));
-			return ApiHttpUtil.createResponse("EUConv Saved");
+			return Response.status(HttpServletResponse.SC_OK).entity("EUConv Saved").build();
 		}
 		catch(DatabaseException e)
 		{
@@ -219,11 +220,11 @@ public class DatatypeUnitResources extends OpenDcsResource
 		try
 		{
 			UnitConverterIO unitDao = createDb().getLegacyDatabase(UnitConverterIO.class)
-					.orElseThrow(() -> new DbException("No UnitConverterIO available."));
+					.orElseThrow(() -> new DbException(NO_UNIT_CONVERTER));
 			UnitConverterDb unitConvDB = new UnitConverterDb("", "");
 			unitConvDB.setId(DbKey.createDbKey(id));
 			unitDao.delete(unitConvDB);
-			return Response.status(HttpServletResponse.SC_NOT_IMPLEMENTED).entity("EUConv with id=" + id + " deleted").build();
+			return Response.status(HttpServletResponse.SC_OK).entity("EUConv with id=" + id + " deleted").build();
 		}
 		catch(SQLException | DatabaseException e)
 		{
