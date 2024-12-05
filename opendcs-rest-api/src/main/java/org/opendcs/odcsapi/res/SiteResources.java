@@ -48,12 +48,12 @@ import org.opendcs.odcsapi.dao.DbException;
 import org.opendcs.odcsapi.errorhandling.ErrorCodes;
 import org.opendcs.odcsapi.errorhandling.WebAppException;
 import org.opendcs.odcsapi.sec.AuthorizationCheck;
-import org.opendcs.odcsapi.util.ApiHttpUtil;
 
 @Path("/")
 public class SiteResources extends OpenDcsResource
 {
 	@Context HttpHeaders httpHeaders;
+	private static final String NO_SITE_DAI = "No SiteDAI available";
 
 	@GET
 	@Path("siterefs")
@@ -63,7 +63,7 @@ public class SiteResources extends OpenDcsResource
 		throws DbException
 	{
 		try (SiteDAI dai = createDb().getDao(SiteDAI.class)
-					 .orElseThrow(() -> new DbException("No SiteDAI available")))
+					 .orElseThrow(() -> new DbException(NO_SITE_DAI)))
 		{
 			SiteList sites = new SiteList();
 			dai.read(sites);
@@ -110,7 +110,7 @@ public class SiteResources extends OpenDcsResource
 				"Missing required siteid parameter.");
 
 		try (SiteDAI dai = createDb().getDao(SiteDAI.class)
-				.orElseThrow(() -> new DbException("No SiteDAI available")))
+				.orElseThrow(() -> new DbException(NO_SITE_DAI)))
 		{
 			return Response.status(HttpServletResponse.SC_OK)
 					.entity(dai.getSiteById(DbKey.createDbKey(siteId))).build();
@@ -129,10 +129,8 @@ public class SiteResources extends OpenDcsResource
 	public Response postSite(ApiSite site)
 		throws DbException
 	{
-
-		// Use username and password to attempt to connect to the database
 		try (SiteDAI dai = createDb().getDao(SiteDAI.class)
-				.orElseThrow(() -> new DbException("No SiteDAI available")))
+				.orElseThrow(() -> new DbException(NO_SITE_DAI)))
 		{
 
 			dai.writeSite(map(site));
@@ -141,8 +139,9 @@ public class SiteResources extends OpenDcsResource
 			{
 			    sitePubName = "";
 			}
-			String resp = String.format("{\"status\": 200, \"message\": \"The site (%s) has been saved successfully.\"}", sitePubName);
-			return ApiHttpUtil.createResponse(resp);
+			return Response.status(HttpServletResponse.SC_OK)
+				.entity(String.format("{\"status\": 200, \"message\": \"The site (%s) has been saved successfully.\"}",
+						sitePubName)).build();
 		}
 		catch(DatabaseException | DbIoException e)
 		{
@@ -181,10 +180,11 @@ public class SiteResources extends OpenDcsResource
 	{
 		// Use username and password to attempt to connect to the database
 		try (SiteDAI dai = createDb().getDao(SiteDAI.class)
-				.orElseThrow(() -> new DbException("No SiteDAI available")))
+				.orElseThrow(() -> new DbException(NO_SITE_DAI)))
 		{
 			dai.deleteSite(DbKey.createDbKey(siteId));
-			return ApiHttpUtil.createResponse("ID " + siteId + " deleted");
+			return Response.status(HttpServletResponse.SC_OK)
+					.entity("ID " + siteId + " deleted").build();
 		}
 		catch(DbIoException e)
 		{
