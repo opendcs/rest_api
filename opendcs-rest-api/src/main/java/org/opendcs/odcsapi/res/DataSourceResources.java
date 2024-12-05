@@ -16,9 +16,11 @@
 package org.opendcs.odcsapi.res;
 
 import java.sql.SQLException;
-import java.util.logging.Logger;
+import java.util.ArrayList;
+import java.util.Vector;
 
 import javax.annotation.security.RolesAllowed;
+import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -31,18 +33,20 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import decodes.db.DataSource;
+import decodes.db.DataSourceList;
+import decodes.db.DatabaseException;
+import decodes.sql.DataSourceListIO;
+import decodes.sql.DbKey;
 import org.opendcs.odcsapi.beans.ApiDataSource;
-import org.opendcs.odcsapi.dao.ApiDataSourceDAO;
+import org.opendcs.odcsapi.beans.ApiDataSourceGroupMember;
 import org.opendcs.odcsapi.dao.DbException;
 import org.opendcs.odcsapi.errorhandling.ErrorCodes;
 import org.opendcs.odcsapi.errorhandling.WebAppException;
-import org.opendcs.odcsapi.hydrojson.DbInterface;
 import org.opendcs.odcsapi.sec.AuthorizationCheck;
-import org.opendcs.odcsapi.util.ApiConstants;
-import org.opendcs.odcsapi.util.ApiHttpUtil;
 
 @Path("/")
-public class DataSourceResources
+public class DataSourceResources extends OpenDcsResource
 {
 	@Context HttpHeaders httpHeaders;
 
@@ -52,11 +56,17 @@ public class DataSourceResources
 	@RolesAllowed({AuthorizationCheck.ODCS_API_GUEST})
 	public Response getDataSourceRefs() throws DbException
 	{
-		Logger.getLogger(ApiConstants.loggerName).fine("getDataSourceRefs");
-		try (DbInterface dbi = new DbInterface();
-			ApiDataSourceDAO dao = new ApiDataSourceDAO(dbi))
+		try
 		{
-			return ApiHttpUtil.createResponse(dao.readDataSourceRefs());
+			DataSourceListIO dao = new DataSourceListIO(null);
+			DataSourceList dsl = new DataSourceList();
+			dao.read(dsl);
+
+			return Response.status(HttpServletResponse.SC_OK).entity(dsl).build();
+		}
+		catch (DatabaseException | SQLException ex)
+		{
+			throw new DbException("Error reading data source list: " + ex);
 		}
 	}
 
@@ -65,22 +75,53 @@ public class DataSourceResources
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({AuthorizationCheck.ODCS_API_GUEST})
 	public Response geDataSource(@QueryParam("datasourceid") Long dataSourceId)
-		throws WebAppException, DbException, SQLException
+		throws WebAppException, DbException
 	{
 		if (dataSourceId == null)
 			throw new WebAppException(ErrorCodes.MISSING_ID, 
 				"Missing required datasourceid parameter.");
 		
-		Logger.getLogger(ApiConstants.loggerName).fine("getDataSource id=" + dataSourceId);
-		try (DbInterface dbi = new DbInterface();
-			ApiDataSourceDAO dao = new ApiDataSourceDAO(dbi))
+		try
 		{
-			ApiDataSource ret = dao.readDataSource(dataSourceId);
+			DataSourceListIO dao = new DataSourceListIO(null);
+			ApiDataSource ret = map(dao.readDS(DbKey.createDbKey(dataSourceId)));
 			if (ret == null)
 				throw new WebAppException(ErrorCodes.NO_SUCH_OBJECT, 
 					"No such DECODES data source with id=" + dataSourceId + ".");
-			return ApiHttpUtil.createResponse(ret);
+			return Response.status(HttpServletResponse.SC_OK).entity(ret).build();
 		}
+		catch (DatabaseException ex)
+		{
+			throw new DbException("Error reading data source: " + ex);
+		}
+	}
+
+	static ApiDataSource map(DataSource ds)
+	{
+		if (ds == null)
+			return null;
+		ApiDataSource ads = new ApiDataSource();
+		ads.setDataSourceId(ds.getId().getValue());
+		ads.setName(ds.getName());
+		ads.setType(ds.dataSourceType);
+		ads.setProps(ds.getArguments());
+		ads.setGroupMembers(map(ds.groupMembers));
+		return ads;
+	}
+
+	static ArrayList<ApiDataSourceGroupMember> map(Vector<DataSource> groupMembers)
+	{
+		if (groupMembers == null)
+			return new ArrayList<>();
+		ArrayList<ApiDataSourceGroupMember> ret = new ArrayList<>();
+		for(DataSource ds : groupMembers)
+		{
+			ApiDataSourceGroupMember ads = new ApiDataSourceGroupMember();
+			ads.setDataSourceId(ds.getId().getValue());
+			ads.setDataSourceName(ds.getName());
+			ret.add(ads);
+		}
+		return ret;
 	}
 
 	@POST
@@ -88,18 +129,45 @@ public class DataSourceResources
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({AuthorizationCheck.ODCS_API_ADMIN, AuthorizationCheck.ODCS_API_USER})
-	public Response postDatasource(ApiDataSource datasource) throws WebAppException, DbException, SQLException
+	public Response postDatasource(ApiDataSource datasource) throws DbException, SQLException
 	{
-		Logger.getLogger(ApiConstants.loggerName).fine(
-			"post datasource received datasource " + datasource.getName() 
-			+ " with ID=" + datasource.getDataSourceId());
-		
-		try (DbInterface dbi = new DbInterface();
-			ApiDataSourceDAO dsDao = new ApiDataSourceDAO(dbi))
+		try
 		{
-			dsDao.writedDataSource(datasource);
-			return ApiHttpUtil.createResponse(datasource);
+			DataSourceListIO dao = new DataSourceListIO(null);
+			dao.write(map(datasource));
+			return Response.status(HttpServletResponse.SC_OK)
+					.entity(String.format("Successfully stored data source with ID: %s", datasource.getDataSourceId()))
+					.build();
 		}
+		catch (DatabaseException ex)
+		{
+			throw new DbException("Error writing data source: " + ex);
+		}
+	}
+
+	static DataSource map(ApiDataSource ads)
+	{
+		DataSource ds = new DataSource(DbKey.createDbKey(ads.getDataSourceId()));
+		ds.setName(ads.getName());
+		ds.dataSourceType = ads.getType();
+		ds.arguments = ads.getProps();
+		ds.numUsedBy = ads.getUsedBy();
+		ds.groupMembers = map(ads.getGroupMembers());
+		return ds;
+	}
+
+	static Vector<DataSource> map(ArrayList<ApiDataSourceGroupMember> groupMembers)
+	{
+		Vector<DataSource> ret = new Vector<>();
+		if (groupMembers == null)
+			return ret;
+		for(ApiDataSourceGroupMember ads : groupMembers)
+		{
+			DataSource ds = new DataSource(DbKey.createDbKey(ads.getDataSourceId()));
+			ds.setName(ads.getDataSourceName());
+			ret.add(ds);
+		}
+		return ret;
 	}
 
 	@DELETE
@@ -109,21 +177,31 @@ public class DataSourceResources
 	@RolesAllowed({AuthorizationCheck.ODCS_API_ADMIN, AuthorizationCheck.ODCS_API_USER})
 	public Response deleteDatasource(@QueryParam("datasourceid") Long datasourceId) throws DbException
 	{
-		Logger.getLogger(ApiConstants.loggerName).fine(
-			"DELETE datasource received datasourceid=" + datasourceId);
-		
-		// Use username and password to attempt to connect to the database
-		try (DbInterface dbi = new DbInterface();
-			ApiDataSourceDAO dsDao = new ApiDataSourceDAO(dbi))
+		try
 		{
-			String errmsg = dsDao.datasourceUsedByRs(datasourceId);
-			if (errmsg != null)
-				return ApiHttpUtil.createResponse(" Cannot delete datasource with ID " + datasourceId 
-						+ " because it is used by the following routing specs: "
-						+ errmsg, ErrorCodes.NOT_ALLOWED);
+			DataSourceListIO dao = new DataSourceListIO(null);
+			DataSource ds = dao.readDS(DbKey.createDbKey(datasourceId));
+			if (ds == null)
+			{
+				return Response.status(HttpServletResponse.SC_NOT_FOUND)
+					.entity("No such data source with ID " + datasourceId).build();
+			}
 
-			dsDao.deleteDatasource(datasourceId);
-			return ApiHttpUtil.createResponse("Datasource with ID " + datasourceId + " deleted");
+			if (ds.numUsedBy > 0)
+			{
+				return Response.status(HttpServletResponse.SC_METHOD_NOT_ALLOWED)
+					.entity(" Cannot delete datasource with ID " + datasourceId
+						+ " because it is used by the following number of routing specs: "
+						+ ds.numUsedBy).build();
+			}
+
+			dao.delete(ds);
+			return Response.status(HttpServletResponse.SC_OK)
+					.entity("Datasource with ID " + datasourceId + " deleted").build();
+		}
+		catch (DatabaseException | SQLException ex)
+		{
+			throw new DbException("Error deleting data source: " + ex);
 		}
 	}
 
