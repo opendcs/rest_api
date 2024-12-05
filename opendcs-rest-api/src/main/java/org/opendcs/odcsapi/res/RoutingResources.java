@@ -60,6 +60,7 @@ public class RoutingResources extends OpenDcsResource
 {
 	@Context private HttpServletRequest request;
 	@Context private HttpHeaders httpHeaders;
+	private static final String NO_SCHEDULE_ENTRY_DAI = "No ScheduleEntryDAI available";
 
 	@GET
 	@Path("routingrefs")
@@ -148,8 +149,7 @@ public class RoutingResources extends OpenDcsResource
 			RoutingSpecListIO rsl = new RoutingSpecListIO(null, null, null, null);
 			RoutingSpec mappedRouting = map(routing);
 			rsl.write(mappedRouting);
-			return Response.status(HttpServletResponse.SC_OK)
-					.entity(mappedRouting).build();
+			return Response.status(HttpServletResponse.SC_OK).build();
 		}
 		catch(DatabaseException e)
 		{
@@ -211,7 +211,7 @@ public class RoutingResources extends OpenDcsResource
 		throws DbException
 	{
 		try (ScheduleEntryDAI dai = createDb().getDao(ScheduleEntryDAI.class)
-				.orElseThrow(() -> new DbException("No ScheduleEntryDAI available")))
+				.orElseThrow(() -> new DbException(NO_SCHEDULE_ENTRY_DAI)))
 		{
 			List<ScheduleEntry> entries = dai.listScheduleEntries(null);
 			return Response.status(HttpServletResponse.SC_OK)
@@ -267,12 +267,11 @@ public class RoutingResources extends OpenDcsResource
 		throws DbException
 	{
 		try (ScheduleEntryDAI dai = createDb().getDao(ScheduleEntryDAI.class)
-				.orElseThrow(() -> new DbException("No ScheduleEntryDAI available")))
+				.orElseThrow(() -> new DbException(NO_SCHEDULE_ENTRY_DAI)))
 		{
 			ScheduleEntry entry = map(schedule);
 			dai.writeScheduleEntry(entry);
-			return Response.status(HttpServletResponse.SC_OK)
-					.entity(entry).build();
+			return Response.status(HttpServletResponse.SC_OK).build();
 		}
 		catch (DbIoException e)
 		{
@@ -313,7 +312,7 @@ public class RoutingResources extends OpenDcsResource
 	{
 		// Use username and password to attempt to connect to the database
 		try (ScheduleEntryDAI dai = createDb().getDao(ScheduleEntryDAI.class)
-				.orElseThrow(() -> new DbException("No ScheduleEntryDAI available")))
+				.orElseThrow(() -> new DbException(NO_SCHEDULE_ENTRY_DAI)))
 		{
 			ScheduleEntry entry = new ScheduleEntry(DbKey.createDbKey(scheduleId));
 			dai.deleteScheduleEntry(entry);
