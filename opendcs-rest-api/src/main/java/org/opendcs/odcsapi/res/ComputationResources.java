@@ -53,6 +53,7 @@ import org.opendcs.odcsapi.sec.AuthorizationCheck;
 public class ComputationResources extends OpenDcsResource
 {
 	@Context HttpHeaders httpHeaders;
+	private static final String NO_COMPUTATION_DAI = "No ComputationDAI implementation available";
 	
 	@GET
 	@Path("computationrefs")
@@ -68,7 +69,7 @@ public class ComputationResources extends OpenDcsResource
 		throws WebAppException, DbException
 	{
 		try (ComputationDAI dai = createDb().getDao(ComputationDAI.class)
-				.orElseThrow(() -> new DbException("No ComputationDAI implementation available")))
+				.orElseThrow(() -> new DbException(NO_COMPUTATION_DAI)))
 		{
 
 //			return ApiHttpUtil.createResponse(dao.getComputationRefs(site, algorithm, datatype, group,
@@ -89,7 +90,7 @@ public class ComputationResources extends OpenDcsResource
 				"Missing required computationid parameter.");
 		
 		try (ComputationDAI dai = createDb().getDao(ComputationDAI.class)
-				.orElseThrow(() -> new DbException("No ComputationDAI implementation available")))
+				.orElseThrow(() -> new DbException(NO_COMPUTATION_DAI)))
 		{
 			return Response.status(HttpServletResponse.SC_OK)
 					.entity(map(dai.getComputationById(DbKey.createDbKey(compId)))).build();
@@ -155,7 +156,7 @@ public class ComputationResources extends OpenDcsResource
 		throws DbException
 	{
 		try (ComputationDAI dai = createDb().getDao(ComputationDAI.class)
-				.orElseThrow(() -> new DbException("No ComputationDAI implementation available")))
+				.orElseThrow(() -> new DbException(NO_COMPUTATION_DAI)))
 		{
 			dai.writeComputation(map(comp));
 			return Response.status(HttpServletResponse.SC_OK).build();
@@ -229,7 +230,7 @@ public class ComputationResources extends OpenDcsResource
 	public Response deleteComputation(@QueryParam("computationid") Long computationId) throws DbException
 	{
 		try (ComputationDAI dai = createDb().getDao(ComputationDAI.class)
-				.orElseThrow(() -> new DbException("No ComputationDAI implementation available")))
+				.orElseThrow(() -> new DbException(NO_COMPUTATION_DAI)))
 		{
 			dai.deleteComputation(DbKey.createDbKey(computationId));
 			return Response.status(HttpServletResponse.SC_OK)
