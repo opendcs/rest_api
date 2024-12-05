@@ -18,7 +18,9 @@ package org.opendcs.odcsapi.res;
 import java.io.LineNumberReader;
 import java.io.StringReader;
 import java.sql.SQLException;
-import java.util.logging.Logger;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.Consumes;
@@ -33,22 +35,28 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import decodes.db.DatabaseException;
+import decodes.db.NetworkList;
+import decodes.db.NetworkListEntry;
+import decodes.db.NetworkListList;
+import decodes.db.RoutingSpec;
+import decodes.db.RoutingSpecList;
+import decodes.sql.DbKey;
+import decodes.sql.NetworkListListIO;
+import decodes.sql.RoutingSpecListIO;
 import org.opendcs.odcsapi.beans.ApiNetList;
 import org.opendcs.odcsapi.beans.ApiNetListItem;
-import org.opendcs.odcsapi.dao.ApiNetlistDAO;
+import org.opendcs.odcsapi.beans.ApiNetlistRef;
 import org.opendcs.odcsapi.dao.DbException;
 import org.opendcs.odcsapi.errorhandling.ErrorCodes;
 import org.opendcs.odcsapi.errorhandling.WebAppException;
-import org.opendcs.odcsapi.hydrojson.DbInterface;
 import org.opendcs.odcsapi.sec.AuthorizationCheck;
-import org.opendcs.odcsapi.util.ApiConstants;
-import org.opendcs.odcsapi.util.ApiHttpUtil;
 
 import javax.servlet.http.HttpServletResponse;
 
 
 @Path("/")
-public class NetlistResources
+public class NetlistResources extends OpenDcsResource
 {
 	@Context HttpHeaders httpHeaders;
 
@@ -59,13 +67,33 @@ public class NetlistResources
 	public Response getNetlistRefs(@QueryParam("tmtype") String tmtype)
 		throws DbException, SQLException
 	{
-		Logger.getLogger(ApiConstants.loggerName).fine("getNetlistRefs tmtype=" + tmtype);
-		try (
-			DbInterface dbi = new DbInterface(); 
-			ApiNetlistDAO netlistDAO = new ApiNetlistDAO(dbi))
+		try
 		{
-			return ApiHttpUtil.createResponse(netlistDAO.readNetlistRefs(tmtype));
+			NetworkListListIO dao = new NetworkListListIO(null);
+			NetworkListList nlList = new NetworkListList();
+			dao.read(nlList);
+			return Response.status(HttpServletResponse.SC_OK).entity(map(nlList)).build();
 		}
+		catch(DatabaseException ex)
+		{
+			throw new DbException("Unable to retrieve network list", ex);
+		}
+	}
+
+	static List<ApiNetlistRef> map(NetworkListList nlList)
+	{
+		List<ApiNetlistRef> ret = new ArrayList<>();
+		for (NetworkList nl : nlList.getList())
+		{
+			ApiNetlistRef anlr = new ApiNetlistRef();
+			anlr.setNetlistId(nl.getId().getValue());
+			anlr.setName(nl.getDisplayName());
+			anlr.setLastModifyTime(nl.lastModifyTime);
+			anlr.setTransportMediumType(nl.transportMediumType);
+			anlr.setSiteNameTypePref(nl.siteNameTypePref);
+			ret.add(anlr);
+		}
+		return ret;
 	}
 
 	@GET
@@ -78,18 +106,41 @@ public class NetlistResources
 		if (netlistId == null)
 			throw new WebAppException(ErrorCodes.MISSING_ID, "Missing required netlistid parameter.");
 		
-		Logger.getLogger(ApiConstants.loggerName).fine("getNetList netlistid=" + netlistId);
-		
-		try (
-			DbInterface dbi = new DbInterface(); 
-			ApiNetlistDAO netlistDAO = new ApiNetlistDAO(dbi))
+		try
 		{
-			ApiNetList ret = netlistDAO.readNetworkList(netlistId);
-			if (ret == null)
+			NetworkListListIO dao = new NetworkListListIO(null);
+			NetworkListList nlList = new NetworkListList();
+			dao.read(nlList);
+			NetworkList nl = nlList.getById(DbKey.createDbKey(netlistId));
+			if (nl.networkListEntries.isEmpty())
 				throw new WebAppException(ErrorCodes.NO_SUCH_OBJECT, 
 					"No such network list with id=" + netlistId + ".");
-			return ApiHttpUtil.createResponse(ret);
+			ApiNetList ret = map(nl);
+			return Response.status(HttpServletResponse.SC_OK).entity(ret).build();
 		}
+		catch(SQLException | DatabaseException ex)
+		{
+			throw new DbException(String.format("Unable to retrieve network list of ID: %s", netlistId), ex);
+		}
+	}
+
+	static ApiNetList map(NetworkList nl)
+	{
+		ApiNetList ret = new ApiNetList();
+		ret.setNetlistId(nl.getId().getValue());
+		ret.setName(nl.getDisplayName());
+		ret.setLastModifyTime(nl.lastModifyTime);
+		ret.setTransportMediumType(nl.transportMediumType);
+		ret.setSiteNameTypePref(nl.siteNameTypePref);
+		for (Map.Entry<String, NetworkListEntry> entry : nl.networkListEntries.entrySet())
+		{
+			ApiNetListItem anli = new ApiNetListItem();
+			anli.setTransportId(entry.getValue().getTransportId());
+			anli.setDescription(entry.getValue().getDescription());
+			anli.setPlatformName(entry.getValue().getPlatformName());
+			ret.getItems().put(anli.getTransportId().toUpperCase(), anli);
+		}
+		return ret;
 	}
 
 	@POST
@@ -98,20 +149,38 @@ public class NetlistResources
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({AuthorizationCheck.ODCS_API_ADMIN, AuthorizationCheck.ODCS_API_USER})
 	public Response  postNetlist(ApiNetList netList)
-		throws WebAppException, DbException, SQLException
+		throws DbException, SQLException
 	{
-		Logger.getLogger(ApiConstants.loggerName).fine(
-			"post netlist received netlist " + netList.getName() 
-			+ " with tm type " + netList.getTransportMediumType() + " containing "
-			+ netList.getItems().size() + " TMs");
-		
-		// Use username and password to attempt to connect to the database
-		try (DbInterface dbi = new DbInterface();
-			ApiNetlistDAO netlistDAO = new ApiNetlistDAO(dbi))
+		try
 		{
-			netlistDAO.writeNetlist(netList);
-			return ApiHttpUtil.createResponse(netList);
+			NetworkListListIO dao = new NetworkListListIO(null);
+			NetworkList nlList = map(netList);
+			dao.write(nlList);
+			return Response.status(HttpServletResponse.SC_OK).entity(netList).build();
 		}
+		catch(DatabaseException ex)
+		{
+			throw new DbException("Unable to store network list", ex);
+		}
+	}
+
+	static NetworkList map(ApiNetList netList) throws DatabaseException
+	{
+		NetworkList ret = new NetworkList(netList.getName());
+		ret.setId(DbKey.createDbKey(netList.getNetlistId()));
+		ret.name = netList.getName();
+		ret.transportMediumType = netList.getTransportMediumType();
+		ret.siteNameTypePref = netList.getSiteNameTypePref();
+		ret.lastModifyTime = netList.getLastModifyTime();
+		for (Map.Entry<String, ApiNetListItem> anli : netList.getItems().entrySet())
+		{
+			NetworkListEntry nle = new NetworkListEntry(ret, anli.getValue().getTransportId());
+			nle.transportId = anli.getValue().getTransportId();
+			nle.setDescription(anli.getValue().getDescription());
+			nle.setPlatformName(anli.getValue().getPlatformName());
+			ret.networkListEntries.put(anli.getKey().toUpperCase(), nle);
+		}
+		return ret;
 	}
 
 	@DELETE
@@ -122,21 +191,43 @@ public class NetlistResources
 	public Response deleteNetlist(@QueryParam("netlistid") Long netlistId)
 		throws DbException
 	{
-		Logger.getLogger(ApiConstants.loggerName)
-				.fine("DELETE netlist received netlistid=" + netlistId);
-		
-		// Use username and password to attempt to connect to the database
-		try (DbInterface dbi = new DbInterface();
-			ApiNetlistDAO netlistDAO = new ApiNetlistDAO(dbi))
+		try
 		{
-			String errmsg = netlistDAO.netlistUsedByRs(netlistId);
-			if (errmsg != null)
-				return ApiHttpUtil.createResponse(" Cannot delete network list with ID " + netlistId 
-						+ " because it is used by the following routing specs: "
-						+ errmsg, ErrorCodes.NOT_ALLOWED);
+			NetworkListListIO dao = new NetworkListListIO(null);
+			NetworkListList nlList = new NetworkListList();
+			dao.read(nlList);
+			NetworkList nl = nlList.getById(DbKey.createDbKey(netlistId));
 
-			netlistDAO.deleteNetlist(netlistId);
-			return ApiHttpUtil.createResponse("ID " + netlistId + " deleted");
+			RoutingSpecListIO rdao = new RoutingSpecListIO(null, null, null, null);
+			RoutingSpecList routingSpecList = new RoutingSpecList();
+			rdao.read(routingSpecList);
+
+			String errmsg = "";
+
+			for (RoutingSpec spec : routingSpecList.getList())
+			{
+				for (NetworkList list : spec.networkLists)
+				{
+					if (list.getId().equals(nl.getId()))
+					{
+						errmsg += (!errmsg.isEmpty() ? ", " : "") + spec.getName();
+					}
+				}
+			}
+
+			if (!errmsg.isEmpty())
+			{
+				return Response.status(HttpServletResponse.SC_OK)
+					.entity(" Cannot delete network list with ID " + netlistId
+						+ " because it is used by the following routing specs: "
+						+ errmsg).build();
+			}
+			dao.delete(nl);
+			return Response.status(HttpServletResponse.SC_OK).entity("ID " + netlistId + " deleted").build();
+		}
+		catch (SQLException | DatabaseException ex)
+		{
+			throw new DbException("Unable to delete network list", ex);
 		}
 	}
 
@@ -148,8 +239,6 @@ public class NetlistResources
 	public Response cnvtNL(String nldata)
 		throws WebAppException
 	{
-		Logger.getLogger(ApiConstants.loggerName).fine("cnvtnl nldata='" + nldata + "'");
-		
 		ApiNetList ret = new ApiNetList();
 		
    		LineNumberReader rdr = new LineNumberReader(new StringReader(nldata));
@@ -161,7 +250,9 @@ public class NetlistResources
 	   	   		ln = ln.trim();
 				if (ln.length() <= 0
 	   			 || ln.charAt(0) == '#' || ln.charAt(0) == ':') // skip comment lines.
-	   				continue;
+				{
+					continue;
+				}
 	   			else
 	   			{
 	   				ApiNetListItem anli = ApiNetListItem.fromString(ln);
@@ -179,7 +270,7 @@ public class NetlistResources
 	
 		try { rdr.close(); } catch (Exception e) {}
 
-		return ApiHttpUtil.createResponse(ret);
+		return Response.status(HttpServletResponse.SC_OK).entity(ret).build();
 	}
 
 
