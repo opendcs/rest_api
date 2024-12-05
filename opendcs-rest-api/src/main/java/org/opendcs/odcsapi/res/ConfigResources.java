@@ -15,10 +15,14 @@
 
 package org.opendcs.odcsapi.res;
 
+import java.io.IOException;
 import java.sql.SQLException;
-import java.util.logging.Logger;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Vector;
 
 import javax.annotation.security.RolesAllowed;
+import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -31,17 +35,26 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import decodes.db.DatabaseException;
+import decodes.db.DecodesScript;
+import decodes.db.DecodesScriptException;
+import decodes.db.EngineeringUnit;
+import decodes.db.PlatformConfig;
+import decodes.db.PlatformConfigList;
+import decodes.db.Poly5Converter;
+import decodes.db.ScriptSensor;
+import decodes.db.UnitConverter;
+import decodes.sql.ConfigListIO;
+import decodes.sql.DbKey;
+import org.opendcs.odcsapi.beans.ApiConfigRef;
 import org.opendcs.odcsapi.beans.ApiConfigScript;
 import org.opendcs.odcsapi.beans.ApiConfigScriptSensor;
 import org.opendcs.odcsapi.beans.ApiPlatformConfig;
-import org.opendcs.odcsapi.dao.ApiConfigDAO;
+import org.opendcs.odcsapi.beans.ApiUnitConverter;
 import org.opendcs.odcsapi.dao.DbException;
 import org.opendcs.odcsapi.errorhandling.ErrorCodes;
 import org.opendcs.odcsapi.errorhandling.WebAppException;
-import org.opendcs.odcsapi.hydrojson.DbInterface;
 import org.opendcs.odcsapi.sec.AuthorizationCheck;
-import org.opendcs.odcsapi.util.ApiConstants;
-import org.opendcs.odcsapi.util.ApiHttpUtil;
 
 @Path("/")
 public class ConfigResources
@@ -54,12 +67,32 @@ public class ConfigResources
 	@RolesAllowed({AuthorizationCheck.ODCS_API_GUEST})
 	public Response getConfigRefs() throws DbException
 	{
-		Logger.getLogger(ApiConstants.loggerName).fine("geConfigRefs");
-		try (DbInterface dbi = new DbInterface();
-			ApiConfigDAO configDAO = new ApiConfigDAO(dbi))
+		try
 		{
-			return ApiHttpUtil.createResponse(configDAO.getConfigRefs());
+			ConfigListIO configListIO = new ConfigListIO(null, null);
+			PlatformConfigList configList = new PlatformConfigList();
+			configListIO.read(configList);
+			return Response.status(HttpServletResponse.SC_OK).entity(map(configList)).build();
 		}
+		catch (SQLException | DatabaseException ex)
+		{
+			throw new DbException("Error reading config list", ex);
+		}
+	}
+
+	static List<ApiConfigRef> map(PlatformConfigList configList)
+	{
+		List<ApiConfigRef> configRefs = new ArrayList<>();
+		for (PlatformConfig config : configList.values())
+		{
+			ApiConfigRef configRef = new ApiConfigRef();
+			configRef.setConfigId(config.getId().getValue());
+			configRef.setName(config.getName());
+			configRef.setNumPlatforms(config.numPlatformsUsing);
+			configRef.setDescription(config.description);
+			configRefs.add(configRef);
+		}
+		return configRefs;
 	}
 
 	@GET
@@ -72,12 +105,26 @@ public class ConfigResources
 			throw new WebAppException(ErrorCodes.MISSING_ID, 
 				"Missing required configid parameter.");
 		
-		Logger.getLogger(ApiConstants.loggerName).fine("getConfig id=" + configId);
-		try (DbInterface dbi = new DbInterface();
-			ApiConfigDAO configDAO = new ApiConfigDAO(dbi))
+		try
 		{
-			return ApiHttpUtil.createResponse(configDAO.getConfig(configId));
+			ConfigListIO configListIO = new ConfigListIO(null, null);
+			PlatformConfig config = configListIO.getConfig(DbKey.createDbKey(configId));
+			return Response.status(HttpServletResponse.SC_OK).entity(map(config)).build();
 		}
+		catch (DatabaseException ex)
+		{
+			throw new DbException("Error reading config", ex);
+		}
+	}
+
+	static ApiPlatformConfig map(PlatformConfig config)
+	{
+		ApiPlatformConfig apiConfig = new ApiPlatformConfig();
+		apiConfig.setConfigId(config.getId().getValue());
+		apiConfig.setName(config.getName());
+		apiConfig.setNumPlatforms(config.numPlatformsUsing);
+		apiConfig.setDescription(config.description);
+		return apiConfig;
 	}
 
 	@POST
@@ -85,46 +132,117 @@ public class ConfigResources
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({AuthorizationCheck.ODCS_API_ADMIN, AuthorizationCheck.ODCS_API_USER})
-	public Response postConfig(ApiPlatformConfig config) throws WebAppException, DbException, SQLException
+	public Response postConfig(ApiPlatformConfig config) throws DbException, SQLException
 	{
-		Logger.getLogger(ApiConstants.loggerName).fine("post config received config " + config.getName() 
-			+ " with ID=" + config.getConfigId());
-		
-		Logger.getLogger(ApiConstants.loggerName).fine("POST config script sensors: ");
-		for(ApiConfigScript acs : config.getScripts())
+		try
 		{
-			Logger.getLogger(ApiConstants.loggerName).fine("\tscript " + acs.getName());
-			for(ApiConfigScriptSensor acss : acs.getScriptSensors())
-			{
-				Logger.getLogger(ApiConstants.loggerName).fine("\t\t" + acss.prettyPrint());
-			}
+			ConfigListIO configListIO = new ConfigListIO(null, null);
+			configListIO.write(map(config));
+			return Response.status(HttpServletResponse.SC_OK)
+					.entity(String.format("Successfully saved platform config with ID: %s", config.getConfigId()))
+					.build();
 		}
-		try (DbInterface dbi = new DbInterface();
-			ApiConfigDAO configDAO = new ApiConfigDAO(dbi))
+		catch (DatabaseException ex)
 		{
-			configDAO.writeConfig(config);
-			return ApiHttpUtil.createResponse(config);
+			throw new DbException("Error saving config", ex);
 		}
 	}
+
+	static PlatformConfig map(ApiPlatformConfig config) throws DbException
+	{
+		try
+		{
+			PlatformConfig pc = new PlatformConfig(config.getName());
+			pc.setId(DbKey.createDbKey(config.getConfigId()));
+			pc.description = config.getDescription();
+			pc.numPlatformsUsing = config.getNumPlatforms();
+			pc.decodesScripts = map(config.getScripts());
+			return pc;
+		}
+		catch (DatabaseException ex)
+		{
+			throw new DbException("Error mapping platform config", ex);
+		}
+	}
+
+	static Vector<DecodesScript> map(List<ApiConfigScript> scripts) throws DbException
+	{
+		try
+		{
+			Vector<DecodesScript> decodesScripts = new Vector<>();
+			for(ApiConfigScript script : scripts)
+			{
+				DecodesScript.DecodesScriptBuilder dsb = DecodesScript.empty();
+				PlatformConfig pc = new PlatformConfig();
+				dsb.platformConfig(pc);
+				dsb.scriptName(script.getName());
+				DecodesScript ds = dsb.build();
+				ds.scriptName = script.getName();
+				for (ApiConfigScriptSensor sensor : script.getScriptSensors())
+				{
+					ds.addScriptSensor(map(sensor));
+				}
+				decodesScripts.add(ds);
+			}
+			return decodesScripts;
+		}
+		catch(DecodesScriptException | IOException ex)
+		{
+			throw new DbException("Error mapping scripts", ex);
+		}
+	}
+
+	static ScriptSensor map(ApiConfigScriptSensor sensor)
+	{
+		ScriptSensor ss = new ScriptSensor(null, sensor.getSensorNumber());
+		ss.execConverter = map(sensor.getUnitConverter());
+		return ss;
+	}
+
+	static UnitConverter map(ApiUnitConverter unitConverter)
+	{
+		EngineeringUnit from = EngineeringUnit.getEngineeringUnit(unitConverter.getFromAbbr());
+		EngineeringUnit to = EngineeringUnit.getEngineeringUnit(unitConverter.getToAbbr());
+		Poly5Converter pc = new Poly5Converter(from, to);
+		double[] coeffs = new double[6];
+		coeffs[0] = unitConverter.getA();
+		coeffs[1] = unitConverter.getB();
+		coeffs[2] = unitConverter.getC();
+		coeffs[3] = unitConverter.getD();
+		coeffs[4] = unitConverter.getE();
+		coeffs[5] = unitConverter.getF();
+		pc.setCoefficients(coeffs);
+		return pc;
+	}
+
 	
 	@DELETE
 	@Path("config")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({AuthorizationCheck.ODCS_API_ADMIN, AuthorizationCheck.ODCS_API_USER})
-	public Response deleteConfig(@QueryParam("configid") Long configId) throws WebAppException, DbException, SQLException
+	public Response deleteConfig(@QueryParam("configid") Long configId) throws DbException, SQLException
 	{
-		Logger.getLogger(ApiConstants.loggerName).fine("DELETE config received configid=" + configId);
-		
-		// Use username and password to attempt to connect to the database
-		try (DbInterface dbi = new DbInterface();
-			ApiConfigDAO cfgDao = new ApiConfigDAO(dbi))
+		try
 		{
-			if (cfgDao.numPlatformsUsing(configId) > 0)
-				return ApiHttpUtil.createResponse(" Cannot delete config with ID " + configId + " because it is used by one or more platforms.", ErrorCodes.NOT_ALLOWED);
-				
-			cfgDao.deleteConfig(configId);
-			return ApiHttpUtil.createResponse("Config with ID " + configId + " deleted");
+			ConfigListIO configListIO = new ConfigListIO(null, null);
+			PlatformConfig pc = configListIO.getConfig(DbKey.createDbKey(configId));
+
+			if (pc.numPlatformsUsing > 0)
+			{
+				return Response.status(HttpServletResponse.SC_METHOD_NOT_ALLOWED)
+						.entity(" Cannot delete config with ID " + configId + " because it is used by one or more platforms.")
+						.build();
+			}
+
+			configListIO.delete(pc);
+			return Response.status(HttpServletResponse.SC_OK)
+					.entity("Config with ID " + configId + " deleted")
+					.build();
+		}
+		catch (DatabaseException ex)
+		{
+			throw new DbException("Error deleting config", ex);
 		}
 	}
 
