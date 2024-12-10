@@ -19,8 +19,10 @@ import java.io.IOException;
 import java.net.UnknownHostException;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
-import java.util.logging.Logger;
+import java.util.Vector;
 import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -36,16 +38,25 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import decodes.db.DataSource;
+import decodes.db.DataSourceList;
+import decodes.db.DatabaseException;
+import decodes.db.DatabaseIO;
+import decodes.db.NetworkList;
+import decodes.db.NetworkListEntry;
+import decodes.sql.DataSourceListIO;
+import decodes.sql.DbKey;
+import decodes.tsdb.DbIoException;
+import opendcs.dai.PropertiesDAI;
 import org.opendcs.odcsapi.beans.ApiDataSource;
+import org.opendcs.odcsapi.beans.ApiDataSourceGroupMember;
 import org.opendcs.odcsapi.beans.ApiDataSourceRef;
 import org.opendcs.odcsapi.beans.ApiNetList;
+import org.opendcs.odcsapi.beans.ApiNetListItem;
 import org.opendcs.odcsapi.beans.ApiRawMessage;
 import org.opendcs.odcsapi.beans.ApiRawMessageBlock;
 import org.opendcs.odcsapi.beans.ApiSearchCrit;
-import org.opendcs.odcsapi.dao.ApiDataSourceDAO;
-import org.opendcs.odcsapi.dao.ApiNetlistDAO;
 import org.opendcs.odcsapi.dao.ApiPlatformDAO;
-import org.opendcs.odcsapi.dao.ApiTsDAO;
 import org.opendcs.odcsapi.dao.DbException;
 import org.opendcs.odcsapi.errorhandling.ErrorCodes;
 import org.opendcs.odcsapi.errorhandling.WebAppException;
@@ -56,15 +67,13 @@ import org.opendcs.odcsapi.lrgsclient.DdsProtocolError;
 import org.opendcs.odcsapi.lrgsclient.DdsServerError;
 import org.opendcs.odcsapi.lrgsclient.LrgsErrorCode;
 import org.opendcs.odcsapi.sec.AuthorizationCheck;
-import org.opendcs.odcsapi.util.ApiConstants;
-import org.opendcs.odcsapi.util.ApiHttpUtil;
 import org.opendcs.odcsapi.util.ApiPropertiesUtil;
 
 /**
  * Resources for interacting with an LRGS for DCP messages and status.
  */
 @Path("/")
-public class LrgsResources
+public class LrgsResources extends OpenDcsResource
 {
 	@Context private HttpServletRequest request;
 	@Context private HttpHeaders httpHeaders;
@@ -76,9 +85,6 @@ public class LrgsResources
 	@RolesAllowed({AuthorizationCheck.ODCS_API_ADMIN, AuthorizationCheck.ODCS_API_USER})
 	public Response postSearchCrit(ApiSearchCrit searchcrit)
 	{
-		Logger.getLogger(ApiConstants.loggerName).fine("post searchcrit");
-
-
 		HttpSession session = request.getSession(true);
 		// If session already contains an LddsClient, close and delete it.
 		// I.e., if a message retrieval is already in progress, the new searchcrit
@@ -97,8 +103,6 @@ public class LrgsResources
 	@RolesAllowed({AuthorizationCheck.ODCS_API_ADMIN, AuthorizationCheck.ODCS_API_USER})
 	public ApiSearchCrit getSearchCrit() throws WebAppException
 	{
-		Logger.getLogger(ApiConstants.loggerName).fine("getSearchCrit");
-
 		HttpSession session = request.getSession(false);
 		if(session == null)
 			throw new WebAppException(ErrorCodes.NO_SUCH_OBJECT,
@@ -117,8 +121,6 @@ public class LrgsResources
 	@RolesAllowed({AuthorizationCheck.ODCS_API_ADMIN, AuthorizationCheck.ODCS_API_USER})
 	public ApiRawMessageBlock getMessages() throws WebAppException, SQLException
 	{
-		Logger.getLogger(ApiConstants.loggerName).fine("getMessages");
-
 		HttpSession session = request.getSession(true);
 		String sessionAttribute = ApiSearchCrit.ATTRIBUTE;
 		ApiSearchCrit searchcrit = (ApiSearchCrit) session.getAttribute(sessionAttribute);
@@ -138,12 +140,13 @@ public class LrgsResources
 		if (client != null)
 		{
 			// This is a new retrieval. Create client, send netlists & searchcrit.
-		
+
+			// TODO: Replace ApiPlatformDAO with OpenDCS PlatformListIO (add methods)
+			DatabaseIO dbio = getLegacyDatabase();
 			try (DbInterface dbi = new DbInterface();
-				ApiPlatformDAO platformDao = new ApiPlatformDAO(dbi);
-				ApiNetlistDAO nlDao = new ApiNetlistDAO(dbi))
+					ApiPlatformDAO dao = new ApiPlatformDAO(dbi))
 			{
-				dataSource = getApiDataSource(dbi, null);
+				dataSource = getApiDataSource(null);
 				String host = ApiPropertiesUtil.getIgnoreCase(dataSource.getProps(),"host");
 				if (host == null)
 					host = dataSource.getName();
@@ -154,8 +157,6 @@ public class LrgsResources
 					try { port = Integer.parseInt(s.trim()); }
 					catch(NumberFormatException ex)
 					{
-						Logger.getLogger(ApiConstants.loggerName).warning("getMessages bad port property "
-							+ s + " in data source " + dataSource.getName() + " -- ignored.");
 						port = 16003;
 					}
 				}
@@ -173,19 +174,22 @@ public class LrgsResources
 				
 				for(String nlname : searchcrit.getNetlistNames())
 				{
-					Long nlId = nlDao.getNetlistId(nlname);
+					NetworkList netList = new NetworkList();
+					netList.name = nlname;
+					dbio.readNetworkList(netList);
+					Long nlId = netList.getId().getValue();
 					if (nlId != null)
 					{
 						action = "sending netlist " + nlname + ", id=" + nlId;
-						ApiNetList nl = nlDao.readNetworkList(nlId);
+						ApiNetList nl = map(netList);
 						client.sendNetList(nl);
 					}
 				}
 				
 				action = "sending searchcrit";
-				client.sendSearchCrit(searchcrit, platformDao);
+				client.sendSearchCrit(searchcrit, dao);
 			}
-			catch (DbException ex)
+			catch (DbException | DatabaseException ex)
 			{
 				clientConnectionCache.removeApiLddsClient(session.getId());
 				throw new WebAppException(ErrorCodes.DATABASE_ERROR,
@@ -203,18 +207,10 @@ public class LrgsResources
 				throw new WebAppException(ErrorCodes.BAD_CONFIG, "IO Error on LRGS data source "
 					+ dataSource.getName() + ": " + ex);
 			}
-			catch (DdsProtocolError ex)
+			catch (DdsProtocolError | DdsServerError ex)
 			{
 				clientConnectionCache.removeApiLddsClient(session.getId());
 				String em = "Error while " + action + ": " + ex;
-				Logger.getLogger(ApiConstants.loggerName).warning("getMessages " + em);
-				throw new WebAppException(ErrorCodes.IO_ERROR, em);
-			}
-			catch (DdsServerError ex)
-			{
-				clientConnectionCache.removeApiLddsClient(session.getId());
-				String em = "Error while " + action + ": " + ex;
-				Logger.getLogger(ApiConstants.loggerName).warning("getMessages " + em);
 				throw new WebAppException(ErrorCodes.IO_ERROR, em);
 			}
 		}
@@ -252,44 +248,74 @@ public class LrgsResources
 			throw new WebAppException(ErrorCodes.IO_ERROR, "Error while " + action + ": " + ex);
 		}
 	}
+
+	static ApiNetList map(NetworkList netList)
+	{
+		ApiNetList ret = new ApiNetList();
+		ret.setName(netList.name);
+		ret.setLastModifyTime(netList.lastModifyTime);
+		ret.setNetlistId(netList.getId().getValue());
+		ret.setSiteNameTypePref(netList.siteNameTypePref);
+		ret.setTransportMediumType(netList.transportMediumType);
+
+		ret.setItems(map(netList.networkListEntries));
+		return ret;
+	}
+
+	static HashMap<String, ApiNetListItem> map(HashMap<String, NetworkListEntry> listEntries)
+	{
+		HashMap<String, ApiNetListItem> ret = new HashMap<>();
+		for (Map.Entry<String, NetworkListEntry> entry : listEntries.entrySet())
+		{
+			NetworkListEntry nle = listEntries.get(entry.getKey());
+			ApiNetListItem item = new ApiNetListItem();
+			item.setPlatformName(nle.getPlatformName());
+			item.setDescription(nle.getDescription());
+			item.setTransportId(nle.transportId);
+			ret.put(entry.getKey(), item);
+		}
+		return ret;
+	}
 	
 	/**
 	 * 
-	 * @param dbi
+	 * @param dsName The name of the data source to retrieve
 	 * @return
 	 * @throws DbException
 	 * @throws SQLException 
 	 */
-	private static ApiDataSource getApiDataSource(DbInterface dbi, String dsName)
+	private ApiDataSource getApiDataSource(String dsName)
 		throws DbException, WebAppException, SQLException
 	{
-		try(ApiDataSourceDAO dsDao = new ApiDataSourceDAO(dbi);
-			ApiTsDAO tsDao = new ApiTsDAO(dbi))
+		try(PropertiesDAI dai = getLegacyTimeseriesDB().makePropertiesDAO())
 		{
+			DataSourceListIO dataSourceIO = getDao(DataSourceListIO.class);
 			ApiDataSource dataSource = null;
-			Properties tsdbProps = tsDao.getTsdbProperties();
+
+			Properties tsdbProps = new Properties();
+
+			dai.readProperties("tsdb_property", null, null, tsdbProps);
 			if (dsName == null)
 				dsName = tsdbProps.getProperty("api.datasource");
 			if (dsName != null)
 			{
-				Long dsId = dsDao.getDataSourceId(dsName);
-				if (dsId == null)
-					Logger.getLogger(ApiConstants.loggerName).warning(
-						"TSDB property api.datasource references non-existant data source '"
-						+ dsName + "' -- will try other LRGS.");
-				else
-					dataSource = dsDao.readDataSource(dsId);
+				// TODO: make this method public in OpenDCS
+//				Long dsId = dataSourceIO.nameToId(dsName);
+				Long dsId = null;
+				if (dsId != null)
+					dataSource = map(dataSourceIO.readDS(DbKey.createDbKey(dsId)));
 			}
 			if (dataSource == null)
 			{
 				// No api.datasource specified, or it doesn't exist. Try the first LRGS
 				// datasource in the list.
-			
-				ArrayList<ApiDataSourceRef> dataSourceRefs = dsDao.readDataSourceRefs();
+				DataSourceList dsList = new DataSourceList();
+				dataSourceIO.read(dsList);
+				ArrayList<ApiDataSourceRef> dataSourceRefs = map(dsList);
 				for(ApiDataSourceRef dsr : dataSourceRefs)
 					if (dsr.getType().toLowerCase().equals("lrgs"))
 					{
-						dataSource = dsDao.readDataSource(dsr.getDataSourceId());
+						dataSource = map(dataSourceIO.readDS(DbKey.createDbKey(dsr.getDataSourceId())));
 						break;
 					}
 			}
@@ -299,6 +325,51 @@ public class LrgsResources
 					+ "Create one, then define 'api.datasource' in TSDB properties.");
 			return dataSource;
 		}
+		catch (DatabaseException | DbIoException ex)
+		{
+			throw new DbException("Cannot get API data source", ex);
+		}
+	}
+
+	static ArrayList<ApiDataSourceRef> map(DataSourceList dsList)
+	{
+		ArrayList<ApiDataSourceRef> ret = new ArrayList<>();
+		for (DataSource ds : dsList.getList())
+		{
+			ApiDataSourceRef dsr = new ApiDataSourceRef();
+			dsr.setDataSourceId(ds.getId().getValue());
+			dsr.setType(ds.dataSourceType);
+			dsr.setName(ds.getName());
+			dsr.setArguments(ds.getDataSourceArg());
+			dsr.setUsedBy(ds.numUsedBy);
+			ret.add(dsr);
+		}
+		return ret;
+	}
+
+	static ApiDataSource map(DataSource source)
+	{
+		ApiDataSource ret = new ApiDataSource();
+		ret.setDataSourceId(source.getId().getValue());
+		ret.setName(source.getName());
+		ret.setType(source.dataSourceType);
+		ret.setProps(source.getArguments());
+		ret.setUsedBy(source.numUsedBy);
+		ret.setGroupMembers(map(source.groupMembers));
+		return ret;
+	}
+
+	static ArrayList<ApiDataSourceGroupMember> map(Vector<DataSource> sources)
+	{
+		ArrayList<ApiDataSourceGroupMember> ret = new ArrayList<>();
+		for (DataSource ds : sources)
+		{
+			ApiDataSourceGroupMember dsgm = new ApiDataSourceGroupMember();
+			dsgm.setDataSourceId(ds.getId().getValue());
+			dsgm.setDataSourceName(ds.getName());
+			ret.add(dsgm);
+		}
+		return ret;
 	}
 		
 	@GET
@@ -342,15 +413,14 @@ public class LrgsResources
 	public Response getLrgsStatus(@QueryParam("source") String source)
 		throws WebAppException, SQLException
 	{
-		Logger.getLogger(ApiConstants.loggerName).fine("getLrgsStatus");
 		ApiDataSource dataSource = null;
 		ApiLddsClient client = null;
 		
 		String action = "connecting";
 		
-		try (DbInterface dbi = new DbInterface())
+		try
 		{
-			dataSource = getApiDataSource(dbi, source);
+			dataSource = getApiDataSource(source);
 			String host = ApiPropertiesUtil.getIgnoreCase(dataSource.getProps(),"host");
 			if (host == null)
 				host = dataSource.getName();
@@ -361,8 +431,6 @@ public class LrgsResources
 				try { port = Integer.parseInt(s.trim()); }
 				catch(NumberFormatException ex)
 				{
-					Logger.getLogger(ApiConstants.loggerName).warning("getMessages bad port property "
-						+ s + " in data source " + dataSource.getName() + " -- ignored.");
 					port = 16003;
 				}
 			}
@@ -378,7 +446,7 @@ public class LrgsResources
 				client.sendAuthHello(username, password);
 			
 			action = "getting LRGS status";
-			return ApiHttpUtil.createResponse(client.getLrgsStatus());
+			return Response.status(HttpServletResponse.SC_OK).entity(client.getLrgsStatus()).build();
 		}
 		catch (DbException ex)
 		{
