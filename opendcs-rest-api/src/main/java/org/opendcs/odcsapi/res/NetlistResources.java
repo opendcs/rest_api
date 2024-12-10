@@ -17,7 +17,6 @@ package org.opendcs.odcsapi.res;
 
 import java.io.LineNumberReader;
 import java.io.StringReader;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -36,14 +35,13 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import decodes.db.DatabaseException;
+import decodes.db.DatabaseIO;
 import decodes.db.NetworkList;
 import decodes.db.NetworkListEntry;
 import decodes.db.NetworkListList;
 import decodes.db.RoutingSpec;
 import decodes.db.RoutingSpecList;
 import decodes.sql.DbKey;
-import decodes.sql.NetworkListListIO;
-import decodes.sql.RoutingSpecListIO;
 import org.opendcs.odcsapi.beans.ApiNetList;
 import org.opendcs.odcsapi.beans.ApiNetListItem;
 import org.opendcs.odcsapi.beans.ApiNetlistRef;
@@ -65,13 +63,13 @@ public class NetlistResources extends OpenDcsResource
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({AuthorizationCheck.ODCS_API_GUEST})
 	public Response getNetlistRefs(@QueryParam("tmtype") String tmtype)
-		throws DbException, SQLException
+		throws DbException
 	{
 		try
 		{
-			NetworkListListIO dao = new NetworkListListIO(null);
+			DatabaseIO dbIo = getLegacyDatabase();
 			NetworkListList nlList = new NetworkListList();
-			dao.read(nlList);
+			dbIo.readNetworkListList(nlList);
 			return Response.status(HttpServletResponse.SC_OK).entity(map(nlList)).build();
 		}
 		catch(DatabaseException ex)
@@ -108,9 +106,9 @@ public class NetlistResources extends OpenDcsResource
 		
 		try
 		{
-			NetworkListListIO dao = new NetworkListListIO(null);
+			DatabaseIO dbIo = getLegacyDatabase();
 			NetworkListList nlList = new NetworkListList();
-			dao.read(nlList);
+			dbIo.readNetworkListList(nlList);
 			NetworkList nl = nlList.getById(DbKey.createDbKey(netlistId));
 			if (nl.networkListEntries.isEmpty())
 				throw new WebAppException(ErrorCodes.NO_SUCH_OBJECT, 
@@ -118,7 +116,7 @@ public class NetlistResources extends OpenDcsResource
 			ApiNetList ret = map(nl);
 			return Response.status(HttpServletResponse.SC_OK).entity(ret).build();
 		}
-		catch(SQLException | DatabaseException ex)
+		catch(DatabaseException ex)
 		{
 			throw new DbException(String.format("Unable to retrieve network list of ID: %s", netlistId), ex);
 		}
@@ -149,13 +147,13 @@ public class NetlistResources extends OpenDcsResource
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({AuthorizationCheck.ODCS_API_ADMIN, AuthorizationCheck.ODCS_API_USER})
 	public Response  postNetlist(ApiNetList netList)
-		throws DbException, SQLException
+		throws DbException
 	{
 		try
 		{
-			NetworkListListIO dao = new NetworkListListIO(null);
+			DatabaseIO dbIo = getLegacyDatabase();
 			NetworkList nlList = map(netList);
-			dao.write(nlList);
+			dbIo.writeNetworkList(nlList);
 			return Response.status(HttpServletResponse.SC_OK).entity(netList).build();
 		}
 		catch(DatabaseException ex)
@@ -193,14 +191,13 @@ public class NetlistResources extends OpenDcsResource
 	{
 		try
 		{
-			NetworkListListIO dao = new NetworkListListIO(null);
+			DatabaseIO dbIo = getLegacyDatabase();
 			NetworkListList nlList = new NetworkListList();
-			dao.read(nlList);
+			dbIo.readNetworkListList(nlList);
 			NetworkList nl = nlList.getById(DbKey.createDbKey(netlistId));
 
-			RoutingSpecListIO rdao = new RoutingSpecListIO(null, null, null, null);
 			RoutingSpecList routingSpecList = new RoutingSpecList();
-			rdao.read(routingSpecList);
+			dbIo.readRoutingSpecList(routingSpecList);
 
 			String errmsg = "";
 
@@ -222,10 +219,10 @@ public class NetlistResources extends OpenDcsResource
 						+ " because it is used by the following routing specs: "
 						+ errmsg).build();
 			}
-			dao.delete(nl);
+			dbIo.deleteNetworkList(nl);
 			return Response.status(HttpServletResponse.SC_OK).entity("ID " + netlistId + " deleted").build();
 		}
-		catch (SQLException | DatabaseException ex)
+		catch (DatabaseException ex)
 		{
 			throw new DbException("Unable to delete network list", ex);
 		}
