@@ -200,17 +200,6 @@ public final class DbInterface implements AutoCloseable
 		}
 	}
 	
-	/**
-	* In open TSDB, date/times are represented as long integer.
-	* @return the numeric date falue or NULL if passed a null date.
-	*/
-	public String sqlDate(Date d)
-	{
-		if (d == null)
-			return "NULL";
-		return "" + d.getTime();
-	}
-	
 	public Long sqlDateV(Date d)
 	{
 		if (d == null)

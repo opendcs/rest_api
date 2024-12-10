@@ -15,19 +15,29 @@
 
 package org.opendcs.odcsapi.res;
 
+import java.sql.Connection;
+import java.sql.SQLException;
 import javax.servlet.ServletContext;
 import javax.sql.DataSource;
 import javax.ws.rs.core.Context;
 
+import decodes.cwms.CwmsDatabaseProvider;
 import decodes.db.DatabaseException;
+import decodes.util.DecodesSettings;
+import opendcs.opentsdb.OpenTsdbProvider;
 import org.opendcs.database.DatabaseService;
 import org.opendcs.database.api.OpenDcsDao;
 import org.opendcs.database.api.OpenDcsDatabase;
+import org.opendcs.spi.database.DatabaseProvider;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static org.opendcs.odcsapi.res.DataSourceContextCreator.DATA_SOURCE_ATTRIBUTE_KEY;
 
 class OpenDcsResource
 {
+	private static final Logger LOGGER = LoggerFactory.getLogger(OpenDcsResource.class);
+
 	@Context
 	private ServletContext context;
 
@@ -39,9 +49,9 @@ class OpenDcsResource
 
 	final OpenDcsDatabase createDb()
 	{
+		DataSource dataSource = (DataSource) context.getAttribute(DATA_SOURCE_ATTRIBUTE_KEY);
 		try
 		{
-			DataSource dataSource = (DataSource) context.getAttribute(DATA_SOURCE_ATTRIBUTE_KEY);
 			if(dataSource == null)
 			{
 				throw new IllegalStateException("No data source defined in context.xml");
@@ -50,7 +60,28 @@ class OpenDcsResource
 		}
 		catch(DatabaseException e)
 		{
-			throw new IllegalStateException("Error connecting to the database via JNDI", e);
+			//Temporary workaround until database_properties table is implemented in the schema
+			LOGGER.atWarn().setCause(e).log("Temporary solution forcing OpenTSDB");
+			DecodesSettings decodesSettings = new DecodesSettings();
+			try(Connection connection = dataSource.getConnection())
+			{
+				DatabaseProvider databaseProvider;
+				String databaseProductName = connection.getMetaData().getDatabaseProductName();
+				if(databaseProductName.toLowerCase().startsWith("oracle"))
+				{
+					databaseProvider = new CwmsDatabaseProvider();
+				}
+				else
+				{
+					databaseProvider = new OpenTsdbProvider();
+				}
+				return databaseProvider.createDatabase(dataSource, decodesSettings);
+			}
+			catch(DatabaseException | SQLException ex)
+			{
+				throw new IllegalStateException("Error connecting to the database via JNDI", ex);
+			}
+//			throw new IllegalStateException("Error connecting to the database via JNDI", e);
 		}
 	}
 }
