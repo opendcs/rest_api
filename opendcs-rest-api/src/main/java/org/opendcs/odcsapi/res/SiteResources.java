@@ -53,7 +53,6 @@ import org.opendcs.odcsapi.sec.AuthorizationCheck;
 public class SiteResources extends OpenDcsResource
 {
 	@Context HttpHeaders httpHeaders;
-	private static final String NO_SITE_DAI = "No SiteDAI available";
 
 	@GET
 	@Path("siterefs")
@@ -62,8 +61,7 @@ public class SiteResources extends OpenDcsResource
 	public Response geSiteRefs()
 		throws DbException
 	{
-		try (SiteDAI dai = createDb().getDao(SiteDAI.class)
-					 .orElseThrow(() -> new DbException(NO_SITE_DAI)))
+		try (SiteDAI dai = getLegacyTimeseriesDB().makeSiteDAO())
 		{
 			SiteList sites = new SiteList();
 			dai.read(sites);
@@ -109,8 +107,7 @@ public class SiteResources extends OpenDcsResource
 			throw new WebAppException(ErrorCodes.MISSING_ID, 
 				"Missing required siteid parameter.");
 
-		try (SiteDAI dai = createDb().getDao(SiteDAI.class)
-				.orElseThrow(() -> new DbException(NO_SITE_DAI)))
+		try (SiteDAI dai = getLegacyTimeseriesDB().makeSiteDAO())
 		{
 			return Response.status(HttpServletResponse.SC_OK)
 					.entity(dai.getSiteById(DbKey.createDbKey(siteId))).build();
@@ -129,10 +126,8 @@ public class SiteResources extends OpenDcsResource
 	public Response postSite(ApiSite site)
 		throws DbException
 	{
-		try (SiteDAI dai = createDb().getDao(SiteDAI.class)
-				.orElseThrow(() -> new DbException(NO_SITE_DAI)))
+		try (SiteDAI dai = getLegacyTimeseriesDB().makeSiteDAO())
 		{
-
 			dai.writeSite(map(site));
 			String sitePubName = site.getPublicName();
 			if (sitePubName == null)
@@ -178,9 +173,7 @@ public class SiteResources extends OpenDcsResource
 	@RolesAllowed({AuthorizationCheck.ODCS_API_ADMIN, AuthorizationCheck.ODCS_API_USER})
 	public Response deleteSite(@QueryParam("siteid") Long siteId) throws DbException
 	{
-		// Use username and password to attempt to connect to the database
-		try (SiteDAI dai = createDb().getDao(SiteDAI.class)
-				.orElseThrow(() -> new DbException(NO_SITE_DAI)))
+		try (SiteDAI dai = getLegacyTimeseriesDB().makeSiteDAO())
 		{
 			dai.deleteSite(DbKey.createDbKey(siteId));
 			return Response.status(HttpServletResponse.SC_OK)
