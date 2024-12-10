@@ -15,7 +15,6 @@
 
 package org.opendcs.odcsapi.res;
 
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Vector;
 
@@ -36,10 +35,10 @@ import javax.ws.rs.core.Response;
 import decodes.db.DataPresentation;
 import decodes.db.DataType;
 import decodes.db.DatabaseException;
+import decodes.db.DatabaseIO;
 import decodes.db.PresentationGroup;
 import decodes.db.PresentationGroupList;
 import decodes.sql.DbKey;
-import decodes.sql.PresentationGroupListIO;
 import org.opendcs.odcsapi.beans.ApiPresentationElement;
 import org.opendcs.odcsapi.beans.ApiPresentationGroup;
 import org.opendcs.odcsapi.beans.ApiPresentationRef;
@@ -49,7 +48,7 @@ import org.opendcs.odcsapi.errorhandling.WebAppException;
 import org.opendcs.odcsapi.sec.AuthorizationCheck;
 
 @Path("/")
-public class PresentationResources
+public class PresentationResources extends OpenDcsResource
 {
 	@Context HttpHeaders httpHeaders;
 
@@ -61,12 +60,12 @@ public class PresentationResources
 	{
 		try
 		{
-			PresentationGroupListIO presGroupList = new PresentationGroupListIO(null);
+			DatabaseIO dbio = getLegacyDatabase();
 			PresentationGroupList groupList = new PresentationGroupList();
-			presGroupList.read(groupList);
+			dbio.readPresentationGroupList(groupList);
 			return Response.status(HttpServletResponse.SC_OK).entity(map(groupList)).build();
 		}
-		catch (SQLException | DatabaseException e)
+		catch (DatabaseException e)
 		{
 			throw new DbException("Unable to retrieve presentation groups", e);
 		}
@@ -103,10 +102,10 @@ public class PresentationResources
 		
 		try
 		{
-			PresentationGroupListIO presGroupList = new PresentationGroupListIO(null);
+			DatabaseIO dbio = getLegacyDatabase();
 			PresentationGroup group = new PresentationGroup();
 			group.setId(DbKey.createDbKey(groupId));
-			presGroupList.readPresentationGroup(group, false);
+			dbio.readPresentationGroup(group);
 			return Response.status(HttpServletResponse.SC_OK).entity(map(group)).build();
 		}
 		catch (DatabaseException e)
@@ -153,12 +152,12 @@ public class PresentationResources
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({AuthorizationCheck.ODCS_API_ADMIN, AuthorizationCheck.ODCS_API_USER})
-	public Response postPresentation(ApiPresentationGroup presGrp) throws DbException, SQLException
+	public Response postPresentation(ApiPresentationGroup presGrp) throws DbException
 	{
 		try
 		{
-			PresentationGroupListIO presGroupList = new PresentationGroupListIO(null);
-			presGroupList.write(map(presGrp));
+			DatabaseIO dbio = getLegacyDatabase();
+			dbio.writePresentationGroup(map(presGrp));
 			return Response.status(HttpServletResponse.SC_OK)
 					.entity("Successfully stored presentation group")
 					.build();
@@ -210,11 +209,11 @@ public class PresentationResources
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({AuthorizationCheck.ODCS_API_ADMIN, AuthorizationCheck.ODCS_API_USER})
-	public Response deletePresentation(@QueryParam("groupid") Long groupId) throws DbException, SQLException
+	public Response deletePresentation(@QueryParam("groupid") Long groupId) throws DbException
 	{
 		try
 		{
-			PresentationGroupListIO presGroupList = new PresentationGroupListIO(null);
+			DatabaseIO dbio = getLegacyDatabase();
 			PresentationGroup group = new PresentationGroup();
 			group.setId(DbKey.createDbKey(groupId));
 
@@ -224,7 +223,7 @@ public class PresentationResources
 //				return ApiHttpUtil.createResponse("Cannot delete presentation group " + groupId
 //						+ " because it is used by the following routing specs: "
 //						+ s, ErrorCodes.NOT_ALLOWED);
-			presGroupList.delete(group);
+			dbio.deletePresentationGroup(group);
 			return Response.status(HttpServletResponse.SC_OK)
 					.entity("Presentation Group with ID " + groupId + " deleted")
 					.build();
