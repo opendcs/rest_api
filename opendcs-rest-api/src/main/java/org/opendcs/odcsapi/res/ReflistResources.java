@@ -17,8 +17,10 @@ package org.opendcs.odcsapi.res;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 
 import javax.annotation.security.RolesAllowed;
+import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -31,15 +33,18 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import decodes.db.DbEnum;
+import decodes.db.EnumList;
+import decodes.db.EnumValue;
+import decodes.tsdb.DbIoException;
+import opendcs.dai.EnumDAI;
 import org.opendcs.odcsapi.beans.ApiRefList;
+import org.opendcs.odcsapi.beans.ApiRefListItem;
 import org.opendcs.odcsapi.beans.ApiSeason;
-import org.opendcs.odcsapi.dao.ApiRefListDAO;
 import org.opendcs.odcsapi.dao.DbException;
 import org.opendcs.odcsapi.errorhandling.ErrorCodes;
 import org.opendcs.odcsapi.errorhandling.WebAppException;
-import org.opendcs.odcsapi.hydrojson.DbInterface;
 import org.opendcs.odcsapi.sec.AuthorizationCheck;
-import org.opendcs.odcsapi.util.ApiHttpUtil;
 
 /**
  * HTTP Resources relating to reference lists and seasons
@@ -47,9 +52,10 @@ import org.opendcs.odcsapi.util.ApiHttpUtil;
  *
  */
 @Path("/")
-public class ReflistResources
+public class ReflistResources extends OpenDcsResource
 {
 	@Context HttpHeaders httpHeaders;
+	private static final String NO_ENUM_DAI = "No EnumDAI available";
 
 	@GET
 	@Path("reflists")
@@ -58,10 +64,20 @@ public class ReflistResources
 	public Response getRefLists(@QueryParam("name") String listNames) throws DbException
 	{
 		
-		try (DbInterface dbi = new DbInterface(); 
-			ApiRefListDAO dao = new ApiRefListDAO(dbi))
+		try (EnumDAI dai = createDb().getDao(EnumDAI.class)
+				.orElseThrow(() -> new DbException(NO_ENUM_DAI)))
 		{
-			HashMap<String, ApiRefList> ret = dao.getAllRefLists();
+			DbEnum returnedEnum = dai.getEnum("season");
+			HashMap<String, ApiRefList> ret = new HashMap<>();
+			for (EnumValue enumVal : returnedEnum.values())
+			{
+				ApiRefList refList = new ApiRefList();
+				refList.setReflistId(returnedEnum.getId().getValue());
+				refList.setDescription(enumVal.getDescription());
+				refList.setDefaultValue(enumVal.getValue());
+				ret.put(enumVal.getValue(), refList);
+			}
+
 			ArrayList<String> searches = getSearchTerms(listNames);
 			if (!searches.isEmpty())
 			{
@@ -78,7 +94,11 @@ public class ReflistResources
 					ret.remove(rm);
 			}
 					
-			return ApiHttpUtil.createResponse(ret);
+			return Response.status(HttpServletResponse.SC_OK).entity(ret).build();
+		}
+		catch(DbIoException e)
+		{
+			throw new DbException("Unable to retrieve reference lists", e);
 		}
 	}
 	
@@ -89,11 +109,31 @@ public class ReflistResources
 	@RolesAllowed({AuthorizationCheck.ODCS_API_ADMIN, AuthorizationCheck.ODCS_API_USER})
 	public Response postRefList(ApiRefList reflist) throws DbException
 	{
-		try (DbInterface dbi = new DbInterface();
-			ApiRefListDAO reflistDAO = new ApiRefListDAO(dbi))
+		try (EnumDAI dai = createDb().getDao(EnumDAI.class)
+				.orElseThrow(() -> new DbException(NO_ENUM_DAI)))
 		{
-			return ApiHttpUtil.createResponse(reflistDAO.writeRefList(reflist));
+			dai.writeEnumList(mapToEnum(reflist));
+			return Response.status(HttpServletResponse.SC_OK)
+					.entity("Successfully stored reference list")
+					.build();
 		}
+		catch(DbIoException e)
+		{
+			throw new DbException("Unable to write reference list", e);
+		}
+	}
+
+	static EnumList mapToEnum(ApiRefList refList)
+	{
+		EnumList el = new EnumList();
+		for (Map.Entry<String, ApiRefListItem> item : refList.getItems().entrySet())
+		{
+			DbEnum ev = new DbEnum(item.getKey());
+			ev.setDescription(item.getValue().getDescription());
+			ev.setDefault(item.getValue().getValue());
+			el.addEnum(ev);
+		}
+		return el;
 	}
 
 	@DELETE
@@ -103,13 +143,14 @@ public class ReflistResources
 	@RolesAllowed({AuthorizationCheck.ODCS_API_ADMIN, AuthorizationCheck.ODCS_API_USER})
 	public Response deleReflist(@QueryParam("reflistid") Long reflistId) throws DbException
 	{
-		
-		// Use username and password to attempt to connect to the database
-		try (DbInterface dbi = new DbInterface();
-			ApiRefListDAO dao = new ApiRefListDAO(dbi))
+		try (EnumDAI dai = createDb().getDao(EnumDAI.class)
+				.orElseThrow(() -> new DbException(NO_ENUM_DAI)))
 		{
-			dao.deleteRefList(reflistId);
-			return ApiHttpUtil.createResponse("reflist with ID " + reflistId + " deleted");
+
+//			dao.deleteRefList(reflistId);
+
+//			return Response.status(HttpServletResponse.SC_OK).entity("reflist with ID " + reflistId + " deleted").build();
+			return Response.status(HttpServletResponse.SC_NOT_IMPLEMENTED).build();
 		}
 	}
 
@@ -117,13 +158,24 @@ public class ReflistResources
 	@Path("seasons")
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({AuthorizationCheck.ODCS_API_GUEST})
-	public Response getSeasons() throws WebAppException, DbException
+	public Response getSeasons() throws DbException
 	{
-		try (DbInterface dbi = new DbInterface(); 
-			ApiRefListDAO dao = new ApiRefListDAO(dbi))
+		try (EnumDAI dai = createDb().getDao(EnumDAI.class)
+				.orElseThrow(() -> new DbException(NO_ENUM_DAI)))
 		{
-			return ApiHttpUtil.createResponse(dao.getAllSeasons());
+			EnumList input = new EnumList();
+			dai.readEnumList(input);
+			return Response.status(HttpServletResponse.SC_OK).entity(mapSeasons(input)).build();
 		}
+		catch(DbIoException e)
+		{
+			throw new DbException("Unable to retrieve seasons", e);
+		}
+	}
+
+	static ArrayList<ApiSeason> mapSeasons(EnumList seasons)
+	{
+		return null;
 	}
 
 	@GET
@@ -131,12 +183,19 @@ public class ReflistResources
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({AuthorizationCheck.ODCS_API_GUEST})
 	public Response getSeason(@QueryParam("abbr") String abbr)
-		throws WebAppException, DbException
+		throws DbException
 	{
-		try (DbInterface dbi = new DbInterface(); 
-			ApiRefListDAO dao = new ApiRefListDAO(dbi))
+		try (EnumDAI dai = createDb().getDao(EnumDAI.class)
+				.orElseThrow(() -> new DbException(NO_ENUM_DAI)))
 		{
-			return ApiHttpUtil.createResponse(dao.getSeason(abbr));
+			EnumList input = new EnumList();
+			dai.readEnumList(input);
+//			return Response.status(HttpServletResponse.SC_OK).entity(dao.getSeason(abbr)).build();
+			return Response.status(HttpServletResponse.SC_NOT_IMPLEMENTED).build();
+		}
+		catch(DbIoException e)
+		{
+			throw new DbException(String.format("Unable to retrieve season with abbreviation: %s", abbr), e);
 		}
 	}
 
@@ -146,16 +205,24 @@ public class ReflistResources
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({AuthorizationCheck.ODCS_API_ADMIN, AuthorizationCheck.ODCS_API_USER})
 	public Response postSeason(@QueryParam("fromabbr") String fromAbbr, ApiSeason season)
-		throws WebAppException, DbException
+		throws DbException
 	{
-		try (DbInterface dbi = new DbInterface();
-			ApiRefListDAO reflistDAO = new ApiRefListDAO(dbi))
+		try (EnumDAI dai = createDb().getDao(EnumDAI.class)
+				.orElseThrow(() -> new DbException(NO_ENUM_DAI)))
 		{
-			if (fromAbbr != null)
-				reflistDAO.deleteSeason(fromAbbr);
-			reflistDAO.writeSeason(season);
-			return ApiHttpUtil.createResponse(String.format("The season (%s) has been saved successfully", season.getAbbr()));
+//			if (fromAbbr != null)
+//				reflistDAO.deleteSeason(fromAbbr);
+//			reflistDAO.writeSeason(season);
+//			return Response.status(HttpServletResponse.SC_OK)
+//					.entity(String.format("The season (%s) has been saved successfully", season.getAbbr()))
+//					.build();
+			return Response.status(HttpServletResponse.SC_NOT_IMPLEMENTED).build();
 		}
+	}
+
+	static DbEnum map(ApiSeason season, String fromAbbr)
+	{
+		return null;
 	}
 
 	@DELETE
@@ -170,11 +237,12 @@ public class ReflistResources
 			throw new WebAppException(ErrorCodes.MISSING_ID, "Provide 'abbr' argument to delete a season.");
 		
 		// Use username and password to attempt to connect to the database
-		try (DbInterface dbi = new DbInterface();
-			ApiRefListDAO reflistDAO = new ApiRefListDAO(dbi))
+		try (EnumDAI dai = createDb().getDao(EnumDAI.class)
+				.orElseThrow(() -> new DbException(NO_ENUM_DAI)))
 		{
-			reflistDAO.deleteSeason(abbr);
-			return ApiHttpUtil.createResponse("Deleted season + " + abbr);
+//			reflistDAO.deleteSeason(abbr);
+//			return Response.status(HttpServletResponse.SC_OK).entity("Deleted season " + abbr).build();
+			return Response.status(HttpServletResponse.SC_NOT_IMPLEMENTED).build();
 		}
 	}
 
