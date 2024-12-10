@@ -15,7 +15,6 @@
 
 package org.opendcs.odcsapi.res;
 
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -37,6 +36,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import decodes.db.DatabaseException;
+import decodes.db.DatabaseIO;
 import decodes.db.Platform;
 import decodes.db.PlatformConfig;
 import decodes.db.PlatformList;
@@ -45,10 +45,8 @@ import decodes.db.PlatformStatus;
 import decodes.db.Site;
 import decodes.db.TransportMedium;
 import decodes.sql.DbKey;
-import decodes.sql.PlatformListIO;
 import decodes.tsdb.DbIoException;
 import opendcs.dai.PlatformStatusDAI;
-import opendcs.dao.PlatformStatusDAO;
 import org.opendcs.odcsapi.beans.ApiPlatform;
 import org.opendcs.odcsapi.beans.ApiPlatformRef;
 import org.opendcs.odcsapi.beans.ApiPlatformSensor;
@@ -69,14 +67,14 @@ public class PlatformResources extends OpenDcsResource
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({AuthorizationCheck.ODCS_API_GUEST})
 	public Response gePlatformRefs(@QueryParam("tmtype") String tmtype)
-		throws DbException, SQLException
+		throws DbException
 	{
 		HashMap<String, ApiPlatformRef> ret = new HashMap<>();
 		try
 		{
-			PlatformListIO dao = new PlatformListIO(null, null, null);
+			DatabaseIO dbio = getLegacyDatabase();
 			PlatformList platformList = new PlatformList();
-			dao.read(platformList);
+			dbio.readPlatformList(platformList);
 			ArrayList<ApiPlatformRef> platSpecs = map(platformList);
 			for(ApiPlatformRef ps : platSpecs)
 				ret.put(ps.getName(), ps);
@@ -117,7 +115,7 @@ public class PlatformResources extends OpenDcsResource
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({AuthorizationCheck.ODCS_API_GUEST})
 	public Response getPlatform(@QueryParam("platformid") Long platformId)
-		throws WebAppException, DbException, SQLException
+		throws WebAppException, DbException
 	{
 		if (platformId == null)
 			throw new WebAppException(ErrorCodes.MISSING_ID, 
@@ -125,10 +123,10 @@ public class PlatformResources extends OpenDcsResource
 		
 		try
 		{
-			PlatformListIO dao = new PlatformListIO(null, null, null);
+			DatabaseIO dbio = getLegacyDatabase();
 			Platform platform = new Platform();
 			platform.setId(DbKey.createDbKey(platformId));
-			dao.readPlatform(platform);
+			dbio.readPlatform(platform);
 			return Response.status(HttpServletResponse.SC_OK).entity(map(platform)).build();
 		}
 		catch (DatabaseException ex)
@@ -186,12 +184,12 @@ public class PlatformResources extends OpenDcsResource
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({AuthorizationCheck.ODCS_API_ADMIN, AuthorizationCheck.ODCS_API_USER})
 	public Response postPlatform(ApiPlatform platform)
-		throws DbException, SQLException
+		throws DbException
 	{
 		try
 		{
-			PlatformListIO dao = new PlatformListIO(null, null, null);
-			dao.writePlatform(map(platform));
+			DatabaseIO dbio = getLegacyDatabase();
+			dbio.writePlatform(map(platform));
 			return Response.status(HttpServletResponse.SC_OK)
 					.entity(String.format("Successfully stored Platform with ID: %s", platform.getPlatformId()))
 					.build();
@@ -282,15 +280,15 @@ public class PlatformResources extends OpenDcsResource
 	{
 		try
 		{
-			PlatformListIO dao = new PlatformListIO(null, null, null);
-			Platform platform = new Platform();
-			platform.setId(DbKey.createDbKey(platformId));
-			dao.delete(platform);
+			DatabaseIO dbio = getLegacyDatabase();
+			Platform plat = new Platform();
+			plat.setId(DbKey.createDbKey(platformId));
+			dbio.deletePlatform(plat);
 			return Response.status(HttpServletResponse.SC_OK)
 					.entity("Platform with ID " + platformId + " deleted")
 					.build();
 		}
-		catch (SQLException | DatabaseException ex)
+		catch (DatabaseException ex)
 		{
 			throw new DbException(String.format("Unable to delete platform with ID: %s", platformId), ex);
 		}
@@ -303,9 +301,8 @@ public class PlatformResources extends OpenDcsResource
 	public Response gePlatformStats(@QueryParam("netlistid") Long netlistId)
 		throws DbException
 	{
-		// DAI class does not extend OpenDcsDao, so we're using the DAO directly here
-		try (PlatformStatusDAI dao = createDb().getDao(PlatformStatusDAO.class)
-				.orElseThrow(() -> new DbException("No PlatformStatusDAI")))
+		DatabaseIO dbio = getLegacyDatabase();
+		try (PlatformStatusDAI dao = dbio.makePlatformStatusDAO())
 		{
 			PlatformStatus status = dao.readPlatformStatus(DbKey.createDbKey(netlistId));
 			return Response.status(HttpServletResponse.SC_OK).entity(map(status)).build();
