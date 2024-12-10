@@ -16,7 +16,6 @@
 package org.opendcs.odcsapi.res;
 
 import java.io.IOException;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
@@ -36,6 +35,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import decodes.db.DatabaseException;
+import decodes.db.DatabaseIO;
 import decodes.db.DecodesScript;
 import decodes.db.DecodesScriptException;
 import decodes.db.EngineeringUnit;
@@ -44,7 +44,6 @@ import decodes.db.PlatformConfigList;
 import decodes.db.Poly5Converter;
 import decodes.db.ScriptSensor;
 import decodes.db.UnitConverter;
-import decodes.sql.ConfigListIO;
 import decodes.sql.DbKey;
 import org.opendcs.odcsapi.beans.ApiConfigRef;
 import org.opendcs.odcsapi.beans.ApiConfigScript;
@@ -57,7 +56,7 @@ import org.opendcs.odcsapi.errorhandling.WebAppException;
 import org.opendcs.odcsapi.sec.AuthorizationCheck;
 
 @Path("/")
-public class ConfigResources
+public class ConfigResources extends OpenDcsResource
 {
 	@Context HttpHeaders httpHeaders;
 
@@ -69,12 +68,12 @@ public class ConfigResources
 	{
 		try
 		{
-			ConfigListIO configListIO = new ConfigListIO(null, null);
+			DatabaseIO dbIo = getLegacyDatabase();
 			PlatformConfigList configList = new PlatformConfigList();
-			configListIO.read(configList);
+			dbIo.readConfigList(configList);
 			return Response.status(HttpServletResponse.SC_OK).entity(map(configList)).build();
 		}
-		catch (SQLException | DatabaseException ex)
+		catch (DatabaseException ex)
 		{
 			throw new DbException("Error reading config list", ex);
 		}
@@ -99,7 +98,7 @@ public class ConfigResources
 	@Path("config")
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({AuthorizationCheck.ODCS_API_GUEST})
-	public Response getConfig(@QueryParam("configid") Long configId) throws WebAppException, DbException, SQLException
+	public Response getConfig(@QueryParam("configid") Long configId) throws WebAppException, DbException
 	{
 		if (configId == null)
 			throw new WebAppException(ErrorCodes.MISSING_ID, 
@@ -107,8 +106,10 @@ public class ConfigResources
 		
 		try
 		{
-			ConfigListIO configListIO = new ConfigListIO(null, null);
-			PlatformConfig config = configListIO.getConfig(DbKey.createDbKey(configId));
+			DatabaseIO dbIo = getLegacyDatabase();
+			PlatformConfig config = new PlatformConfig();
+			config.setId(DbKey.createDbKey(configId));
+			dbIo.readConfig(config);
 			return Response.status(HttpServletResponse.SC_OK).entity(map(config)).build();
 		}
 		catch (DatabaseException ex)
@@ -132,12 +133,12 @@ public class ConfigResources
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({AuthorizationCheck.ODCS_API_ADMIN, AuthorizationCheck.ODCS_API_USER})
-	public Response postConfig(ApiPlatformConfig config) throws DbException, SQLException
+	public Response postConfig(ApiPlatformConfig config) throws DbException
 	{
 		try
 		{
-			ConfigListIO configListIO = new ConfigListIO(null, null);
-			configListIO.write(map(config));
+			DatabaseIO dbIo = getLegacyDatabase();
+			dbIo.writeConfig(map(config));
 			return Response.status(HttpServletResponse.SC_OK)
 					.entity(String.format("Successfully saved platform config with ID: %s", config.getConfigId()))
 					.build();
@@ -221,12 +222,14 @@ public class ConfigResources
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({AuthorizationCheck.ODCS_API_ADMIN, AuthorizationCheck.ODCS_API_USER})
-	public Response deleteConfig(@QueryParam("configid") Long configId) throws DbException, SQLException
+	public Response deleteConfig(@QueryParam("configid") Long configId) throws DbException
 	{
 		try
 		{
-			ConfigListIO configListIO = new ConfigListIO(null, null);
-			PlatformConfig pc = configListIO.getConfig(DbKey.createDbKey(configId));
+			DatabaseIO dbIo = getLegacyDatabase();
+			PlatformConfig pc = new PlatformConfig();
+			pc.setId(DbKey.createDbKey(configId));
+			dbIo.readConfig(pc);
 
 			if (pc.numPlatformsUsing > 0)
 			{
@@ -235,7 +238,7 @@ public class ConfigResources
 						.build();
 			}
 
-			configListIO.delete(pc);
+			dbIo.deleteConfig(pc);
 			return Response.status(HttpServletResponse.SC_OK)
 					.entity("Config with ID " + configId + " deleted")
 					.build();
