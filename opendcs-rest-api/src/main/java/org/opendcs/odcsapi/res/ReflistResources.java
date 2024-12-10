@@ -33,9 +33,11 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import decodes.db.DatabaseException;
 import decodes.db.DbEnum;
 import decodes.db.EnumList;
 import decodes.db.EnumValue;
+import decodes.sql.DbKey;
 import decodes.tsdb.DbIoException;
 import opendcs.dai.EnumDAI;
 import org.opendcs.odcsapi.beans.ApiRefList;
@@ -55,7 +57,6 @@ import org.opendcs.odcsapi.sec.AuthorizationCheck;
 public class ReflistResources extends OpenDcsResource
 {
 	@Context HttpHeaders httpHeaders;
-	private static final String NO_ENUM_DAI = "No EnumDAI available";
 
 	@GET
 	@Path("reflists")
@@ -63,9 +64,7 @@ public class ReflistResources extends OpenDcsResource
 	@RolesAllowed({AuthorizationCheck.ODCS_API_GUEST})
 	public Response getRefLists(@QueryParam("name") String listNames) throws DbException
 	{
-		
-		try (EnumDAI dai = createDb().getDao(EnumDAI.class)
-				.orElseThrow(() -> new DbException(NO_ENUM_DAI)))
+		try (EnumDAI dai = getLegacyTimeseriesDB().makeEnumDAO())
 		{
 			DbEnum returnedEnum = dai.getEnum("season");
 			HashMap<String, ApiRefList> ret = new HashMap<>();
@@ -109,28 +108,28 @@ public class ReflistResources extends OpenDcsResource
 	@RolesAllowed({AuthorizationCheck.ODCS_API_ADMIN, AuthorizationCheck.ODCS_API_USER})
 	public Response postRefList(ApiRefList reflist) throws DbException
 	{
-		try (EnumDAI dai = createDb().getDao(EnumDAI.class)
-				.orElseThrow(() -> new DbException(NO_ENUM_DAI)))
+		try (EnumDAI dai = getLegacyTimeseriesDB().makeEnumDAO())
 		{
 			dai.writeEnumList(mapToEnum(reflist));
 			return Response.status(HttpServletResponse.SC_OK)
 					.entity("Successfully stored reference list")
 					.build();
 		}
-		catch(DbIoException e)
+		catch(DbIoException | DatabaseException e)
 		{
 			throw new DbException("Unable to write reference list", e);
 		}
 	}
 
-	static EnumList mapToEnum(ApiRefList refList)
+	static EnumList mapToEnum(ApiRefList refList) throws DatabaseException
 	{
 		EnumList el = new EnumList();
 		for (Map.Entry<String, ApiRefListItem> item : refList.getItems().entrySet())
 		{
 			DbEnum ev = new DbEnum(item.getKey());
 			ev.setDescription(item.getValue().getDescription());
-			ev.setDefault(item.getValue().getValue());
+			ev.setDefault(refList.getDefaultValue());
+			ev.setId(DbKey.createDbKey(refList.getReflistId()));
 			el.addEnum(ev);
 		}
 		return el;
@@ -143,10 +142,8 @@ public class ReflistResources extends OpenDcsResource
 	@RolesAllowed({AuthorizationCheck.ODCS_API_ADMIN, AuthorizationCheck.ODCS_API_USER})
 	public Response deleReflist(@QueryParam("reflistid") Long reflistId) throws DbException
 	{
-		try (EnumDAI dai = createDb().getDao(EnumDAI.class)
-				.orElseThrow(() -> new DbException(NO_ENUM_DAI)))
+		try (EnumDAI dai = getLegacyTimeseriesDB().makeEnumDAO())
 		{
-
 //			dao.deleteRefList(reflistId);
 
 //			return Response.status(HttpServletResponse.SC_OK).entity("reflist with ID " + reflistId + " deleted").build();
@@ -160,8 +157,7 @@ public class ReflistResources extends OpenDcsResource
 	@RolesAllowed({AuthorizationCheck.ODCS_API_GUEST})
 	public Response getSeasons() throws DbException
 	{
-		try (EnumDAI dai = createDb().getDao(EnumDAI.class)
-				.orElseThrow(() -> new DbException(NO_ENUM_DAI)))
+		try (EnumDAI dai = getLegacyTimeseriesDB().makeEnumDAO())
 		{
 			EnumList input = new EnumList();
 			dai.readEnumList(input);
@@ -175,7 +171,14 @@ public class ReflistResources extends OpenDcsResource
 
 	static ArrayList<ApiSeason> mapSeasons(EnumList seasons)
 	{
-		return null;
+		ArrayList<ApiSeason> ret = new ArrayList<>();
+		for (DbEnum ev : seasons.getEnumList())
+		{
+			ApiSeason as = new ApiSeason();
+			as.setName(ev.getUniqueName());
+			ret.add(as);
+		}
+		return ret;
 	}
 
 	@GET
@@ -185,8 +188,7 @@ public class ReflistResources extends OpenDcsResource
 	public Response getSeason(@QueryParam("abbr") String abbr)
 		throws DbException
 	{
-		try (EnumDAI dai = createDb().getDao(EnumDAI.class)
-				.orElseThrow(() -> new DbException(NO_ENUM_DAI)))
+		try (EnumDAI dai = getLegacyTimeseriesDB().makeEnumDAO())
 		{
 			EnumList input = new EnumList();
 			dai.readEnumList(input);
@@ -207,8 +209,7 @@ public class ReflistResources extends OpenDcsResource
 	public Response postSeason(@QueryParam("fromabbr") String fromAbbr, ApiSeason season)
 		throws DbException
 	{
-		try (EnumDAI dai = createDb().getDao(EnumDAI.class)
-				.orElseThrow(() -> new DbException(NO_ENUM_DAI)))
+		try (EnumDAI dai = getLegacyTimeseriesDB().makeEnumDAO())
 		{
 //			if (fromAbbr != null)
 //				reflistDAO.deleteSeason(fromAbbr);
@@ -222,7 +223,9 @@ public class ReflistResources extends OpenDcsResource
 
 	static DbEnum map(ApiSeason season, String fromAbbr)
 	{
-		return null;
+		DbEnum ret = new DbEnum(season.getName());
+		ret.setDefault(fromAbbr);
+		return ret;
 	}
 
 	@DELETE
@@ -237,8 +240,7 @@ public class ReflistResources extends OpenDcsResource
 			throw new WebAppException(ErrorCodes.MISSING_ID, "Provide 'abbr' argument to delete a season.");
 		
 		// Use username and password to attempt to connect to the database
-		try (EnumDAI dai = createDb().getDao(EnumDAI.class)
-				.orElseThrow(() -> new DbException(NO_ENUM_DAI)))
+		try (EnumDAI dai = getLegacyTimeseriesDB().makeEnumDAO())
 		{
 //			reflistDAO.deleteSeason(abbr);
 //			return Response.status(HttpServletResponse.SC_OK).entity("Deleted season " + abbr).build();
