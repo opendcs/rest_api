@@ -67,7 +67,6 @@ public class AppResources extends OpenDcsResource
 {
 	@Context private HttpServletRequest request;
 	@Context private HttpHeaders httpHeaders;
-	private static final String NO_LOADING_APP_DAI = "No LoadingAppDAI available";
 
 	@GET
 	@Path("apprefs")
@@ -75,8 +74,8 @@ public class AppResources extends OpenDcsResource
 	@RolesAllowed({AuthorizationCheck.ODCS_API_GUEST})
 	public Response getAppRefs() throws DbException
 	{
-		try (LoadingAppDAI dai = createDb().getDao(LoadingAppDAI.class)
-					 .orElseThrow(() -> new DbException(NO_LOADING_APP_DAI)))
+
+		try (LoadingAppDAI dai = getLegacyDatabase().makeLoadingAppDAO())
 		{
 			List<ApiAppRef> ret = dai.listComputationApps(false)
 					.stream()
@@ -112,8 +111,7 @@ public class AppResources extends OpenDcsResource
 		if (appId == null)
 			throw new WebAppException(ErrorCodes.MISSING_ID, 
 				"Missing required appid parameter.");
-		try (LoadingAppDAI dai = createDb().getDao(LoadingAppDAI.class)
-				.orElseThrow(() -> new DbException(NO_LOADING_APP_DAI)))
+		try (LoadingAppDAI dai = getLegacyDatabase().makeLoadingAppDAO())
 		{
 			return Response.status(HttpServletResponse.SC_OK)
 					.entity(map(dai.getComputationApp(DbKey.createDbKey(appId)))).build();
@@ -132,12 +130,12 @@ public class AppResources extends OpenDcsResource
 	public Response postApp(ApiLoadingApp app)
 		throws DbException
 	{
-		try (LoadingAppDAI dai = createDb().getDao(LoadingAppDAI.class)
-				.orElseThrow(() -> new DbException(NO_LOADING_APP_DAI)))
+		try (LoadingAppDAI dai = getLegacyDatabase().makeLoadingAppDAO())
 		{
 			dai.writeComputationApp(map(app));
 			return Response.status(HttpServletResponse.SC_OK)
-					.entity(String.format("Wrote app to database with ID: %s", app.getAppId())).build();
+					.entity(String.format("Wrote app to database with ID: %s", app.getAppId()))
+					.build();
 		}
 		catch(DbIoException ex)
 		{
@@ -170,8 +168,7 @@ public class AppResources extends OpenDcsResource
 	public Response deleteApp(@QueryParam("appid") Long appId)
 		throws DbException
 	{
-		try (LoadingAppDAI dai = createDb().getDao(LoadingAppDAI.class)
-				.orElseThrow(() -> new DbException(NO_LOADING_APP_DAI)))
+		try (LoadingAppDAI dai = getLegacyDatabase().makeLoadingAppDAO())
 		{
 			CompAppInfo app = dai.getComputationApp(DbKey.createDbKey(appId));
 			if (app == null)
@@ -194,8 +191,7 @@ public class AppResources extends OpenDcsResource
 	@RolesAllowed({AuthorizationCheck.ODCS_API_ADMIN, AuthorizationCheck.ODCS_API_USER})
  	public Response getAppStat() throws DbException
 	{
-		try (LoadingAppDAI dai = createDb().getDao(LoadingAppDAI.class)
-				.orElseThrow(() -> new DbException(NO_LOADING_APP_DAI)))
+		try (LoadingAppDAI dai = getLegacyDatabase().makeLoadingAppDAO())
 		{
 			return Response.status(HttpServletResponse.SC_OK)
 					.entity(dai.getAllCompProcLocks()
@@ -233,8 +229,7 @@ public class AppResources extends OpenDcsResource
 		ClientConnectionCache clientConnectionCache = ClientConnectionCache.getInstance();
 		Optional<ApiEventClient> cli = clientConnectionCache.getApiEventClient(appId, session.getId());
 		ApiAppStatus appStat = null;
-		try(LoadingAppDAI dai = createDb().getDao(LoadingAppDAI.class)
-				.orElseThrow(() -> new DbException(NO_LOADING_APP_DAI)))
+		try(LoadingAppDAI dai = getLegacyDatabase().makeLoadingAppDAO())
 		{
 			ApiEventClient apiEventClient = null;
 			appStat = getAppStatus(dai, appId);
@@ -316,8 +311,7 @@ public class AppResources extends OpenDcsResource
 		if (appId == null)
 			throw new WebAppException(ErrorCodes.MISSING_ID, "appId parameter required for this operation.");
 		
-		try (LoadingAppDAI dai = createDb().getDao(LoadingAppDAI.class)
-				.orElseThrow(() -> new DbException(NO_LOADING_APP_DAI)))
+		try (LoadingAppDAI dai = getLegacyDatabase().makeLoadingAppDAO())
 		{
 			// Retrieve ApiLoadingApp and ApiAppStatus
 			ApiLoadingApp loadingApp = mapLoading(dai.getComputationApp(DbKey.createDbKey(appId)));
@@ -377,8 +371,7 @@ public class AppResources extends OpenDcsResource
 		if (appId == null)
 			throw new WebAppException(ErrorCodes.MISSING_ID, "appId parameter required for this operation.");
 		
-		try (LoadingAppDAI dai = createDb().getDao(LoadingAppDAI.class)
-				.orElseThrow(() -> new DbException(NO_LOADING_APP_DAI)))
+		try (LoadingAppDAI dai = getLegacyDatabase().makeLoadingAppDAO())
 		{
 			// Retrieve ApiLoadingApp and ApiAppStatus
 			ApiLoadingApp loadingApp = mapLoading(dai.getComputationApp(DbKey.createDbKey(appId)));
