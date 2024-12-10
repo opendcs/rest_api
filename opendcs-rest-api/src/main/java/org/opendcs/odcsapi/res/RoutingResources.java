@@ -15,7 +15,6 @@
 
 package org.opendcs.odcsapi.res;
 
-import java.sql.SQLException;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
@@ -37,12 +36,12 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import decodes.db.DatabaseException;
+import decodes.db.DatabaseIO;
 import decodes.db.RoutingSpec;
 import decodes.db.RoutingSpecList;
 import decodes.db.ScheduleEntry;
 import decodes.polling.DacqEvent;
 import decodes.sql.DbKey;
-import decodes.sql.RoutingSpecListIO;
 import decodes.tsdb.DbIoException;
 import opendcs.dai.DacqEventDAI;
 import opendcs.dai.ScheduleEntryDAI;
@@ -60,7 +59,6 @@ public class RoutingResources extends OpenDcsResource
 {
 	@Context private HttpServletRequest request;
 	@Context private HttpHeaders httpHeaders;
-	private static final String NO_SCHEDULE_ENTRY_DAI = "No ScheduleEntryDAI available";
 
 	@GET
 	@Path("routingrefs")
@@ -70,13 +68,13 @@ public class RoutingResources extends OpenDcsResource
 	{
 		try
 		{
-			RoutingSpecListIO rsl = new RoutingSpecListIO(null, null, null, null);
+			DatabaseIO dbio = getLegacyDatabase();
 			RoutingSpecList rsList = new RoutingSpecList();
-			rsl.read(rsList);
+			dbio.readRoutingSpecList(rsList);
 			return Response.status(HttpServletResponse.SC_OK)
 					.entity(map(rsList)).build();
 		}
-		catch(SQLException | DatabaseException e)
+		catch(DatabaseException e)
 		{
 			throw new DbException("Unable to retrieve routing reference list", e);
 		}
@@ -108,10 +106,10 @@ public class RoutingResources extends OpenDcsResource
 		
 		try
 		{
-			RoutingSpecListIO rsl = new RoutingSpecListIO(null, null, null, null);
+			DatabaseIO dbio = getLegacyDatabase();
 			RoutingSpec spec = new RoutingSpec();
 			spec.setId(DbKey.createDbKey(routingId));
-			rsl.readRoutingSpec(spec);
+			dbio.readRoutingSpec(spec);
 			return Response.status(HttpServletResponse.SC_OK)
 					.entity(map(spec)).build();
 		}
@@ -142,13 +140,12 @@ public class RoutingResources extends OpenDcsResource
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({AuthorizationCheck.ODCS_API_ADMIN, AuthorizationCheck.ODCS_API_USER})
 	public Response postRouting(ApiRouting routing)
-		throws DbException, SQLException
+		throws DbException
 	{
 		try
 		{
-			RoutingSpecListIO rsl = new RoutingSpecListIO(null, null, null, null);
-			RoutingSpec mappedRouting = map(routing);
-			rsl.write(mappedRouting);
+			DatabaseIO dbio = getLegacyDatabase();
+			dbio.writeRoutingSpec(map(routing));
 			return Response.status(HttpServletResponse.SC_OK).build();
 		}
 		catch(DatabaseException e)
@@ -186,14 +183,14 @@ public class RoutingResources extends OpenDcsResource
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response deleteRouting(@QueryParam("routingid") Long routingId)
-		throws DbException, SQLException
+		throws DbException
 	{
 		try
 		{
-			RoutingSpecListIO rsl = new RoutingSpecListIO(null, null, null, null);
+			DatabaseIO dbio = getLegacyDatabase();
 			RoutingSpec spec = new RoutingSpec();
 			spec.setId(DbKey.createDbKey(routingId));
-			rsl.delete(spec);
+			dbio.deleteRoutingSpec(spec);
 			return Response.status(HttpServletResponse.SC_OK)
 					.entity("RoutingSpec with ID " + routingId + " deleted").build();
 		}
@@ -210,8 +207,8 @@ public class RoutingResources extends OpenDcsResource
 	public Response getScheduleRefs()
 		throws DbException
 	{
-		try (ScheduleEntryDAI dai = createDb().getDao(ScheduleEntryDAI.class)
-				.orElseThrow(() -> new DbException(NO_SCHEDULE_ENTRY_DAI)))
+
+		try (ScheduleEntryDAI dai = getLegacyDatabase().makeScheduleEntryDAO())
 		{
 			List<ScheduleEntry> entries = dai.listScheduleEntries(null);
 			return Response.status(HttpServletResponse.SC_OK)
@@ -244,17 +241,26 @@ public class RoutingResources extends OpenDcsResource
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({AuthorizationCheck.ODCS_API_GUEST})
  	public Response getSchedule(@QueryParam("scheduleid") Long scheduleId)
-		throws WebAppException, DbException, SQLException
+		throws WebAppException, DbException
 	{
 		if (scheduleId == null)
 			throw new WebAppException(ErrorCodes.MISSING_ID, 
 				"Missing required scheduleid parameter.");
-		
-//		try (DbInterface dbi = new DbInterface();
-//				ApiRoutingDAO dao = new ApiRoutingDAO(dbi))
+		try (ScheduleEntryDAI dai = getLegacyDatabase().makeScheduleEntryDAO())
+		{
+			ScheduleEntry entry = new ScheduleEntry(DbKey.createDbKey(scheduleId));
+
+			//		try (DbInterface dbi = new DbInterface();
+			//				ApiRoutingDAO dao = new ApiRoutingDAO(dbi))
+			//		{
+			//			return ApiHttpUtil.createResponse(dao.getSchedule(scheduleId));
+			//		}
+		}
+//		catch(DbIoException e)
 //		{
-//			return ApiHttpUtil.createResponse(dao.getSchedule(scheduleId));
+//			throw new DbException("Unable to retrieve schedule entry by ID", e);
 //		}
+
 		return Response.status(HttpServletResponse.SC_NOT_IMPLEMENTED).build();
 	}
 
@@ -266,8 +272,7 @@ public class RoutingResources extends OpenDcsResource
 	public Response postSchedule(ApiScheduleEntry schedule)
 		throws DbException
 	{
-		try (ScheduleEntryDAI dai = createDb().getDao(ScheduleEntryDAI.class)
-				.orElseThrow(() -> new DbException(NO_SCHEDULE_ENTRY_DAI)))
+		try (ScheduleEntryDAI dai = getLegacyDatabase().makeScheduleEntryDAO())
 		{
 			ScheduleEntry entry = map(schedule);
 			dai.writeScheduleEntry(entry);
@@ -310,14 +315,12 @@ public class RoutingResources extends OpenDcsResource
 	public Response deleteSchedule(@QueryParam("scheduleid") Long scheduleId)
 		throws DbException
 	{
-		// Use username and password to attempt to connect to the database
-		try (ScheduleEntryDAI dai = createDb().getDao(ScheduleEntryDAI.class)
-				.orElseThrow(() -> new DbException(NO_SCHEDULE_ENTRY_DAI)))
+		try (ScheduleEntryDAI dai = getLegacyDatabase().makeScheduleEntryDAO())
 		{
 			ScheduleEntry entry = new ScheduleEntry(DbKey.createDbKey(scheduleId));
 			dai.deleteScheduleEntry(entry);
 			return Response.status(HttpServletResponse.SC_OK)
-					.entity("schedulec with ID " + scheduleId + " deleted").build();
+					.entity("Schedule entry with ID " + scheduleId + " deleted").build();
 		}
 		catch (DbIoException e)
 		{
@@ -331,7 +334,7 @@ public class RoutingResources extends OpenDcsResource
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({AuthorizationCheck.ODCS_API_GUEST})
 	public Response getRoutingStats()
-		throws WebAppException, DbException
+		throws DbException
 	{
 //		try (DbInterface dbi = new DbInterface();
 //			ApiRoutingDAO dao = new ApiRoutingDAO(dbi))
@@ -374,8 +377,7 @@ public class RoutingResources extends OpenDcsResource
 //			return ApiHttpUtil.createResponse(dao.getDacqEvents(appId, routingExecId, platformId, backlog, session));
 //		}
 
-		try (DacqEventDAI dai = createDb().getDao(DacqEventDAI.class)
-				.orElseThrow(() -> new DbException("No DacqEventDAI available")))
+		try (DacqEventDAI dai = getLegacyTimeseriesDB().makeDacqEventDAO())
 		{
 			ArrayList<DacqEvent> platformEvents = new ArrayList<>();
 			if (platformId != null) {
