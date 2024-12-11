@@ -62,6 +62,7 @@ public class DatatypeUnitResources extends OpenDcsResource
 	@RolesAllowed({AuthorizationCheck.ODCS_API_GUEST})
 	public Response getDataTypeList(@QueryParam("standard") String std) throws DbException
 	{
+		// TODO: Add support for standard in OpenDCS
 		try
 		{
 			DatabaseIO dbIo = getLegacyDatabase();
