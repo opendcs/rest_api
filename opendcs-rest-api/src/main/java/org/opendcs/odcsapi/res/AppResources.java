@@ -41,6 +41,7 @@ import decodes.sql.DbKey;
 import decodes.tsdb.CompAppInfo;
 import decodes.tsdb.ConstraintException;
 import decodes.tsdb.DbIoException;
+import decodes.tsdb.LockBusyException;
 import decodes.tsdb.NoSuchObjectException;
 import decodes.tsdb.TsdbCompLock;
 import opendcs.dai.LoadingAppDAI;
@@ -146,7 +147,10 @@ public class AppResources extends OpenDcsResource
 	static CompAppInfo map(ApiLoadingApp app)
 	{
 		CompAppInfo ret = new CompAppInfo();
-		ret.setAppId(DbKey.createDbKey(app.getAppId()));
+		if (app.getAppId() != null)
+		{
+			ret.setAppId(DbKey.createDbKey(app.getAppId()));
+		}
 		ret.setAppName(app.getAppName());
 		ret.setComment(app.getComment());
 		ret.setLastModified(app.getLastModified());
@@ -335,13 +339,18 @@ public class AppResources extends OpenDcsResource
 						ApiLoadingApp loadingApp1 = (ApiLoadingApp)obj;
 					};
 
+			// Obtain a lock on the app with a random number and localhost
+			// TODO: Find a more reliable way to generate the PID and hostname, collisions are possible with this method.
+			dai.obtainCompProcLock(dai.getComputationApp(DbKey.createDbKey(loadingApp.getAppId())),
+					Double.valueOf(Math.random()).intValue(), "localhost");
+
 			ProcWaiterThread.runBackground(ApiEnvExpander.expand(startCmd), "App:" + loadingApp.getAppName(), 
 				pwcb, loadingApp);
 
 			return Response.status(HttpServletResponse.SC_OK)
 					.entity("App with ID " + appId + " (" + loadingApp.getAppName() + ") started.").build();
 		}
-		catch (DbIoException | NoSuchObjectException | IOException ex)
+		catch (DbIoException | NoSuchObjectException | IOException | LockBusyException ex)
 		{
 			throw new WebAppException(ErrorCodes.DATABASE_ERROR,
 					String.format("Error attempting to start appId=%s", appId), ex);
