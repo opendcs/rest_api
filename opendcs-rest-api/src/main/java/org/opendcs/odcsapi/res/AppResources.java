@@ -410,8 +410,28 @@ public class AppResources extends OpenDcsResource
 		{
 			List<TsdbCompLock> locks = dai.getAllCompProcLocks();
 			for (TsdbCompLock lock : locks)
-				if (lock.getAppId().getValue() == appId)
+			{
+				if(lock.getAppId().getValue() == appId)
+				{
 					return map(lock);
+				}
+			}
+			List<ApiAppRef> apps = dai.listComputationApps(false)
+					.stream()
+					.map(AppResources::map)
+					.collect(Collectors.toList());
+			for (ApiAppRef app : apps)
+			{
+				if (app.getAppId().equals(appId))
+				{
+					ApiAppStatus ret = new ApiAppStatus();
+					ret.setAppId(appId);
+					ret.setAppName(app.getAppName());
+					ret.setStatus("Not Running");
+					ret.setAppType(app.getAppType());
+					return ret;
+				}
+			}
 			return null;
 		}
 		catch (DbIoException ex)

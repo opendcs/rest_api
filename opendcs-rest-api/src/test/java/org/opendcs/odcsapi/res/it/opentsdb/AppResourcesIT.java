@@ -1,8 +1,7 @@
-package org.opendcs.odcsapi.res.it;
+package org.opendcs.odcsapi.res.it.opentsdb;
 
 import java.sql.Date;
 import java.time.Instant;
-import java.util.Base64;
 import java.util.Properties;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.MediaType;
@@ -21,17 +20,16 @@ import org.junit.jupiter.api.TestTemplate;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.opendcs.odcsapi.beans.ApiLoadingApp;
 import org.opendcs.odcsapi.fixtures.DatabaseContextProvider;
-import org.opendcs.odcsapi.sec.basicauth.Credentials;
+import org.opendcs.odcsapi.fixtures.ResourcesTestBase;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.is;
 
 @Tag("integration")
 @ExtendWith(DatabaseContextProvider.class)
-final class AppResourcesIT
+final class AppResourcesIT extends ResourcesTestBase
 {
 	private static Long appid;
-	private static String credentialsJson = null;
 	private static final String AUTH_HEADER_PREFIX = "Basic ";
 	private static SessionFilter sessionFilter;
 	private static Properties properties;
@@ -41,19 +39,12 @@ final class AppResourcesIT
 	{
 		properties = new Properties();
 		properties.setProperty("startCmd", "$DCSTOOL_HOME\\bin\\compproc.bat");
-
-		// TODO: Find a way to get the credentials from the test harness
-		Credentials credentials = new Credentials();
-		credentials.setUsername("dcs_admin");
-		credentials.setPassword("dcs_admin_password");
-
-		credentialsJson = Base64.getEncoder()
-				.encodeToString(String.format("%s:%s", credentials.getUsername(), credentials.getPassword()).getBytes());
 	}
 
 	@BeforeEach
 	void setUp() throws Exception
 	{
+		setUpCreds();
 		appid = null;
 		sessionFilter = new SessionFilter();
 
@@ -181,6 +172,7 @@ final class AppResourcesIT
 			.log().ifValidationFails(LogDetail.ALL, true)
 		.assertThat()
 			.statusCode(is(HttpServletResponse.SC_OK))
+			.body("appName", is("TestApp1"))
 		;
 	}
 
