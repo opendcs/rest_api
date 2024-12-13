@@ -72,6 +72,7 @@ public class PlatformResources extends OpenDcsResource
 		HashMap<String, ApiPlatformRef> ret = new HashMap<>();
 		try
 		{
+			// TODO: Add support for filtering by transport media type
 			DatabaseIO dbio = getLegacyDatabase();
 			PlatformList platformList = new PlatformList();
 			dbio.readPlatformList(platformList);
@@ -140,12 +141,21 @@ public class PlatformResources extends OpenDcsResource
 		ApiPlatform ret = new ApiPlatform();
 		ret.setPlatformId(platform.getId().getValue());
 		ret.setAgency(platform.getAgency());
-		ret.setSiteId(platform.getSite().getId().getValue());
+		if (platform.getSite() != null && platform.getSite().getId() != null)
+		{
+			ret.setSiteId(platform.getSite().getId().getValue());
+		}
 		ret.setDescription(platform.getDescription());
 		ret.setDesignator(platform.getPlatformDesignator());
-		ret.setConfigId(platform.getConfig().getId().getValue());
+		if (platform.getConfig() != null && platform.getConfig().getId() != null)
+		{
+			ret.setConfigId(platform.getConfig().getId().getValue());
+		}
 		ret.setProduction(platform.isProduction);
-		ret.setSiteId(platform.getSite().getId().getValue());
+		if (platform.getSite() != null && platform.getSite().getId() != null)
+		{
+			ret.setSiteId(platform.getSite().getId().getValue());
+		}
 		ret.setTransportMedia(map(platform.getTransportMedia()));
 		return ret;
 	}
@@ -191,31 +201,40 @@ public class PlatformResources extends OpenDcsResource
 			DatabaseIO dbio = getLegacyDatabase();
 			dbio.writePlatform(map(platform));
 			return Response.status(HttpServletResponse.SC_OK)
-					.entity(String.format("Successfully stored Platform with ID: %s", platform.getPlatformId()))
+					.entity(String.format("Successfully stored Platform with name: %s", platform.getName()))
 					.build();
 		}
 		catch (DatabaseException ex)
 		{
-			throw new DbException(String.format("Unable to store platform with ID: %s", platform.getPlatformId()), ex);
+			throw new DbException(String.format("Unable to store platform with name: %s", platform.getName()), ex);
 		}
 	}
 
 	static Platform map(ApiPlatform platform) throws DatabaseException
 	{
 		Platform ret = new Platform();
-		ret.setId(DbKey.createDbKey(platform.getPlatformId()));
+		if (platform.getPlatformId() != null)
+		{
+			ret.setId(DbKey.createDbKey(platform.getPlatformId()));
+		}
 		ret.setAgency(platform.getAgency());
 		ret.setDescription(platform.getDescription());
 		ret.setPlatformDesignator(platform.getDesignator());
 		ret.lastModifyTime = platform.getLastModified();
 		ret.platformSensors = platMap(platform.getPlatformSensors());
-		PlatformConfig config = new PlatformConfig();
-		config.setId(DbKey.createDbKey(platform.getConfigId()));
-		ret.setConfig(config);
+		if (platform.getConfigId() != null)
+		{
+			PlatformConfig config = new PlatformConfig();
+			config.setId(DbKey.createDbKey(platform.getConfigId()));
+			ret.setConfig(config);
+		}
 		ret.isProduction = platform.isProduction();
-		Site site = new Site();
-		site.setId(DbKey.createDbKey(platform.getSiteId()));
-		ret.setSite(site);
+		if (platform.getSiteId() != null)
+		{
+			Site site = new Site();
+			site.setId(DbKey.createDbKey(platform.getSiteId()));
+			ret.setSite(site);
+		}
 		ret.transportMedia = map(platform.getTransportMedia());
 		return ret;
 	}
@@ -227,9 +246,12 @@ public class PlatformResources extends OpenDcsResource
 		{
 			PlatformSensor ps = new PlatformSensor();
 			ps.sensorNumber = sensor.getSensorNum();
-			Site site = new Site();
-			site.setId(DbKey.createDbKey(sensor.getActualSiteId()));
-			ps.site = site;
+			if (sensor.getActualSiteId() != null)
+			{
+				Site site = new Site();
+				site.setId(DbKey.createDbKey(sensor.getActualSiteId()));
+				ps.site = site;
+			}
 			ps.setUsgsDdno(sensor.getUsgsDdno());
 			Properties props = sensor.getSensorProps();
 			for (String name : props.stringPropertyNames())
@@ -276,8 +298,11 @@ public class PlatformResources extends OpenDcsResource
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({AuthorizationCheck.ODCS_API_ADMIN, AuthorizationCheck.ODCS_API_USER})
 	public Response deletePlatform(@QueryParam("platformid") Long platformId)
-		throws DbException
+		throws DbException, WebAppException
 	{
+		if (platformId == null)
+			throw new WebAppException(ErrorCodes.MISSING_ID,
+				"Missing required platformid parameter.");
 		try
 		{
 			DatabaseIO dbio = getLegacyDatabase();
@@ -299,8 +324,12 @@ public class PlatformResources extends OpenDcsResource
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({AuthorizationCheck.ODCS_API_GUEST})
 	public Response gePlatformStats(@QueryParam("netlistid") Long netlistId)
-		throws DbException
+		throws DbException, WebAppException
 	{
+		if (netlistId == null)
+			throw new WebAppException(ErrorCodes.MISSING_ID,
+				"Missing required netlistid parameter.");
+
 		DatabaseIO dbio = getLegacyDatabase();
 		try (PlatformStatusDAI dao = dbio.makePlatformStatusDAO())
 		{
@@ -315,9 +344,15 @@ public class PlatformResources extends OpenDcsResource
 
 	static ArrayList<ApiPlatformStatus> map(PlatformStatus status)
 	{
+		if (status == null)
+			return new ArrayList<>();
+
 		ArrayList<ApiPlatformStatus> ret = new ArrayList<>();
 		ApiPlatformStatus ps = new ApiPlatformStatus();
-		ps.setPlatformId(status.getPlatformId().getValue());
+		if (status.getPlatformId() != null)
+		{
+			ps.setPlatformId(status.getPlatformId().getValue());
+		}
 		ps.setAnnotation(status.getAnnotation());
 		ps.setLastContact(status.getLastContactTime());
 		ps.setLastError(status.getLastErrorTime());
