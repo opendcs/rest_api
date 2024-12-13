@@ -65,6 +65,8 @@ public class NetlistResources extends OpenDcsResource
 	public Response getNetlistRefs(@QueryParam("tmtype") String tmtype)
 		throws DbException
 	{
+		// TODO: Implement filtering by transport medium type.
+		// TODO: Investigate non-functioning endpoint (no data returned).
 		try
 		{
 			DatabaseIO dbIo = getLegacyDatabase();
@@ -165,7 +167,10 @@ public class NetlistResources extends OpenDcsResource
 	static NetworkList map(ApiNetList netList) throws DatabaseException
 	{
 		NetworkList ret = new NetworkList(netList.getName());
-		ret.setId(DbKey.createDbKey(netList.getNetlistId()));
+		if (netList.getNetlistId() != null)
+		{
+			ret.setId(DbKey.createDbKey(netList.getNetlistId()));
+		}
 		ret.name = netList.getName();
 		ret.transportMediumType = netList.getTransportMediumType();
 		ret.siteNameTypePref = netList.getSiteNameTypePref();
@@ -187,8 +192,13 @@ public class NetlistResources extends OpenDcsResource
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({AuthorizationCheck.ODCS_API_ADMIN, AuthorizationCheck.ODCS_API_USER})
 	public Response deleteNetlist(@QueryParam("netlistid") Long netlistId)
-		throws DbException
+		throws DbException, WebAppException
 	{
+		if (netlistId == null)
+		{
+			throw new WebAppException(ErrorCodes.MISSING_ID, "Missing required netlistid parameter.");
+		}
+
 		try
 		{
 			DatabaseIO dbIo = getLegacyDatabase();
@@ -199,7 +209,7 @@ public class NetlistResources extends OpenDcsResource
 			RoutingSpecList routingSpecList = new RoutingSpecList();
 			dbIo.readRoutingSpecList(routingSpecList);
 
-			String errmsg = "";
+			StringBuilder errmsg = new StringBuilder();
 
 			for (RoutingSpec spec : routingSpecList.getList())
 			{
@@ -207,12 +217,12 @@ public class NetlistResources extends OpenDcsResource
 				{
 					if (list.getId().equals(nl.getId()))
 					{
-						errmsg += (!errmsg.isEmpty() ? ", " : "") + spec.getName();
+						errmsg.append((errmsg.length() > 0) ? ", " : "").append(spec.getName());
 					}
 				}
 			}
 
-			if (!errmsg.isEmpty())
+			if (errmsg.length() > 0)
 			{
 				return Response.status(HttpServletResponse.SC_OK)
 					.entity(" Cannot delete network list with ID " + netlistId
@@ -233,7 +243,7 @@ public class NetlistResources extends OpenDcsResource
 	@Consumes(MediaType.TEXT_PLAIN)
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({AuthorizationCheck.ODCS_API_GUEST})
-	public Response cnvtNL(String nldata)
+	public Response cnvtANL(String nldata)
 		throws WebAppException
 	{
 		ApiNetList ret = new ApiNetList();
