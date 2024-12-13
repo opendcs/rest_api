@@ -4,7 +4,7 @@ import java.util.Base64;
 
 import org.opendcs.odcsapi.sec.basicauth.Credentials;
 
-public class ResourcesTestBase
+public abstract class ResourcesTestBase
 {
 	protected static String authHeader = null;
 
