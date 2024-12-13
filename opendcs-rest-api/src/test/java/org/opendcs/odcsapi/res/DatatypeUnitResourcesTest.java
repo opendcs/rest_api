@@ -1,9 +1,14 @@
 package org.opendcs.odcsapi.res;
 
+import java.util.ArrayList;
+
+import decodes.db.EngineeringUnit;
+import decodes.db.EngineeringUnitList;
 import decodes.db.UnitConverterDb;
 import decodes.db.UnitConverterSet;
 import decodes.sql.DbKey;
 import org.junit.jupiter.api.Test;
+import org.opendcs.odcsapi.beans.ApiUnit;
 import org.opendcs.odcsapi.beans.ApiUnitConverter;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -46,5 +51,27 @@ final class DatatypeUnitResourcesTest
 		assertEquals(5.0, ucdb.coefficients[4]);
 		assertEquals(6.0, ucdb.coefficients[5]);
 
+	}
+
+	@Test
+	void testUnitListMap()
+	{
+		EngineeringUnitList eul = new EngineeringUnitList();
+		EngineeringUnit eu = new EngineeringUnit("t", "Test", "Test", "Test");
+		EngineeringUnit eu2 = new EngineeringUnit("t2", "Test2", "Test2", "Test2");
+		eul.add(eu);
+		eul.add(eu2);
+
+		ArrayList<ApiUnit> apiUnits = map(eul);
+		assertNotNull(apiUnits);
+		assertEquals(2, apiUnits.size());
+		assertEquals("t", apiUnits.get(0).getAbbr());
+		assertEquals("Test", apiUnits.get(0).getName());
+		assertEquals("Test", apiUnits.get(0).getFamily());
+		assertEquals("Test", apiUnits.get(0).getMeasures());
+		assertEquals("t2", apiUnits.get(1).getAbbr());
+		assertEquals("Test2", apiUnits.get(1).getName());
+		assertEquals("Test2", apiUnits.get(1).getFamily());
+		assertEquals("Test2", apiUnits.get(1).getMeasures());
 	}
 }

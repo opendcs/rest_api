@@ -16,6 +16,8 @@
 package org.opendcs.odcsapi.res;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Iterator;
 
 import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletResponse;
@@ -88,14 +90,33 @@ public class DatatypeUnitResources extends OpenDcsResource
 			DatabaseIO dbIo = getLegacyDatabase();
 			EngineeringUnitList euList = new EngineeringUnitList();
 			dbIo.readEngineeringUnitList(euList);
-			return Response.status(HttpServletResponse.SC_OK).entity(euList).build();
+
+			return Response.status(HttpServletResponse.SC_OK).entity(map(euList)).build();
 		}
 		catch(DatabaseException e)
 		{
 			throw new DbException("Unable to retrieve data type list", e);
 		}
 	}
-	
+
+	static ArrayList<ApiUnit> map(EngineeringUnitList unitList)
+	{
+		ArrayList<ApiUnit> ret = new ArrayList<>();
+		Iterator<EngineeringUnit> it = unitList.iterator();
+		while(it.hasNext())
+		{
+			EngineeringUnit eu = it.next();
+			ApiUnit apiUnit = new ApiUnit();
+			apiUnit.setAbbr(eu.abbr);
+			apiUnit.setName(eu.getName());
+			apiUnit.setMeasures(eu.measures);
+			apiUnit.setFamily(eu.family);
+			ret.add(apiUnit);
+		}
+		return ret;
+
+	}
+
 	@POST
 	@Path("eu")
 	@Consumes(MediaType.APPLICATION_JSON)
@@ -130,7 +151,7 @@ public class DatatypeUnitResources extends OpenDcsResource
 		try
 		{
 			DatabaseIO dbIo = getLegacyDatabase();
-			EngineeringUnit unit = new EngineeringUnit(abbr, null, null, null);
+			EngineeringUnit unit = new EngineeringUnit(abbr, "", "", "");
 			EngineeringUnitList euList = new EngineeringUnitList();
 			euList.add(unit);
 			dbIo.writeEngineeringUnitList(euList);
@@ -173,7 +194,6 @@ public class DatatypeUnitResources extends OpenDcsResource
 			// TODO: Create a write method for UnitConverter in OpenDCS
 			UnitConverterIO unitDao = createDb().getLegacyDatabase(UnitConverterIO.class)
 					.orElseThrow(() -> new DbException(NO_UNIT_CONVERTER));
-
 			unitDao.write(map(euc));
 			return Response.status(HttpServletResponse.SC_OK).entity("EUConv Saved").build();
 		}
