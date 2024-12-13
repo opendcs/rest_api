@@ -15,8 +15,8 @@
 
 package org.opendcs.odcsapi.res;
 
-import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Properties;
 import java.util.Vector;
 
 import javax.annotation.security.RolesAllowed;
@@ -36,10 +36,11 @@ import javax.ws.rs.core.Response;
 import decodes.db.DataSource;
 import decodes.db.DataSourceList;
 import decodes.db.DatabaseException;
-import decodes.sql.DataSourceListIO;
+import decodes.db.DatabaseIO;
 import decodes.sql.DbKey;
 import org.opendcs.odcsapi.beans.ApiDataSource;
 import org.opendcs.odcsapi.beans.ApiDataSourceGroupMember;
+import org.opendcs.odcsapi.beans.ApiDataSourceRef;
 import org.opendcs.odcsapi.dao.DbException;
 import org.opendcs.odcsapi.errorhandling.ErrorCodes;
 import org.opendcs.odcsapi.errorhandling.WebAppException;
@@ -58,16 +59,44 @@ public class DataSourceResources extends OpenDcsResource
 	{
 		try
 		{
-			DataSourceListIO dao = new DataSourceListIO(null);
+			DatabaseIO dbio = getLegacyDatabase();
 			DataSourceList dsl = new DataSourceList();
-			dao.read(dsl);
-
-			return Response.status(HttpServletResponse.SC_OK).entity(dsl).build();
+			dbio.readDataSourceList(dsl);
+			return Response.status(HttpServletResponse.SC_OK).entity(map(dsl)).build();
 		}
-		catch (DatabaseException | SQLException ex)
+		catch (DatabaseException ex)
 		{
 			throw new DbException("Error reading data source list: " + ex);
 		}
+	}
+
+	static ArrayList<ApiDataSourceRef> map(DataSourceList dsl)
+	{
+		ArrayList<ApiDataSourceRef> ret = new ArrayList<>();
+		for(DataSource ds : dsl.getList())
+		{
+			ApiDataSourceRef adr = new ApiDataSourceRef();
+			adr.setDataSourceId(ds.getId().getValue());
+			adr.setName(ds.getName());
+			adr.setType(ds.dataSourceType);
+			adr.setUsedBy(ds.numUsedBy);
+			adr.setArguments(map(ds.getArguments()));
+			ret.add(adr);
+		}
+		return ret;
+	}
+
+	static String map(Properties props)
+	{
+		if (props == null || props.isEmpty())
+			return null;
+
+		StringBuilder retVal = new StringBuilder();
+		for (Object key : props.keySet())
+		{
+			retVal.append(key).append("=").append(props.getProperty((String) key)).append(",");
+		}
+		return retVal.toString();
 	}
 
 	@GET
@@ -83,11 +112,14 @@ public class DataSourceResources extends OpenDcsResource
 		
 		try
 		{
-			DataSourceListIO dao = new DataSourceListIO(null);
-			ApiDataSource ret = map(dao.readDS(DbKey.createDbKey(dataSourceId)));
-			if (ret == null)
+			DatabaseIO dbio = getLegacyDatabase();
+			DataSource ds = new DataSource(DbKey.createDbKey(dataSourceId));
+			dbio.readDataSource(ds);
+
+			if (ds.getName() == null)
 				throw new WebAppException(ErrorCodes.NO_SUCH_OBJECT, 
 					"No such DECODES data source with id=" + dataSourceId + ".");
+			ApiDataSource ret = map(ds);
 			return Response.status(HttpServletResponse.SC_OK).entity(ret).build();
 		}
 		catch (DatabaseException ex)
@@ -129,12 +161,12 @@ public class DataSourceResources extends OpenDcsResource
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({AuthorizationCheck.ODCS_API_ADMIN, AuthorizationCheck.ODCS_API_USER})
-	public Response postDatasource(ApiDataSource datasource) throws DbException, SQLException
+	public Response postDatasource(ApiDataSource datasource) throws DbException
 	{
 		try
 		{
-			DataSourceListIO dao = new DataSourceListIO(null);
-			dao.write(map(datasource));
+			DatabaseIO dbio = getLegacyDatabase();
+			dbio.writeDataSource(map(datasource));
 			return Response.status(HttpServletResponse.SC_OK)
 					.entity(String.format("Successfully stored data source with ID: %s", datasource.getDataSourceId()))
 					.build();
@@ -145,14 +177,19 @@ public class DataSourceResources extends OpenDcsResource
 		}
 	}
 
-	static DataSource map(ApiDataSource ads)
+	static DataSource map(ApiDataSource ads) throws DatabaseException
 	{
-		DataSource ds = new DataSource(DbKey.createDbKey(ads.getDataSourceId()));
+		DataSource ds = new DataSource();
+		if (ads.getDataSourceId() != null)
+		{
+			ds.setId(DbKey.createDbKey(ads.getDataSourceId()));
+		}
 		ds.setName(ads.getName());
 		ds.dataSourceType = ads.getType();
 		ds.arguments = ads.getProps();
 		ds.numUsedBy = ads.getUsedBy();
 		ds.groupMembers = map(ads.getGroupMembers());
+		ds.write();
 		return ds;
 	}
 
@@ -175,13 +212,18 @@ public class DataSourceResources extends OpenDcsResource
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({AuthorizationCheck.ODCS_API_ADMIN, AuthorizationCheck.ODCS_API_USER})
-	public Response deleteDatasource(@QueryParam("datasourceid") Long datasourceId) throws DbException
+	public Response deleteDatasource(@QueryParam("datasourceid") Long datasourceId) throws DbException, WebAppException
 	{
 		try
 		{
-			DataSourceListIO dao = new DataSourceListIO(null);
-			DataSource ds = dao.readDS(DbKey.createDbKey(datasourceId));
-			if (ds == null)
+			if (datasourceId == null)
+			{
+				throw new WebAppException(ErrorCodes.MISSING_ID, "Missing required datasourceid parameter.");
+			}
+			DatabaseIO dao = getLegacyDatabase();
+			DataSource ds = new DataSource(DbKey.createDbKey(datasourceId));
+			dao.readDataSource(ds);
+			if (ds.getName() == null)
 			{
 				return Response.status(HttpServletResponse.SC_NOT_FOUND)
 					.entity("No such data source with ID " + datasourceId).build();
@@ -195,11 +237,11 @@ public class DataSourceResources extends OpenDcsResource
 						+ ds.numUsedBy).build();
 			}
 
-			dao.delete(ds);
+			dao.deleteDataSource(ds);
 			return Response.status(HttpServletResponse.SC_OK)
 					.entity("Datasource with ID " + datasourceId + " deleted").build();
 		}
-		catch (DatabaseException | SQLException ex)
+		catch (DatabaseException ex)
 		{
 			throw new DbException("Error deleting data source: " + ex);
 		}

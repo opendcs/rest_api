@@ -73,7 +73,7 @@ final class DataSourceResourcesTest
 	}
 
 	@Test
-	void testApiDataSourceMap()
+	void testApiDataSourceMap() throws Exception
 	{
 		ApiDataSource dataSource = new ApiDataSource();
 		dataSource.setDataSourceId(58559642L);
@@ -124,5 +124,21 @@ final class DataSourceResourcesTest
 			assertEquals(groupMembers.get(i).getDataSourceName(), result.get(i).getName());
 			assertEquals(groupMembers.get(i).getDataSourceId(), result.get(i).getId().getValue());
 		}
+	}
+
+	@Test
+	void testPropertyMap()
+	{
+		Properties props = new Properties();
+		props.setProperty("key", "value");
+		props.setProperty("key2", "value2");
+
+		ApiDataSource apiData = new ApiDataSource();
+		apiData.setProps(props);
+
+		String result = map(apiData.getProps());
+
+		assertNotNull(result);
+		assertEquals("key=value,key2=value2,", result);
 	}
 }
