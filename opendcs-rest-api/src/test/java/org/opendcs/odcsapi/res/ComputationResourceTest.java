@@ -2,14 +2,17 @@ package org.opendcs.odcsapi.res;
 
 import java.sql.Date;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.stream.Collectors;
 
 import decodes.sql.DbKey;
 import decodes.tsdb.DbCompAlgorithm;
 import decodes.tsdb.DbComputation;
 import decodes.tsdb.TsGroup;
+import decodes.tsdb.compedit.ComputationInList;
 import org.junit.jupiter.api.Test;
 import org.opendcs.odcsapi.beans.ApiComputation;
+import org.opendcs.odcsapi.beans.ApiComputationRef;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -37,15 +40,19 @@ final class ComputationResourceTest
 		group.setGroupId(DbKey.createDbKey(16753096L));
 		dbComp.setGroup(group);
 		dbComp.setEnabled(true);
+		dbComp.setAlgorithmId(DbKey.createDbKey(197865L));
 		dbComp.setValidEnd(Date.from(Instant.parse("2023-08-03T00:30:00Z")));
+
 		ApiComputation apiComp = map(dbComp);
+
 		assertNotNull(apiComp);
-		assertEquals(dbKey.getValue(), apiComp.getComputationId());
+		assertEquals(dbComp.getId().getValue(), apiComp.getComputationId());
 		assertEquals(dbComp.getAlgorithmName(), apiComp.getAlgorithmName());
 		assertEquals(dbComp.getComment(), apiComp.getComment());
 		assertEquals(dbComp.getAppId().getValue(), apiComp.getAppId());
 		assertEquals(dbComp.getLastModified(), apiComp.getLastModified());
 		assertEquals(dbComp.getAlgorithm().getName(), apiComp.getAlgorithmName());
+		assertEquals(dbComp.getAlgorithmId().getValue(), apiComp.getAlgorithmId());
 		assertEquals(dbComp.isEnabled(), apiComp.isEnabled());
 		assertEquals(dbComp.getApplicationName(), apiComp.getApplicationName());
 		assertEquals(dbComp.getValidStart(), apiComp.getEffectiveStartDate());
@@ -98,5 +105,35 @@ final class ComputationResourceTest
 		assertEquals(apiComp.getParmList().stream().map(ComputationResources::map).collect(Collectors.toList()),
 				dbComp.getParmList());
 		assertEquals(apiComp.getAlgorithmId(), dbComp.getAlgorithm().getId().getValue());
+	}
+
+	@Test
+	void testComputationRefMap()
+	{
+		ArrayList<ComputationInList> comps = new ArrayList<>();
+		ComputationInList dbComp = new ComputationInList(DbKey.createDbKey(16704L), "Test Name",
+				DbKey.createDbKey(197865L), DbKey.createDbKey(51981L),
+				true, "Test Description");
+		dbComp.setAlgorithmName("Test Algorithm");
+		dbComp.setDescription("Test Comment");
+		dbComp.setProcessId(DbKey.createDbKey(1L));
+		DbCompAlgorithm dbCompAlgorithm = new DbCompAlgorithm("Test Algorithm");
+		dbCompAlgorithm.setId(DbKey.createDbKey(197865L));
+		dbComp.setEnabled(true);
+		comps.add(dbComp);
+
+		ArrayList<ApiComputationRef> apiComps = map(comps);
+
+		assertNotNull(apiComps);
+		assertEquals(1, apiComps.size());
+		ApiComputationRef apiComp = apiComps.get(0);
+		assertNotNull(apiComp);
+		assertEquals(dbComp.getComputationId().getValue(), apiComp.getComputationId());
+		assertEquals(dbComp.getComputationName(), apiComp.getName());
+		assertEquals(dbComp.getAlgorithmName(), apiComp.getAlgorithmName());
+		assertEquals(dbComp.getDescription(), apiComp.getDescription());
+		assertEquals(dbComp.getProcessId().getValue(), apiComp.getProcessId());
+		assertEquals(dbComp.getProcessName(), apiComp.getProcessName());
+		assertEquals(dbComp.getAlgorithmId().getValue(), apiComp.getAlgorithmId());
 	}
 }

@@ -34,6 +34,7 @@ import javax.ws.rs.core.Response;
 import decodes.db.DataType;
 import decodes.db.Site;
 import decodes.sql.DbKey;
+import decodes.tsdb.CompFilter;
 import decodes.tsdb.ConstraintException;
 import decodes.tsdb.DbCompAlgorithm;
 import decodes.tsdb.DbCompParm;
@@ -41,9 +42,11 @@ import decodes.tsdb.DbComputation;
 import decodes.tsdb.DbIoException;
 import decodes.tsdb.NoSuchObjectException;
 import decodes.tsdb.TsGroup;
+import decodes.tsdb.compedit.ComputationInList;
 import opendcs.dai.ComputationDAI;
 import org.opendcs.odcsapi.beans.ApiCompParm;
 import org.opendcs.odcsapi.beans.ApiComputation;
+import org.opendcs.odcsapi.beans.ApiComputationRef;
 import org.opendcs.odcsapi.dao.DbException;
 import org.opendcs.odcsapi.errorhandling.ErrorCodes;
 import org.opendcs.odcsapi.errorhandling.WebAppException;
@@ -53,8 +56,7 @@ import org.opendcs.odcsapi.sec.AuthorizationCheck;
 public class ComputationResources extends OpenDcsResource
 {
 	@Context HttpHeaders httpHeaders;
-	private static final String NO_COMPUTATION_DAI = "No ComputationDAI implementation available";
-	
+
 	@GET
 	@Path("computationrefs")
 	@Produces(MediaType.APPLICATION_JSON)
@@ -66,16 +68,43 @@ public class ComputationResources extends OpenDcsResource
 		@QueryParam("process") String process,
 		@QueryParam("enabled") Boolean enabled,
 		@QueryParam("interval") String interval)
-		throws WebAppException, DbException
+		throws DbException
 	{
-		try (ComputationDAI dai = createDb().getDao(ComputationDAI.class)
-				.orElseThrow(() -> new DbException(NO_COMPUTATION_DAI)))
+		try (ComputationDAI dai = getLegacyTimeseriesDB().makeComputationDAO())
 		{
-
-//			return ApiHttpUtil.createResponse(dao.getComputationRefs(site, algorithm, datatype, group,
-//					process, enabled, interval));
-			return Response.status(HttpServletResponse.SC_NOT_IMPLEMENTED).build();
+			CompFilter filter = new CompFilter();
+			// TODO: Implement filter, needs IDs from names
+			if (enabled != null)
+			{
+				filter.setEnabledOnly(enabled);
+			}
+			// TODO: Fix this retrieval, no data is being returned
+			return Response.status(HttpServletResponse.SC_OK)
+					.entity(map(dai.compEditList(filter))).build();
 		}
+		catch(DbIoException e)
+		{
+			throw new DbException("Unable to retrieve computation references", e);
+		}
+	}
+
+	static ArrayList<ApiComputationRef> map(ArrayList<ComputationInList> computations)
+	{
+		ArrayList<ApiComputationRef> ret = new ArrayList<>();
+		for (ComputationInList comp : computations)
+		{
+			ApiComputationRef ref = new ApiComputationRef();
+			ref.setComputationId(comp.getComputationId().getValue());
+			ref.setAlgorithmId(comp.getAlgorithmId().getValue());
+			ref.setAlgorithmName(comp.getAlgorithmName());
+			ref.setName(comp.getComputationName());
+			ref.setEnabled(comp.isEnabled());
+			ref.setDescription(comp.getDescription());
+			ref.setProcessName(comp.getProcessName());
+			ref.setProcessId(comp.getProcessId().getValue());
+			ret.add(ref);
+		}
+		return ret;
 	}
 
 	@GET
@@ -89,8 +118,7 @@ public class ComputationResources extends OpenDcsResource
 			throw new WebAppException(ErrorCodes.MISSING_ID, 
 				"Missing required computationid parameter.");
 		
-		try (ComputationDAI dai = createDb().getDao(ComputationDAI.class)
-				.orElseThrow(() -> new DbException(NO_COMPUTATION_DAI)))
+		try (ComputationDAI dai = getLegacyTimeseriesDB().makeComputationDAO())
 		{
 			return Response.status(HttpServletResponse.SC_OK)
 					.entity(map(dai.getComputationById(DbKey.createDbKey(compId)))).build();
@@ -155,8 +183,7 @@ public class ComputationResources extends OpenDcsResource
 	public Response postComputation(ApiComputation comp)
 		throws DbException
 	{
-		try (ComputationDAI dai = createDb().getDao(ComputationDAI.class)
-				.orElseThrow(() -> new DbException(NO_COMPUTATION_DAI)))
+		try (ComputationDAI dai = getLegacyTimeseriesDB().makeComputationDAO())
 		{
 			dai.writeComputation(map(comp));
 			return Response.status(HttpServletResponse.SC_OK).build();
@@ -170,20 +197,31 @@ public class ComputationResources extends OpenDcsResource
 	static DbComputation map(ApiComputation comp)
 	{
 		DbComputation ret = new DbComputation(DbKey.createDbKey(comp.getComputationId()), comp.getName());
-		ret.setId(DbKey.createDbKey(comp.getComputationId()));
-		ret.setAlgorithmId(DbKey.createDbKey(comp.getAlgorithmId()));
-		ret.setAppId(DbKey.createDbKey(comp.getAppId()));
+		if (comp.getAlgorithmId() != null)
+		{
+			ret.setAlgorithmId(DbKey.createDbKey(comp.getAlgorithmId()));
+		}
+		if (comp.getAppId() != null)
+		{
+			ret.setAppId(DbKey.createDbKey(comp.getAppId()));
+		}
 		ret.setComment(comp.getComment());
 		ret.setEnabled(comp.isEnabled());
 		ret.setValidEnd(comp.getEffectiveEndDate());
 		ret.setValidStart(comp.getEffectiveStartDate());
 		ret.setAlgorithmName(comp.getAlgorithmName());
-		ret.setAlgorithm(new DbCompAlgorithm(DbKey.createDbKey(comp.getAlgorithmId()),
-				comp.getAlgorithmName(), null, comp.getComment()));
+		if (comp.getAlgorithmId() != null)
+		{
+			ret.setAlgorithm(new DbCompAlgorithm(DbKey.createDbKey(comp.getAlgorithmId()),
+					comp.getAlgorithmName(), null, comp.getComment()));
+		}
 		ret.setApplicationName(comp.getApplicationName());
 		ret.setGroup(new TsGroup().copy(comp.getGroupName()));
 		ret.setLastModified(comp.getLastModified());
-		ret.setGroupId(DbKey.createDbKey(comp.getGroupId()));
+		if (comp.getGroupId() != null)
+		{
+			ret.setGroupId(DbKey.createDbKey(comp.getGroupId()));
+		}
 		for (String prop : comp.getProps().stringPropertyNames())
 		{
 			ret.setProperty(prop, comp.getProps().getProperty(prop));
@@ -197,24 +235,34 @@ public class ComputationResources extends OpenDcsResource
 
 	static DbCompParm map(ApiCompParm parm)
 	{
+		if (parm == null)
+			return null;
 		DbCompParm ret = new DbCompParm(parm.getAlgoRoleName(),
 				DbKey.createDbKey(parm.getSiteId()), parm.getInterval(),
 				parm.getTableSelector(), parm.getDeltaT());
-		DataType dt = new DataType(parm.getDataType(), parm.getDataTypeId().toString());
-		ret.setDataType(dt);
+		if (parm.getDataTypeId() != null)
+		{
+			DataType dt = new DataType(parm.getDataType(), parm.getDataTypeId().toString());
+			ret.setDataType(dt);
+		}
 		ret.setInterval(parm.getInterval());
-		Site site = new Site();
-		site.setPublicName(parm.getSiteName());
-		ret.setSite(site);
-		ret.setSiteId(DbKey.createDbKey(parm.getSiteId()));
+		if (parm.getSiteId() != null)
+		{
+			Site site = new Site();
+			site.setPublicName(parm.getSiteName());
+			ret.setSite(site);
+			ret.setSiteId(DbKey.createDbKey(parm.getSiteId()));
+		}
 		ret.setUnitsAbbr(parm.getUnitsAbbr());
 		ret.setAlgoParmType(parm.getAlgoParmType());
 		ret.setRoleName(parm.getAlgoRoleName());
 		ret.setInterval(parm.getInterval());
 		ret.setDeltaT(parm.getDeltaT());
-		ret.setDataTypeId(DbKey.createDbKey(parm.getDataTypeId()));
 		ret.setDeltaTUnits(parm.getDeltaTUnits());
-		ret.setModelId(parm.getModelId());
+		if (parm.getModelId() != null)
+		{
+			ret.setModelId(parm.getModelId());
+		}
 		ret.setTableSelector(parm.getTableSelector());
 		ret.setInterval(parm.getInterval());
 		ret.setDeltaT(parm.getDeltaT());
@@ -227,10 +275,14 @@ public class ComputationResources extends OpenDcsResource
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({AuthorizationCheck.ODCS_API_ADMIN, AuthorizationCheck.ODCS_API_USER})
-	public Response deleteComputation(@QueryParam("computationid") Long computationId) throws DbException
+	public Response deleteComputation(@QueryParam("computationid") Long computationId) throws DbException, WebAppException
 	{
-		try (ComputationDAI dai = createDb().getDao(ComputationDAI.class)
-				.orElseThrow(() -> new DbException(NO_COMPUTATION_DAI)))
+		if (computationId == null)
+		{
+			throw new WebAppException(ErrorCodes.MISSING_ID, "Missing required computationid parameter.");
+		}
+
+		try (ComputationDAI dai = getLegacyTimeseriesDB().makeComputationDAO())
 		{
 			dai.deleteComputation(DbKey.createDbKey(computationId));
 			return Response.status(HttpServletResponse.SC_OK)
