@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletResponse;
@@ -124,10 +125,13 @@ public class SiteResources extends OpenDcsResource
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({AuthorizationCheck.ODCS_API_ADMIN, AuthorizationCheck.ODCS_API_USER})
 	public Response postSite(ApiSite site)
-		throws DbException
+		throws DbException, WebAppException
 	{
 		try (SiteDAI dai = getLegacyTimeseriesDB().makeSiteDAO())
 		{
+			if (site == null) {
+				throw new WebAppException(ErrorCodes.MISSING_ID, "Missing required site parameter.");
+			}
 			dai.writeSite(map(site));
 			String sitePubName = site.getPublicName();
 			if (sitePubName == null)
@@ -153,14 +157,21 @@ public class SiteResources extends OpenDcsResource
 		}
 		returnSite.setLocationType(site.getLocationType());
 		returnSite.setElevation(site.getElevation());
-		returnSite.setPublicName(site.getPublicName());
 		returnSite.setElevationUnits(site.getElevUnits());
 		returnSite.setActive(site.isActive());
 		returnSite.setDescription(site.getDescription());
 		returnSite.setLastModifyTime(site.getLastModified());
-		for (String name : site.getProperties().stringPropertyNames())
+		returnSite.country = site.getCountry();
+		returnSite.state = site.getState();
+		returnSite.isNew = true;
+		returnSite.nearestCity = site.getNearestCity();
+		returnSite.latitude = site.getLatitude();
+		returnSite.longitude = site.getLongitude();
+		returnSite.timeZoneAbbr = site.getTimezone();
+		for (Map.Entry<String, String> entry : site.getSitenames().entrySet())
 		{
-			SiteName sn = new SiteName(returnSite, name);
+			returnSite.setPublicName(entry.getValue());
+			SiteName sn = new SiteName(returnSite, entry.getKey());
 			returnSite.addName(sn);
 		}
 		return returnSite;
@@ -175,11 +186,14 @@ public class SiteResources extends OpenDcsResource
 	{
 		try (SiteDAI dai = getLegacyTimeseriesDB().makeSiteDAO())
 		{
+			if (siteId == null)
+				throw new WebAppException(ErrorCodes.MISSING_ID,
+					"Missing required siteid parameter.");
 			dai.deleteSite(DbKey.createDbKey(siteId));
 			return Response.status(HttpServletResponse.SC_OK)
 					.entity("ID " + siteId + " deleted").build();
 		}
-		catch(DbIoException e)
+		catch(DbIoException | WebAppException e)
 		{
 			throw new DbException("Unable to delete site", e);
 		}
