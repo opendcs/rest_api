@@ -172,7 +172,7 @@ final class DataSourceResourcesIT extends ResourcesTestBase
 	void testPostAndDeleteDataSource() throws Exception
 	{
 		ApiDataSource ds = new ApiDataSource();
-		ds.setName("TestDataSource");
+		ds.setName("TestDataSource1");
 		ds.setUsedBy(12);
 		ds.setType("TestType");
 		Properties properties = new Properties();
