@@ -154,7 +154,10 @@ public class ConfigResources extends OpenDcsResource
 		try
 		{
 			PlatformConfig pc = new PlatformConfig(config.getName());
-			pc.setId(DbKey.createDbKey(config.getConfigId()));
+			if (config.getConfigId() != null)
+			{
+				pc.setId(DbKey.createDbKey(config.getConfigId()));
+			}
 			pc.description = config.getDescription();
 			pc.numPlatformsUsing = config.getNumPlatforms();
 			pc.decodesScripts = map(config.getScripts());
@@ -168,6 +171,9 @@ public class ConfigResources extends OpenDcsResource
 
 	static Vector<DecodesScript> map(List<ApiConfigScript> scripts) throws DbException
 	{
+		if (scripts == null)
+			return new Vector<>();
+
 		try
 		{
 			Vector<DecodesScript> decodesScripts = new Vector<>();
@@ -206,12 +212,12 @@ public class ConfigResources extends OpenDcsResource
 		EngineeringUnit to = EngineeringUnit.getEngineeringUnit(unitConverter.getToAbbr());
 		Poly5Converter pc = new Poly5Converter(from, to);
 		double[] coeffs = new double[6];
-		coeffs[0] = unitConverter.getA();
-		coeffs[1] = unitConverter.getB();
-		coeffs[2] = unitConverter.getC();
-		coeffs[3] = unitConverter.getD();
-		coeffs[4] = unitConverter.getE();
-		coeffs[5] = unitConverter.getF();
+		coeffs[0] = unitConverter.getA() != null ? unitConverter.getA() : 0.0;
+		coeffs[1] = unitConverter.getB() != null ? unitConverter.getB() : 0.0;
+		coeffs[2] = unitConverter.getC() != null ? unitConverter.getC() : 0.0;
+		coeffs[3] = unitConverter.getD() != null ? unitConverter.getD() : 0.0;
+		coeffs[4] = unitConverter.getE() != null ? unitConverter.getE() : 0.0;
+		coeffs[5] = unitConverter.getF() != null ? unitConverter.getF() : 0.0;
 		pc.setCoefficients(coeffs);
 		return pc;
 	}
