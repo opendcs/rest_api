@@ -19,6 +19,7 @@ import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.TimeZone;
+import java.util.Vector;
 
 import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletRequest;
@@ -35,17 +36,20 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import decodes.db.DataSource;
 import decodes.db.DatabaseException;
 import decodes.db.DatabaseIO;
 import decodes.db.RoutingSpec;
 import decodes.db.RoutingSpecList;
 import decodes.db.ScheduleEntry;
+import decodes.db.ScheduleEntryStatus;
 import decodes.polling.DacqEvent;
 import decodes.sql.DbKey;
 import decodes.tsdb.DbIoException;
 import opendcs.dai.DacqEventDAI;
 import opendcs.dai.ScheduleEntryDAI;
 import org.opendcs.odcsapi.beans.ApiRouting;
+import org.opendcs.odcsapi.beans.ApiRoutingExecStatus;
 import org.opendcs.odcsapi.beans.ApiRoutingRef;
 import org.opendcs.odcsapi.beans.ApiScheduleEntry;
 import org.opendcs.odcsapi.beans.ApiScheduleEntryRef;
@@ -68,6 +72,7 @@ public class RoutingResources extends OpenDcsResource
 	{
 		try
 		{
+			//TODO: Fix this endpoint. Currently, it is returning an empty list.
 			DatabaseIO dbio = getLegacyDatabase();
 			RoutingSpecList rsList = new RoutingSpecList();
 			dbio.readRoutingSpecList(rsList);
@@ -159,16 +164,42 @@ public class RoutingResources extends OpenDcsResource
 		try
 		{
 			RoutingSpec spec = new RoutingSpec();
-			spec.setId(DbKey.createDbKey(routing.getRoutingId()));
+			if (routing.getRoutingId() != null)
+			{
+				spec.setId(DbKey.createDbKey(routing.getRoutingId()));
+			}
 			spec.setName(routing.getName());
+			spec.usePerformanceMeasurements = false;
 			spec.lastModifyTime = routing.getLastModified();
 			if (routing.getOutputTZ() != null)
 			{
+				spec.outputTimeZoneAbbr = routing.getOutputTZ();
 				spec.outputTimeZone = TimeZone.getTimeZone(ZoneId.of(routing.getOutputTZ()));
 			}
 			routing.getNetlistNames().forEach(spec::addNetworkListName);
 			spec.outputFormat = routing.getOutputFormat();
 			spec.enableEquations = routing.isEnableEquations();
+			spec.presentationGroupName = routing.getPresGroupName();
+			spec.isProduction = routing.isProduction();
+			spec.consumerArg = routing.getDestinationArg();
+			spec.consumerType = routing.getDestinationType();
+			if (routing.getSince() != null)
+			{
+				spec.sinceTime = routing.getSince();
+			}
+			if (routing.getUntil() != null)
+			{
+				spec.untilTime = routing.getUntil();
+			}
+			spec.setProperties(routing.getProperties());
+			if (routing.getDataSourceId() != null)
+			{
+				DataSource dataSource = new DataSource();
+				dataSource.setId(DbKey.createDbKey(routing.getDataSourceId()));
+				dataSource.setName(routing.getDataSourceName());
+				spec.dataSource = dataSource;
+			}
+			spec.networkListNames = new Vector<>(routing.getNetlistNames());
 			return spec;
 		}
 		catch(DatabaseException e)
@@ -276,7 +307,9 @@ public class RoutingResources extends OpenDcsResource
 		{
 			ScheduleEntry entry = map(schedule);
 			dai.writeScheduleEntry(entry);
-			return Response.status(HttpServletResponse.SC_OK).build();
+			return Response.status(HttpServletResponse.SC_OK)
+					.entity(String.format("Successfully stored schedule entry with name: %s", schedule.getName()))
+					.build();
 		}
 		catch (DbIoException e)
 		{
@@ -288,17 +321,25 @@ public class RoutingResources extends OpenDcsResource
 	{
 		try
 		{
-			ScheduleEntry entry = new ScheduleEntry(DbKey.createDbKey(schedule.getSchedEntryId()));
+			ScheduleEntry entry = new ScheduleEntry(schedule.getName());
+			if (schedule.getSchedEntryId() != null)
+			{
+				entry.setId(DbKey.createDbKey(schedule.getSchedEntryId()));
+			}
 			entry.setStartTime(schedule.getStartTime());
 			entry.setTimezone(schedule.getTimeZone());
-			entry.setLoadingAppId(DbKey.createDbKey(schedule.getAppId()));
-			entry.setRoutingSpecId(DbKey.createDbKey(schedule.getRoutingSpecId()));
-			entry.setLoadingAppName(schedule.getAppName());
-			entry.setRoutingSpecName(schedule.getRoutingSpecName());
+			if (schedule.getAppId() != null)
+			{
+				entry.setLoadingAppId(DbKey.createDbKey(schedule.getAppId()));
+				entry.setLoadingAppName(schedule.getAppName());
+			}
+			if (schedule.getRoutingSpecId() != null)
+			{
+				entry.setRoutingSpecId(DbKey.createDbKey(schedule.getRoutingSpecId()));
+				entry.setRoutingSpecName(schedule.getRoutingSpecName());
+			}
 			entry.setRunInterval(schedule.getRunInterval());
-			entry.setName(schedule.getName());
 			entry.setLastModified(schedule.getLastModified());
-			entry.setId(DbKey.createDbKey(schedule.getSchedEntryId()));
 			return entry;
 		}
 		catch (DatabaseException e)
@@ -336,12 +377,33 @@ public class RoutingResources extends OpenDcsResource
 	public Response getRoutingStats()
 		throws DbException
 	{
-//		try (DbInterface dbi = new DbInterface();
-//			ApiRoutingDAO dao = new ApiRoutingDAO(dbi))
-//		{
-//			return ApiHttpUtil.createResponse(dao.getRsStatus());
-//		}
-		return Response.status(HttpServletResponse.SC_NOT_IMPLEMENTED).build();
+		try (ScheduleEntryDAI dai = getLegacyDatabase().makeScheduleEntryDAO())
+		{
+			return Response.status(HttpServletResponse.SC_OK)
+					.entity(map(dai.listScheduleEntries(null))).build();
+		}
+		catch (DbIoException e)
+		{
+			throw new DbException("Unable to retrieve routing status", e);
+		}
+	}
+
+	static ArrayList<ApiScheduleEntryRef> map(ArrayList<ScheduleEntry> entries)
+	{
+		ArrayList<ApiScheduleEntryRef> refs = new ArrayList<>();
+		for (ScheduleEntry entry : entries)
+		{
+			ApiScheduleEntryRef ref = new ApiScheduleEntryRef();
+			ref.setSchedEntryId(entry.getId().getValue());
+			ref.setEnabled(entry.isEnabled());
+			ref.setAppName(entry.getLoadingAppName());
+			ref.setName(entry.getName());
+			ref.setLastModified(entry.getLastModified());
+			ref.setRoutingSpecName(entry.getRoutingSpecName());
+			refs.add(ref);
+		}
+
+		return refs;
 	}
 
 	@GET
@@ -353,13 +415,37 @@ public class RoutingResources extends OpenDcsResource
 	{
 		if (scheduleEntryId == null)
 			throw new WebAppException(ErrorCodes.MISSING_ID, "missing required scheduleentryid argument.");
-		
-//		try (DbInterface dbi = new DbInterface();
-//			ApiRoutingDAO dao = new ApiRoutingDAO(dbi))
-//		{
-//			return ApiHttpUtil.createResponse(dao.getRoutingExecStatus(scheduleEntryId));
-//		}
-		return Response.status(HttpServletResponse.SC_NOT_IMPLEMENTED).build();
+
+		try (ScheduleEntryDAI dai = getLegacyDatabase().makeScheduleEntryDAO())
+		{
+			ScheduleEntry entry = new ScheduleEntry(DbKey.createDbKey(scheduleEntryId));
+			return Response.status(HttpServletResponse.SC_OK)
+					.entity(statusMap(dai.readScheduleStatus(entry))).build();
+		}
+		catch (DbIoException e)
+		{
+			throw new DbException("Unable to retrieve routing exec status", e);
+		}
+	}
+
+	static ArrayList<ApiRoutingExecStatus> statusMap(ArrayList<ScheduleEntryStatus> statuses)
+	{
+		ArrayList<ApiRoutingExecStatus> execStatuses = new ArrayList<>();
+		for (ScheduleEntryStatus status : statuses)
+		{
+			ApiRoutingExecStatus execStatus = new ApiRoutingExecStatus();
+			execStatus.setScheduleEntryId(status.getScheduleEntryId().getValue());
+			execStatus.setHostname(status.getHostname());
+			execStatus.setNumErrors(status.getNumDecodesErrors());
+			execStatus.setRunStatus(status.getRunStatus());
+			execStatus.setRunStop(status.getRunStop());
+			execStatus.setRunStart(status.getRunStart());
+			execStatus.setNumPlatforms(status.getNumPlatforms());
+			execStatus.setNumMessages(status.getNumMessages());
+			execStatus.setLastActivity(status.getLastModified());
+			execStatuses.add(execStatus);
+		}
+		return execStatuses;
 	}
 
 	@GET

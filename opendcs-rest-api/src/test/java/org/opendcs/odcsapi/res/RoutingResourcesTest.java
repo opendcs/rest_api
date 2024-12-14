@@ -11,9 +11,11 @@ import java.util.Vector;
 import decodes.db.RoutingSpec;
 import decodes.db.RoutingSpecList;
 import decodes.db.ScheduleEntry;
+import decodes.db.ScheduleEntryStatus;
 import decodes.sql.DbKey;
 import org.junit.jupiter.api.Test;
 import org.opendcs.odcsapi.beans.ApiRouting;
+import org.opendcs.odcsapi.beans.ApiRoutingExecStatus;
 import org.opendcs.odcsapi.beans.ApiRoutingRef;
 import org.opendcs.odcsapi.beans.ApiScheduleEntry;
 import org.opendcs.odcsapi.beans.ApiScheduleEntryRef;
@@ -22,6 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.opendcs.odcsapi.res.RoutingResources.map;
+import static org.opendcs.odcsapi.res.RoutingResources.statusMap;
 
 final class RoutingResourcesTest
 {
@@ -128,6 +131,69 @@ final class RoutingResourcesTest
 		assertEquals(scheduleEntry.isEnabled(), apiScheduleEntry.isEnabled());
 		assertEquals(scheduleEntry.getTimezone(), apiScheduleEntry.getTimeZone());
 		assertEquals(scheduleEntry.getRunInterval(), apiScheduleEntry.getRunInterval());
+	}
+
+	@Test
+	void testApiScheduleEntryMap()
+	{
+		ArrayList<ScheduleEntry> scheduleEntries = new ArrayList<>();
+		ScheduleEntry scheduleEntry = new ScheduleEntry(DbKey.createDbKey(1234L));
+		scheduleEntry.setName("TestScheduleEntry");
+		scheduleEntry.setLoadingAppName("TestAppName");
+		scheduleEntry.setRoutingSpecName("TestRoutingSpec");
+		scheduleEntry.setLastModified(Date.from(Instant.parse("2021-02-01T00:00:00Z")));
+		scheduleEntry.setLoadingAppId(DbKey.createDbKey(5678L));
+		scheduleEntry.setRoutingSpecId(DbKey.createDbKey(9012L));
+		scheduleEntry.setStartTime(Date.from(Instant.parse("2021-01-01T00:00:00Z")));
+		scheduleEntry.setEnabled(true);
+		scheduleEntry.setTimezone("UTC");
+		scheduleEntry.setRunInterval("1h");
+		scheduleEntries.add(scheduleEntry);
+
+		ArrayList<ApiScheduleEntryRef> results = map(scheduleEntries);
+
+		assertNotNull(results);
+		assertEquals(1, results.size());
+		ApiScheduleEntryRef result = results.get(0);
+		assertNotNull(result);
+		assertEquals(scheduleEntry.getKey().getValue(), result.getSchedEntryId());
+		assertEquals(scheduleEntry.getName(), result.getName());
+		assertEquals(scheduleEntry.getLoadingAppName(), result.getAppName());
+		assertEquals(scheduleEntry.getRoutingSpecName(), result.getRoutingSpecName());
+		assertEquals(scheduleEntry.getLastModified(), result.getLastModified());
+	}
+
+	@Test
+	void testRoutingStatusMap()
+	{
+		ArrayList<ScheduleEntryStatus> scheduleEntries = new ArrayList<>();
+		ScheduleEntryStatus scheduleEntry = new ScheduleEntryStatus(DbKey.createDbKey(1234L));
+		scheduleEntry.setScheduleEntryName("TestScheduleEntry");
+		scheduleEntry.setLastModified(Date.from(Instant.parse("2021-02-01T00:00:00Z")));
+		scheduleEntry.setHostname("TestHost");
+		scheduleEntry.setRunStatus("TestStatus");
+		scheduleEntry.setNumDecodesErrors(10);
+		scheduleEntry.setNumMessages(20);
+		scheduleEntry.setNumPlatforms(30);
+		scheduleEntry.setRunStop(Date.from(Instant.parse("2021-03-01T00:00:00Z")));
+		scheduleEntry.setRunStart(Date.from(Instant.parse("2021-02-01T00:00:00Z")));
+		scheduleEntry.setLastModified(Date.from(Instant.parse("2021-04-01T00:00:00Z")));
+		scheduleEntries.add(scheduleEntry);
+
+		ArrayList<ApiRoutingExecStatus> results = statusMap(scheduleEntries);
+		assertNotNull(results);
+		assertEquals(1, results.size());
+		ApiRoutingExecStatus result = results.get(0);
+		assertNotNull(result);
+		assertEquals(scheduleEntry.getScheduleEntryId().getValue(), result.getScheduleEntryId());
+		assertEquals(scheduleEntry.getHostname(), result.getHostname());
+		assertEquals(scheduleEntry.getRunStatus(), result.getRunStatus());
+		assertEquals(scheduleEntry.getNumDecodesErrors(), result.getNumErrors());
+		assertEquals(scheduleEntry.getNumMessages(), result.getNumMessages());
+		assertEquals(scheduleEntry.getNumPlatforms(), result.getNumPlatforms());
+		assertEquals(scheduleEntry.getRunStop(), result.getRunStop());
+		assertEquals(scheduleEntry.getRunStart(), result.getRunStart());
+		assertEquals(scheduleEntry.getLastModified(), result.getLastActivity());
 	}
 
 	private RoutingSpec buildRoutingSpec() throws Exception
