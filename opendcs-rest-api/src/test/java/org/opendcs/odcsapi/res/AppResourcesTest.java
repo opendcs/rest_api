@@ -23,13 +23,13 @@ final class AppResourcesTest
 	void testAppRefMap()
 	{
 		CompAppInfo compAppInfo = new CompAppInfo();
-		compAppInfo.setAppName("Test App");
-		compAppInfo.setComment("Test Comment");
+		compAppInfo.setAppName("Computation application");
+		compAppInfo.setComment("Computation to find the volume of a river");
 		compAppInfo.setLastModified(Date.from(Instant.parse("2021-07-01T00:00:00Z")));
 		compAppInfo.setAppId(DbKey.createDbKey(151615L));
 		compAppInfo.setNumComputations(1);
 		Properties properties = new Properties();
-		properties.setProperty("key", "value");
+		properties.setProperty("compRef", "applicationValue");
 		compAppInfo.setProperties(properties);
 
 		ApiAppRef appRef = map(compAppInfo);
@@ -47,13 +47,13 @@ final class AppResourcesTest
 	{
 		ApiLoadingApp app = new ApiLoadingApp();
 		app.setAppId(151615L);
-		app.setAppName("Test App");
-		app.setAppType("Test Type");
-		app.setComment("Test Comment");
+		app.setAppName("Calculation application");
+		app.setAppType("Computation");
+		app.setComment("Application to calculate the flow of a river");
 		app.setLastModified(Date.from(Instant.parse("2021-07-01T00:00:00Z")));
 		app.setManualEditingApp(true);
 		Properties properties = new Properties();
-		properties.setProperty("key", "value");
+		properties.setProperty("algorithm", "processName");
 		app.setProperties(properties);
 
 		CompAppInfo compAppInfo = map(app);
@@ -75,9 +75,9 @@ final class AppResourcesTest
 		int pid = 12345;
 		String host = "localhost";
 		Date heartbeat = Date.from(Instant.parse("2021-07-01T00:00:00Z"));
-		String status = "Test Status";
+		String status = "Running";
 		TsdbCompLock compLock = new TsdbCompLock(appId, pid, host, heartbeat, status);
-		compLock.setAppName("Test App");
+		compLock.setAppName("Computation Application");
 
 		ApiAppStatus appStatus = map(compLock);
 
@@ -94,13 +94,13 @@ final class AppResourcesTest
 	void testLoadingAppMap()
 	{
 		CompAppInfo compAppInfo = new CompAppInfo();
-		compAppInfo.setAppName("Test App");
-		compAppInfo.setComment("Test Comment");
+		compAppInfo.setAppName("Dijkstra's Algorithm");
+		compAppInfo.setComment("Runs Dijkstra's algorithm on a graph");
 		compAppInfo.setLastModified(Date.from(Instant.parse("2021-07-01T00:00:00Z")));
 		compAppInfo.setAppId(DbKey.createDbKey(151615L));
 		compAppInfo.setNumComputations(1);
 		Properties properties = new Properties();
-		properties.setProperty("appType", "test app type");
+		properties.setProperty("appType", "computation");
 		compAppInfo.setProperties(properties);
 
 		ApiLoadingApp app = mapLoading(compAppInfo);

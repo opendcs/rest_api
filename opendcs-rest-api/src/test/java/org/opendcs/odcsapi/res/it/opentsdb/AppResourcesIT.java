@@ -32,6 +32,7 @@ final class AppResourcesIT extends ResourcesTestBase
 	private static Long appid;
 	private static SessionFilter sessionFilter;
 	private static Properties properties;
+	private static final ObjectMapper objectMapper = new ObjectMapper();
 
 	@BeforeAll
 	static void setUpAll()
@@ -63,15 +64,13 @@ final class AppResourcesIT extends ResourcesTestBase
 			.statusCode(is(HttpServletResponse.SC_OK))
 		;
 
-		ObjectMapper objectMapper = new ObjectMapper();
-
 		ApiLoadingApp app = new ApiLoadingApp();
-		app.setAppType("loading");
-		app.setAppName("TestApp1");
+		app.setAppType("Computation");
+		app.setAppName("River Flow Calculation");
 		app.setAppId(9965L);
 		app.setProperties(properties);
 		app.setLastModified(Date.from(Instant.parse("2021-02-01T00:00:00Z")));
-		app.setComment("Test comment");
+		app.setComment("Computation to calculate the flow of a river");
 
 		String appJson = objectMapper.writeValueAsString(app);
 
@@ -171,7 +170,7 @@ final class AppResourcesIT extends ResourcesTestBase
 			.log().ifValidationFails(LogDetail.ALL, true)
 		.assertThat()
 			.statusCode(is(HttpServletResponse.SC_OK))
-			.body("appName", is("TestApp1"))
+			.body("appName", is("River Flow Calculation"))
 		;
 	}
 
@@ -179,12 +178,10 @@ final class AppResourcesIT extends ResourcesTestBase
 	void testPostAppRoundTrip() throws Exception
 	{
 		ApiLoadingApp app = new ApiLoadingApp();
-		app.setAppType("loading");
-		app.setAppName("TestApp2");
+		app.setAppType("Utility");
+		app.setAppName("Hostname Generator");
 		app.setLastModified(Date.from(Instant.parse("2021-01-01T00:00:00Z")));
-		app.setComment("Test comment");
-
-		ObjectMapper objectMapper = new ObjectMapper();
+		app.setComment("Generates a pseudo-random hostname");
 
 		String appJson = objectMapper.writeValueAsString(app);
 
@@ -229,13 +226,11 @@ final class AppResourcesIT extends ResourcesTestBase
 	void testDeleteAppRoundTrip() throws Exception
 	{
 		ApiLoadingApp app = new ApiLoadingApp();
-		app.setAppType("loading");
-		app.setAppName("TestApp3");
+		app.setAppType("Loading");
+		app.setAppName("Application Wrapper");
 		app.setProperties(properties);
 		app.setLastModified(Date.from(Instant.parse("2021-01-01T00:00:00Z")));
-		app.setComment("Test comment");
-
-		ObjectMapper objectMapper = new ObjectMapper();
+		app.setComment("Wraps a custom application in a usable interface");
 
 		String appJson = objectMapper.writeValueAsString(app);
 
@@ -298,13 +293,11 @@ final class AppResourcesIT extends ResourcesTestBase
 	void testGetAppEventsRoundTrip() throws Exception
 	{
 		ApiLoadingApp app = new ApiLoadingApp();
-		app.setAppType("loading");
-		app.setAppName("TestApp4");
+		app.setAppType("Utility");
+		app.setAppName("User Properties GUI");
 		app.setProperties(properties);
 		app.setLastModified(Date.from(Instant.parse("2021-01-01T00:00:00Z")));
-		app.setComment("Test comment");
-
-		ObjectMapper objectMapper = new ObjectMapper();
+		app.setComment("Opens a GUI to edit user properties");
 
 		String appJson = objectMapper.writeValueAsString(app);
 
