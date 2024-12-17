@@ -115,7 +115,7 @@ public final class AppResources extends OpenDcsResource
 			throws WebAppException, DbException
 	{
 		if (appId == null)
-			throw new WebAppException(ErrorCodes.MISSING_ID,
+			throw new WebAppException(HttpServletResponse.SC_BAD_REQUEST,
 					"Missing required appid parameter.");
 		try (LoadingAppDAI dai = getLegacyDatabase().makeLoadingAppDAO())
 		{
@@ -179,7 +179,7 @@ public final class AppResources extends OpenDcsResource
 	{
 		if (appId == null)
 		{
-			throw new WebAppException(ErrorCodes.MISSING_ID, "Missing required appid parameter.");
+			throw new WebAppException(HttpServletResponse.SC_BAD_REQUEST, "Missing required appid parameter.");
 		}
 
 		try (LoadingAppDAI dai = getLegacyDatabase().makeLoadingAppDAO())
@@ -250,19 +250,19 @@ public final class AppResources extends OpenDcsResource
 			if (appStat == null)
 			{
 				cli.ifPresent(c -> clientConnectionCache.removeApiEventClient(c, session.getId()));
-				throw new WebAppException(ErrorCodes.NO_SUCH_OBJECT, "appid " + appId
+				throw new WebAppException(HttpServletResponse.SC_NOT_FOUND, "appid " + appId
 						+ " is not running (no lock found).");
 			}
 			else if (appStat.getPid() == null)
 			{
 				cli.ifPresent(c -> clientConnectionCache.removeApiEventClient(c, session.getId()));
-				throw new WebAppException(ErrorCodes.NO_SUCH_OBJECT, "appid " + appId
+				throw new WebAppException(HttpServletResponse.SC_NOT_FOUND, "appid " + appId
 						+ " (" + appStat.getAppName() + ") is not running.");
 			}
 			else if (System.currentTimeMillis() - appStat.getHeartbeat().getTime() > 20000L)
 			{
 				cli.ifPresent(c -> clientConnectionCache.removeApiEventClient(c, session.getId()));
-				throw new WebAppException(ErrorCodes.NO_SUCH_OBJECT, "appid " + appId
+				throw new WebAppException(HttpServletResponse.SC_NOT_FOUND, "appid " + appId
 						+ " (" + appStat.getAppName() + ") is not running (stale heartbeat).");
 			}
 			else if (!cli.isPresent())
@@ -295,7 +295,7 @@ public final class AppResources extends OpenDcsResource
 			}
 			if(apiEventClient == null)
 			{
-				throw new WebAppException(ErrorCodes.NO_SUCH_OBJECT, "No API Event Client found or created");
+				throw new WebAppException(HttpServletResponse.SC_NOT_FOUND, "No API Event Client found or created");
 			}
 			return Response.status(HttpServletResponse.SC_OK)
 					.entity(apiEventClient.getNewEvents()).build();
@@ -323,7 +323,7 @@ public final class AppResources extends OpenDcsResource
 			throws WebAppException, DbException
 	{
 		if (appId == null)
-			throw new WebAppException(ErrorCodes.MISSING_ID, "appId parameter required for this operation.");
+			throw new WebAppException(HttpServletResponse.SC_BAD_REQUEST, "appId parameter required for this operation.");
 
 		try (LoadingAppDAI dai = getLegacyDatabase().makeLoadingAppDAO())
 		{
@@ -395,7 +395,7 @@ public final class AppResources extends OpenDcsResource
 			throws WebAppException, DbException
 	{
 		if (appId == null)
-			throw new WebAppException(ErrorCodes.MISSING_ID, "appId parameter required for this operation.");
+			throw new WebAppException(HttpServletResponse.SC_BAD_REQUEST, "appId parameter required for this operation.");
 
 		try (LoadingAppDAI dai = getLegacyDatabase().makeLoadingAppDAO())
 		{
@@ -405,7 +405,7 @@ public final class AppResources extends OpenDcsResource
 			ApiAppStatus appStat = getAppStatus(dai, appId);
 
 			if (appStat == null || appStat.getPid() == null)
-				throw new WebAppException(ErrorCodes.NO_SUCH_OBJECT,
+				throw new WebAppException(HttpServletResponse.SC_NOT_FOUND,
 						"appId " + appId + "(" + loadingApp.getAppName() + ") not currently running.");
 
 			dai.releaseCompProcLock(new TsdbCompLock(DbKey.createDbKey(appId), appStat.getPid().intValue(),
