@@ -166,15 +166,8 @@ tasks.register('integrationTest', Test) {
     jvmArgs += "-Dorg.apache.tomcat.util.digester.PROPERTY_SOURCE=org.apache.tomcat.util.digester.EnvironmentPropertySource"
     jvmArgs += "-Dcatalina.base=${layout.buildDirectory.file("tomcat")}"
     jvmArgs += "-Dopendcs.test.integration.CWMS-Oracle.disabled=true"
-    systemProperties += project.properties.findAll { k, v -> k.startsWith("opendcs") }
-    systemProperties += project.properties.findAll { k, v -> k.startsWith("postgresdb") }
     def outputDir = downloadAndUnzipInstaller.outputs.files.singleFile
     systemProperties.put("DCSTOOL_HOME", outputDir)
-    if (!project.hasProperty("postgresdb.url")) {
-        systemProperties.put("postgresdb.url", "jdbc:postgresql://localhost:5432/open_tsdb")
-        systemProperties.put("opendcs.db.username", "tsdbadm")
-        systemProperties.put("opendcs.db.password", "postgres_pass")
-    }
 }
 
 
