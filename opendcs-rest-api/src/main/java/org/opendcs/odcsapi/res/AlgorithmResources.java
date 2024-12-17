@@ -44,7 +44,6 @@ import org.opendcs.odcsapi.beans.ApiAlgoParm;
 import org.opendcs.odcsapi.beans.ApiAlgorithm;
 import org.opendcs.odcsapi.beans.ApiAlgorithmRef;
 import org.opendcs.odcsapi.beans.ApiAlgorithmScript;
-import org.opendcs.odcsapi.errorhandling.ErrorCodes;
 import org.opendcs.odcsapi.errorhandling.WebAppException;
 import org.opendcs.odcsapi.sec.AuthorizationCheck;
 
@@ -93,7 +92,7 @@ public class AlgorithmResources extends OpenDcsResource
 	{
 		if(algoId == null)
 		{
-			throw new WebAppException(ErrorCodes.MISSING_ID,
+			throw new WebAppException(HttpServletResponse.SC_BAD_REQUEST,
 					"Missing required algorithmid parameter.");
 		}
 		try(AlgorithmDAI dai = getDao(AlgorithmDAI.class))
@@ -105,7 +104,7 @@ public class AlgorithmResources extends OpenDcsResource
 		}
 		catch(NoSuchObjectException e)
 		{
-			throw new WebAppException(ErrorCodes.NO_SUCH_OBJECT,
+			throw new WebAppException(HttpServletResponse.SC_NOT_FOUND,
 					"No Computation Algorithm with id=" + algoId, e);
 		}
 	}
@@ -158,17 +157,24 @@ public class AlgorithmResources extends OpenDcsResource
 	{
 		try(AlgorithmDAI dai = getDao(AlgorithmDAI.class))
 		{
-			dai.writeAlgorithm(map(algo));
+			DbCompAlgorithm map = map(algo);
+			dai.writeAlgorithm(map);
+			algo.setAlgorithmId(map.getId().getValue());
 			return Response.status(HttpServletResponse.SC_CREATED)
-					.entity(algo)
+					.entity(map(map))
 					.build();
 		}
 	}
 
 	static DbCompAlgorithm map(ApiAlgorithm algo)
 	{
-		DbCompAlgorithm retval = new DbCompAlgorithm(DbKey.createDbKey(algo.getAlgorithmId()),
-				algo.getName(), algo.getExecClass(), algo.getDescription());
+		Long algorithmId = algo.getAlgorithmId();
+		DbKey dbKey = DbKey.NullKey;
+		if(algorithmId != null)
+		{
+			dbKey = DbKey.createDbKey(algorithmId);
+		}
+		DbCompAlgorithm retval = new DbCompAlgorithm(dbKey, algo.getName(), algo.getExecClass(), algo.getDescription());
 		retval.setNumCompsUsing(algo.getNumCompsUsing());
 		algo.getProps()
 				.forEach((key, value) -> retval.setProperty(String.valueOf(key), String.valueOf(value)));
@@ -190,7 +196,7 @@ public class AlgorithmResources extends OpenDcsResource
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({AuthorizationCheck.ODCS_API_ADMIN, AuthorizationCheck.ODCS_API_USER})
-	public Response deletAlgorithm(@QueryParam("algorithmid") Long algorithmId) throws TsdbException
+	public Response deleteAlgorithm(@QueryParam("algorithmid") Long algorithmId) throws TsdbException
 	{
 		try(AlgorithmDAI dai = getDao(AlgorithmDAI.class))
 		{
