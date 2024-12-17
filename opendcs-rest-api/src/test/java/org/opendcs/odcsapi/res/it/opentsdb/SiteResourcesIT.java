@@ -56,25 +56,26 @@ final class SiteResourcesIT extends ResourcesTestBase
 		;
 
 		ApiSite site = new ApiSite();
-		site.setPublicName("Test Site");
+		site.setPublicName("Pump Site");
 		site.setElevUnits("m");
 		site.setCountry("US");
 		site.setLatitude("0.0");
-		site.setLocationtype("Test Location Type");
+		site.setLocationtype("PUMP");
 		site.setLongitude("0.0");
 		site.setActive(true);
-		site.setDescription("Test Site Description");
+		site.setDescription("Pump located in NM, USA");
 		site.setElevation(56.3);
 		site.setLastModified(Date.from(Instant.parse("2021-01-01T15:45:10Z")));
-		site.setNearestCity("Test City");
+		site.setNearestCity("Albuquerque");
+		site.setState("NM");
 		site.setTimezone("UTC");
 		HashMap<String, String> siteNames = new HashMap<>();
-		siteNames.put("en", "Test Site 1");
+		siteNames.put("PUMP", "Pump Site");
 		site.setSitenames(siteNames);
 
 		String siteJson = OBJECT_MAPPER.writeValueAsString(site);
 
-		given()
+		ExtractableResponse<Response> response = given()
 			.log().ifValidationFails(LogDetail.ALL, true)
 			.accept(MediaType.APPLICATION_JSON)
 			.header("Authorization", authHeader)
@@ -89,9 +90,10 @@ final class SiteResourcesIT extends ResourcesTestBase
 			.log().ifValidationFails(LogDetail.ALL, true)
 		.assertThat()
 			.statusCode(is(HttpServletResponse.SC_OK))
+			.extract()
 		;
 
-		siteId = getSiteId(site.getPublicName());
+		siteId = response.body().jsonPath().getLong("siteId");
 	}
 
 	@AfterEach
@@ -132,8 +134,6 @@ final class SiteResourcesIT extends ResourcesTestBase
 			.statusCode(is(HttpServletResponse.SC_NO_CONTENT))
 		;
 	}
-
-	// TODO: Fix siteRef retrieval in OpenDCS/determine source of failure
 
 	@TestTemplate
 	void testGetSiteRefs()
@@ -180,26 +180,27 @@ final class SiteResourcesIT extends ResourcesTestBase
 	void testPostAndDeleteSite() throws Exception
 	{
 		ApiSite site = new ApiSite();
-		site.setPublicName("Test Site 1");
+		site.setPublicName("Pool Site");
 		site.setElevUnits("m");
 		site.setCountry("US");
 		site.setLatitude("38.56");
 		site.setLongitude("-121.72");
+		site.setLocationtype("LOCK");
 		site.setActive(true);
-		site.setDescription("Test Site Description 1");
+		site.setDescription("LOCK Site");
 		site.setElevation(56.3);
 		site.setLastModified(Date.from(Instant.parse("2021-02-01T15:45:10Z")));
 		site.setNearestCity("Davis");
 		site.setTimezone("UTC");
 		site.setState("CA");
 		HashMap<String, String> siteNames = new HashMap<>();
-		siteNames.put("en", "Test Site 1");
+		siteNames.put("en", "Test Lock");
 		site.setSitenames(siteNames);
 		site.setSiteId(18817L);
 
 		String siteJson = OBJECT_MAPPER.writeValueAsString(site);
 
-		given()
+		ExtractableResponse<Response> response = given()
 			.log().ifValidationFails(LogDetail.ALL, true)
 			.accept(MediaType.APPLICATION_JSON)
 			.contentType(MediaType.APPLICATION_JSON)
@@ -214,9 +215,10 @@ final class SiteResourcesIT extends ResourcesTestBase
 			.log().ifValidationFails(LogDetail.ALL, true)
 		.assertThat()
 			.statusCode(is(HttpServletResponse.SC_OK))
+			.extract()
 		;
 
-		Long id = getSiteId(site.getPublicName());
+		Long id = response.body().jsonPath().getLong("siteId");
 
 		given()
 			.log().ifValidationFails(LogDetail.ALL, true)
@@ -228,41 +230,11 @@ final class SiteResourcesIT extends ResourcesTestBase
 		.when()	
 			.redirects().follow(true)
 			.redirects().max(3)
-			.post("site")
+			.delete("site")
 		.then()
 			.log().ifValidationFails(LogDetail.ALL, true)
 		.assertThat()
 			.statusCode(is(HttpServletResponse.SC_OK))
 		;
-	}
-
-	private Long getSiteId(String siteName)
-	{
-
-		ExtractableResponse<Response> response = given()
-			.log().ifValidationFails(LogDetail.ALL, true)
-			.accept(MediaType.APPLICATION_JSON)
-			.header("Authorization", authHeader)
-			.filter(sessionFilter)
-		.when()
-			.redirects().follow(true)
-			.redirects().max(3)
-			.get("siterefs")
-		.then()
-			.log().ifValidationFails(LogDetail.ALL, true)
-		.assertThat()
-			.statusCode(is(HttpServletResponse.SC_OK))
-			.extract()
-		;
-
-		for (int i = 0; i < response.body().jsonPath().getList("").size(); i++)
-		{
-
-			if ((response.body().jsonPath().getString("[" + i + "].siteName")).equalsIgnoreCase(siteName))
-			{
-				return response.body().jsonPath().getLong("[" + i + "].siteId");
-			}
-		}
-		return null;
 	}
 }

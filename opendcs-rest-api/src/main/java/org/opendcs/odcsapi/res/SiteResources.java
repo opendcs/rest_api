@@ -110,13 +110,42 @@ public class SiteResources extends OpenDcsResource
 
 		try (SiteDAI dai = getLegacyTimeseriesDB().makeSiteDAO())
 		{
+			Site returnedSite = dai.getSiteById(DbKey.createDbKey(siteId));
 			return Response.status(HttpServletResponse.SC_OK)
-					.entity(dai.getSiteById(DbKey.createDbKey(siteId))).build();
+					.entity(map(returnedSite)).build();
 		}
 		catch(DbIoException | NoSuchObjectException e)
 		{
 			throw new DbException("Unable to retrieve site by ID", e);
 		}
+	}
+
+	static ApiSite map(Site site)
+	{
+		ApiSite returnSite = new ApiSite();
+		returnSite.setSiteId(site.getId().getValue());
+		returnSite.setLocationtype(site.getLocationType());
+		returnSite.setElevation(site.getElevation());
+		returnSite.setElevUnits(site.getElevationUnits());
+		returnSite.setActive(site.isActive());
+		returnSite.setDescription(site.getDescription());
+		returnSite.setLastModified(site.getLastModifyTime());
+		returnSite.setCountry(site.country);
+		returnSite.setState(site.state);
+		returnSite.setNearestCity(site.nearestCity);
+		returnSite.setLatitude(site.latitude);
+		returnSite.setLongitude(site.longitude);
+		returnSite.setTimezone(site.timeZoneAbbr);
+		returnSite.setRegion(site.region);
+		returnSite.setPublicName(site.getPublicName());
+		HashMap<String, String> siteNames = new HashMap<>();
+		for(Iterator<SiteName> iter = site.getNames(); iter.hasNext(); )
+		{
+			final SiteName sn = iter.next();
+			siteNames.put(sn.getNameType(), sn.getNameValue());
+		}
+		returnSite.setSitenames(siteNames);
+		return returnSite;
 	}
 
 	@POST
@@ -132,15 +161,11 @@ public class SiteResources extends OpenDcsResource
 			if (site == null) {
 				throw new WebAppException(ErrorCodes.MISSING_ID, "Missing required site parameter.");
 			}
-			dai.writeSite(map(site));
-			String sitePubName = site.getPublicName();
-			if (sitePubName == null)
-			{
-			    sitePubName = "";
-			}
+			Site dbSite = map(site);
+			dai.writeSite(dbSite);
+			site.setSiteId(dbSite.getId().getValue());
 			return Response.status(HttpServletResponse.SC_OK)
-				.entity(String.format("{\"status\": 200, \"message\": \"The site (%s) has been saved successfully.\"}",
-						sitePubName)).build();
+				.entity(site).build();
 		}
 		catch(DatabaseException | DbIoException e)
 		{
@@ -168,10 +193,14 @@ public class SiteResources extends OpenDcsResource
 		returnSite.latitude = site.getLatitude();
 		returnSite.longitude = site.getLongitude();
 		returnSite.timeZoneAbbr = site.getTimezone();
+		returnSite.setPublicName(site.getPublicName());
 		for (Map.Entry<String, String> entry : site.getSitenames().entrySet())
 		{
-			returnSite.setPublicName(entry.getValue());
-			SiteName sn = new SiteName(returnSite, entry.getKey());
+			Site newSite = new Site();
+			newSite.setLocationType(entry.getKey());
+			newSite.setPublicName(entry.getValue());
+			SiteName sn = new SiteName(newSite, entry.getKey());
+			sn.setNameValue(entry.getValue());
 			returnSite.addName(sn);
 		}
 		return returnSite;
