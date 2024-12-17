@@ -17,6 +17,7 @@ package org.opendcs.odcsapi.res;
 
 import java.io.IOException;
 import java.net.ConnectException;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -37,13 +38,17 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import decodes.db.DatabaseException;
 import decodes.sql.DbKey;
+import decodes.sql.KeyGenerator;
 import decodes.tsdb.CompAppInfo;
 import decodes.tsdb.ConstraintException;
 import decodes.tsdb.DbIoException;
 import decodes.tsdb.LockBusyException;
 import decodes.tsdb.NoSuchObjectException;
+import decodes.tsdb.TimeSeriesDb;
 import decodes.tsdb.TsdbCompLock;
+import ilex.cmdline.StdAppSettings;
 import opendcs.dai.LoadingAppDAI;
 import org.opendcs.odcsapi.appmon.ApiEventClient;
 import org.opendcs.odcsapi.beans.ApiAppEvent;
@@ -170,8 +175,13 @@ public class AppResources extends OpenDcsResource
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({AuthorizationCheck.ODCS_API_ADMIN, AuthorizationCheck.ODCS_API_USER})
 	public Response deleteApp(@QueryParam("appid") Long appId)
-		throws DbException
+		throws DbException, WebAppException
 	{
+		if (appId == null)
+		{
+			throw new WebAppException(ErrorCodes.MISSING_ID, "Missing required appid parameter.");
+		}
+
 		try (LoadingAppDAI dai = getLegacyDatabase().makeLoadingAppDAO())
 		{
 			CompAppInfo app = dai.getComputationApp(DbKey.createDbKey(appId));
@@ -339,10 +349,16 @@ public class AppResources extends OpenDcsResource
 						ApiLoadingApp loadingApp1 = (ApiLoadingApp)obj;
 					};
 
-			// Obtain a lock on the app with a random number and localhost
-			// TODO: Find a more reliable way to generate the PID and hostname, collisions are possible with this method.
+			// NOTE: Currently uses available primary key generator to obtain a PID value.
+			// A better solution should be found.
+			TimeSeriesDb tsdb = getLegacyTimeseriesDB();
+			KeyGenerator keyGen = tsdb.getKeyGenerator();
+			DbKey key = keyGen.getKey("HDB_LOADING_APPLICATION", tsdb.getConnection());
+			StdAppSettings settings = new StdAppSettings();
+
+			// Obtain a lock on the app with a processId chosen from the DB and standard hostname
 			dai.obtainCompProcLock(dai.getComputationApp(DbKey.createDbKey(loadingApp.getAppId())),
-					Double.valueOf(Math.random()).intValue(), "localhost");
+					(int) key.getValue(), settings.getHostName());
 
 			ProcWaiterThread.runBackground(ApiEnvExpander.expand(startCmd), "App:" + loadingApp.getAppName(), 
 				pwcb, loadingApp);
@@ -350,7 +366,8 @@ public class AppResources extends OpenDcsResource
 			return Response.status(HttpServletResponse.SC_OK)
 					.entity("App with ID " + appId + " (" + loadingApp.getAppName() + ") started.").build();
 		}
-		catch (DbIoException | NoSuchObjectException | IOException | LockBusyException ex)
+		catch (DbIoException | NoSuchObjectException | IOException
+			   | LockBusyException | SQLException | DatabaseException ex)
 		{
 			throw new WebAppException(ErrorCodes.DATABASE_ERROR,
 					String.format("Error attempting to start appId=%s", appId), ex);
