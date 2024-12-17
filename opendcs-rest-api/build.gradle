@@ -165,6 +165,7 @@ tasks.register('integrationTest', Test) {
     jvmArgs += "-Djava.util.logging.config.file=$projectDir/test/resources/logging.properties"
     jvmArgs += "-Dorg.apache.tomcat.util.digester.PROPERTY_SOURCE=org.apache.tomcat.util.digester.EnvironmentPropertySource"
     jvmArgs += "-Dcatalina.base=${layout.buildDirectory.file("tomcat")}"
+    jvmArgs += "-Dopendcs.test.integration.CWMS-Oracle.disabled=true"
     systemProperties += project.properties.findAll { k, v -> k.startsWith("opendcs") }
     systemProperties += project.properties.findAll { k, v -> k.startsWith("postgresdb") }
     def outputDir = downloadAndUnzipInstaller.outputs.files.singleFile
