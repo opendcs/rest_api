@@ -3,10 +3,11 @@ on:
   push:
     branches:
       - main
+      - feature/task_cwms_support
   pull_request:
     branches:
       - main
-      -
+      - feature/task_cwms_support
 permissions:
   contents: write
 jobs:
@@ -34,36 +35,17 @@ jobs:
           dependency-graph: generate-and-submit
       - name: Build
         run: ./gradlew build
-#Disabling integration tests for now. Should work more reliably
-#after getting testcontainer support going with the opendcs test fixtures
-#      - name: Install Docker Compose
-#        run: |
-#           sudo apt-get update
-#           sudo apt-get install -y docker-compose
-#      - name: Verify Docker Compose installation
-#        run: docker-compose --version
-#      - name: Validate docker-compose.yaml
-#        run: docker-compose -f opendcs-rest-api-jetty/docker-compose.yml config
-#      - name: Integration Tests
-#        run: ./gradlew integrationTest --stacktrace --info
+      - name: Integration Tests
+        run: ./gradlew integrationTest --stacktrace --info
       - name: Analyze
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: ./gradlew sonar
-      - name: Bundle tarballs
-        run: ./gradlew bundle
       - name: Upload WAR files
         uses: actions/upload-artifact@v4.4.3
         with:
           name: warfile
           path: ./**/build/libs/*.war
-          retention-days: 1
-          if-no-files-found: error
-      - name: Upload Tarballs
-        uses: actions/upload-artifact@v4.4.3
-        with:
-          name: opendcs-rest-api-artifacts
-          path: ./**/build/distributions/*.tar.gz
           retention-days: 1
           if-no-files-found: error
