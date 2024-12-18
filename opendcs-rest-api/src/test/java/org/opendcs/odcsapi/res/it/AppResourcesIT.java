@@ -11,7 +11,6 @@ import io.restassured.filter.log.LogDetail;
 import io.restassured.filter.session.SessionFilter;
 import io.restassured.response.ExtractableResponse;
 import io.restassured.response.Response;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -20,14 +19,13 @@ import org.junit.jupiter.api.TestTemplate;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.opendcs.odcsapi.beans.ApiLoadingApp;
 import org.opendcs.odcsapi.fixtures.DatabaseContextProvider;
-import org.opendcs.odcsapi.fixtures.ResourcesTestBase;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.is;
 
 @Tag("integration")
 @ExtendWith(DatabaseContextProvider.class)
-final class AppResourcesIT extends ResourcesTestBase
+final class AppResourcesIT extends BaseIT
 {
 	private static Long appid;
 	private static SessionFilter sessionFilter;
@@ -48,21 +46,7 @@ final class AppResourcesIT extends ResourcesTestBase
 		appid = null;
 		sessionFilter = new SessionFilter();
 
-		given()
-			.log().ifValidationFails(LogDetail.ALL, true)
-			.accept(MediaType.APPLICATION_JSON)
-			.contentType(MediaType.APPLICATION_JSON)
-			.header("Authorization", authHeader)
-			.filter(sessionFilter)
-		.when()
-			.redirects().follow(true)
-			.redirects().max(3)
-			.post("credentials")
-		.then()
-			.log().ifValidationFails(LogDetail.ALL, true)
-		.assertThat()
-			.statusCode(is(HttpServletResponse.SC_OK))
-		;
+		authenticate(sessionFilter);
 
 		ApiLoadingApp app = new ApiLoadingApp();
 		app.setAppType("Computation");
@@ -74,7 +58,7 @@ final class AppResourcesIT extends ResourcesTestBase
 
 		String appJson = objectMapper.writeValueAsString(app);
 
-		given()
+		ExtractableResponse<Response> response = given()
 			.log().ifValidationFails(LogDetail.ALL, true)
 			.accept(MediaType.APPLICATION_JSON)
 			.contentType(MediaType.APPLICATION_JSON)
@@ -89,9 +73,10 @@ final class AppResourcesIT extends ResourcesTestBase
 			.log().ifValidationFails(LogDetail.ALL, true)
 		.assertThat()
 			.statusCode(is(HttpServletResponse.SC_OK))
+			.extract()
 		;
 
-		appid = getAppId(app.getAppName());
+		appid = response.body().jsonPath().getLong("appId");
 	}
 
 	@AfterEach
@@ -112,26 +97,8 @@ final class AppResourcesIT extends ResourcesTestBase
 		.assertThat()
 			.statusCode(is(HttpServletResponse.SC_OK))
 		;
-	}
 
-	@AfterAll
-	static void tearDownAll()
-	{
-		given()
-			.log().ifValidationFails(LogDetail.ALL, true)
-			.accept(MediaType.APPLICATION_JSON)
-			.contentType(MediaType.APPLICATION_JSON)
-			.header("Authorization", authHeader)
-			.filter(sessionFilter)
-		.when()
-			.redirects().follow(true)
-			.redirects().max(3)
-			.delete("logout")
-		.then()
-			.log().ifValidationFails(LogDetail.ALL, true)
-		.assertThat()
-			.statusCode(is(HttpServletResponse.SC_NO_CONTENT))
-		;
+		logout(sessionFilter);
 	}
 
 	@TestTemplate
@@ -185,7 +152,7 @@ final class AppResourcesIT extends ResourcesTestBase
 
 		String appJson = objectMapper.writeValueAsString(app);
 
-		given()
+		ExtractableResponse<Response> response = given()
 			.log().ifValidationFails(LogDetail.ALL, true)
 			.accept(MediaType.APPLICATION_JSON)
 			.contentType(MediaType.APPLICATION_JSON)
@@ -200,9 +167,10 @@ final class AppResourcesIT extends ResourcesTestBase
 			.log().ifValidationFails(LogDetail.ALL, true)
 		.assertThat()
 			.statusCode(is(HttpServletResponse.SC_OK))
+			.extract()
 		;
 
-		Long appId = getAppId(app.getAppName());
+		Long appId = response.body().jsonPath().getLong("appId");
 
 		given()
 			.log().ifValidationFails(LogDetail.ALL, true)
@@ -234,7 +202,7 @@ final class AppResourcesIT extends ResourcesTestBase
 
 		String appJson = objectMapper.writeValueAsString(app);
 
-		given()
+		ExtractableResponse<Response> response = given()
 			.log().ifValidationFails(LogDetail.ALL, true)
 			.accept(MediaType.APPLICATION_JSON)
 			.contentType(MediaType.APPLICATION_JSON)
@@ -249,9 +217,10 @@ final class AppResourcesIT extends ResourcesTestBase
 			.log().ifValidationFails(LogDetail.ALL, true)
 		.assertThat()
 			.statusCode(is(HttpServletResponse.SC_OK))
+			.extract()
 		;
 
-		Long appId = getAppId(app.getAppName());
+		Long appId = response.body().jsonPath().getLong("appId");
 
 		given()
 			.log().ifValidationFails(LogDetail.ALL, true)
@@ -301,7 +270,7 @@ final class AppResourcesIT extends ResourcesTestBase
 
 		String appJson = objectMapper.writeValueAsString(app);
 
-		given()
+		ExtractableResponse<Response> response = given()
 			.log().ifValidationFails(LogDetail.ALL, true)
 			.accept(MediaType.APPLICATION_JSON)
 			.header("Authorization", authHeader)
@@ -316,9 +285,10 @@ final class AppResourcesIT extends ResourcesTestBase
 			.log().ifValidationFails(LogDetail.ALL, true)
 		.assertThat()
 			.statusCode(is(HttpServletResponse.SC_OK))
+			.extract()
 		;
 
-		Long appId = getAppId(app.getAppName());
+		Long appId = response.body().jsonPath().getLong("appId");
 
 		given()
 			.log().ifValidationFails(LogDetail.ALL, true)
@@ -462,35 +432,4 @@ final class AppResourcesIT extends ResourcesTestBase
 			.statusCode(is(HttpServletResponse.SC_OK))
 		;
 	}
-
-	private Long getAppId(String appName)
-	{
-		ExtractableResponse<Response> response = given()
-			.log().ifValidationFails(LogDetail.ALL, true)
-			.accept(MediaType.APPLICATION_JSON)
-			.contentType(MediaType.APPLICATION_JSON)
-			.header("Authorization", authHeader)
-			.filter(sessionFilter)
-		.when()
-			.redirects().follow(true)
-			.redirects().max(3)
-			.get("apprefs")
-		.then()
-			.log().ifValidationFails(LogDetail.ALL, true)
-		.assertThat()
-			.statusCode(is(HttpServletResponse.SC_OK))
-			.extract()
-		;
-
-		for (int i = 0; i < response.body().jsonPath().getList("").size(); i++)
-		{
-
-			if ((response.body().jsonPath().getString("[" + i + "].appName")).equalsIgnoreCase(appName))
-			{
-				return response.body().jsonPath().getLong("[" + i + "].appId");
-			}
-		}
-		return null;
-	}
-
 }
