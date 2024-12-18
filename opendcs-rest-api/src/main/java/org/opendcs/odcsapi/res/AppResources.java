@@ -73,6 +73,7 @@ public final class AppResources extends OpenDcsResource
 {
 	@Context private HttpServletRequest request;
 	@Context private HttpHeaders httpHeaders;
+	private static final String NO_APP_FOUND = "No such app with ID: %s";
 
 	@GET
 	@Path("apprefs")
@@ -80,7 +81,6 @@ public final class AppResources extends OpenDcsResource
 	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
 	public Response getAppRefs() throws DbException
 	{
-
 		try (LoadingAppDAI dai = getLegacyDatabase().makeLoadingAppDAO())
 		{
 			List<ApiAppRef> ret = dai.listComputationApps(false)
@@ -127,7 +127,7 @@ public final class AppResources extends OpenDcsResource
 		catch (NoSuchObjectException e)
 		{
 			return Response.status(HttpServletResponse.SC_NOT_FOUND)
-					.entity("No such app found with ID " + appId).build();
+					.entity(String.format(NO_APP_FOUND, appId)).build();
 		}
 		catch (DbIoException ex)
 		{
@@ -145,9 +145,10 @@ public final class AppResources extends OpenDcsResource
 	{
 		try (LoadingAppDAI dai = getLegacyDatabase().makeLoadingAppDAO())
 		{
-			dai.writeComputationApp(map(app));
+			CompAppInfo compApp = map(app);
+			dai.writeComputationApp(compApp);
 			return Response.status(HttpServletResponse.SC_OK)
-					.entity(String.format("Wrote app to database with ID: %s", app.getAppId()))
+					.entity(map(compApp))
 					.build();
 		}
 		catch(DbIoException ex)
@@ -198,7 +199,7 @@ public final class AppResources extends OpenDcsResource
 			CompAppInfo app = dai.getComputationApp(DbKey.createDbKey(appId));
 			if (app == null)
 			{
-				throw new DbException(String.format("No such app with ID: %s", appId));
+				throw new DbException(String.format(NO_APP_FOUND, appId));
 			}
 			dai.deleteComputationApp(app);
 			return Response.status(HttpServletResponse.SC_OK)
@@ -207,11 +208,11 @@ public final class AppResources extends OpenDcsResource
 		catch (NoSuchObjectException e)
 		{
 			return Response.status(HttpServletResponse.SC_NOT_FOUND)
-					.entity("No such app found with ID " + appId).build();
+					.entity(String.format(NO_APP_FOUND, appId)).build();
 		}
 		catch (DbIoException | ConstraintException ex)
 		{
-			throw new DbException(String.format("No such app with ID: %s", appId), ex);
+			throw new DbException(String.format(NO_APP_FOUND, appId), ex);
 		}
 	}
 
