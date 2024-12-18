@@ -19,6 +19,7 @@ import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
+import java.util.Base64;
 import javax.servlet.http.HttpServletResponse;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -36,6 +37,8 @@ import static org.hamcrest.Matchers.is;
 
 class BaseIT
 {
+	protected static String authHeader = null;
+
 	<T> T getDtoFromResource(String filename, Class<T> dtoType) throws Exception
 	{
 		try(InputStream inputStream = getClass().getClassLoader()
@@ -120,5 +123,36 @@ class BaseIT
 				.statusCode(is(HttpServletResponse.SC_OK))
 			;
 		}
+	}
+
+	void logout(SessionFilter sessionFilter)
+	{
+		if (DatabaseSetupExtension.getCurrentDbType() == DbType.OPEN_TSDB)
+		{
+			given()
+				.log().ifValidationFails(LogDetail.ALL, true)
+				.filter(sessionFilter)
+				.header("Authorization", authHeader)
+			.when()
+				.redirects().follow(true)
+				.redirects().max(3)
+				.delete("logout")
+			.then()
+				.log().ifValidationFails(LogDetail.ALL, true)
+			.assertThat()
+				.statusCode(is(HttpServletResponse.SC_NO_CONTENT))
+			;
+		}
+	}
+
+	public static void setUpCreds()
+	{
+		String authHeaderPrefix = "Basic ";
+		Credentials adminCreds = new Credentials();
+		adminCreds.setPassword(System.getProperty("DB_PASSWORD"));
+		adminCreds.setUsername(System.getProperty("DB_USERNAME"));
+		String credentialsJson = Base64.getEncoder()
+				.encodeToString(String.format("%s:%s", adminCreds.getUsername(), adminCreds.getPassword()).getBytes());
+		authHeader = authHeaderPrefix + credentialsJson;
 	}
 }
