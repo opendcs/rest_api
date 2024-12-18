@@ -28,7 +28,6 @@ final class ConfigResourcesTest
 	@Test
 	void testPlatformConfigListMap() throws Exception
 	{
-
 		PlatformConfigList pcl = new PlatformConfigList();
 		PlatformConfig config = new PlatformConfig();
 		config.numPlatformsUsing = 11;

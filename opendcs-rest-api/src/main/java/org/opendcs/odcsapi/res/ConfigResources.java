@@ -85,7 +85,14 @@ public class ConfigResources extends OpenDcsResource
 		for (PlatformConfig config : configList.values())
 		{
 			ApiConfigRef configRef = new ApiConfigRef();
-			configRef.setConfigId(config.getId().getValue());
+			if (config.getId() != null)
+			{
+				configRef.setConfigId(config.getId().getValue());
+			}
+			else
+			{
+				configRef.setConfigId(DbKey.NullKey.getValue());
+			}
 			configRef.setName(config.getName());
 			configRef.setNumPlatforms(config.numPlatformsUsing);
 			configRef.setDescription(config.description);
@@ -101,8 +108,10 @@ public class ConfigResources extends OpenDcsResource
 	public Response getConfig(@QueryParam("configid") Long configId) throws WebAppException, DbException
 	{
 		if (configId == null)
-			throw new WebAppException(ErrorCodes.MISSING_ID, 
-				"Missing required configid parameter.");
+		{
+			throw new WebAppException(ErrorCodes.MISSING_ID,
+					"Missing required configid parameter.");
+		}
 		
 		try
 		{
@@ -121,7 +130,14 @@ public class ConfigResources extends OpenDcsResource
 	static ApiPlatformConfig map(PlatformConfig config)
 	{
 		ApiPlatformConfig apiConfig = new ApiPlatformConfig();
-		apiConfig.setConfigId(config.getId().getValue());
+		if (config.getId() != null)
+		{
+			apiConfig.setConfigId(config.getId().getValue());
+		}
+		else
+		{
+			apiConfig.setConfigId(DbKey.NullKey.getValue());
+		}
 		apiConfig.setName(config.getName());
 		apiConfig.setNumPlatforms(config.numPlatformsUsing);
 		apiConfig.setDescription(config.description);
@@ -138,9 +154,10 @@ public class ConfigResources extends OpenDcsResource
 		try
 		{
 			DatabaseIO dbIo = getLegacyDatabase();
-			dbIo.writeConfig(map(config));
+			PlatformConfig pc = map(config);
+			dbIo.writeConfig(pc);
 			return Response.status(HttpServletResponse.SC_OK)
-					.entity(String.format("Successfully saved platform config with ID: %s", config.getConfigId()))
+					.entity(map(pc))
 					.build();
 		}
 		catch (DatabaseException ex)
@@ -158,6 +175,10 @@ public class ConfigResources extends OpenDcsResource
 			{
 				pc.setId(DbKey.createDbKey(config.getConfigId()));
 			}
+			else
+			{
+				pc.setId(DbKey.NullKey);
+			}
 			pc.description = config.getDescription();
 			pc.numPlatformsUsing = config.getNumPlatforms();
 			pc.decodesScripts = map(config.getScripts());
@@ -172,7 +193,9 @@ public class ConfigResources extends OpenDcsResource
 	static Vector<DecodesScript> map(List<ApiConfigScript> scripts) throws DbException
 	{
 		if (scripts == null)
+		{
 			return new Vector<>();
+		}
 
 		try
 		{
@@ -228,8 +251,14 @@ public class ConfigResources extends OpenDcsResource
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({AuthorizationCheck.ODCS_API_ADMIN, AuthorizationCheck.ODCS_API_USER})
-	public Response deleteConfig(@QueryParam("configid") Long configId) throws DbException
+	public Response deleteConfig(@QueryParam("configid") Long configId) throws DbException, WebAppException
 	{
+		if (configId == null)
+		{
+			throw new WebAppException(HttpServletResponse.SC_BAD_REQUEST,
+					"Missing required configid parameter.");
+		}
+
 		try
 		{
 			DatabaseIO dbIo = getLegacyDatabase();
@@ -240,7 +269,8 @@ public class ConfigResources extends OpenDcsResource
 			if (pc.numPlatformsUsing > 0)
 			{
 				return Response.status(HttpServletResponse.SC_METHOD_NOT_ALLOWED)
-						.entity(" Cannot delete config with ID " + configId + " because it is used by one or more platforms.")
+						.entity(" Cannot delete config with ID "
+								+ configId + " because it is used by one or more platforms.")
 						.build();
 			}
 
@@ -254,6 +284,4 @@ public class ConfigResources extends OpenDcsResource
 			throw new DbException("Error deleting config", ex);
 		}
 	}
-
-
 }
