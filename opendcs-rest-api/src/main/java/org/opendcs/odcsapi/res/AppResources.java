@@ -115,14 +115,21 @@ public class AppResources extends OpenDcsResource
 			throws WebAppException, DbException
 	{
 		if (appId == null)
+		{
 			throw new WebAppException(HttpServletResponse.SC_BAD_REQUEST,
 					"Missing required appid parameter.");
+		}
 		try (LoadingAppDAI dai = getLegacyDatabase().makeLoadingAppDAO())
 		{
 			return Response.status(HttpServletResponse.SC_OK)
 					.entity(map(dai.getComputationApp(DbKey.createDbKey(appId)))).build();
 		}
-		catch(NoSuchObjectException | DbIoException ex)
+		catch (NoSuchObjectException e)
+		{
+			return Response.status(HttpServletResponse.SC_NOT_FOUND)
+					.entity("No such app found with ID " + appId).build();
+		}
+		catch (DbIoException ex)
 		{
 			throw new DbException("No such app with ID " + appId, ex);
 		}
@@ -155,6 +162,10 @@ public class AppResources extends OpenDcsResource
 		if (app.getAppId() != null)
 		{
 			ret.setAppId(DbKey.createDbKey(app.getAppId()));
+		}
+		else
+		{
+			ret.setAppId(DbKey.NullKey);
 		}
 		ret.setAppName(app.getAppName());
 		ret.setComment(app.getComment());
@@ -193,7 +204,12 @@ public class AppResources extends OpenDcsResource
 			return Response.status(HttpServletResponse.SC_OK)
 					.entity("appId with ID " + appId + " deleted").build();
 		}
-		catch (NoSuchObjectException | DbIoException | ConstraintException ex)
+		catch (NoSuchObjectException e)
+		{
+			return Response.status(HttpServletResponse.SC_NOT_FOUND)
+					.entity("No such app found with ID " + appId).build();
+		}
+		catch (DbIoException | ConstraintException ex)
 		{
 			throw new DbException(String.format("No such app with ID: %s", appId), ex);
 		}
@@ -203,7 +219,7 @@ public class AppResources extends OpenDcsResource
 	@Path("appstat")
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({AuthorizationCheck.ODCS_API_ADMIN, AuthorizationCheck.ODCS_API_USER})
-	public Response getAppStat() throws DbException
+	public Response getAppStatus() throws DbException
 	{
 		try (LoadingAppDAI dai = getLegacyDatabase().makeLoadingAppDAO())
 		{
@@ -323,7 +339,10 @@ public class AppResources extends OpenDcsResource
 			throws WebAppException, DbException
 	{
 		if (appId == null)
-			throw new WebAppException(HttpServletResponse.SC_BAD_REQUEST, "appId parameter required for this operation.");
+		{
+			throw new WebAppException(HttpServletResponse.SC_BAD_REQUEST,
+					"appId parameter required for this operation.");
+		}
 
 		try (LoadingAppDAI dai = getLegacyDatabase().makeLoadingAppDAO())
 		{
@@ -374,7 +393,8 @@ public class AppResources extends OpenDcsResource
 		}
 	}
 
-	static ApiLoadingApp mapLoading(CompAppInfo app) {
+	static ApiLoadingApp mapLoading(CompAppInfo app)
+	{
 		ApiLoadingApp ret = new ApiLoadingApp();
 		ret.setAppId(app.getAppId().getValue());
 		ret.setAppName(app.getAppName());
@@ -395,7 +415,10 @@ public class AppResources extends OpenDcsResource
 			throws WebAppException, DbException
 	{
 		if (appId == null)
-			throw new WebAppException(HttpServletResponse.SC_BAD_REQUEST, "appId parameter required for this operation.");
+		{
+			throw new WebAppException(HttpServletResponse.SC_BAD_REQUEST,
+					"appId parameter required for this operation.");
+		}
 
 		try (LoadingAppDAI dai = getLegacyDatabase().makeLoadingAppDAO())
 		{
@@ -405,8 +428,10 @@ public class AppResources extends OpenDcsResource
 			ApiAppStatus appStat = getAppStatus(dai, appId);
 
 			if (appStat == null || appStat.getPid() == null)
+			{
 				throw new WebAppException(HttpServletResponse.SC_NOT_FOUND,
 						"appId " + appId + "(" + loadingApp.getAppName() + ") not currently running.");
+			}
 
 			dai.releaseCompProcLock(new TsdbCompLock(DbKey.createDbKey(appId), appStat.getPid().intValue(),
 					appStat.getHostname(), appStat.getHeartbeat(), appStat.getStatus()));
@@ -414,14 +439,19 @@ public class AppResources extends OpenDcsResource
 			return Response.status(HttpServletResponse.SC_OK)
 					.entity("App with ID " + appId + " (" + loadingApp.getAppName() + ") terminated.").build();
 		}
-		catch (DbIoException | NoSuchObjectException ex)
+		catch (NoSuchObjectException e)
+		{
+			return Response.status(HttpServletResponse.SC_NOT_FOUND)
+					.entity("No such app found with ID " + appId).build();
+		}
+		catch (DbIoException ex)
 		{
 			throw new WebAppException(ErrorCodes.DATABASE_ERROR,
 					String.format("Error attempting to stop appId=%s", appId), ex);
 		}
 	}
 
-	static ApiAppStatus getAppStatus(LoadingAppDAI dai, Long appId) throws  DbException
+	private static ApiAppStatus getAppStatus(LoadingAppDAI dai, Long appId) throws DbException
 	{
 		try
 		{
