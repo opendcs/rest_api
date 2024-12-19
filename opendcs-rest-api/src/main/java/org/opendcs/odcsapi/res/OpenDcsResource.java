@@ -22,7 +22,10 @@ import javax.sql.DataSource;
 import javax.ws.rs.core.Context;
 
 import decodes.cwms.CwmsDatabaseProvider;
+import decodes.db.Database;
 import decodes.db.DatabaseException;
+import decodes.db.DatabaseIO;
+import decodes.tsdb.TimeSeriesDb;
 import decodes.util.DecodesSettings;
 import opendcs.opentsdb.OpenTsdbProvider;
 import org.opendcs.database.DatabaseService;
@@ -83,5 +86,17 @@ class OpenDcsResource
 			}
 //			throw new IllegalStateException("Error connecting to the database via JNDI", e);
 		}
+	}
+
+	DatabaseIO getLegacyDatabase()
+	{
+		return createDb().getLegacyDatabase(Database.class).map(Database::getDbIo)
+				.orElseThrow(() -> new UnsupportedOperationException("Endpoint is unsupported by the OpenDCS REST API."));
+	}
+
+	TimeSeriesDb getLegacyTimeseriesDB()
+	{
+		return createDb().getLegacyDatabase(TimeSeriesDb.class)
+				.orElseThrow(() -> new UnsupportedOperationException("Endpoint is unsupported by the OpenDCS REST API."));
 	}
 }
