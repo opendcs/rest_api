@@ -1,0 +1,10 @@
+
+{
+  "abbr" : "summ",
+  "fromabbr" : null,
+  "name" : "Summer",
+  "start" : "2021-06-01T00:00:00Z",
+  "end" : "2021-09-01T00:00:00Z",
+  "tz" : "UTC",
+  "sortNumber" : 1
+}
