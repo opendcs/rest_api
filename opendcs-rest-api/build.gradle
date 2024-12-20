@@ -229,6 +229,8 @@ task downloadAndUnzipInstaller {
 test {
     useJUnitPlatform {
         excludeTags "integration"
+        excludeTags "integration-opentsdb-only"
+        excludeTags "integration-cwms-only"
     }
 }
 
