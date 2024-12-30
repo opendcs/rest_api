@@ -69,7 +69,7 @@ final class AppResourcesTest
 	}
 
 	@Test
-	void testStatusMap()
+	void testStatusMap() throws Exception
 	{
 		DbKey appId = DbKey.createDbKey(151615L);
 		int pid = 12345;
@@ -79,7 +79,7 @@ final class AppResourcesTest
 		TsdbCompLock compLock = new TsdbCompLock(appId, pid, host, heartbeat, status);
 		compLock.setAppName("Computation Application");
 
-		ApiAppStatus appStatus = map(compLock);
+		ApiAppStatus appStatus = map(null, compLock);
 
 		assertNotNull(appStatus);
 		assertEquals(compLock.getAppId().getValue(), appStatus.getAppId());
@@ -114,5 +114,4 @@ final class AppResourcesTest
 		assertEquals(compAppInfo.getManualEditApp(), app.isManualEditingApp());
 		assertEquals(compAppInfo.getProperties(), app.getProperties());
 	}
-
 }
