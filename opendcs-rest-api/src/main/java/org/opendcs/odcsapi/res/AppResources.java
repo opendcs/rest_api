@@ -17,7 +17,6 @@ package org.opendcs.odcsapi.res;
 
 import java.io.IOException;
 import java.net.ConnectException;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -38,15 +37,12 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import decodes.db.DatabaseException;
 import decodes.sql.DbKey;
-import decodes.sql.KeyGenerator;
 import decodes.tsdb.CompAppInfo;
 import decodes.tsdb.ConstraintException;
 import decodes.tsdb.DbIoException;
 import decodes.tsdb.LockBusyException;
 import decodes.tsdb.NoSuchObjectException;
-import decodes.tsdb.TimeSeriesDb;
 import decodes.tsdb.TsdbCompLock;
 import ilex.cmdline.StdAppSettings;
 import opendcs.dai.LoadingAppDAI;
@@ -369,16 +365,22 @@ public final class AppResources extends OpenDcsResource
 				ApiLoadingApp loadingApp1 = (ApiLoadingApp)obj;
 			};
 
-			// NOTE: Currently uses available primary key generator to obtain a PID value.
-			// A better solution should be found.
-			TimeSeriesDb tsdb = getLegacyTimeseriesDB();
-			KeyGenerator keyGen = tsdb.getKeyGenerator();
-			DbKey key = keyGen.getKey("HDB_LOADING_APPLICATION", tsdb.getConnection());
 			StdAppSettings settings = new StdAppSettings();
+
+			int pid;
+
+			if (appStat == null || appStat.getPid() == null)
+			{
+				pid = appId.intValue();
+			}
+			else
+			{
+				pid = appStat.getPid().intValue();
+			}
 
 			// Obtain a lock on the app with a processId chosen from the DB and standard hostname
 			dai.obtainCompProcLock(dai.getComputationApp(DbKey.createDbKey(loadingApp.getAppId())),
-					(int) key.getValue(), settings.getHostName());
+					pid, settings.getHostName());
 
 			ProcWaiterThread.runBackground(ApiEnvExpander.expand(startCmd), "App:" + loadingApp.getAppName(),
 					pwcb, loadingApp);
@@ -386,8 +388,7 @@ public final class AppResources extends OpenDcsResource
 			return Response.status(HttpServletResponse.SC_OK)
 					.entity("App with ID " + appId + " (" + loadingApp.getAppName() + ") started.").build();
 		}
-		catch (DbIoException | NoSuchObjectException | IOException
-			   | LockBusyException | SQLException | DatabaseException ex)
+		catch (DbIoException | NoSuchObjectException | IOException | LockBusyException ex)
 		{
 			throw new WebAppException(ErrorCodes.DATABASE_ERROR,
 					String.format("Error attempting to start appId=%s", appId), ex);
