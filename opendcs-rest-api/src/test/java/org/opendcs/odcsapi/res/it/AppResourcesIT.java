@@ -43,7 +43,6 @@ final class AppResourcesIT extends BaseIT
 	void setUp() throws Exception
 	{
 		setUpCreds();
-		appid = null;
 		sessionFilter = new SessionFilter();
 
 		authenticate(sessionFilter);
