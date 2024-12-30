@@ -118,7 +118,7 @@ public class AppResources extends OpenDcsResource
 		try (LoadingAppDAI dai = getLegacyDatabase().makeLoadingAppDAO())
 		{
 			return Response.status(HttpServletResponse.SC_OK)
-					.entity(map(dai.getComputationApp(DbKey.createDbKey(appId)))).build();
+					.entity(mapLoading(dai.getComputationApp(DbKey.createDbKey(appId)))).build();
 		}
 		catch (NoSuchObjectException e)
 		{
@@ -218,13 +218,15 @@ public class AppResources extends OpenDcsResource
 	@RolesAllowed({AuthorizationCheck.ODCS_API_ADMIN, AuthorizationCheck.ODCS_API_USER})
 	public Response getAppStatus() throws DbException
 	{
+		List<ApiAppStatus> ret = new ArrayList<>();
 		try (LoadingAppDAI dai = getLegacyDatabase().makeLoadingAppDAO())
 		{
+			for (TsdbCompLock lock : dai.getAllCompProcLocks())
+			{
+				ret.add(map(dai, lock));
+			}
 			return Response.status(HttpServletResponse.SC_OK)
-					.entity(dai.getAllCompProcLocks()
-							.stream()
-							.map(AppResources::map)
-							.collect(Collectors.toList())).build();
+					.entity(ret).build();
 		}
 		catch (DbIoException ex)
 		{
@@ -232,7 +234,7 @@ public class AppResources extends OpenDcsResource
 		}
 	}
 
-	static ApiAppStatus map(TsdbCompLock lock)
+	static ApiAppStatus map(LoadingAppDAI dai, TsdbCompLock lock) throws DbIoException
 	{
 		ApiAppStatus ret = new ApiAppStatus();
 		ret.setAppId(lock.getAppId().getValue());
@@ -241,6 +243,22 @@ public class AppResources extends OpenDcsResource
 		ret.setPid((long) lock.getPID());
 		ret.setHeartbeat(lock.getHeartbeat());
 		ret.setStatus(lock.getStatus());
+		if (dai != null)
+		{
+			try {
+				ApiLoadingApp app = mapLoading(dai.getComputationApp(lock.getAppId()));
+				if (app.getProperties() == null || app.getProperties().getProperty("EventPort") == null)
+				{
+					throw new DbIoException("EventPort property not found");
+				}
+				ret.setEventPort(Integer.parseInt(app.getProperties().getProperty("EventPort")));
+				ret.setAppType(app.getAppType());
+			}
+			catch (DbIoException | NoSuchObjectException | NumberFormatException ex)
+			{
+				throw new DbIoException("Error mapping app status", ex);
+			}
+		}
 		return ret;
 	}
 
@@ -462,7 +480,7 @@ public class AppResources extends OpenDcsResource
 			{
 				if(lock.getAppId().getValue() == appId)
 				{
-					return map(lock);
+					return map(dai, lock);
 				}
 			}
 			List<ApiAppRef> apps = dai.listComputationApps(false)
