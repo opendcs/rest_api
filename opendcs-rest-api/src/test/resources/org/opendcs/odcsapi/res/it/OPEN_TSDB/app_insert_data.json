@@ -1,0 +1,12 @@
+{
+  "appId" : 9965,
+  "appName" : "River Flow Calculation",
+  "appType" : "computationprocess",
+  "comment" : "Computation to calculate the flow of a river",
+  "lastModified" : 1612137600000,
+  "manualEditingApp" : false,
+  "properties" : {
+    "startCmd" : "$DCSTOOL_HOME\\bin\\compproc.bat",
+    "EventPort" : 12345
+  }
+}

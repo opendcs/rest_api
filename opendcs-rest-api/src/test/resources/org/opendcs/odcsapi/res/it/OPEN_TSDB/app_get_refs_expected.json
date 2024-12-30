@@ -1,0 +1,65 @@
+[
+  {
+    "appId": 1,
+    "appName": "AlbertaScada",
+    "appType": "albertascada",
+    "comment": "Retrieves data from Lethbridge SCADA database",
+    "lastModified": "null"
+  },
+  {
+    "appId": "2",
+    "appName": "compdepends",
+    "appType": "compdepends",
+    "comment": "Daemon to determine computation dependencies",
+    "lastModified": "null"
+  },
+  {
+    "appId": "3",
+    "appName": "CompEdit",
+    "appType": "gui",
+    "comment": "GUI Computation Editor",
+    "lastModified": "null"
+  },
+  {
+    "appId": "4",
+    "appName": "compproc",
+    "appType": "computationprocess",
+    "comment": "Executes Computations in the Background",
+    "lastModified": "null"
+  },
+  {
+    "appId": "5",
+    "appName": "decodes",
+    "appType": "routingspec",
+    "comment": "Manual DECODES Routing Specs",
+    "lastModified": "null"
+  },
+  {
+    "appId": "6",
+    "appName": "RoutingScheduler",
+    "appType": "routingscheduler",
+    "comment": "Schedules and Executes DECODES Routing Specs",
+    "lastModified": "null"
+  },
+  {
+    "appId": "7",
+    "appName": "utility",
+    "appType": "utility",
+    "comment": "Utility Program -- used by several apps",
+    "lastModified": "null"
+  },
+  {
+    "appId": "11",
+    "appName": "Hostname Generator",
+    "appType": "Utility",
+    "comment": "Generates a pseudo-random hostname",
+    "lastModified": "null"
+  },
+  {
+    "appId": "12",
+    "appName": "River Flow Calculation",
+    "appType": "Computation",
+    "comment": "Computation to calculate the flow of a river",
+    "lastModified": "null"
+  }
+]
