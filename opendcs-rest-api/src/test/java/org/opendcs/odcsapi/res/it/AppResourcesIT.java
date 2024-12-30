@@ -1,27 +1,27 @@
 package org.opendcs.odcsapi.res.it;
 
-import java.sql.Date;
-import java.time.Instant;
-import java.util.Properties;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.MediaType;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.restassured.filter.log.LogDetail;
 import io.restassured.filter.session.SessionFilter;
+import io.restassured.path.json.JsonPath;
 import io.restassured.response.ExtractableResponse;
 import io.restassured.response.Response;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.TestTemplate;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.opendcs.odcsapi.beans.ApiLoadingApp;
 import org.opendcs.odcsapi.fixtures.DatabaseContextProvider;
 
 import static io.restassured.RestAssured.given;
+import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Tag("integration")
 @ExtendWith(DatabaseContextProvider.class)
@@ -29,33 +29,15 @@ final class AppResourcesIT extends BaseIT
 {
 	private static Long appid;
 	private static SessionFilter sessionFilter;
-	private static Properties properties;
-	private static final ObjectMapper objectMapper = new ObjectMapper();
-
-	@BeforeAll
-	static void setUpAll()
-	{
-		properties = new Properties();
-		properties.setProperty("startCmd", "$DCSTOOL_HOME\\bin\\compproc.bat");
-	}
 
 	@BeforeEach
 	void setUp() throws Exception
 	{
 		setUpCreds();
 		sessionFilter = new SessionFilter();
-
 		authenticate(sessionFilter);
 
-		ApiLoadingApp app = new ApiLoadingApp();
-		app.setAppType("Computation");
-		app.setAppName("River Flow Calculation");
-		app.setAppId(9965L);
-		app.setProperties(properties);
-		app.setLastModified(Date.from(Instant.parse("2021-02-01T00:00:00Z")));
-		app.setComment("Computation to calculate the flow of a river");
-
-		String appJson = objectMapper.writeValueAsString(app);
+		String appJson = getJsonFromResource("app_insert_data.json");
 
 		ExtractableResponse<Response> response = given()
 			.log().ifValidationFails(LogDetail.ALL, true)
@@ -101,9 +83,11 @@ final class AppResourcesIT extends BaseIT
 	}
 
 	@TestTemplate
-	void testGetAppRefsRoundTrip()
+	void testGetAppRefs()
 	{
-		given()
+		JsonPath expected = getJsonPathFromResource("app_get_refs_expected.json");
+
+		ExtractableResponse<Response> response = given()
 			.log().ifValidationFails(LogDetail.ALL, true)
 			.accept(MediaType.APPLICATION_JSON)
 			.header("Authorization", authHeader)
@@ -116,12 +100,35 @@ final class AppResourcesIT extends BaseIT
 			.log().ifValidationFails(LogDetail.ALL, true)
 		.assertThat()
 			.statusCode(is(HttpServletResponse.SC_OK))
+			.extract()
 		;
+
+		JsonPath actual = response.body().jsonPath();
+
+		boolean found = false;
+		for (int i = 0; i < actual.getList("").size(); i++)
+		{
+			String actualAppName = actual.get("[" + i + "].appName");
+			String expectedAppName = expected.get("[" + i + "].appName");
+			if (actualAppName.equalsIgnoreCase(expectedAppName))
+			{
+				assertEquals(actualAppName, expectedAppName);
+				assertEquals(actual.get("[" + i + "].appType").toString(),
+						expected.get("[" + i + "].appType").toString());
+				assertEquals(actual.get("[" + i + "].comment").toString(),
+						expected.get("[" + i + "].comment").toString());
+				found = true;
+				break;
+			}
+		}
+		assertTrue(found);
 	}
 
 	@TestTemplate
-	void testGetAppRoundTrip()
+	void testGetApp()
 	{
+		JsonPath expected = getJsonPathFromResource("app_get_expected.json");
+
 		given()
 			.log().ifValidationFails(LogDetail.ALL, true)
 			.accept(MediaType.APPLICATION_JSON)
@@ -136,21 +143,19 @@ final class AppResourcesIT extends BaseIT
 			.log().ifValidationFails(LogDetail.ALL, true)
 		.assertThat()
 			.statusCode(is(HttpServletResponse.SC_OK))
-			.body("appName", is("River Flow Calculation"))
+			.body("appName", equalTo(expected.get("appName")))
+			.body("appType", equalTo(expected.get("appType")))
+			.body("comment", equalTo(expected.get("comment")))
+			.body("lastModified", notNullValue())
 		;
 	}
 
 	@TestTemplate
-	void testPostAppRoundTrip() throws Exception
+	void testPostAndDeleteApp() throws Exception
 	{
-		ApiLoadingApp app = new ApiLoadingApp();
-		app.setAppType("Utility");
-		app.setAppName("Hostname Generator");
-		app.setLastModified(Date.from(Instant.parse("2021-01-01T00:00:00Z")));
-		app.setComment("Generates a pseudo-random hostname");
+		String appJson = getJsonFromResource("app_post_delete_insert_data.json");
 
-		String appJson = objectMapper.writeValueAsString(app);
-
+		// Store app
 		ExtractableResponse<Response> response = given()
 			.log().ifValidationFails(LogDetail.ALL, true)
 			.accept(MediaType.APPLICATION_JSON)
@@ -166,11 +171,37 @@ final class AppResourcesIT extends BaseIT
 			.log().ifValidationFails(LogDetail.ALL, true)
 		.assertThat()
 			.statusCode(is(HttpServletResponse.SC_OK))
-			.extract()
-		;
+			.extract();
 
+		// Get app ID from response
 		Long appId = response.body().jsonPath().getLong("appId");
 
+		JsonPath expected = getJsonPathFromResource("app_post_delete_expected.json");
+
+		// Retrieve the app
+		given()
+			.log().ifValidationFails(LogDetail.ALL, true)
+			.accept(MediaType.APPLICATION_JSON)
+			.header("Authorization", authHeader)
+			.queryParam("appid", appId)
+			.filter(sessionFilter)
+		.when()
+			.redirects().follow(true)
+			.redirects().max(3)
+			.get("app")
+		.then()
+			.log().ifValidationFails(LogDetail.ALL, true)
+		.assertThat()
+			.statusCode(is(HttpServletResponse.SC_OK))
+			.body("appName", equalTo(expected.get("appName")))
+			.body("appType", equalTo(expected.get("appType")))
+			.body("comment", equalTo(expected.get("comment")))
+			.body("lastModified", notNullValue())
+			.body("manualEditingApp", equalTo(expected.get("manualEditingApp")))
+			.body("properties.startCmd", equalTo(expected.get("properties.startCmd")))
+		;
+
+		// Delete app
 		given()
 			.log().ifValidationFails(LogDetail.ALL, true)
 			.accept(MediaType.APPLICATION_JSON)
@@ -187,60 +218,99 @@ final class AppResourcesIT extends BaseIT
 		.assertThat()
 			.statusCode(is(HttpServletResponse.SC_OK))
 		;
+
+		// Assert that the app was deleted
+		given()
+			.log().ifValidationFails(LogDetail.ALL, true)
+			.accept(MediaType.APPLICATION_JSON)
+			.header("Authorization", authHeader)
+			.queryParam("appid", appId)
+			.filter(sessionFilter)
+		.when()
+			.redirects().follow(true)
+			.redirects().max(3)
+			.get("app")
+		.then()
+			.log().ifValidationFails(LogDetail.ALL, true)
+		.assertThat()
+			.statusCode(is(HttpServletResponse.SC_NOT_FOUND))
+		;
 	}
 
 	@TestTemplate
-	void testDeleteAppRoundTrip() throws Exception
+	void testGetAppStatus()
 	{
-		ApiLoadingApp app = new ApiLoadingApp();
-		app.setAppType("Loading");
-		app.setAppName("Application Wrapper");
-		app.setProperties(properties);
-		app.setLastModified(Date.from(Instant.parse("2021-01-01T00:00:00Z")));
-		app.setComment("Wraps a custom application in a usable interface");
-
-		String appJson = objectMapper.writeValueAsString(app);
-
-		ExtractableResponse<Response> response = given()
+		// Post app start
+		given()
 			.log().ifValidationFails(LogDetail.ALL, true)
 			.accept(MediaType.APPLICATION_JSON)
 			.contentType(MediaType.APPLICATION_JSON)
 			.header("Authorization", authHeader)
-			.body(appJson)
 			.filter(sessionFilter)
+			.queryParam("appid", appid)
 		.when()
 			.redirects().follow(true)
 			.redirects().max(3)
-			.post("app")
+			.post("appstart")
 		.then()
 			.log().ifValidationFails(LogDetail.ALL, true)
 		.assertThat()
 			.statusCode(is(HttpServletResponse.SC_OK))
-			.extract()
 		;
 
-		Long appId = response.body().jsonPath().getLong("appId");
+		JsonPath expected = getJsonPathFromResource("app_stat_expected.json");
 
-		given()
+		// Get app status, assert that it matches the expected JSON
+		ExtractableResponse<Response> response = given()
 			.log().ifValidationFails(LogDetail.ALL, true)
 			.accept(MediaType.APPLICATION_JSON)
-			.queryParam("appid", appId)
 			.header("Authorization", authHeader)
 			.filter(sessionFilter)
 		.when()
 			.redirects().follow(true)
 			.redirects().max(3)
-			.delete("app")
+			.get("appstat")
+		.then()
+			.log().ifValidationFails(LogDetail.ALL, true)
+		.assertThat()
+			.statusCode(is(HttpServletResponse.SC_OK))
+			.body("", notNullValue())
+			.body("appId", notNullValue())
+			.body("pid", notNullValue())
+			.body("heartbeat", notNullValue())
+			.extract()
+		;
+
+		// Extract response and app ID, assert that the app matches the expected JSON
+		JsonPath actual = response.body().jsonPath();
+		assertNotNull(actual.getList("appId"));
+		int appID = Integer.parseInt(actual.getList("appId").get(0).toString());
+		assertEquals(appid.intValue(), appID);
+		assertEquals(expected.get("hostname"), actual.getList("hostname").get(0));
+		assertEquals(expected.get("eventPort"), actual.getList("eventPort").get(0));
+		assertEquals(expected.get("status"), actual.getList("status").get(0));
+		assertEquals(expected.get("appName"), actual.getList("appName").get(0));
+		// App type is not returned by the API
+
+		// Post app stop
+		given()
+			.log().ifValidationFails(LogDetail.ALL, true)
+			.accept(MediaType.APPLICATION_JSON)
+			.contentType(MediaType.APPLICATION_JSON)
+			.header("Authorization", authHeader)
+			.filter(sessionFilter)
+			.queryParam("appid", appID)
+		.when()
+			.redirects().follow(true)
+			.redirects().max(3)
+			.post("appstop")
 		.then()
 			.log().ifValidationFails(LogDetail.ALL, true)
 		.assertThat()
 			.statusCode(is(HttpServletResponse.SC_OK))
 		;
-	}
 
-	@TestTemplate
-	void testGetAppStatRoundTrip()
-	{
+		// assert that the app is stopped
 		given()
 			.log().ifValidationFails(LogDetail.ALL, true)
 			.accept(MediaType.APPLICATION_JSON)
@@ -254,47 +324,20 @@ final class AppResourcesIT extends BaseIT
 			.log().ifValidationFails(LogDetail.ALL, true)
 		.assertThat()
 			.statusCode(is(HttpServletResponse.SC_OK))
+			.body("size()", is(0))
 		;
 	}
 
 	@TestTemplate
-	void testGetAppEventsRoundTrip() throws Exception
+	void testGetAppEvents()
 	{
-		ApiLoadingApp app = new ApiLoadingApp();
-		app.setAppType("Utility");
-		app.setAppName("User Properties GUI");
-		app.setProperties(properties);
-		app.setLastModified(Date.from(Instant.parse("2021-01-01T00:00:00Z")));
-		app.setComment("Opens a GUI to edit user properties");
-
-		String appJson = objectMapper.writeValueAsString(app);
-
-		ExtractableResponse<Response> response = given()
-			.log().ifValidationFails(LogDetail.ALL, true)
-			.accept(MediaType.APPLICATION_JSON)
-			.header("Authorization", authHeader)
-			.contentType(MediaType.APPLICATION_JSON)
-			.body(appJson)
-			.filter(sessionFilter)
-		.when()
-			.redirects().follow(true)
-			.redirects().max(3)
-			.post("app")
-		.then()
-			.log().ifValidationFails(LogDetail.ALL, true)
-		.assertThat()
-			.statusCode(is(HttpServletResponse.SC_OK))
-			.extract()
-		;
-
-		Long appId = response.body().jsonPath().getLong("appId");
-
+		// Start app
 		given()
 			.log().ifValidationFails(LogDetail.ALL, true)
 			.accept(MediaType.APPLICATION_JSON)
 			.header("Authorization", authHeader)
 			.contentType(MediaType.APPLICATION_JSON)
-			.queryParam("appid", appId)
+			.queryParam("appid", appid)
 			.filter(sessionFilter)
 		.when()
 			.redirects().follow(true)
@@ -306,12 +349,13 @@ final class AppResourcesIT extends BaseIT
 			.statusCode(is(HttpServletResponse.SC_OK))
 		;
 
-		given()
+		// Get app events
+		ExtractableResponse<Response> eventResponse = given()
 			.log().ifValidationFails(LogDetail.ALL, true)
 			.accept(MediaType.APPLICATION_JSON)
 			.header("Authorization", authHeader)
 			.filter(sessionFilter)
-			.queryParam("appid", appId)
+			.queryParam("appid", appid)
 		.when()
 			.redirects().follow(true)
 			.redirects().max(3)
@@ -320,83 +364,40 @@ final class AppResourcesIT extends BaseIT
 			.log().ifValidationFails(LogDetail.ALL, true)
 		.assertThat()
 			.statusCode(is(HttpServletResponse.SC_OK))
+			// TODO: The correct event port for compproc is unknown, so the connection is failing
+			.body("", equalTo(getJsonPathFromResource("app_event_expected.json").get()))
+			.extract()
 		;
 
-		given()
-			.log().ifValidationFails(LogDetail.ALL, true)
-			.accept(MediaType.APPLICATION_JSON)
-			.header("Authorization", authHeader)
-			.contentType(MediaType.APPLICATION_JSON)
-			.queryParam("appid", appId)
-			.filter(sessionFilter)
-		.when()
-			.redirects().follow(true)
-			.redirects().max(3)
-			.post("appstop")
-		.then()
-			.log().ifValidationFails(LogDetail.ALL, true)
-		.assertThat()
-			.statusCode(is(HttpServletResponse.SC_OK))
-		;
+		JsonPath expected = getJsonPathFromResource("app_event_expected.json");
+		JsonPath actual = eventResponse.body().jsonPath();
 
-		given()
-			.log().ifValidationFails(LogDetail.ALL, true)
-			.accept(MediaType.APPLICATION_JSON)
-			.header("Authorization", authHeader)
-			.queryParam("appid", appId)
-			.filter(sessionFilter)
-		.when()
-			.redirects().follow(true)
-			.redirects().max(3)
-			.delete("app")
-		.then()
-			.log().ifValidationFails(LogDetail.ALL, true)
-		.assertThat()
-			.statusCode(is(HttpServletResponse.SC_OK))
-		;
+		// TODO: Fix and re-enable these assertions when the correct event port is known and matching can be done
+//		assertEquals(expected.get(""), actual.getList("").get(0));
+//
+//		// Stop app
+//		given()
+//			.log().ifValidationFails(LogDetail.ALL, true)
+//			.accept(MediaType.APPLICATION_JSON)
+//			.header("Authorization", authHeader)
+//			.contentType(MediaType.APPLICATION_JSON)
+//			.queryParam("appid", appid)
+//			.filter(sessionFilter)
+//		.when()
+//			.redirects().follow(true)
+//			.redirects().max(3)
+//			.post("appstop")
+//		.then()
+//			.log().ifValidationFails(LogDetail.ALL, true)
+//		.assertThat()
+//			.statusCode(is(HttpServletResponse.SC_OK))
+//		;
 	}
 
 	@TestTemplate
-	void testPostAppStartRoundTrip()
+	void testPostAppStartStop()
 	{
-		given()
-			.log().ifValidationFails(LogDetail.ALL, true)
-			.accept(MediaType.APPLICATION_JSON)
-			.header("Authorization", authHeader)
-			.contentType(MediaType.APPLICATION_JSON)
-			.filter(sessionFilter)
-			.queryParam("appid", appid)
-		.when()
-			.redirects().follow(true)
-			.redirects().max(3)
-			.post("appstart")
-		.then()
-			.log().ifValidationFails(LogDetail.ALL, true)
-		.assertThat()
-			.statusCode(is(HttpServletResponse.SC_OK))
-		;
-
-		given()
-			.log().ifValidationFails(LogDetail.ALL, true)
-			.accept(MediaType.APPLICATION_JSON)
-			.header("Authorization", authHeader)
-			.contentType(MediaType.APPLICATION_JSON)
-			.filter(sessionFilter)
-			.queryParam("appid", appid)
-		.when()
-			.redirects().follow(true)
-			.redirects().max(3)
-			.post("appstop")
-		.then()
-			.log().ifValidationFails(LogDetail.ALL, true)
-		.assertThat()
-			.statusCode(is(HttpServletResponse.SC_OK))
-		;
-	}
-
-	@TestTemplate
-	void testPostAppStopRoundTrip()
-	{
+		// start app
 		given()
 			.log().ifValidationFails(LogDetail.ALL, true)
 			.accept(MediaType.APPLICATION_JSON)
@@ -414,6 +415,28 @@ final class AppResourcesIT extends BaseIT
 			.statusCode(is(HttpServletResponse.SC_OK))
 		;
 
+		// assert that the app is running
+		ExtractableResponse<Response> response = given()
+			.log().ifValidationFails(LogDetail.ALL, true)
+			.accept(MediaType.APPLICATION_JSON)
+			.header("Authorization", authHeader)
+			.filter(sessionFilter)
+		.when()
+			.redirects().follow(true)
+			.redirects().max(3)
+			.get("appstat")
+		.then()
+			.log().ifValidationFails(LogDetail.ALL, true)
+		.assertThat()
+			.statusCode(is(HttpServletResponse.SC_OK))
+			.body("size()", is(1))
+			.extract()
+		;
+
+		JsonPath actual = response.body().jsonPath();
+		assertEquals("Starting", actual.get("[0].status"));
+
+		// stop app
 		given()
 			.log().ifValidationFails(LogDetail.ALL, true)
 			.accept(MediaType.APPLICATION_JSON)
@@ -429,6 +452,23 @@ final class AppResourcesIT extends BaseIT
 			.log().ifValidationFails(LogDetail.ALL, true)
 		.assertThat()
 			.statusCode(is(HttpServletResponse.SC_OK))
+		;
+
+		// assert that the app is stopped
+		given()
+			.log().ifValidationFails(LogDetail.ALL, true)
+			.accept(MediaType.APPLICATION_JSON)
+			.header("Authorization", authHeader)
+			.filter(sessionFilter)
+		.when()
+			.redirects().follow(true)
+			.redirects().max(3)
+			.get("appstat")
+		.then()
+			.log().ifValidationFails(LogDetail.ALL, true)
+		.assertThat()
+			.statusCode(is(HttpServletResponse.SC_OK))
+			.body("size()", is(0))
 		;
 	}
 }
