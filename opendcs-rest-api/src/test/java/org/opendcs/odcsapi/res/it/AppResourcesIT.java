@@ -1,5 +1,7 @@
 package org.opendcs.odcsapi.res.it;
 
+import java.util.List;
+import java.util.Map;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.MediaType;
 
@@ -104,19 +106,23 @@ final class AppResourcesIT extends BaseIT
 		;
 
 		JsonPath actual = response.body().jsonPath();
+		List<Map<String, Object>> actualList = actual.getList("");
+		List<Map<String, Object>> expectedList = expected.getList("");
 
 		boolean found = false;
-		for (int i = 0; i < actual.getList("").size(); i++)
+		for (int i = 0; i < actualList.size(); i++)
 		{
-			String actualAppName = actual.get("[" + i + "].appName");
-			String expectedAppName = expected.get("[" + i + "].appName");
+			Map<String, Object> actualApp = actualList.get(i);
+			Map<String, Object> expectedApp = expectedList.get(i);
+			String actualAppName = actualApp.get("appName").toString();
+			String expectedAppName = expectedApp.get("appName").toString();
 			if (actualAppName.equalsIgnoreCase(expectedAppName))
 			{
 				assertEquals(actualAppName, expectedAppName);
-				assertEquals(actual.get("[" + i + "].appType").toString(),
-						expected.get("[" + i + "].appType").toString());
-				assertEquals(actual.get("[" + i + "].comment").toString(),
-						expected.get("[" + i + "].comment").toString());
+				assertEquals(actualApp.get("appType").toString(),
+						expectedApp.get("appType").toString());
+				assertEquals(actualApp.get("comment").toString(),
+						expectedApp.get("comment").toString());
 				found = true;
 				break;
 			}
