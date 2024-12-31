@@ -16,6 +16,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.opendcs.odcsapi.res.AppResources.map;
 import static org.opendcs.odcsapi.res.AppResources.mapLoading;
+import static org.opendcs.odcsapi.res.AppResources.statusMap;
 
 final class AppResourcesTest
 {
@@ -28,6 +29,7 @@ final class AppResourcesTest
 		compAppInfo.setLastModified(Date.from(Instant.parse("2021-07-01T00:00:00Z")));
 		compAppInfo.setAppId(DbKey.createDbKey(151615L));
 		compAppInfo.setNumComputations(1);
+		// Properties are not mapped to the ApiAppRef object
 		Properties properties = new Properties();
 		properties.setProperty("compRef", "applicationValue");
 		compAppInfo.setProperties(properties);
@@ -98,7 +100,7 @@ final class AppResourcesTest
 		compAppInfo.setComment("Runs Dijkstra's algorithm on a graph");
 		compAppInfo.setLastModified(Date.from(Instant.parse("2021-07-01T00:00:00Z")));
 		compAppInfo.setAppId(DbKey.createDbKey(151615L));
-		compAppInfo.setNumComputations(1);
+		compAppInfo.setNumComputations(1); // This field is not mapped to the ApiLoadingApp object
 		Properties properties = new Properties();
 		properties.setProperty("appType", "computation");
 		compAppInfo.setProperties(properties);
@@ -113,5 +115,27 @@ final class AppResourcesTest
 		assertEquals(compAppInfo.getAppType(), app.getAppType());
 		assertEquals(compAppInfo.getManualEditApp(), app.isManualEditingApp());
 		assertEquals(compAppInfo.getProperties(), app.getProperties());
+	}
+
+	@Test
+	void testAppStatusMap()
+	{
+		// Most of these fields are not mapped to the ApiAppStatus object
+		CompAppInfo compAppInfo = new CompAppInfo();
+		compAppInfo.setManualEditApp(true);
+		compAppInfo.setAppName("Computation application");
+		compAppInfo.setComment("Computation to find the volume of a river");
+		compAppInfo.setLastModified(Date.from(Instant.parse("2021-07-01T00:00:00Z")));
+		compAppInfo.setAppId(DbKey.createDbKey(151615L));
+		compAppInfo.setNumComputations(1);
+		Properties properties = new Properties();
+		properties.setProperty("compRef", "applicationValue");
+		compAppInfo.setProperties(properties);
+
+		ApiAppStatus appStatus = statusMap(compAppInfo);
+		assertNotNull(appStatus);
+		assertEquals(compAppInfo.getAppName(), appStatus.getAppName());
+		assertEquals(compAppInfo.getAppId().getValue(), appStatus.getAppId());
+		assertEquals(compAppInfo.getAppType(), appStatus.getAppType());
 	}
 }
