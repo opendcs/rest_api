@@ -7,7 +7,6 @@ import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.MediaType;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import decodes.sql.DbKey;
 import io.restassured.filter.log.LogDetail;
 import io.restassured.filter.session.SessionFilter;
 import io.restassured.response.ExtractableResponse;
@@ -67,15 +66,12 @@ final class ConfigResourcesIT extends BaseIT
 		script.setName("Test Script");
 		ArrayList<ApiConfigScriptSensor> scriptSensors = new ArrayList<>();
 		ApiConfigScriptSensor scriptSensor = new ApiConfigScriptSensor();
-		// TODO: Tie this into the unit converter endpoint. Causes NPE if converter with ID is not in DB
 		ApiUnitConverter unitConverter = new ApiUnitConverter();
 		unitConverter.setAlgorithm("x * 100 + 32");
 		unitConverter.setFromAbbr("C");
 		unitConverter.setToAbbr("F");
 		unitConverter.setA(100.0);
 		unitConverter.setB(32.0);
-		Long convId = storeConverter(unitConverter);
-		unitConverter.setUcId(convId);
 		scriptSensor.setUnitConverter(unitConverter);
 		scriptSensors.add(scriptSensor);
 		script.setScriptSensors(scriptSensors);
@@ -195,17 +191,13 @@ final class ConfigResourcesIT extends BaseIT
 		ApiConfigScript script = new ApiConfigScript();
 		script.setName("Test Script");
 		ArrayList<ApiConfigScriptSensor> scriptSensors = new ArrayList<>();
-		// TODO: Tie this into the unit converter endpoint. Causes NPE if converter with ID is not in DB
 		ApiConfigScriptSensor scriptSensor = new ApiConfigScriptSensor();
 		ApiUnitConverter unitConverter = new ApiUnitConverter();
 		unitConverter.setAlgorithm("x * A");
 		unitConverter.setFromAbbr("m");
 		unitConverter.setToAbbr("ft");
 		unitConverter.setA(3.28084);
-		Long convId = storeConverter(unitConverter);
-		unitConverter.setUcId(convId);
 		scriptSensor.setUnitConverter(unitConverter);
-		scriptSensor.setSensorNumber(convId.intValue());
 		scriptSensors.add(scriptSensor);
 		script.setScriptSensors(scriptSensors);
 		scripts.add(script);
@@ -249,54 +241,5 @@ final class ConfigResourcesIT extends BaseIT
 		.assertThat()
 			.statusCode(is(HttpServletResponse.SC_OK))
 		;
-	}
-
-	private Long storeConverter(ApiUnitConverter unitConverter) throws Exception
-	{
-		String converterJson = mapper.writeValueAsString(unitConverter);
-
-		given()
-			.log().ifValidationFails(LogDetail.ALL, true)
-			.accept(MediaType.APPLICATION_JSON)
-			.contentType(MediaType.APPLICATION_JSON)
-			.header("Authorization", authHeader)
-			.filter(sessionFilter)
-			.body(converterJson)
-		.when()
-			.redirects().follow(true)
-			.redirects().max(3)
-			.post("euconv")
-		.then()
-			.log().ifValidationFails(LogDetail.ALL, true)
-		.assertThat()
-			.statusCode(is(HttpServletResponse.SC_OK))
-		;
-
-		ExtractableResponse<Response> response = given()
-			.log().ifValidationFails(LogDetail.ALL, true)
-			.accept(MediaType.APPLICATION_JSON)
-			.header("Authorization", authHeader)
-			.filter(sessionFilter)
-		.when()
-			.redirects().follow(true)
-			.redirects().max(3)
-			.get("euconvlist")
-		.then()
-			.log().ifValidationFails(LogDetail.ALL, true)
-		.assertThat()
-			.statusCode(is(HttpServletResponse.SC_OK))
-			.extract()
-		;
-
-		for (int i = 0; i < response.body().jsonPath().getList("").size(); i++)
-		{
-			if (response.body().jsonPath().getString("[" + i + "].fromAbbr").equals(unitConverter.getFromAbbr())
-				&& response.body().jsonPath().getString("[" + i + "].toAbbr").equals(unitConverter.getToAbbr()))
-			{
-				return response.body().jsonPath().getLong("[" + i + "].ucId");
-			}
-		}
-
-		return DbKey.NullKey.getValue();
 	}
 }

@@ -45,6 +45,7 @@ import decodes.db.PlatformConfigList;
 import decodes.db.Poly5Converter;
 import decodes.db.ScriptSensor;
 import decodes.db.UnitConverter;
+import decodes.db.UnitConverterDb;
 import decodes.sql.DbKey;
 import org.opendcs.odcsapi.beans.ApiConfigRef;
 import org.opendcs.odcsapi.beans.ApiConfigScript;
@@ -226,16 +227,30 @@ public class ConfigResources extends OpenDcsResource
 			}
 			return decodesScripts;
 		}
-		catch(DecodesScriptException | IOException ex)
+		catch(DecodesScriptException | IOException | DatabaseException ex)
 		{
 			throw new DbException("Error mapping scripts", ex);
 		}
 	}
 
-	static ScriptSensor map(ApiConfigScriptSensor sensor)
+	static ScriptSensor map(ApiConfigScriptSensor sensor) throws DatabaseException
 	{
 		ScriptSensor scriptSensor = new ScriptSensor(null, sensor.getSensorNumber());
 		scriptSensor.execConverter = map(sensor.getUnitConverter());
+		UnitConverterDb rawConv = new UnitConverterDb(sensor.getUnitConverter().getFromAbbr(),
+				sensor.getUnitConverter().getToAbbr());
+		rawConv.algorithm = sensor.getUnitConverter().getAlgorithm();
+		if (sensor.getUnitConverter().getUcId() != null)
+		{
+			rawConv.setId(DbKey.createDbKey(sensor.getUnitConverter().getUcId()));
+		}
+		else
+		{
+			rawConv.setId(DbKey.NullKey);
+		}
+		ApiUnitConverter uc = sensor.getUnitConverter();
+		rawConv.coefficients = coefficientMap(uc);
+		scriptSensor.rawConverter = rawConv;
 		if (sensor.getUnitConverter().getUcId() != null)
 		{
 			scriptSensor.setUnitConverterId(DbKey.createDbKey(sensor.getUnitConverter().getUcId()));
@@ -252,6 +267,12 @@ public class ConfigResources extends OpenDcsResource
 		EngineeringUnit from = EngineeringUnit.getEngineeringUnit(unitConverter.getFromAbbr());
 		EngineeringUnit to = EngineeringUnit.getEngineeringUnit(unitConverter.getToAbbr());
 		Poly5Converter pc = new Poly5Converter(from, to);
+		pc.setCoefficients(coefficientMap(unitConverter));
+		return pc;
+	}
+
+	static double[] coefficientMap(ApiUnitConverter unitConverter)
+	{
 		double[] coeffs = new double[6];
 		coeffs[0] = unitConverter.getA() != null ? unitConverter.getA() : 0.0;
 		coeffs[1] = unitConverter.getB() != null ? unitConverter.getB() : 0.0;
@@ -259,8 +280,7 @@ public class ConfigResources extends OpenDcsResource
 		coeffs[3] = unitConverter.getD() != null ? unitConverter.getD() : 0.0;
 		coeffs[4] = unitConverter.getE() != null ? unitConverter.getE() : 0.0;
 		coeffs[5] = unitConverter.getF() != null ? unitConverter.getF() : 0.0;
-		pc.setCoefficients(coeffs);
-		return pc;
+		return coeffs;
 	}
 
 
