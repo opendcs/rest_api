@@ -21,6 +21,7 @@ import org.opendcs.odcsapi.beans.ApiUnitConverter;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.opendcs.odcsapi.res.ConfigResources.coefficientMap;
 import static org.opendcs.odcsapi.res.ConfigResources.map;
 
 final class ConfigResourcesTest
@@ -109,7 +110,7 @@ final class ConfigResourcesTest
 	}
 
 	@Test
-	void testApiConfigScriptSensorMap()
+	void testApiConfigScriptSensorMap() throws Exception
 	{
 		ApiConfigScriptSensor sensor = new ApiConfigScriptSensor();
 		sensor.setSensorNumber(1);
@@ -131,6 +132,16 @@ final class ConfigResourcesTest
 		assertNotNull(decodesSensor);
 		assertEquals(sensor.getSensorNumber(), decodesSensor.sensorNumber);
 		assertMatch(sensor.getUnitConverter(), (Poly5Converter) decodesSensor.execConverter);
+		assertEquals(sensor.getUnitConverter().getFromAbbr(), decodesSensor.rawConverter.fromAbbr);
+		assertEquals(sensor.getUnitConverter().getToAbbr(), decodesSensor.rawConverter.toAbbr);
+		assertEquals(sensor.getUnitConverter().getA(), decodesSensor.rawConverter.coefficients[0]);
+		assertEquals(sensor.getUnitConverter().getB(), decodesSensor.rawConverter.coefficients[1]);
+		assertEquals(sensor.getUnitConverter().getC(), decodesSensor.rawConverter.coefficients[2]);
+		assertEquals(sensor.getUnitConverter().getD(), decodesSensor.rawConverter.coefficients[3]);
+		assertEquals(sensor.getUnitConverter().getE(), decodesSensor.rawConverter.coefficients[4]);
+		assertEquals(sensor.getUnitConverter().getF(), decodesSensor.rawConverter.coefficients[5]);
+		assertEquals(sensor.getUnitConverter().getUcId(), decodesSensor.rawConverter.getId().getValue());
+		assertEquals(sensor.getUnitConverter().getAlgorithm(), decodesSensor.rawConverter.algorithm);
 	}
 
 	@Test
@@ -154,6 +165,27 @@ final class ConfigResourcesTest
 		assertEquals(unitConverter.getFromAbbr(), decodesUc.getFromAbbr());
 		assertEquals(unitConverter.getToAbbr(), decodesUc.getToAbbr());
 		assertEquals(3545706.0, decodesUc.convert(20.0));
+	}
+
+	@Test
+	void testCoefficientMap()
+	{
+		ApiUnitConverter unitConverter = new ApiUnitConverter();
+		unitConverter.setA(1.0);
+		unitConverter.setB(2.0);
+		unitConverter.setC(3.0);
+		unitConverter.setD(4.0);
+		unitConverter.setE(5.0);
+		unitConverter.setF(6.0);
+
+		double[] coefficients = coefficientMap(unitConverter);
+
+		assertEquals(unitConverter.getA(), coefficients[0]);
+		assertEquals(unitConverter.getB(), coefficients[1]);
+		assertEquals(unitConverter.getC(), coefficients[2]);
+		assertEquals(unitConverter.getD(), coefficients[3]);
+		assertEquals(unitConverter.getE(), coefficients[4]);
+		assertEquals(unitConverter.getF(), coefficients[5]);
 	}
 
 	private static void assertMatch(ApiUnitConverter apiUc, Poly5Converter decodesUc)
