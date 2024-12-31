@@ -58,7 +58,6 @@ import org.opendcs.odcsapi.lrgsclient.ClientConnectionCache;
 import org.opendcs.odcsapi.util.ApiConstants;
 import org.opendcs.odcsapi.util.ApiEnvExpander;
 import org.opendcs.odcsapi.util.ApiPropertiesUtil;
-import org.opendcs.odcsapi.util.ProcWaiterCallback;
 import org.opendcs.odcsapi.util.ProcWaiterThread;
 
 /**
@@ -127,7 +126,7 @@ public final class AppResources extends OpenDcsResource
 		}
 		catch (DbIoException ex)
 		{
-			throw new DbException("No such app with ID " + appId, ex);
+			throw new DbException(String.format(NO_APP_FOUND, appId), ex);
 		}
 	}
 
@@ -296,19 +295,7 @@ public final class AppResources extends OpenDcsResource
 				throw new WebAppException(HttpServletResponse.SC_NOT_FOUND, "appid " + appId
 						+ " (" + appStat.getAppName() + ") is not running (stale heartbeat).");
 			}
-			else if (!cli.isPresent())
-			{
-				Integer port = appStat.getEventPort();
-				if (port == null)
-				{
-					return Response.status(HttpServletResponse.SC_OK)
-							.entity(new ArrayList<ApiAppEvent>()).build();
-				}
-				apiEventClient = new ApiEventClient(appId, appStat.getHostname(), port, appStat.getAppName(), appStat.getPid());
-				apiEventClient.connect();
-				clientConnectionCache.addApiEventClient(apiEventClient, session.getId());
-			}
-			else if (appStat.getPid() != null && appStat.getPid() != cli.get().getPid())
+			else if (appStat.getPid() != null && (!cli.isPresent() || appStat.getPid() != cli.get().getPid()))
 			{
 				// This means that the app was stopped and restarted since we last checked for events.
 				// Close the old client and open a new one with the correct PID.
@@ -322,6 +309,7 @@ public final class AppResources extends OpenDcsResource
 				}
 				apiEventClient = new ApiEventClient(appId, appStat.getHostname(), port, appStat.getAppName(), appStat.getPid());
 				apiEventClient.connect();
+				// NOTE: event client added to user token ONLY if connect succeeds.
 				clientConnectionCache.addApiEventClient(apiEventClient, session.getId());
 			}
 			if(apiEventClient == null)
@@ -335,7 +323,7 @@ public final class AppResources extends OpenDcsResource
 		{
 			throw new WebAppException(ErrorCodes.IO_ERROR,
 					String.format("Cannot connect to %s.", appStat.getAppName()), ex);
-			// NOTE: event client added to user token ONLY if connect succeeds.
+			// Connection failed, event client not added to user token
 		}
 		catch(IOException ex)
 		{
@@ -377,11 +365,6 @@ public final class AppResources extends OpenDcsResource
 				throw new WebAppException(ErrorCodes.BAD_CONFIG,
 						"App id=" + appId + " (" + loadingApp.getAppName() + ") has no 'startCmd' property.");
 
-			// ProcWaiterThread runBackground to execute command, use callback.
-			ProcWaiterCallback pwcb = (procName, obj, exitStatus) ->
-			{
-				ApiLoadingApp loadingApp1 = (ApiLoadingApp)obj;
-			};
 
 			StdAppSettings settings = new StdAppSettings();
 
@@ -401,7 +384,7 @@ public final class AppResources extends OpenDcsResource
 					pid, settings.getHostName());
 
 			ProcWaiterThread.runBackground(ApiEnvExpander.expand(startCmd), "App:" + loadingApp.getAppName(),
-					pwcb, loadingApp);
+					null, loadingApp);
 
 			return Response.status(HttpServletResponse.SC_OK)
 					.entity("App with ID " + appId + " (" + loadingApp.getAppName() + ") started.").build();
@@ -483,28 +466,27 @@ public final class AppResources extends OpenDcsResource
 					return map(dai, lock);
 				}
 			}
-			List<ApiAppRef> apps = dai.listComputationApps(false)
+
+			Optional<ApiAppStatus> appStatus = dai.listComputationApps(false)
 					.stream()
-					.map(AppResources::map)
-					.collect(Collectors.toList());
-			for (ApiAppRef app : apps)
-			{
-				if (app.getAppId().equals(appId))
-				{
-					ApiAppStatus ret = new ApiAppStatus();
-					ret.setAppId(appId);
-					ret.setAppName(app.getAppName());
-					ret.setStatus("Not Running");
-					ret.setAppType(app.getAppType());
-					return ret;
-				}
-			}
-			return null;
+					.map(AppResources::statusMap)
+					.filter(app -> app.getAppId().equals(appId))
+					.findFirst();
+			return appStatus.orElse(null);
 		}
 		catch (DbIoException ex)
 		{
 			throw new DbException(String.format("Error retrieving locks for app ID: %s", appId), ex);
 		}
+	}
+
+	static ApiAppStatus statusMap(CompAppInfo app)
+	{
+		ApiAppStatus ret = new ApiAppStatus();
+		ret.setAppId(app.getAppId().getValue());
+		ret.setAppName(app.getAppName());
+		ret.setAppType(app.getAppType());
+		return ret;
 	}
 
 }
