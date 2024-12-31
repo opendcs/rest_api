@@ -4,6 +4,7 @@ import java.sql.Date;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Properties;
 import java.util.Vector;
 
@@ -91,7 +92,7 @@ final class PlatformResourcesTest
 		model2.company = "GEI";
 		Properties properties2 = new Properties();
 		properties2.setProperty("prop2", "value2");
-		model2.properties = properties;
+		model2.properties = properties2;
 		config2.equipmentModel = model;
 		Vector<DecodesScript> scripts2 = new Vector<>();
 		DecodesScript script2 = new DecodesScript
@@ -105,7 +106,7 @@ final class PlatformResourcesTest
 		platformList.add(plat1);
 		platformList.add(plat2);
 
-		ArrayList<ApiPlatformRef> platRefs = map(platformList);
+		List<ApiPlatformRef> platRefs = map(platformList);
 
 		assertNotNull(platRefs);
 		assertFalse(platRefs.isEmpty());
@@ -403,7 +404,7 @@ final class PlatformResourcesTest
 		status.setLastFailureCodes("System Failure 2");
 		status.setLastErrorTime(Date.from(Instant.parse("2021-07-01T12:00:00Z")));
 
-		ArrayList<ApiPlatformStatus> apiStatus = map(status);
+		List<ApiPlatformStatus> apiStatus = map(status);
 		assertNotNull(apiStatus);
 		assertFalse(apiStatus.isEmpty());
 		assertEquals(1, apiStatus.size());

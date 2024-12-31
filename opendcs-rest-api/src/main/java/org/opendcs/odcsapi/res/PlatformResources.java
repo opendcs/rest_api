@@ -16,8 +16,10 @@
 package org.opendcs.odcsapi.res;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Vector;
 
@@ -68,14 +70,14 @@ public class PlatformResources extends OpenDcsResource
 	public Response getPlatformRefs(@QueryParam("tmtype") String tmtype)
 			throws DbException
 	{
-		HashMap<String, ApiPlatformRef> ret = new HashMap<>();
+		Map<String, ApiPlatformRef> ret = new LinkedHashMap<>();
 		try
 		{
 			// TODO: Add support for filtering by transport media type
 			DatabaseIO dbio = getLegacyDatabase();
 			PlatformList platformList = new PlatformList();
 			dbio.readPlatformList(platformList);
-			ArrayList<ApiPlatformRef> platSpecs = map(platformList);
+			List<ApiPlatformRef> platSpecs = map(platformList);
 			for(ApiPlatformRef ps : platSpecs)
 				ret.put(ps.getName(), ps);
 			return Response.status(HttpServletResponse.SC_OK).entity(ret).build();
@@ -86,9 +88,9 @@ public class PlatformResources extends OpenDcsResource
 		}
 	}
 
-	static ArrayList<ApiPlatformRef> map(PlatformList platformList)
+	static List<ApiPlatformRef> map(PlatformList platformList)
 	{
-		ArrayList<ApiPlatformRef> ret = new ArrayList<>();
+		List<ApiPlatformRef> ret = new ArrayList<>();
 		Iterator<Platform> platform = platformList.iterator();
 		while (platform.hasNext())
 		{
@@ -278,7 +280,7 @@ public class PlatformResources extends OpenDcsResource
 		return ret;
 	}
 
-	static Vector<PlatformSensor> platMap(ArrayList<ApiPlatformSensor> platformSensors) throws DatabaseException
+	static Vector<PlatformSensor> platMap(List<ApiPlatformSensor> platformSensors) throws DatabaseException
 	{
 		Vector<PlatformSensor> ret = new Vector<>();
 		for (ApiPlatformSensor sensor: platformSensors)
@@ -302,7 +304,7 @@ public class PlatformResources extends OpenDcsResource
 		return ret;
 	}
 
-	static Vector<TransportMedium> map(ArrayList<ApiTransportMedium> transportMedium)
+	static Vector<TransportMedium> map(List<ApiTransportMedium> transportMedium)
 	{
 		Vector<TransportMedium> ret = new Vector<>();
 		for (ApiTransportMedium tm : transportMedium)
@@ -386,13 +388,13 @@ public class PlatformResources extends OpenDcsResource
 		}
 	}
 
-	static ArrayList<ApiPlatformStatus> map(PlatformStatus status)
+	static List<ApiPlatformStatus> map(PlatformStatus status)
 	{
 		if (status == null)
 		{
 			return new ArrayList<>();
 		}
-		ArrayList<ApiPlatformStatus> ret = new ArrayList<>();
+		List<ApiPlatformStatus> ret = new ArrayList<>();
 		ApiPlatformStatus ps = new ApiPlatformStatus();
 		if (status.getPlatformId() != null)
 		{
