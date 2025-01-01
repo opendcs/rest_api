@@ -121,7 +121,7 @@ public class ConfigResources extends OpenDcsResource
 			DatabaseIO dbIo = getLegacyDatabase();
 			PlatformConfig config = new PlatformConfig();
 			config.setId(DbKey.createDbKey(configId));
-			dbIo.readConfig(config);
+			dbIo.readConfig(config); // TODO: This method does not return any data. Investigate why.
 			return Response.status(HttpServletResponse.SC_OK).entity(map(config)).build();
 		}
 		catch (DatabaseException ex)
