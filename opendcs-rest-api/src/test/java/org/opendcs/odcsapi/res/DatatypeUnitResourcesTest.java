@@ -60,22 +60,22 @@ final class DatatypeUnitResourcesTest
 	void testUnitListMap()
 	{
 		EngineeringUnitList eul = new EngineeringUnitList();
-		EngineeringUnit eu = new EngineeringUnit("t", "Test", "Test", "Test");
-		EngineeringUnit eu2 = new EngineeringUnit("t2", "Test2", "Test2", "Test2");
+		EngineeringUnit eu = new EngineeringUnit("C", "Celsius", "Metric", "temperature");
+		EngineeringUnit eu2 = new EngineeringUnit("K", "Kelvin", "Metric", "temperature");
 		eul.add(eu);
 		eul.add(eu2);
 
 		ArrayList<ApiUnit> apiUnits = map(eul);
 		assertNotNull(apiUnits);
 		assertEquals(2, apiUnits.size());
-		assertEquals("t", apiUnits.get(0).getAbbr());
-		assertEquals("Test", apiUnits.get(0).getName());
-		assertEquals("Test", apiUnits.get(0).getFamily());
-		assertEquals("Test", apiUnits.get(0).getMeasures());
-		assertEquals("t2", apiUnits.get(1).getAbbr());
-		assertEquals("Test2", apiUnits.get(1).getName());
-		assertEquals("Test2", apiUnits.get(1).getFamily());
-		assertEquals("Test2", apiUnits.get(1).getMeasures());
+		assertEquals("C", apiUnits.get(0).getAbbr());
+		assertEquals("Celsius", apiUnits.get(0).getName());
+		assertEquals("Metric", apiUnits.get(0).getFamily());
+		assertEquals("temperature", apiUnits.get(0).getMeasures());
+		assertEquals("K", apiUnits.get(1).getAbbr());
+		assertEquals("Kelvin", apiUnits.get(1).getName());
+		assertEquals("Metric", apiUnits.get(1).getFamily());
+		assertEquals("temperature", apiUnits.get(1).getMeasures());
 	}
 
 	@Test
