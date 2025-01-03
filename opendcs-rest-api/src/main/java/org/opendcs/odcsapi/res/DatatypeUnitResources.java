@@ -63,6 +63,7 @@ import org.opendcs.odcsapi.sec.AuthorizationCheck;
 public class DatatypeUnitResources extends OpenDcsResource
 {
 	@Context HttpHeaders httpHeaders;
+	private DatabaseIO dbIo;
 
 	@GET
 	@Path("datatypelist")
@@ -72,15 +73,18 @@ public class DatatypeUnitResources extends OpenDcsResource
 	{
 		try
 		{
-			DatabaseIO dbIo = getLegacyDatabase();
+			dbIo = getLegacyDatabase();
 			DataTypeSet set = new DataTypeSet();
 			dbIo.readDataTypeSet(set, std);
-			dbIo.close();
 			return Response.status(HttpServletResponse.SC_OK).entity(map(set)).build();
 		}
 		catch(DatabaseException e)
 		{
 			throw new DbException("Unable to retrieve data type list", e);
+		}
+		finally
+		{
+			dbIo.close();
 		}
 	}
 
@@ -117,15 +121,18 @@ public class DatatypeUnitResources extends OpenDcsResource
 	{
 		try
 		{
-			DatabaseIO dbIo = getLegacyDatabase();
+			dbIo = getLegacyDatabase();
 			EngineeringUnitList euList = new EngineeringUnitList();
 			dbIo.readEngineeringUnitList(euList);
-			dbIo.close();
 			return Response.status(HttpServletResponse.SC_OK).entity(map(euList)).build();
 		}
 		catch(DatabaseException e)
 		{
 			throw new DbException("Unable to retrieve data type list", e);
+		}
+		finally
+		{
+			dbIo.close();
 		}
 	}
 
@@ -158,18 +165,21 @@ public class DatatypeUnitResources extends OpenDcsResource
 		try
 		{
 			EngineeringUnit unit = new EngineeringUnit(fromabbr, eu.getName(), eu.getFamily(), eu.getMeasures());
-			DatabaseIO dbIo = getLegacyDatabase();
+			dbIo = getLegacyDatabase();
 			EngineeringUnitList euList = new EngineeringUnitList();
 			dbIo.readEngineeringUnitList(euList);
 			euList.add(unit);
 			dbIo.writeEngineeringUnitList(euList);
-			dbIo.close();
 			return Response.status(HttpServletResponse.SC_OK)
 					.entity(map(euList)).build();
 		}
 		catch(DatabaseException e)
 		{
 			throw new DbException("Unable to store Engineering Unit list", e);
+		}
+		finally
+		{
+			dbIo.close();
 		}
 	}
 
@@ -187,17 +197,20 @@ public class DatatypeUnitResources extends OpenDcsResource
 
 		try
 		{
-			DatabaseIO dbIo = getLegacyDatabase();
+			dbIo = getLegacyDatabase();
 			EngineeringUnit unit = new EngineeringUnit(abbr, "", "", "");
 			EngineeringUnitList euList = new EngineeringUnitList();
 			euList.add(unit);
 			dbIo.writeEngineeringUnitList(euList);
-			dbIo.close();
 			return Response.status(HttpServletResponse.SC_OK).entity("EU with abbr " + abbr + " deleted").build();
 		}
 		catch(DatabaseException e)
 		{
 			throw new DbException("Unable to store Engineering Unit list", e);
+		}
+		finally
+		{
+			dbIo.close();
 		}
 	}
 
@@ -209,15 +222,18 @@ public class DatatypeUnitResources extends OpenDcsResource
 	{
 		try
 		{
-			DatabaseIO dbIo = getLegacyDatabase();
+			dbIo = getLegacyDatabase();
 			UnitConverterSet unitConverterSet = new UnitConverterSet();
 			dbIo.readUnitConverterSet(unitConverterSet);
-			dbIo.close();
 			return Response.status(HttpServletResponse.SC_OK).entity(map(unitConverterSet)).build();
 		}
 		catch(DatabaseException e)
 		{
 			throw new DbException("Unable to retrieve Unit Converter list", e);
+		}
+		finally
+		{
+			dbIo.close();
 		}
 	}
 
@@ -260,15 +276,18 @@ public class DatatypeUnitResources extends OpenDcsResource
 	{
 		try
 		{
-			DatabaseIO dbIo = getLegacyDatabase();
+			dbIo = getLegacyDatabase();
 			UnitConverterSet unitSet = map(euc);
 			dbIo.writeUnitConverterSet(unitSet);
-			dbIo.close();
 			return Response.status(HttpServletResponse.SC_OK).entity(map(unitSet)).build();
 		}
 		catch(DatabaseException e)
 		{
 			throw new DbException("Unable to store Unit Converter list", e);
+		}
+		finally
+		{
+			dbIo.close();
 		}
 	}
 
@@ -351,14 +370,17 @@ public class DatatypeUnitResources extends OpenDcsResource
 
 		try
 		{
-			DatabaseIO dbIo = getLegacyDatabase();
+			dbIo = getLegacyDatabase();
 			dbIo.deleteUnitConverterSet(id);
-			dbIo.close();
 			return Response.status(HttpServletResponse.SC_OK).entity("EUConv with id=" + id + " deleted").build();
 		}
 		catch(DatabaseException e)
 		{
 			throw new DbException("Unable to delete Unit Converter", e);
+		}
+		finally
+		{
+			dbIo.close();
 		}
 	}
 }
