@@ -242,7 +242,7 @@ public class NetlistResources extends OpenDcsResource
 
 			if (errmsg.length() > 0)
 			{
-				return Response.status(HttpServletResponse.SC_OK)
+				return Response.status(HttpServletResponse.SC_CONFLICT)
 						.entity(" Cannot delete network list with ID " + netlistId
 								+ " because it is used by the following routing specs: "
 								+ errmsg).build();
@@ -273,7 +273,7 @@ public class NetlistResources extends OpenDcsResource
 			while( (ln = rdr.readLine()) != null)
 			{
 				ln = ln.trim();
-				if (!(ln.length() <= 0
+				if (!(ln.isEmpty()
 						|| ln.charAt(0) == '#' || ln.charAt(0) == ':')) // skip comment lines.
 				{
 					ApiNetListItem anli = ApiNetListItem.fromString(ln);
