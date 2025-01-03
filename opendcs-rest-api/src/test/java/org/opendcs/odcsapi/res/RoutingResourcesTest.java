@@ -12,8 +12,11 @@ import decodes.db.RoutingSpec;
 import decodes.db.RoutingSpecList;
 import decodes.db.ScheduleEntry;
 import decodes.db.ScheduleEntryStatus;
+import decodes.polling.DacqEvent;
 import decodes.sql.DbKey;
+import ilex.util.Logger;
 import org.junit.jupiter.api.Test;
+import org.opendcs.odcsapi.beans.ApiDacqEvent;
 import org.opendcs.odcsapi.beans.ApiRouting;
 import org.opendcs.odcsapi.beans.ApiRoutingExecStatus;
 import org.opendcs.odcsapi.beans.ApiRoutingRef;
@@ -224,6 +227,34 @@ final class RoutingResourcesTest
 		assertEquals(apiScheduleEntry.isEnabled(), scheduleEntry.isEnabled());
 		assertEquals(apiScheduleEntry.getTimeZone(), scheduleEntry.getTimezone());
 		assertEquals(apiScheduleEntry.getRunInterval(), scheduleEntry.getRunInterval());
+	}
+
+	@Test
+	void testDacqEventMap()
+	{
+		DacqEvent dacqEvent = new DacqEvent();
+		dacqEvent.setAppId(DbKey.createDbKey(1234L));
+		dacqEvent.setDacqEventId(DbKey.createDbKey(5678L));
+		dacqEvent.setEventText("TestEvent");
+		dacqEvent.setEventTime(Date.from(Instant.parse("2021-02-01T00:00:00Z")));
+		dacqEvent.setEventPriority(Logger.E_DEBUG1);
+		dacqEvent.setMsgRecvTime(Date.from(Instant.parse("2021-02-01T12:00:00Z")));
+		dacqEvent.setSubsystem("TestSubsystem");
+		dacqEvent.setScheduleEntryStatusId(DbKey.createDbKey(9012L));
+		dacqEvent.setPlatformId(DbKey.createDbKey(3456L));
+
+		ApiDacqEvent apiDacqEvent = map(dacqEvent);
+
+		assertNotNull(apiDacqEvent);
+		assertEquals(apiDacqEvent.getAppId(), dacqEvent.getAppId().getValue());
+		assertEquals(apiDacqEvent.getEventId(), dacqEvent.getDacqEventId().getValue());
+		assertEquals(apiDacqEvent.getEventText(), dacqEvent.getEventText());
+		assertEquals(apiDacqEvent.getEventTime(), dacqEvent.getEventTime());
+		assertEquals(apiDacqEvent.getPriority(), Logger.priorityName[dacqEvent.getEventPriority()]);
+		assertEquals(apiDacqEvent.getMsgRecvTime(), dacqEvent.getMsgRecvTime());
+		assertEquals(apiDacqEvent.getSubsystem(), dacqEvent.getSubsystem());
+		assertEquals(apiDacqEvent.getRoutingExecId(), dacqEvent.getScheduleEntryStatusId().getValue());
+		assertEquals(apiDacqEvent.getPlatformId(), dacqEvent.getPlatformId().getValue());
 	}
 
 	private RoutingSpec buildRoutingSpec() throws Exception

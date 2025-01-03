@@ -20,10 +20,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.TimeZone;
 import java.util.Vector;
+import java.util.stream.Collectors;
 
 import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -46,8 +48,10 @@ import decodes.db.ScheduleEntryStatus;
 import decodes.polling.DacqEvent;
 import decodes.sql.DbKey;
 import decodes.tsdb.DbIoException;
+import ilex.util.Logger;
 import opendcs.dai.DacqEventDAI;
 import opendcs.dai.ScheduleEntryDAI;
+import org.opendcs.odcsapi.beans.ApiDacqEvent;
 import org.opendcs.odcsapi.beans.ApiRouting;
 import org.opendcs.odcsapi.beans.ApiRoutingExecStatus;
 import org.opendcs.odcsapi.beans.ApiRoutingRef;
@@ -76,6 +80,7 @@ public class RoutingResources extends OpenDcsResource
 			DatabaseIO dbio = getLegacyDatabase();
 			RoutingSpecList rsList = new RoutingSpecList();
 			dbio.readRoutingSpecList(rsList);
+			dbio.close();
 			return Response.status(HttpServletResponse.SC_OK)
 					.entity(map(rsList)).build();
 		}
@@ -124,6 +129,7 @@ public class RoutingResources extends OpenDcsResource
 			RoutingSpec spec = new RoutingSpec();
 			spec.setId(DbKey.createDbKey(routingId));
 			dbio.readRoutingSpec(spec);
+			dbio.close();
 			return Response.status(HttpServletResponse.SC_OK)
 					.entity(map(spec)).build();
 		}
@@ -168,6 +174,7 @@ public class RoutingResources extends OpenDcsResource
 			DatabaseIO dbio = getLegacyDatabase();
 			RoutingSpec spec = map(routing);
 			dbio.writeRoutingSpec(spec);
+			dbio.close();
 			return Response.status(HttpServletResponse.SC_OK).entity(map(spec)).build();
 		}
 		catch(DatabaseException e)
@@ -256,6 +263,7 @@ public class RoutingResources extends OpenDcsResource
 			RoutingSpec spec = new RoutingSpec();
 			spec.setId(DbKey.createDbKey(routingId));
 			dbio.deleteRoutingSpec(spec);
+			dbio.close();
 			return Response.status(HttpServletResponse.SC_OK)
 					.entity("RoutingSpec with ID " + routingId + " deleted").build();
 		}
@@ -320,23 +328,15 @@ public class RoutingResources extends OpenDcsResource
 					"Missing required scheduleid parameter.");
 		try (ScheduleEntryDAI dai = getLegacyDatabase().makeScheduleEntryDAO())
 		{
-			ScheduleEntry entry = new ScheduleEntry(DbKey.createDbKey(scheduleId));
-
-			// TODO: Add support for schedule retrieval by id in OpenDCS,
-			//  which currently only supports retrieval by name
-
-			//		try (DbInterface dbi = new DbInterface();
-			//				ApiRoutingDAO dao = new ApiRoutingDAO(dbi))
-			//		{
-			//			return ApiHttpUtil.createResponse(dao.getSchedule(scheduleId));
-			//		}
+			ScheduleEntry entry = dai.readScheduleEntry(DbKey.createDbKey(scheduleId));
+			return Response.status(HttpServletResponse.SC_OK)
+					.entity(map(entry))
+					.build();
 		}
-		//		catch(DbIoException e)
-		//		{
-		//			throw new DbException("Unable to retrieve schedule entry by ID", e);
-		//		}
-
-		return Response.status(HttpServletResponse.SC_NOT_IMPLEMENTED).build();
+		catch(DbIoException e)
+		{
+			throw new DbException("Unable to retrieve schedule entry by ID", e);
+		}
 	}
 
 	@POST
@@ -547,38 +547,33 @@ public class RoutingResources extends OpenDcsResource
 			@QueryParam("platformid") Long platformId, @QueryParam("backlog") String backlog)
 			throws DbException
 	{
-		// TODO: Add support for dacq events retrieval in OpenDCS, which currently only supports retrieval by a few
-		// 		of the above parameters independently
-
-		//		try (DbInterface dbi = new DbInterface();
-		//			ApiRoutingDAO dao = new ApiRoutingDAO(dbi))
-		//		{
-		//			HttpSession session = request.getSession(true);
-		//			return ApiHttpUtil.createResponse(dao.getDacqEvents(appId, routingExecId, platformId, backlog, session));
-		//		}
-
 		try (DacqEventDAI dai = getLegacyTimeseriesDB().makeDacqEventDAO())
 		{
-			ArrayList<DacqEvent> platformEvents = new ArrayList<>();
-			if (platformId != null) {
-				dai.readEventsForPlatform(DbKey.createDbKey(platformId), platformEvents);
-			}
-			ArrayList<DacqEvent> routingExecEvents = new ArrayList<>();
-			if (routingExecId != null) {
-				dai.readEventsForScheduleStatus(DbKey.createDbKey(routingExecId), routingExecEvents);
-			}
-
-
-
-			//			dai.getDacqEvents(appId, routingExecId, platformId, backlog);
-			//			return Response.status(HttpServletResponse.SC_OK)
-			//					.entity(events).build();
+			HttpSession session = request.getSession(true);
+			ArrayList<DacqEvent> events = new ArrayList<>();
+			dai.readEvents(events, DbKey.createDbKey(appId), DbKey.createDbKey(routingExecId),
+					DbKey.createDbKey(platformId), backlog, session);
+			return Response.status(HttpServletResponse.SC_OK)
+					.entity(events.stream().map(RoutingResources::map).collect(Collectors.toList())).build();
 		}
 		catch (DbIoException e)
 		{
 			throw new DbException("Unable to retrieve dacq events", e);
 		}
+	}
 
-		return Response.status(HttpServletResponse.SC_NOT_IMPLEMENTED).build();
+	static ApiDacqEvent map(DacqEvent event)
+	{
+		ApiDacqEvent apiEvent = new ApiDacqEvent();
+		apiEvent.setEventId(event.getDacqEventId().getValue());
+		apiEvent.setAppId(event.getAppId().getValue());
+		apiEvent.setPlatformId(event.getPlatformId().getValue());
+		apiEvent.setRoutingExecId(event.getScheduleEntryStatusId().getValue());
+		apiEvent.setPriority(Logger.priorityName[event.getEventPriority()]);
+		apiEvent.setEventTime(event.getEventTime());
+		apiEvent.setEventText(event.getEventText());
+		apiEvent.setSubsystem(event.getSubsystem());
+		apiEvent.setMsgRecvTime(event.getMsgRecvTime());
+		return apiEvent;
 	}
 }
