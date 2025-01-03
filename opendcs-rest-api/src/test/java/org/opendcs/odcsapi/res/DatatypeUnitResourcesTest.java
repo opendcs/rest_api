@@ -3,12 +3,15 @@ package org.opendcs.odcsapi.res;
 import java.util.ArrayList;
 import java.util.List;
 
+import decodes.db.DataType;
+import decodes.db.DataTypeSet;
 import decodes.db.EngineeringUnit;
 import decodes.db.EngineeringUnitList;
 import decodes.db.UnitConverterDb;
 import decodes.db.UnitConverterSet;
 import decodes.sql.DbKey;
 import org.junit.jupiter.api.Test;
+import org.opendcs.odcsapi.beans.ApiDataType;
 import org.opendcs.odcsapi.beans.ApiUnit;
 import org.opendcs.odcsapi.beans.ApiUnitConverter;
 
@@ -25,7 +28,7 @@ final class DatatypeUnitResourcesTest
 		ApiUnitConverter auc = new ApiUnitConverter();
 		auc.setFromAbbr("ft");
 		auc.setToAbbr("m");
-		auc.setAlgorithm("none");
+		auc.setAlgorithm("NULL");
 		auc.setA(1.0);
 		auc.setB(2.0);
 		auc.setC(3.0);
@@ -44,14 +47,13 @@ final class DatatypeUnitResourcesTest
 		assertEquals("ft->m", ucdb.toString());
 		assertEquals("ft", ucdb.fromAbbr);
 		assertEquals("m", ucdb.toAbbr);
-		assertEquals("none", ucdb.algorithm);
+		assertEquals("NULL", ucdb.algorithm);
 		assertEquals(1.0, ucdb.coefficients[0]);
 		assertEquals(2.0, ucdb.coefficients[1]);
 		assertEquals(3.0, ucdb.coefficients[2]);
 		assertEquals(4.0, ucdb.coefficients[3]);
 		assertEquals(5.0, ucdb.coefficients[4]);
 		assertEquals(6.0, ucdb.coefficients[5]);
-
 	}
 
 	@Test
@@ -105,5 +107,33 @@ final class DatatypeUnitResourcesTest
 		assertEquals(unitDb.coefficients[4], unitConverter.getE());
 		assertEquals(unitDb.coefficients[5], unitConverter.getF());
 		assertEquals(unitDb.getId().getValue(), unitConverter.getUcId());
+	}
+
+	@Test
+	void testDataTypeSetMap() throws Exception
+	{
+		DataTypeSet dts = new DataTypeSet();
+		DataType dt = new DataType("SHEF-PE", "TEST_CODE");
+		dt.setId(DbKey.createDbKey(1234L));
+		dt.setDisplayName("Test Display Name");
+		dts.add(dt);
+		DataType dt2 = new DataType("EPA-CODE", "995842215");
+		dt2.setId(DbKey.createDbKey(5678L));
+		dt2.setDisplayName("Test Display Name 2");
+		dts.add(dt2);
+
+		ArrayList<ApiDataType> apiDataTypes = map(dts);
+		assertNotNull(apiDataTypes);
+		assertEquals(2, apiDataTypes.size());
+		ApiDataType apiDataType = apiDataTypes.get(0);
+		assertEquals(dt.getCode(), apiDataType.getCode());
+		assertEquals(dt.getId().getValue(), apiDataType.getId());
+		assertEquals(dt.getDisplayName(), apiDataType.getDisplayName());
+		assertEquals(dt.getStandard(), apiDataType.getStandard());
+		ApiDataType apiDataType2 = apiDataTypes.get(1);
+		assertEquals(dt2.getCode(), apiDataType2.getCode());
+		assertEquals(dt2.getId().getValue(), apiDataType2.getId());
+		assertEquals(dt2.getDisplayName(), apiDataType2.getDisplayName());
+		assertEquals(dt2.getStandard(), apiDataType2.getStandard());
 	}
 }
