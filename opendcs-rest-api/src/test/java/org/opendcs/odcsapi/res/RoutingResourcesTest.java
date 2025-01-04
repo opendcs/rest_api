@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.TimeZone;
 import java.util.Vector;
 
+import decodes.db.DataSource;
 import decodes.db.RoutingSpec;
 import decodes.db.RoutingSpecList;
 import decodes.db.ScheduleEntry;
@@ -20,6 +21,7 @@ import org.opendcs.odcsapi.beans.ApiDacqEvent;
 import org.opendcs.odcsapi.beans.ApiRouting;
 import org.opendcs.odcsapi.beans.ApiRoutingExecStatus;
 import org.opendcs.odcsapi.beans.ApiRoutingRef;
+import org.opendcs.odcsapi.beans.ApiRoutingStatus;
 import org.opendcs.odcsapi.beans.ApiScheduleEntry;
 import org.opendcs.odcsapi.beans.ApiScheduleEntryRef;
 
@@ -42,20 +44,33 @@ final class RoutingResourcesTest
 		assertNotNull(apiRoutingRef);
 		assertEquals(apiRoutingRef.getRoutingId(), routingSpec.getId().getValue());
 		assertEquals(apiRoutingRef.getName(), routingSpec.getName());
+		assertEquals(apiRoutingRef.getDataSourceName(), routingSpec.dataSource.getName());
+		assertEquals(apiRoutingRef.getLastModified(), routingSpec.lastModifyTime);
 	}
 
 	@Test
 	void testApiRoutingMap() throws Exception
 	{
 		RoutingSpec routingSpec = buildRoutingSpec();
+
 		ApiRouting apiRouting = map(routingSpec);
+
 		assertNotNull(apiRouting);
 		assertEquals(apiRouting.getRoutingId(), routingSpec.getId().getValue());
 		assertEquals(apiRouting.getName(), routingSpec.getName());
-		assertEquals(apiRouting.getOutputTZ(), routingSpec.outputTimeZone.getID());
+		assertEquals(apiRouting.getOutputTZ(), routingSpec.outputTimeZoneAbbr);
 		assertEquals(apiRouting.getLastModified(), routingSpec.lastModifyTime);
 		assertEquals(apiRouting.isEnableEquations(), routingSpec.enableEquations);
 		assertEquals(new Vector<>(apiRouting.getNetlistNames()), routingSpec.networkListNames);
+		assertEquals(apiRouting.getDataSourceName(), routingSpec.dataSource.getName());
+		assertEquals(apiRouting.getDestinationType(), routingSpec.consumerType);
+		assertEquals(apiRouting.getDestinationArg(), routingSpec.consumerArg);
+		assertEquals(apiRouting.getDataSourceId(), routingSpec.dataSource.getId().getValue());
+		assertEquals(apiRouting.getPresGroupName(), routingSpec.presentationGroupName);
+		assertEquals(apiRouting.getSince(), routingSpec.sinceTime);
+		assertEquals(apiRouting.getUntil(), routingSpec.untilTime);
+		assertEquals(apiRouting.getDataSourceId(), routingSpec.dataSource.getId().getValue());
+		assertEquals(apiRouting.getProperties(), routingSpec.getProperties());
 	}
 
 	@Test
@@ -257,6 +272,34 @@ final class RoutingResourcesTest
 		assertEquals(apiDacqEvent.getPlatformId(), dacqEvent.getPlatformId().getValue());
 	}
 
+	@Test
+	void testStatusMap()
+	{
+		ScheduleEntry scheduleEntry = new ScheduleEntry(DbKey.createDbKey(1234L));
+		scheduleEntry.setName("TestScheduleEntry");
+		scheduleEntry.setLoadingAppName("TestAppName");
+		scheduleEntry.setRoutingSpecName("TestRoutingSpec");
+		scheduleEntry.setLastModified(Date.from(Instant.parse("2021-02-01T00:00:00Z")));
+		scheduleEntry.setLoadingAppId(DbKey.createDbKey(5678L));
+		scheduleEntry.setRoutingSpecId(DbKey.createDbKey(9012L));
+		scheduleEntry.setStartTime(Date.from(Instant.parse("2021-01-01T00:00:00Z")));
+		scheduleEntry.setEnabled(true);
+		scheduleEntry.setTimezone("UTC");
+		scheduleEntry.setRunInterval("1h");
+
+		ApiRoutingStatus apiRoutingStatus = statusMap(scheduleEntry);
+
+		assertNotNull(apiRoutingStatus);
+		assertEquals(apiRoutingStatus.getScheduleEntryId(), scheduleEntry.getKey().getValue());
+		assertEquals(apiRoutingStatus.getName(), scheduleEntry.getName());
+		assertEquals(apiRoutingStatus.getAppName(), scheduleEntry.getLoadingAppName());
+		assertEquals(apiRoutingStatus.getLastActivity(), scheduleEntry.getLastModified());
+		assertEquals(apiRoutingStatus.getAppId(), scheduleEntry.getLoadingAppId().getValue());
+		assertEquals(apiRoutingStatus.getRoutingSpecId(), scheduleEntry.getRoutingSpecId().getValue());
+		assertEquals(apiRoutingStatus.isEnabled(), scheduleEntry.isEnabled());
+		assertEquals(apiRoutingStatus.getRunInterval(), scheduleEntry.getRunInterval());
+	}
+
 	private RoutingSpec buildRoutingSpec() throws Exception
 	{
 		RoutingSpec routingSpec = new RoutingSpec();
@@ -265,7 +308,15 @@ final class RoutingResourcesTest
 		routingSpec.outputTimeZone = TimeZone.getTimeZone("UTC");
 		routingSpec.lastModifyTime = Date.from(Instant.parse("2021-02-01T00:00:00Z"));
 		routingSpec.enableEquations = true;
+		DataSource dataSource = new DataSource();
+		dataSource.setName("TestDataSource");
+		routingSpec.dataSource = dataSource;
+		routingSpec.consumerType = "TestConsumerType";
+		routingSpec.consumerArg = "TestConsumerArg";
 		routingSpec.networkListNames = new Vector<>(Arrays.asList("TestNet", "TestNet2"));
+		routingSpec.presentationGroupName = "TestPresGroup";
+		routingSpec.sinceTime = "2021-01-01T00:00:00Z";
+		routingSpec.untilTime ="2021-02-01T00:00:00Z";
 		return routingSpec;
 	}
 }
