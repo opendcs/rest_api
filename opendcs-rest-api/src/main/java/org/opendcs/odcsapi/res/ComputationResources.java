@@ -34,7 +34,7 @@ import javax.ws.rs.core.Response;
 import decodes.db.DataType;
 import decodes.db.Site;
 import decodes.sql.DbKey;
-import decodes.tsdb.CompFilter;
+import decodes.tsdb.CompRefFilter;
 import decodes.tsdb.ConstraintException;
 import decodes.tsdb.DbCompAlgorithm;
 import decodes.tsdb.DbCompParm;
@@ -71,15 +71,19 @@ public class ComputationResources extends OpenDcsResource
 	{
 		try (ComputationDAI dai = getLegacyTimeseriesDB().makeComputationDAO())
 		{
-			CompFilter filter = new CompFilter();
-			// TODO: Implement filter, needs IDs from names
+			CompRefFilter refFilter = new CompRefFilter();
 			if (enabled != null)
 			{
-				filter.setEnabledOnly(enabled);
+				refFilter.setEnabledOnly(enabled);
+				refFilter.setAlgorithm(algorithm);
+				refFilter.setDataType(datatype);
+				refFilter.setGroup(group);
+				refFilter.setProcess(process);
+				refFilter.setSite(site);
+				refFilter.setIntervalCode(interval);
 			}
-			// TODO: Fix this retrieval, no data is being returned
 			return Response.status(HttpServletResponse.SC_OK)
-					.entity(map(dai.compEditList(filter))).build();
+					.entity(dai.listCompRefsForREST(refFilter).stream().map(ComputationResources::map)).build();
 		}
 		catch(DbIoException e)
 		{
