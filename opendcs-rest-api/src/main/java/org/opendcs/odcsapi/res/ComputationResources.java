@@ -75,15 +75,37 @@ public class ComputationResources extends OpenDcsResource
 			if (enabled != null)
 			{
 				refFilter.setEnabledOnly(enabled);
+			}
+			if (algorithm != null)
+			{
 				refFilter.setAlgorithm(algorithm);
+			}
+			if (datatype != null)
+			{
 				refFilter.setDataType(datatype);
+			}
+			if (group != null)
+			{
 				refFilter.setGroup(group);
+			}
+			if (process != null)
+			{
 				refFilter.setProcess(process);
+			}
+			if (site != null)
+			{
 				refFilter.setSite(site);
+			}
+			if (interval != null)
+			{
 				refFilter.setIntervalCode(interval);
 			}
 			return Response.status(HttpServletResponse.SC_OK)
-					.entity(dai.listCompRefsForREST(refFilter).stream().map(ComputationResources::map)).build();
+					.entity(dai.listCompRefsForREST(refFilter)
+							.stream()
+							.map(ComputationResources::map)
+							.collect(Collectors.toList()))
+					.build();
 		}
 		catch(DbIoException e)
 		{
@@ -142,9 +164,14 @@ public class ComputationResources extends OpenDcsResource
 			return Response.status(HttpServletResponse.SC_OK)
 					.entity(map(dai.getComputationById(DbKey.createDbKey(compId)))).build();
 		}
-		catch(DbIoException | NoSuchObjectException e)
+		catch(DbIoException e)
 		{
 			throw new DbException(String.format("Unable to retrieve computation by ID: %s", compId), e);
+		}
+		catch (NoSuchObjectException e)
+		{
+			throw new WebAppException(HttpServletResponse.SC_NOT_FOUND,
+					String.format("Computation with ID %s not found", compId));
 		}
 	}
 
@@ -203,9 +230,15 @@ public class ComputationResources extends OpenDcsResource
 	static ApiCompParm map(DbCompParm parm)
 	{
 		ApiCompParm ret = new ApiCompParm();
-		ret.setDataType(parm.getDataType().getDisplayName());
+		if (parm.getDataType() != null)
+		{
+			ret.setDataType(parm.getDataType().getDisplayName());
+		}
 		ret.setInterval(parm.getInterval());
-		ret.setSiteName(parm.getSiteName().getNameValue());
+		if (parm.getSiteName() != null)
+		{
+			ret.setSiteName(parm.getSiteName().getDisplayName());
+		}
 		if (parm.getSiteId() != null)
 		{
 			ret.setSiteId(parm.getSiteId().getValue());
@@ -258,7 +291,15 @@ public class ComputationResources extends OpenDcsResource
 
 	static DbComputation map(ApiComputation comp)
 	{
-		DbComputation ret = new DbComputation(DbKey.createDbKey(comp.getComputationId()), comp.getName());
+		DbComputation ret;
+		if (comp.getComputationId() != null)
+		{
+			ret = new DbComputation(DbKey.createDbKey(comp.getComputationId()), comp.getName());
+		}
+		else
+		{
+			ret = new DbComputation(DbKey.NullKey, comp.getName());
+		}
 		if (comp.getAlgorithmId() != null)
 		{
 			ret.setAlgorithmId(DbKey.createDbKey(comp.getAlgorithmId()));
@@ -306,8 +347,8 @@ public class ComputationResources extends OpenDcsResource
 			return null;
 		}
 		DbCompParm ret = new DbCompParm(parm.getAlgoRoleName(),
-				DbKey.createDbKey(parm.getSiteId()), parm.getInterval(),
-				parm.getTableSelector(), parm.getDeltaT());
+				parm.getSiteId() != null ? DbKey.createDbKey(parm.getSiteId()) : DbKey.NullKey,
+				parm.getInterval(), parm.getTableSelector(), parm.getDeltaT());
 		if (parm.getDataTypeId() != null)
 		{
 			DataType dt = new DataType(parm.getDataType(), parm.getDataTypeId().toString());
