@@ -40,6 +40,7 @@ import static org.opendcs.odcsapi.res.DataSourceContextCreator.DATA_SOURCE_ATTRI
 class OpenDcsResource
 {
 	private static final Logger LOGGER = LoggerFactory.getLogger(OpenDcsResource.class);
+	private static final String UNSUPPORTED_OPERATION_MESSAGE = "Endpoint is unsupported by the OpenDCS REST API.";
 
 	@Context
 	private ServletContext context;
@@ -47,7 +48,7 @@ class OpenDcsResource
 	final <T extends OpenDcsDao> T getDao(Class<T> daoClass)
 	{
 		return createDb().getDao(daoClass)
-				.orElseThrow(() -> new UnsupportedOperationException("Endpoint is unsupported by the OpenDCS REST API."));
+				.orElseThrow(() -> new UnsupportedOperationException(UNSUPPORTED_OPERATION_MESSAGE));
 	}
 
 	final OpenDcsDatabase createDb()
@@ -90,12 +91,12 @@ class OpenDcsResource
 	DatabaseIO getLegacyDatabase()
 	{
 		return createDb().getLegacyDatabase(Database.class).map(Database::getDbIo)
-				.orElseThrow(() -> new UnsupportedOperationException("Endpoint is unsupported by the OpenDCS REST API."));
+				.orElseThrow(() -> new UnsupportedOperationException(UNSUPPORTED_OPERATION_MESSAGE));
 	}
 
 	TimeSeriesDb getLegacyTimeseriesDB()
 	{
 		return createDb().getLegacyDatabase(TimeSeriesDb.class)
-				.orElseThrow(() -> new UnsupportedOperationException("Endpoint is unsupported by the OpenDCS REST API."));
+				.orElseThrow(() -> new UnsupportedOperationException(UNSUPPORTED_OPERATION_MESSAGE));
 	}
 }
