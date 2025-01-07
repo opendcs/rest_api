@@ -101,7 +101,7 @@ public class ComputationResources extends OpenDcsResource
 				refFilter.setIntervalCode(interval);
 			}
 			return Response.status(HttpServletResponse.SC_OK)
-					.entity(dai.listCompRefsForREST(refFilter)
+					.entity(dai.listCompRefsMatching(refFilter)
 							.stream()
 							.map(ComputationResources::map)
 							.collect(Collectors.toList()))
