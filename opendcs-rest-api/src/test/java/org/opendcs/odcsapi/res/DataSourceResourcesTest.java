@@ -1,6 +1,7 @@
 package org.opendcs.odcsapi.res;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 import java.util.Vector;
 
@@ -42,7 +43,7 @@ final class DataSourceResourcesTest
 		assertMatch(apiData.getGroupMembers(), ds.groupMembers);
 	}
 
-	private static void assertMatch(ArrayList<ApiDataSourceGroupMember> groupMembers, Vector<DataSource> groupMemVector)
+	private static void assertMatch(List<ApiDataSourceGroupMember> groupMembers, Vector<DataSource> groupMemVector)
 	{
 		for (ApiDataSourceGroupMember member : groupMembers)
 		{
@@ -67,7 +68,7 @@ final class DataSourceResourcesTest
 	{
 		Vector<DataSource> groupMembers = new Vector<>();
 
-		ArrayList<ApiDataSourceGroupMember> members = map(groupMembers);
+		List<ApiDataSourceGroupMember> members = map(groupMembers);
 		assertNotNull(members);
 		assertMatch(members, groupMembers);
 	}

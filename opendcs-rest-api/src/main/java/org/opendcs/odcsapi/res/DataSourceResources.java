@@ -16,6 +16,7 @@
 package org.opendcs.odcsapi.res;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 import java.util.Vector;
 
@@ -49,6 +50,8 @@ import org.opendcs.odcsapi.sec.AuthorizationCheck;
 @Path("/")
 public class DataSourceResources extends OpenDcsResource
 {
+	private DatabaseIO dbIo;
+
 	@Context HttpHeaders httpHeaders;
 
 	@GET
@@ -59,14 +62,18 @@ public class DataSourceResources extends OpenDcsResource
 	{
 		try
 		{
-			DatabaseIO dbio = getLegacyDatabase();
+			dbIo = getLegacyDatabase();
 			DataSourceList dsl = new DataSourceList();
-			dbio.readDataSourceList(dsl);
+			dbIo.readDataSourceList(dsl);
 			return Response.status(HttpServletResponse.SC_OK).entity(map(dsl)).build();
 		}
 		catch (DatabaseException ex)
 		{
 			throw new DbException("Error reading data source list: " + ex);
+		}
+		finally
+		{
+			dbIo.close();
 		}
 	}
 
@@ -110,7 +117,7 @@ public class DataSourceResources extends OpenDcsResource
 	@Path("datasource")
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({AuthorizationCheck.ODCS_API_GUEST})
-	public Response geDataSource(@QueryParam("datasourceid") Long dataSourceId)
+	public Response getDataSource(@QueryParam("datasourceid") Long dataSourceId)
 			throws WebAppException, DbException
 	{
 		if (dataSourceId == null)
@@ -121,9 +128,9 @@ public class DataSourceResources extends OpenDcsResource
 
 		try
 		{
-			DatabaseIO dbio = getLegacyDatabase();
+			dbIo = getLegacyDatabase();
 			DataSource ds = new DataSource(DbKey.createDbKey(dataSourceId));
-			dbio.readDataSource(ds);
+			dbIo.readDataSource(ds);
 
 			if (ds.getName() == null)
 			{
@@ -136,6 +143,10 @@ public class DataSourceResources extends OpenDcsResource
 		catch (DatabaseException ex)
 		{
 			throw new DbException("Error reading data source: " + ex);
+		}
+		finally
+		{
+			dbIo.close();
 		}
 	}
 
@@ -159,13 +170,13 @@ public class DataSourceResources extends OpenDcsResource
 		return ads;
 	}
 
-	static ArrayList<ApiDataSourceGroupMember> map(Vector<DataSource> groupMembers)
+	static List<ApiDataSourceGroupMember> map(Vector<DataSource> groupMembers)
 	{
 		if (groupMembers == null)
 		{
 			return new ArrayList<>();
 		}
-		ArrayList<ApiDataSourceGroupMember> ret = new ArrayList<>();
+		List<ApiDataSourceGroupMember> ret = new ArrayList<>();
 		for(DataSource ds : groupMembers)
 		{
 			ApiDataSourceGroupMember ads = new ApiDataSourceGroupMember();
@@ -197,9 +208,9 @@ public class DataSourceResources extends OpenDcsResource
 		}
 		try
 		{
-			DatabaseIO dbio = getLegacyDatabase();
+			dbIo = getLegacyDatabase();
 			DataSource source = map(datasource);
-			dbio.writeDataSource(source);
+			dbIo.writeDataSource(source);
 			return Response.status(HttpServletResponse.SC_OK)
 					.entity(map(source))
 					.build();
@@ -207,6 +218,10 @@ public class DataSourceResources extends OpenDcsResource
 		catch (DatabaseException ex)
 		{
 			throw new DbException("Error writing data source: " + ex);
+		}
+		finally
+		{
+			dbIo.close();
 		}
 	}
 
@@ -229,7 +244,7 @@ public class DataSourceResources extends OpenDcsResource
 		return ds;
 	}
 
-	static Vector<DataSource> map(ArrayList<ApiDataSourceGroupMember> groupMembers)
+	static Vector<DataSource> map(List<ApiDataSourceGroupMember> groupMembers)
 	{
 		Vector<DataSource> ret = new Vector<>();
 		if (groupMembers == null)
@@ -258,9 +273,9 @@ public class DataSourceResources extends OpenDcsResource
 			{
 				throw new WebAppException(ErrorCodes.MISSING_ID, "Missing required datasourceid parameter.");
 			}
-			DatabaseIO dao = getLegacyDatabase();
+			dbIo = getLegacyDatabase();
 			DataSource ds = new DataSource(DbKey.createDbKey(datasourceId));
-			dao.readDataSource(ds);
+			dbIo.readDataSource(ds);
 			if (ds.getName() == null)
 			{
 				return Response.status(HttpServletResponse.SC_NOT_FOUND)
@@ -275,13 +290,17 @@ public class DataSourceResources extends OpenDcsResource
 								+ ds.numUsedBy).build();
 			}
 
-			dao.deleteDataSource(ds);
+			dbIo.deleteDataSource(ds);
 			return Response.status(HttpServletResponse.SC_OK)
 					.entity("Datasource with ID " + datasourceId + " deleted").build();
 		}
 		catch (DatabaseException ex)
 		{
 			throw new DbException("Error deleting data source: " + ex);
+		}
+		finally
+		{
+			dbIo.close();
 		}
 	}
 
