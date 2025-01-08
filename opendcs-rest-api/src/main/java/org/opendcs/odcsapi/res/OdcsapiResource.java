@@ -15,9 +15,11 @@
 
 package org.opendcs.odcsapi.res;
 
+import java.sql.SQLException;
+import java.util.Collections;
 import java.util.Properties;
-import java.util.logging.Logger;
 import javax.annotation.security.RolesAllowed;
+import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -29,18 +31,15 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import decodes.tsdb.DbIoException;
+import decodes.tsdb.TimeSeriesDb;
 import org.opendcs.database.api.OpenDcsDatabase;
 import org.opendcs.odcsapi.beans.DecodeRequest;
-import org.opendcs.odcsapi.dao.ApiTsDAO;
 import org.opendcs.odcsapi.dao.DbException;
-import org.opendcs.odcsapi.errorhandling.ErrorCodes;
 import org.opendcs.odcsapi.errorhandling.WebAppException;
-import org.opendcs.odcsapi.hydrojson.DbInterface;
 import org.opendcs.odcsapi.opendcs_dep.PropSpecHelper;
 import org.opendcs.odcsapi.opendcs_dep.TestDecoder;
 import org.opendcs.odcsapi.sec.AuthorizationCheck;
-import org.opendcs.odcsapi.util.ApiConstants;
-import org.opendcs.odcsapi.util.ApiHttpUtil;
 
 
 @Path("/")
@@ -54,11 +53,22 @@ public class OdcsapiResource extends OpenDcsResource
 	@RolesAllowed({AuthorizationCheck.ODCS_API_GUEST})
 	public Response getTsdbProperties() throws DbException
 	{
-		Logger.getLogger(ApiConstants.loggerName).fine("getTsdbProperties");
-		try (DbInterface dbi = new DbInterface();
-			 ApiTsDAO dao = new ApiTsDAO(dbi))
+		try
 		{
-			return ApiHttpUtil.createResponse(dao.getTsdbProperties());
+			TimeSeriesDb tsdb = getLegacyTimeseriesDB();
+			tsdb.readTsdbProperties(tsdb.getConnection());
+
+			Properties props = new Properties();
+			for (Object keyObj : Collections.list(tsdb.getPropertyNames()))
+			{
+				String key = (String) keyObj;
+				props.setProperty(key, tsdb.getProperty(key));
+			}
+			return Response.status(HttpServletResponse.SC_OK).entity(props).build();
+		}
+		catch(SQLException e)
+		{
+			throw new DbException("Error reading timeseries properties", e);
 		}
 	}
 
@@ -69,13 +79,16 @@ public class OdcsapiResource extends OpenDcsResource
 	@RolesAllowed({AuthorizationCheck.ODCS_API_ADMIN, AuthorizationCheck.ODCS_API_USER})
 	public Response postTsdbProperties(Properties props) throws DbException
 	{
-		Logger.getLogger(ApiConstants.loggerName).fine("post tsdb_properties");
-		try (DbInterface dbi = new DbInterface();
-			 ApiTsDAO dao = new ApiTsDAO(dbi))
+		try
 		{
-			dao.setTsdbProperties(props);;
-			return ApiHttpUtil.createResponse(props);
+			TimeSeriesDb tsdb = getLegacyTimeseriesDB();
+			tsdb.writeTsdbProperties(props);
 		}
+		catch (DbIoException e)
+		{
+			throw new DbException("Error writing timeseries properties", e);
+		}
+		return Response.status(HttpServletResponse.SC_OK).entity(props).build();
 	}
 
 	@GET
@@ -85,12 +98,12 @@ public class OdcsapiResource extends OpenDcsResource
 	public Response getPropSpecs(@QueryParam("class") String className)
 			throws WebAppException
 	{
-		Logger.getLogger(ApiConstants.loggerName).info("getPropSpecs class='" + className + "'");
-
 		if (className == null)
-			throw new WebAppException(ErrorCodes.MISSING_ID, "Missing required class argument.");
+		{
+			throw new WebAppException(HttpServletResponse.SC_BAD_REQUEST, "Missing required class argument.");
+		}
 
-		return ApiHttpUtil.createResponse(PropSpecHelper.getPropSpecs(className));
+		return Response.status(HttpServletResponse.SC_OK).entity(PropSpecHelper.getPropSpecs(className)).build();
 	}
 
 	@POST
@@ -101,9 +114,13 @@ public class OdcsapiResource extends OpenDcsResource
 	public Response postDecode(@QueryParam("script") String scriptName, DecodeRequest request)
 			throws WebAppException, DbException
 	{
-		Logger.getLogger(ApiConstants.loggerName).fine("decode message");
+		if (scriptName == null)
+		{
+			throw new WebAppException(HttpServletResponse.SC_BAD_REQUEST, "Missing required script argument.");
+		}
 		OpenDcsDatabase db = createDb();
-		return ApiHttpUtil.createResponse(TestDecoder.decodeMessage(request.getRawmsg(), request.getConfig(),
-				scriptName, db));
+
+		return Response.status(HttpServletResponse.SC_OK).entity(TestDecoder.decodeMessage(request.getRawmsg(),
+				request.getConfig(), scriptName, db)).build();
 	}
 }
