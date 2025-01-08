@@ -21,6 +21,7 @@ import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.Base64;
 import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.core.MediaType;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.restassured.filter.log.LogDetail;
@@ -131,8 +132,9 @@ class BaseIT
 		{
 			given()
 				.log().ifValidationFails(LogDetail.ALL, true)
-				.filter(sessionFilter)
+				.accept(MediaType.APPLICATION_JSON)
 				.header("Authorization", authHeader)
+				.filter(sessionFilter)
 			.when()
 				.redirects().follow(true)
 				.redirects().max(3)
