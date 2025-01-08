@@ -56,6 +56,7 @@ import javax.servlet.http.HttpServletResponse;
 public class NetlistResources extends OpenDcsResource
 {
 	@Context HttpHeaders httpHeaders;
+	DatabaseIO dbIo;
 
 	@GET
 	@Path("netlistrefs")
@@ -64,18 +65,27 @@ public class NetlistResources extends OpenDcsResource
 	public Response getNetlistRefs(@QueryParam("tmtype") String tmtype)
 			throws DbException
 	{
-		// TODO: Implement filtering by transport medium type.
-		// TODO: Investigate non-functioning endpoint (no data returned).
 		try
 		{
-			DatabaseIO dbIo = getLegacyDatabase();
+			dbIo = getLegacyDatabase();
 			NetworkListList nlList = new NetworkListList();
-			dbIo.readNetworkListList(nlList);
+			if (tmtype == null)
+			{
+				dbIo.readNetworkListList(nlList);
+			}
+			else
+			{
+				dbIo.readNetworkListList(nlList, getSingleWord(tmtype).toLowerCase());
+			}
 			return Response.status(HttpServletResponse.SC_OK).entity(map(nlList)).build();
 		}
 		catch(DatabaseException ex)
 		{
 			throw new DbException("Unable to retrieve network list", ex);
+		}
+		finally
+		{
+			dbIo.close();
 		}
 	}
 
@@ -116,19 +126,25 @@ public class NetlistResources extends OpenDcsResource
 
 		try
 		{
-			DatabaseIO dbIo = getLegacyDatabase();
+			dbIo = getLegacyDatabase();
 			NetworkListList nlList = new NetworkListList();
 			dbIo.readNetworkListList(nlList);
 			NetworkList nl = nlList.getById(DbKey.createDbKey(netlistId));
-			if (nl.networkListEntries.isEmpty())
+ 			if (nl == null || nl.networkListEntries == null || nl.networkListEntries.isEmpty())
+			{
 				throw new WebAppException(HttpServletResponse.SC_NOT_FOUND,
 						"No such network list with id=" + netlistId + ".");
+			}
 			ApiNetList ret = map(nl);
 			return Response.status(HttpServletResponse.SC_OK).entity(ret).build();
 		}
 		catch(DatabaseException ex)
 		{
 			throw new DbException(String.format("Unable to retrieve network list of ID: %s", netlistId), ex);
+		}
+		finally
+		{
+			dbIo.close();
 		}
 	}
 
@@ -164,11 +180,15 @@ public class NetlistResources extends OpenDcsResource
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({AuthorizationCheck.ODCS_API_ADMIN, AuthorizationCheck.ODCS_API_USER})
 	public Response  postNetlist(ApiNetList netList)
-			throws DbException
+			throws DbException, WebAppException
 	{
 		try
 		{
-			DatabaseIO dbIo = getLegacyDatabase();
+			if (netList == null)
+			{
+				throw new WebAppException(HttpServletResponse.SC_BAD_REQUEST, "Missing required request body.");
+			}
+			dbIo = getLegacyDatabase();
 			NetworkList nlList = map(netList);
 			dbIo.writeNetworkList(nlList);
 			return Response.status(HttpServletResponse.SC_OK).entity(map(nlList)).build();
@@ -176,6 +196,10 @@ public class NetlistResources extends OpenDcsResource
 		catch(DatabaseException ex)
 		{
 			throw new DbException("Unable to store network list", ex);
+		}
+		finally
+		{
+			dbIo.close();
 		}
 	}
 
@@ -220,7 +244,7 @@ public class NetlistResources extends OpenDcsResource
 
 		try
 		{
-			DatabaseIO dbIo = getLegacyDatabase();
+			dbIo = getLegacyDatabase();
 			NetworkListList nlList = new NetworkListList();
 			dbIo.readNetworkListList(nlList);
 			NetworkList nl = nlList.getById(DbKey.createDbKey(netlistId));
@@ -254,6 +278,10 @@ public class NetlistResources extends OpenDcsResource
 		catch (DatabaseException ex)
 		{
 			throw new DbException("Unable to delete network list", ex);
+		}
+		finally
+		{
+			dbIo.close();
 		}
 	}
 
@@ -290,10 +318,27 @@ public class NetlistResources extends OpenDcsResource
 			throw new WebAppException(HttpServletResponse.SC_NOT_ACCEPTABLE, msg);
 		}
 
-		try { rdr.close(); } catch (Exception e) {}
+		try { rdr.close(); } catch (Exception ignored)
+		{
+			// Ignored
+		}
 
 		return Response.status(HttpServletResponse.SC_OK).entity(ret).build();
 	}
 
+	// Helper method to extract the first word from a string.
+	public static String getSingleWord(String arg)
+	{
+		String special = "(){}[]'\"|,";
+
+		StringBuilder sb = new StringBuilder(arg.trim());
+		for(int idx = 0; idx < sb.length(); idx++)
+		{
+			char c = sb.charAt(idx);
+			if (Character.isWhitespace(c) || special.indexOf(c) >= 0)
+				return idx == 0 ? "" : sb.substring(0, idx);
+		}
+		return sb.toString();
+	}
 
 }
