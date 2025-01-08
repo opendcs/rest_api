@@ -16,6 +16,7 @@ import org.opendcs.odcsapi.beans.ApiNetlistRef;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.opendcs.odcsapi.res.NetlistResources.map;
 
 final class NetlistResourcesTest
@@ -102,5 +103,25 @@ final class NetlistResourcesTest
 		assertEquals(nle.getDescription(), nle2.getDescription());
 		assertEquals(nle.getPlatformName(), nle2.getPlatformName());
 		assertEquals(nle.getTransportId(), nle2.getTransportId());
+	}
+
+	@Test
+	void testGetSingleWord()
+	{
+		String input = "This is a test input";
+		String output = NetlistResources.getSingleWord(input);
+		assertEquals("This", output);
+
+		input = "Val[{ue: status}]";
+		output = NetlistResources.getSingleWord(input);
+		assertEquals("Val", output);
+
+		input = "";
+		output = NetlistResources.getSingleWord(input);
+		assertNull(output);
+
+		input = "goes-self-timed{}";
+		output = NetlistResources.getSingleWord(input);
+		assertEquals("goes-self-timed", output);
 	}
 }
