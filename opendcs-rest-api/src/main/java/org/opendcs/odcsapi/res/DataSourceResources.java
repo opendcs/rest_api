@@ -43,7 +43,6 @@ import org.opendcs.odcsapi.beans.ApiDataSource;
 import org.opendcs.odcsapi.beans.ApiDataSourceGroupMember;
 import org.opendcs.odcsapi.beans.ApiDataSourceRef;
 import org.opendcs.odcsapi.dao.DbException;
-import org.opendcs.odcsapi.errorhandling.ErrorCodes;
 import org.opendcs.odcsapi.errorhandling.WebAppException;
 import org.opendcs.odcsapi.sec.AuthorizationCheck;
 
@@ -94,13 +93,20 @@ public class DataSourceResources extends OpenDcsResource
 			adr.setName(ds.getName());
 			adr.setType(ds.dataSourceType);
 			adr.setUsedBy(ds.numUsedBy);
-			adr.setArguments(map(ds.getArguments()));
+			if (ds.getArguments() != null)
+			{
+				adr.setArguments(propsToString(ds.getArguments()));
+			}
+			else
+			{
+				adr.setArguments(ds.getDataSourceArg());
+			}
 			ret.add(adr);
 		}
 		return ret;
 	}
 
-	static String map(Properties props)
+	static String propsToString(Properties props)
 	{
 		if (props == null || props.isEmpty())
 			return null;
@@ -110,7 +116,7 @@ public class DataSourceResources extends OpenDcsResource
 		{
 			retVal.append(key).append("=").append(props.getProperty((String) key)).append(",");
 		}
-		return retVal.toString();
+		return retVal.substring(0, retVal.length() - 1);
 	}
 
 	@GET
@@ -120,9 +126,10 @@ public class DataSourceResources extends OpenDcsResource
 	public Response getDataSource(@QueryParam("datasourceid") Long dataSourceId)
 			throws WebAppException, DbException
 	{
+		String notFound = "No such DECODES data source with id=";
 		if (dataSourceId == null)
 		{
-			throw new WebAppException(ErrorCodes.MISSING_ID,
+			throw new WebAppException(HttpServletResponse.SC_BAD_REQUEST,
 					"Missing required datasourceid parameter.");
 		}
 
@@ -134,14 +141,19 @@ public class DataSourceResources extends OpenDcsResource
 
 			if (ds.getName() == null)
 			{
-				throw new WebAppException(ErrorCodes.NO_SUCH_OBJECT,
-						"No such DECODES data source with id=" + dataSourceId + ".");
+				throw new WebAppException(HttpServletResponse.SC_NOT_FOUND,
+						notFound + dataSourceId + ".");
 			}
 			ApiDataSource ret = map(ds);
 			return Response.status(HttpServletResponse.SC_OK).entity(ret).build();
 		}
 		catch (DatabaseException ex)
 		{
+			if (ex.getMessage().contains("No DataSource found with id"))
+			{
+				return Response.status(HttpServletResponse.SC_NOT_FOUND)
+						.entity(notFound + dataSourceId + ".").build();
+			}
 			throw new DbException("Error reading data source: " + ex);
 		}
 		finally
@@ -165,8 +177,16 @@ public class DataSourceResources extends OpenDcsResource
 		}
 		ads.setName(ds.getName());
 		ads.setType(ds.dataSourceType);
-		ads.setProps(ds.getArguments());
+		if (ds.getArguments() != null)
+		{
+			ads.setProps(ds.getArguments());
+		}
+		else
+		{
+			ads.setProps(parseProps(ds.getDataSourceArg()));
+		}
 		ads.setGroupMembers(map(ds.groupMembers));
+		ads.setUsedBy(ds.numUsedBy);
 		return ads;
 	}
 
@@ -239,6 +259,7 @@ public class DataSourceResources extends OpenDcsResource
 		ds.setName(ads.getName());
 		ds.dataSourceType = ads.getType();
 		ds.arguments = ads.getProps();
+		ds.setDataSourceArg(propsToString(ads.getProps()));
 		ds.numUsedBy = ads.getUsedBy();
 		ds.groupMembers = map(ads.getGroupMembers());
 		return ds;
@@ -267,12 +288,12 @@ public class DataSourceResources extends OpenDcsResource
 	@RolesAllowed({AuthorizationCheck.ODCS_API_ADMIN, AuthorizationCheck.ODCS_API_USER})
 	public Response deleteDatasource(@QueryParam("datasourceid") Long datasourceId) throws DbException, WebAppException
 	{
+		if (datasourceId == null)
+		{
+			throw new WebAppException(HttpServletResponse.SC_BAD_REQUEST, "Missing required datasourceid parameter.");
+		}
 		try
 		{
-			if (datasourceId == null)
-			{
-				throw new WebAppException(ErrorCodes.MISSING_ID, "Missing required datasourceid parameter.");
-			}
 			dbIo = getLegacyDatabase();
 			DataSource ds = new DataSource(DbKey.createDbKey(datasourceId));
 			dbIo.readDataSource(ds);
@@ -304,5 +325,19 @@ public class DataSourceResources extends OpenDcsResource
 		}
 	}
 
-
+	static Properties parseProps(String properties)
+	{
+		if (properties == null || properties.isEmpty())
+		{
+			return new Properties();
+		}
+		Properties props = new Properties();
+		String[] pairs = properties.split(",");
+		for (String pair : pairs)
+		{
+			String[] keyValue = pair.split("=");
+			props.setProperty(keyValue[0], keyValue[1]);
+		}
+		return props;
+	}
 }

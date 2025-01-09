@@ -6,15 +6,18 @@ import java.util.Properties;
 import java.util.Vector;
 
 import decodes.db.DataSource;
+import decodes.db.DataSourceList;
 import decodes.sql.DbKey;
 import org.junit.jupiter.api.Test;
 import org.opendcs.odcsapi.beans.ApiDataSource;
 import org.opendcs.odcsapi.beans.ApiDataSourceGroupMember;
+import org.opendcs.odcsapi.beans.ApiDataSourceRef;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.opendcs.odcsapi.res.DataSourceResources.map;
+import static org.opendcs.odcsapi.res.DataSourceResources.parseProps;
 
 final class DataSourceResourcesTest
 {
@@ -37,10 +40,14 @@ final class DataSourceResourcesTest
 		ds.groupMembers = groupMembers;
 
 		ApiDataSource apiData = map(ds);
+
 		assertNotNull(apiData);
 		assertEquals(apiData.getDataSourceId(), ds.getId().getValue());
 		assertEquals(apiData.getName(), ds.getName());
 		assertMatch(apiData.getGroupMembers(), ds.groupMembers);
+		assertEquals(apiData.getUsedBy(), ds.numUsedBy);
+		assertEquals(apiData.getType(), ds.dataSourceType);
+		assertEquals(apiData.getProps(), ds.arguments);
 	}
 
 	private static void assertMatch(List<ApiDataSourceGroupMember> groupMembers, Vector<DataSource> groupMemVector)
@@ -128,6 +135,26 @@ final class DataSourceResourcesTest
 	}
 
 	@Test
+	void testSourceListToApiRefMap() throws Exception
+	{
+		DataSourceList list = new DataSourceList();
+		DataSource ds = new DataSource();
+		ds.setName("Test");
+		ds.setDataSourceArg("test=true");
+		ds.setId(DbKey.createDbKey(12345L));
+		list.add(ds);
+
+		List<ApiDataSourceRef> result = map(list);
+
+		assertNotNull(result);
+		ApiDataSourceRef ref = result.get(0);
+		assertNotNull(ref);
+		assertEquals(ds.getName(), ref.getName());
+		assertEquals(ds.getId().getValue(), ref.getDataSourceId());
+		assertEquals(ds.getDataSourceArg(), ref.getArguments());
+	}
+
+	@Test
 	void testPropertyMap()
 	{
 		Properties props = new Properties();
@@ -137,9 +164,23 @@ final class DataSourceResourcesTest
 		ApiDataSource apiData = new ApiDataSource();
 		apiData.setProps(props);
 
-		String result = map(apiData.getProps());
+		String result = DataSourceResources.propsToString(apiData.getProps());
 
 		assertNotNull(result);
-		assertEquals("key=value,key2=value2,", result);
+		assertEquals("key=value,key2=value2", result);
+	}
+
+	@Test
+	void testPropertyStringParser()
+	{
+		String propString = "key=value,key2=value2";
+		Properties result = parseProps(propString);
+		assertEquals(2, result.size());
+		assertEquals("value", result.getProperty("key"));
+		assertEquals("value2", result.getProperty("key2"));
+
+		propString = "";
+		result = parseProps(propString);
+		assertEquals(0, result.size());
 	}
 }
