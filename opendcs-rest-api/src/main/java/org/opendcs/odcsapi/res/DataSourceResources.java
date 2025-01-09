@@ -109,7 +109,7 @@ public class DataSourceResources extends OpenDcsResource
 	static String propsToString(Properties props)
 	{
 		if (props == null || props.isEmpty())
-			return null;
+			return "";
 
 		StringBuilder retVal = new StringBuilder();
 		for (Object key : props.keySet())

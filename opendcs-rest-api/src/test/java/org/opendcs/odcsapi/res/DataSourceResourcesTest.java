@@ -168,6 +168,10 @@ final class DataSourceResourcesTest
 
 		assertNotNull(result);
 		assertEquals("key=value,key2=value2", result);
+
+		props = new Properties();
+		result = DataSourceResources.propsToString(props);
+		assertEquals("", result);
 	}
 
 	@Test
