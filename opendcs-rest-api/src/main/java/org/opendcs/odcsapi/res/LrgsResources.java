@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.net.UnknownHostException;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -45,8 +46,7 @@ import decodes.db.DatabaseIO;
 import decodes.db.NetworkList;
 import decodes.db.NetworkListEntry;
 import decodes.sql.DbKey;
-import decodes.tsdb.DbIoException;
-import opendcs.dai.PropertiesDAI;
+import decodes.tsdb.TimeSeriesDb;
 import org.opendcs.odcsapi.beans.ApiDataSource;
 import org.opendcs.odcsapi.beans.ApiDataSourceGroupMember;
 import org.opendcs.odcsapi.beans.ApiDataSourceRef;
@@ -55,10 +55,9 @@ import org.opendcs.odcsapi.beans.ApiNetListItem;
 import org.opendcs.odcsapi.beans.ApiRawMessage;
 import org.opendcs.odcsapi.beans.ApiRawMessageBlock;
 import org.opendcs.odcsapi.beans.ApiSearchCrit;
-import org.opendcs.odcsapi.dao.ApiPlatformDAO;
 import org.opendcs.odcsapi.dao.DbException;
+import org.opendcs.odcsapi.errorhandling.DatabaseItemNotFoundException;
 import org.opendcs.odcsapi.errorhandling.WebAppException;
-import org.opendcs.odcsapi.hydrojson.DbInterface;
 import org.opendcs.odcsapi.lrgsclient.ApiLddsClient;
 import org.opendcs.odcsapi.lrgsclient.ClientConnectionCache;
 import org.opendcs.odcsapi.lrgsclient.DdsProtocolError;
@@ -75,6 +74,7 @@ public class LrgsResources extends OpenDcsResource
 {
 	@Context private HttpServletRequest request;
 	@Context private HttpHeaders httpHeaders;
+	private DatabaseIO dbIo;
 
 	@POST
 	@Path("searchcrit")
@@ -111,8 +111,7 @@ public class LrgsResources extends OpenDcsResource
 		ApiSearchCrit searchcrit = (ApiSearchCrit) session.getAttribute(sessionAttribute);
 		if (searchcrit == null)
 		{
-			throw new WebAppException(HttpServletResponse.SC_NOT_FOUND,
-					"No searchcrit is currently stored.");
+			throw new DatabaseItemNotFoundException("No searchcrit is currently stored.");
 		}
 		return searchcrit;
 	}
@@ -141,21 +140,28 @@ public class LrgsResources extends OpenDcsResource
 		// See if there is already an ApiLddsClient object in the userToken.
 		// If so, skip the stuff below where I connect & send netlists & searchcrit.
 		// Just skip to getting the next message block
-		if (client != null)
+		if (client == null)
 		{
 			// This is a new retrieval. Create client, send netlists & searchcrit.
-
-			// TODO: Replace ApiPlatformDAO with OpenDCS PlatformListIO (add methods in OpenDCS)
-			DatabaseIO dbio = getLegacyDatabase();
-			try (DbInterface dbi = new DbInterface();
-				 ApiPlatformDAO dao = new ApiPlatformDAO(dbi))
+			dbIo = getLegacyDatabase();
+			try
 			{
+				String host;
+				String s;
 				dataSource = getApiDataSource(null);
-				String host = ApiPropertiesUtil.getIgnoreCase(dataSource.getProps(),"host");
+				if (dataSource.getProps() == null)
+				{
+					host = null;
+					s = null;
+				}
+				else
+				{
+					host = ApiPropertiesUtil.getIgnoreCase(dataSource.getProps(), "host");
+					s = ApiPropertiesUtil.getIgnoreCase(dataSource.getProps(),"port");
+				}
 				if (host == null)
 					host = dataSource.getName();
 				int port = 16003;
-				String s = ApiPropertiesUtil.getIgnoreCase(dataSource.getProps(),"port");
 				if (s != null)
 				{
 					try
@@ -183,9 +189,9 @@ public class LrgsResources extends OpenDcsResource
 				{
 					NetworkList netList = new NetworkList();
 					netList.name = nlname;
-					dbio.readNetworkList(netList);
+					dbIo.readNetworkList(netList);
 					Long nlId = netList.getId().getValue();
-					if (nlId != null)
+					if (nlId != null && nlId != DbKey.NullKey.getValue())
 					{
 						action = "sending netlist " + nlname + ", id=" + nlId;
 						ApiNetList nl = map(netList);
@@ -195,8 +201,7 @@ public class LrgsResources extends OpenDcsResource
 
 				action = "sending searchcrit";
 
-				// TODO: Replace ApiPlatformDAO with OpenDCS PlatformListIO (this is the one usage)
-				client.sendSearchCrit(searchcrit, dao);
+				client.sendSearchCrit(searchcrit, dbIo);
 			}
 			catch (DbException | DatabaseException ex)
 			{
@@ -221,6 +226,13 @@ public class LrgsResources extends OpenDcsResource
 				clientConnectionCache.removeApiLddsClient(session.getId());
 				String em = "Error while " + action + ": " + ex;
 				throw new WebAppException(HttpServletResponse.SC_CONFLICT, em);
+			}
+			finally
+			{
+				if (dbIo != null)
+				{
+					dbIo.close();
+				}
 			}
 		}
 		// ELSE use the existing client object already initialized.
@@ -300,28 +312,31 @@ public class LrgsResources extends OpenDcsResource
 	 * @throws SQLException
 	 */
 	private ApiDataSource getApiDataSource(String dsName)
-			throws DbException, WebAppException, SQLException
+			throws DbException, WebAppException
 	{
-		try(PropertiesDAI dai = getLegacyTimeseriesDB().makePropertiesDAO())
+		TimeSeriesDb tsdb = getLegacyTimeseriesDB();
+		try
 		{
-			DatabaseIO dbio = getLegacyDatabase();
+			dbIo = getLegacyDatabase();
 			ApiDataSource dataSource = null;
 
 			Properties tsdbProps = new Properties();
 
-			dai.readProperties("tsdb_property", null, null, tsdbProps);
+			tsdb.readTsdbProperties(tsdb.getConnection());
+			for (Object keyObj : Collections.list(tsdb.getPropertyNames()))
+			{
+				String key = (String) keyObj;
+				tsdbProps.setProperty(key, tsdb.getProperty(key));
+			}
 			if (dsName == null)
 				dsName = tsdbProps.getProperty("api.datasource");
 			if (dsName != null)
 			{
-				// TODO: make this method public in OpenDCS
-
-				// Long dsId = dataSourceIO.nameToId(dsName);
-				Long dsId = null;
-				if (dsId != null)
+				DbKey dsId = dbIo.lookupDataSourceId(dsName);
+				if (dsId != DbKey.NullKey)
 				{
-					DataSource dataSource1 = new DataSource(DbKey.createDbKey(dsId));
-					dbio.readDataSource(dataSource1);
+					DataSource dataSource1 = new DataSource(dsId);
+					dbIo.readDataSource(dataSource1);
 					dataSource = map(dataSource1);
 				}
 			}
@@ -330,13 +345,13 @@ public class LrgsResources extends OpenDcsResource
 				// No api.datasource specified, or it doesn't exist. Try the first LRGS
 				// datasource in the list.
 				DataSourceList dsList = new DataSourceList();
-				dbio.readDataSourceList(dsList);
+				dbIo.readDataSourceList(dsList);
 				ArrayList<ApiDataSourceRef> dataSourceRefs = map(dsList);
 				for(ApiDataSourceRef dsr : dataSourceRefs)
 					if (dsr.getType().equalsIgnoreCase("lrgs"))
 					{
 						DataSource dataSource2 = new DataSource(DbKey.createDbKey(dsr.getDataSourceId()));
-						dbio.readDataSource(dataSource2);
+						dbIo.readDataSource(dataSource2);
 						dataSource = map(dataSource2);
 						break;
 					}
@@ -347,9 +362,16 @@ public class LrgsResources extends OpenDcsResource
 								+ "Create one, then define 'api.datasource' in TSDB properties.");
 			return dataSource;
 		}
-		catch (DatabaseException | DbIoException ex)
+		catch (DatabaseException | SQLException ex)
 		{
 			throw new DbException("Cannot get API data source", ex);
+		}
+		finally
+		{
+			if (dbIo != null)
+			{
+				dbIo.close();
+			}
 		}
 	}
 
@@ -456,7 +478,7 @@ public class LrgsResources extends OpenDcsResource
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({AuthorizationCheck.ODCS_API_GUEST})
 	public Response getLrgsStatus(@QueryParam("source") String source)
-			throws WebAppException, SQLException
+			throws WebAppException
 	{
 		ApiDataSource dataSource = null;
 		ApiLddsClient client = null;
@@ -466,13 +488,29 @@ public class LrgsResources extends OpenDcsResource
 		try
 		{
 			dataSource = getApiDataSource(source);
-			String host = ApiPropertiesUtil.getIgnoreCase(dataSource.getProps(),"host");
+			String host;
+			if (dataSource.getProps() == null)
+			{
+				host = null;
+			}
+			else
+			{
+				host = ApiPropertiesUtil.getIgnoreCase(dataSource.getProps(), "host");
+			}
 			if (host == null)
 			{
 				host = dataSource.getName();
 			}
 			int port = 16003;
-			String s = ApiPropertiesUtil.getIgnoreCase(dataSource.getProps(),"port");
+			String s;
+			if (dataSource.getProps() == null)
+			{
+				s = null;
+			}
+			else
+			{
+				s = ApiPropertiesUtil.getIgnoreCase(dataSource.getProps(), "port");
+			}
 			if (s != null)
 			{
 				try

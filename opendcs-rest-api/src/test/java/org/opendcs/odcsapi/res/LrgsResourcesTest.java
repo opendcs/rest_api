@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Properties;
 import java.util.Vector;
 
@@ -123,7 +124,7 @@ final class LrgsResourcesTest
 		assertMatch(dataSource.groupMembers, apiDataSource.getGroupMembers());
 	}
 
-	private void assertMatch(Vector<DataSource> sources, ArrayList<ApiDataSourceGroupMember> groupMembers)
+	private void assertMatch(Vector<DataSource> sources, List<ApiDataSourceGroupMember> groupMembers)
 	{
 		assertEquals(sources.size(), groupMembers.size());
 		Iterator<DataSource> srcIter = sources.iterator();
