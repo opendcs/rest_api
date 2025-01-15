@@ -16,6 +16,7 @@
 package org.opendcs.odcsapi.res;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.stream.Collectors;
 import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletResponse;
@@ -48,6 +49,8 @@ import org.opendcs.odcsapi.beans.ApiCompParm;
 import org.opendcs.odcsapi.beans.ApiComputation;
 import org.opendcs.odcsapi.beans.ApiComputationRef;
 import org.opendcs.odcsapi.dao.DbException;
+import org.opendcs.odcsapi.errorhandling.DatabaseItemNotFoundException;
+import org.opendcs.odcsapi.errorhandling.MissingParameterException;
 import org.opendcs.odcsapi.errorhandling.WebAppException;
 import org.opendcs.odcsapi.util.ApiConstants;
 
@@ -67,7 +70,7 @@ public class ComputationResources extends OpenDcsResource
 			@QueryParam("process") String process,
 			@QueryParam("enabled") Boolean enabled,
 			@QueryParam("interval") String interval)
-			throws DbException
+			throws DbException, WebAppException
 	{
 		try (ComputationDAI dai = getLegacyTimeseriesDB().makeComputationDAO())
 		{
@@ -100,12 +103,15 @@ public class ComputationResources extends OpenDcsResource
 			{
 				refFilter.setIntervalCode(interval);
 			}
-			return Response.status(HttpServletResponse.SC_OK)
-					.entity(dai.listCompRefsMatching(refFilter)
-							.stream()
-							.map(ComputationResources::map)
-							.collect(Collectors.toList()))
-					.build();
+			List<ApiComputation> comps = dai.listCompRefsMatching(refFilter)
+				.stream()
+				.map(ComputationResources::map)
+				.collect(Collectors.toList());
+			if (comps.isEmpty())
+			{
+				throw new DatabaseItemNotFoundException("No computations found matching the filter criteria");
+			}
+			return Response.status(HttpServletResponse.SC_OK).entity(comps).build();
 		}
 		catch(DbIoException e)
 		{
@@ -155,8 +161,7 @@ public class ComputationResources extends OpenDcsResource
 	{
 		if (compId == null)
 		{
-			throw new WebAppException(HttpServletResponse.SC_BAD_REQUEST,
-					"Missing required computationid parameter.");
+			throw new MissingParameterException("Missing required computationid parameter.");
 		}
 
 		try (ComputationDAI dai = getLegacyTimeseriesDB().makeComputationDAO())
@@ -170,8 +175,7 @@ public class ComputationResources extends OpenDcsResource
 		}
 		catch (NoSuchObjectException e)
 		{
-			throw new WebAppException(HttpServletResponse.SC_NOT_FOUND,
-					String.format("Computation with ID %s not found", compId));
+			throw new DatabaseItemNotFoundException(String.format("Computation with ID %s not found", compId));
 		}
 	}
 
@@ -347,7 +351,7 @@ public class ComputationResources extends OpenDcsResource
 			return null;
 		}
 		DbCompParm ret = new DbCompParm(parm.getAlgoRoleName(),
-				parm.getSiteId() != null ? DbKey.createDbKey(parm.getSiteId()) : DbKey.NullKey,
+				parm.getDataTypeId() != null ? DbKey.createDbKey(parm.getDataTypeId()) : DbKey.NullKey,
 				parm.getInterval(), parm.getTableSelector(), parm.getDeltaT());
 		if (parm.getDataTypeId() != null)
 		{
@@ -393,13 +397,13 @@ public class ComputationResources extends OpenDcsResource
 	{
 		if (computationId == null)
 		{
-			throw new WebAppException(HttpServletResponse.SC_BAD_REQUEST, "Missing required computationid parameter.");
+			throw new MissingParameterException("Missing required computationid parameter.");
 		}
 
 		try (ComputationDAI dai = getLegacyTimeseriesDB().makeComputationDAO())
 		{
 			dai.deleteComputation(DbKey.createDbKey(computationId));
-			return Response.status(HttpServletResponse.SC_OK)
+			return Response.status(HttpServletResponse.SC_NO_CONTENT)
 					.entity("Computation with ID " + computationId + " deleted").build();
 		}
 		catch(DbIoException | ConstraintException e)

@@ -19,7 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.opendcs.odcsapi.res.ComputationResources.map;
 
-final class ComputationResourceTest
+final class ComputationResourcesTest
 {
 	@Test
 	void testApiComputeMap()

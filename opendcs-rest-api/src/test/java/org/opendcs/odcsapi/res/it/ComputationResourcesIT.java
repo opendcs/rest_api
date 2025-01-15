@@ -25,10 +25,10 @@ import org.opendcs.odcsapi.fixtures.DatabaseContextProvider;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.core.IsNull.nullValue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
-@Tag("integration")
+@Tag("integration-opentsdb-only")
 @ExtendWith(DatabaseContextProvider.class)
 final class ComputationResourcesIT extends BaseIT
 {
@@ -79,7 +79,6 @@ final class ComputationResourcesIT extends BaseIT
 
 		String algJson = MAPPER.writeValueAsString(alg);
 
-		// TODO: Fix this once AlgorithmResources DAO access is updated.
 		// Insert the algorithm
 		response = given()
 			.log().ifValidationFails(LogDetail.ALL, true)
@@ -95,7 +94,7 @@ final class ComputationResourcesIT extends BaseIT
 		.then()
 			.log().ifValidationFails(LogDetail.ALL, true)
 		.assertThat()
-			.statusCode(is(HttpServletResponse.SC_OK))
+			.statusCode(is(HttpServletResponse.SC_CREATED))
 			.extract()
 		;
 
@@ -122,9 +121,7 @@ final class ComputationResourcesIT extends BaseIT
 			.extract()
 		;
 
-		// Temporary solution to get the siteId until SiteResources changes are merged in
-		// TODO: Fix this once SiteResources changes are merged in
-		siteId = getSiteId(site.getPublicName());
+		siteId = response.body().jsonPath().getLong("siteId");
 
 		comp.getParmList().get(0).setSiteName(site.getPublicName());
 		comp.getParmList().get(0).setSiteId(siteId);
@@ -174,24 +171,7 @@ final class ComputationResourcesIT extends BaseIT
 		.then()
 			.log().ifValidationFails(LogDetail.ALL, true)
 		.assertThat()
-			.statusCode(is(HttpServletResponse.SC_OK))
-		;
-
-		// Delete the site
-		given()
-			.log().ifValidationFails(LogDetail.ALL, true)
-			.filter(sessionFilter)
-			.accept(MediaType.APPLICATION_JSON)
-			.header("Authorization", authHeader)
-			.queryParam("siteid", siteId)
-		.when()
-			.redirects().follow(true)
-			.redirects().max(3)
-			.delete("site")
-		.then()
-			.log().ifValidationFails(LogDetail.ALL, true)
-		.assertThat()
-			.statusCode(is(HttpServletResponse.SC_OK))
+			.statusCode(is(HttpServletResponse.SC_NO_CONTENT))
 		;
 
 		// Delete the app
@@ -225,6 +205,23 @@ final class ComputationResourcesIT extends BaseIT
 		.then()
 			.log().ifValidationFails(LogDetail.ALL, true)
 		.assertThat()
+			.statusCode(is(HttpServletResponse.SC_NO_CONTENT))
+		;
+
+		// Delete the site
+		given()
+			.log().ifValidationFails(LogDetail.ALL, true)
+			.filter(sessionFilter)
+			.accept(MediaType.APPLICATION_JSON)
+			.header("Authorization", authHeader)
+			.queryParam("siteid", siteId)
+		.when()
+			.redirects().follow(true)
+			.redirects().max(3)
+			.delete("site")
+		.then()
+			.log().ifValidationFails(LogDetail.ALL, true)
+		.assertThat()
 			.statusCode(is(HttpServletResponse.SC_OK))
 		;
 
@@ -252,6 +249,7 @@ final class ComputationResourcesIT extends BaseIT
 			.extract()
 		;
 		List<Map<String, Object>> actualList = response.body().jsonPath().getList("");
+		assertFalse(actualList.isEmpty());
 		Map<String, Object> actualItem = actualList.get(0);
 		assertEquals(expectedJson.getString("name"), actualItem.get("name"));
 		assertEquals(expectedJson.getString("description"), actualItem.get("description"));
@@ -299,6 +297,7 @@ final class ComputationResourcesIT extends BaseIT
 		;
 
 		List<Map<String, Object>> actualList = response.body().jsonPath().getList("");
+		assertFalse(actualList.isEmpty());
 		Map<String, Object> actualItem = actualList.get(0);
 		assertEquals(expected.getString("name"), actualItem.get("name"));
 		assertEquals(expected.getString("description"), actualItem.get("description"));
@@ -328,7 +327,7 @@ final class ComputationResourcesIT extends BaseIT
 			.header("Authorization", authHeader)
 			.queryParam("site", expectedComp.getParmList().get(0).getSiteName())
 			.queryParam("datatype", expectedComp.getParmList().get(0).getDataType())
-			.queryParam("group", expectedComp.getGroupName())
+			.queryParam("group", "test group")
 			.queryParam("algorithm", expectedComp.getAlgorithmName())
 			.queryParam("process", expectedComp.getApplicationName())
 			.queryParam("enabled", false)
@@ -340,8 +339,7 @@ final class ComputationResourcesIT extends BaseIT
 		.then()
 			.log().ifValidationFails(LogDetail.ALL, true)
 		.assertThat()
-			.statusCode(is(HttpServletResponse.SC_OK))
-			.body(nullValue())
+			.statusCode(is(HttpServletResponse.SC_NOT_FOUND))
 		;
 
 		given()
@@ -363,8 +361,7 @@ final class ComputationResourcesIT extends BaseIT
 		.then()
 			.log().ifValidationFails(LogDetail.ALL, true)
 		.assertThat()
-			.statusCode(is(HttpServletResponse.SC_OK))
-			.body(nullValue())
+			.statusCode(is(HttpServletResponse.SC_NOT_FOUND))
 		;
 
 		given()
@@ -387,7 +384,6 @@ final class ComputationResourcesIT extends BaseIT
 			.log().ifValidationFails(LogDetail.ALL, true)
 		.assertThat()
 			.statusCode(is(HttpServletResponse.SC_NOT_FOUND))
-			.body(nullValue())
 		;
 	}
 
@@ -419,7 +415,10 @@ final class ComputationResourcesIT extends BaseIT
 		assertEquals(expected.getString("enabled"), actual.getString("enabled"));
 		assertEquals(expected.getString("groupName"), actual.getString("groupName"));
 		assertEquals(expected.getString("applicationName"), actual.getString("applicationName"));
-		assertEquals(expected.getString("algorithmName"), actual.getString("algorithmName"));
+		assertEquals("Test Algorithm", actual.getString("algorithmName"));
+		assertEquals(algId, actual.getLong("algorithmId"));
+		assertEquals(appId, actual.getLong("appId"));
+		assertEquals(siteId, actual.getLong("parmList[0].siteId"));
 		assertEquals(expected.getString("parmList[0].siteName"), actual.getString("parmList[0].siteName"));
 		assertEquals(expected.getString("parmList[0].dataType"), actual.getString("parmList[0].dataType"));
 		assertEquals(expected.getString("parmList[0].interval"), actual.getString("parmList[0].interval"));
@@ -505,7 +504,7 @@ final class ComputationResourcesIT extends BaseIT
 		.then()
 			.log().ifValidationFails(LogDetail.ALL, true)
 		.assertThat()
-			.statusCode(is(HttpServletResponse.SC_OK))
+			.statusCode(is(HttpServletResponse.SC_NO_CONTENT))
 		;
 
 		// Get the new computation and assert it is not found
@@ -524,35 +523,5 @@ final class ComputationResourcesIT extends BaseIT
 		.assertThat()
 			.statusCode(is(HttpServletResponse.SC_NOT_FOUND))
 		;
-	}
-
-	// TEMPORARY SOLUTION TO GET THE SITE ID UNTIL SITERESOURCES CHANGES ARE MERGED IN
-	private Long getSiteId(String siteName)
-	{
-		ExtractableResponse<Response> response = given()
-			.log().ifValidationFails(LogDetail.ALL, true)
-			.filter(sessionFilter)
-			.accept(MediaType.APPLICATION_JSON)
-			.header("Authorization", authHeader)
-		.when()
-			.redirects().follow(true)
-			.redirects().max(3)
-			.get("siterefs")
-		.then()
-			.log().ifValidationFails(LogDetail.ALL, true)
-		.assertThat()
-			.statusCode(is(HttpServletResponse.SC_OK))
-			.extract()
-		;
-
-		List<Map<String, Object>> siteList = response.body().jsonPath().getList("");
-		for (Map<String, Object> site : siteList)
-		{
-			if (site.get("publicName").equals(siteName))
-			{
-				return Long.parseLong(site.get("siteId").toString());
-			}
-		}
-		return null;
 	}
 }
