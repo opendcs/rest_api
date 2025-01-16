@@ -1,23 +1,21 @@
 {
   "configId": 4,
   "name": "Test Platform",
-  "numPlatforms": 1,
+  "numPlatforms": 0,
   "description": "Test Platform",
   "configSensors": [
     {
       "sensorNumber" : 0,
       "sensorName" : "Test Sensor",
       "recordingMode" : "U",
-      "recordingInterval" : 900,
+      "recordingInterval" : 1500,
       "timeOfFirstSample" : 0,
       "absoluteMin" : 0.0,
       "absoluteMax" : 100.0,
       "properties" : {
         "site" : "Test Site"
       },
-      "dataTypes" : {
-        "Test Type" : "Test Units"
-      },
+      "dataTypes" : {},
       "usgsStatCode" : null
     }
   ],
@@ -32,7 +30,7 @@
           "ucId" : null,
           "fromAbbr" : "C",
           "toAbbr" : "F",
-          "algorithm" : "x * 100 + 32",
+          "algorithm" : "Linear",
           "a" : 100.0,
           "b" : 32.0,
           "c" : null,

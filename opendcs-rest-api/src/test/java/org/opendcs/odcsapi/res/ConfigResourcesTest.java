@@ -5,13 +5,14 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
 
+import decodes.db.ConfigSensor;
 import decodes.db.DecodesScript;
 import decodes.db.PlatformConfig;
 import decodes.db.PlatformConfigList;
-import decodes.db.Poly5Converter;
 import decodes.db.ScriptSensor;
 import decodes.db.UnitConverter;
 import decodes.sql.DbKey;
+import decodes.xml.DecodesScriptParser;
 import org.junit.jupiter.api.Test;
 import org.opendcs.odcsapi.beans.ApiConfigRef;
 import org.opendcs.odcsapi.beans.ApiConfigScript;
@@ -21,6 +22,7 @@ import org.opendcs.odcsapi.beans.ApiUnitConverter;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.opendcs.odcsapi.res.ConfigResources.coefficientMap;
 import static org.opendcs.odcsapi.res.ConfigResources.map;
 
@@ -54,6 +56,30 @@ final class ConfigResourcesTest
 		config.configName = "Test config";
 		config.description = "Platform description";
 		config.setId(DbKey.createDbKey(5899L));
+		Vector<DecodesScript> scripts = new Vector<>();
+		PlatformConfig scriptConfig = new PlatformConfig();
+		scriptConfig.numPlatformsUsing = 1;
+		scriptConfig.configName = "Test script config";
+		scriptConfig.description = "Script config description";
+		DecodesScript.DecodesScriptBuilder builder = new DecodesScript.DecodesScriptBuilder(new DecodesScriptParser());
+		builder.platformConfig(scriptConfig);
+		DecodesScript script = builder.build();
+		script.scriptName = "Test script";
+		script.scriptType = "Test";
+		scripts.add(script);
+		config.decodesScripts = scripts;
+		PlatformConfig sensor = new PlatformConfig();
+		sensor.numPlatformsUsing = 1;
+		sensor.configName = "Test sensor";
+		sensor.description = "Sensor description";
+		ConfigSensor sensorConfig = new ConfigSensor(sensor, 12);
+		sensorConfig.absoluteMax = 100.0;
+		sensorConfig.absoluteMin = 0.0;
+		sensorConfig.recordingInterval = 15;
+		sensorConfig.recordingMode = 'C';
+		sensorConfig.sensorName = "Test sensor";
+		sensorConfig.setUsgsStatCode("00000");
+		config.addSensor(sensorConfig);
 
 		ApiPlatformConfig apiConfig = map(config);
 
@@ -62,6 +88,13 @@ final class ConfigResourcesTest
 		assertEquals(config.configName, apiConfig.getName());
 		assertEquals(config.description, apiConfig.getDescription());
 		assertEquals(config.getId().getValue(), apiConfig.getConfigId());
+		assertEquals(config.decodesScripts.size(), apiConfig.getScripts().size());
+		assertEquals(config.decodesScripts.get(0).scriptName, apiConfig.getScripts().get(0).getName());
+		assertEquals(config.getSensorVec().get(0).absoluteMax, apiConfig.getConfigSensors().get(0).getAbsoluteMax());
+		assertEquals(config.getSensorVec().get(0).absoluteMin, apiConfig.getConfigSensors().get(0).getAbsoluteMin());
+		assertEquals(config.getSensorVec().get(0).recordingInterval, apiConfig.getConfigSensors().get(0).getRecordingInterval());
+		assertEquals(config.getSensorVec().get(0).recordingMode, apiConfig.getConfigSensors().get(0).getRecordingMode());
+		assertEquals(config.getSensorVec().get(0).sensorName, apiConfig.getConfigSensors().get(0).getSensorName());
 	}
 
 	@Test
@@ -75,6 +108,7 @@ final class ConfigResourcesTest
 		apiConfig.setConfigId(5899L);
 
 		PlatformConfig config = map(apiConfig);
+
 		assertNotNull(config);
 		assertEquals(apiConfig.getNumPlatforms(), config.numPlatformsUsing);
 		assertEquals(apiConfig.getName(), config.configName);
@@ -87,8 +121,21 @@ final class ConfigResourcesTest
 			for (ScriptSensor sensor : script.scriptSensors)
 			{
 				assertEquals(apiConfig.getScripts().get(0).getScriptSensors().get(0).getSensorNumber(), sensor.sensorNumber);
-				assertMatch(apiConfig.getScripts().get(0).getScriptSensors().get(0).getUnitConverter(), (Poly5Converter) sensor.execConverter);
+				assertMatch(apiConfig.getScripts().get(0).getScriptSensors().get(0).getUnitConverter(), sensor.execConverter);
 			}
+		}
+		for (Iterator<ConfigSensor> sensor = config.getSensors(); sensor.hasNext(); )
+		{
+			ConfigSensor sensorConfig = sensor.next();
+			assertEquals(apiConfig.getConfigSensors().get(0).getAbsoluteMax(), sensorConfig.absoluteMax);
+			assertEquals(apiConfig.getConfigSensors().get(0).getAbsoluteMin(), sensorConfig.absoluteMin);
+			assertEquals(apiConfig.getConfigSensors().get(0).getRecordingInterval(), sensorConfig.recordingInterval);
+			assertEquals(apiConfig.getConfigSensors().get(0).getRecordingMode(), sensorConfig.recordingMode);
+			assertEquals(apiConfig.getConfigSensors().get(0).getSensorName(), sensorConfig.sensorName);
+			assertEquals(apiConfig.getConfigSensors().get(0).getSensorNumber(), sensorConfig.sensorNumber);
+			assertEquals(apiConfig.getConfigSensors().get(0).getUsgsStatCode(), sensorConfig.getUsgsStatCode());
+			assertEquals(apiConfig.getConfigSensors().get(0).getDataTypes(), sensorConfig.getDataType());
+			assertEquals(apiConfig.getConfigSensors().get(0).getProperties(), sensorConfig.getProperties());
 		}
 	}
 
@@ -105,7 +152,7 @@ final class ConfigResourcesTest
 		for (ScriptSensor sensor : decodesScripts.get(0).scriptSensors)
 		{
 			assertEquals(scripts.get(0).getScriptSensors().get(0).getSensorNumber(), sensor.sensorNumber);
-			assertMatch(scripts.get(0).getScriptSensors().get(0).getUnitConverter(), (Poly5Converter) sensor.execConverter);
+			assertMatch(scripts.get(0).getScriptSensors().get(0).getUnitConverter(), sensor.execConverter);
 		}
 	}
 
@@ -116,7 +163,7 @@ final class ConfigResourcesTest
 		sensor.setSensorNumber(1);
 		ApiUnitConverter unitConverter = new ApiUnitConverter();
 		unitConverter.setUcId(1234L);
-		unitConverter.setAlgorithm("None");
+		unitConverter.setAlgorithm("Poly-5");
 		unitConverter.setFromAbbr("ft");
 		unitConverter.setToAbbr("m");
 		unitConverter.setA(1.0);
@@ -131,7 +178,7 @@ final class ConfigResourcesTest
 
 		assertNotNull(decodesSensor);
 		assertEquals(sensor.getSensorNumber(), decodesSensor.sensorNumber);
-		assertMatch(sensor.getUnitConverter(), (Poly5Converter) decodesSensor.execConverter);
+		assertMatch(sensor.getUnitConverter(), decodesSensor.execConverter);
 		assertEquals(sensor.getUnitConverter().getFromAbbr(), decodesSensor.rawConverter.fromAbbr);
 		assertEquals(sensor.getUnitConverter().getToAbbr(), decodesSensor.rawConverter.toAbbr);
 		assertEquals(sensor.getUnitConverter().getA(), decodesSensor.rawConverter.coefficients[0]);
@@ -147,6 +194,7 @@ final class ConfigResourcesTest
 	@Test
 	void testApiUnitConverterMap() throws Exception
 	{
+		// Test with NullConverter
 		ApiUnitConverter unitConverter = new ApiUnitConverter();
 		unitConverter.setUcId(1234L);
 		unitConverter.setAlgorithm("None");
@@ -164,7 +212,43 @@ final class ConfigResourcesTest
 		assertNotNull(decodesUc);
 		assertEquals(unitConverter.getFromAbbr(), decodesUc.getFromAbbr());
 		assertEquals(unitConverter.getToAbbr(), decodesUc.getToAbbr());
+		assertEquals(20.0, decodesUc.convert(20.0));
+
+		// Test with Poly5Converter
+		unitConverter.setAlgorithm("Poly-5");
+
+		decodesUc = map(unitConverter);
+
+		assertNotNull(decodesUc);
+		assertEquals(unitConverter.getFromAbbr(), decodesUc.getFromAbbr());
+		assertEquals(unitConverter.getToAbbr(), decodesUc.getToAbbr());
 		assertEquals(3545706.0, decodesUc.convert(20.0));
+
+		// Test with CompositeConverter
+		unitConverter.setAlgorithm("Composite");
+		unitConverter.setFromAbbr("in");
+
+		assertThrows(IllegalArgumentException.class, () -> map(unitConverter));
+
+		// Test with LinearConverter
+		unitConverter.setAlgorithm("Linear");
+		unitConverter.setFromAbbr("ft");
+
+		decodesUc = map(unitConverter);
+
+		assertNotNull(decodesUc);
+		assertEquals(unitConverter.getFromAbbr(), decodesUc.getFromAbbr());
+		assertEquals(unitConverter.getToAbbr(), decodesUc.getToAbbr());
+		assertEquals(22.0, decodesUc.convert(20.0));
+
+		// Test with USGSStandardConverter
+		unitConverter.setAlgorithm("USGS-Standard");
+		decodesUc = map(unitConverter);
+
+		assertNotNull(decodesUc);
+		assertEquals(unitConverter.getFromAbbr(), decodesUc.getFromAbbr());
+		assertEquals(unitConverter.getToAbbr(), decodesUc.getToAbbr());
+		assertEquals(10652.0, decodesUc.convert(20.0));
 	}
 
 	@Test
@@ -188,7 +272,7 @@ final class ConfigResourcesTest
 		assertEquals(unitConverter.getF(), coefficients[5]);
 	}
 
-	private static void assertMatch(ApiUnitConverter apiUc, Poly5Converter decodesUc)
+	private static void assertMatch(ApiUnitConverter apiUc, UnitConverter decodesUc) throws Exception
 	{
 		assertEquals(apiUc.getFromAbbr(), decodesUc.getFromAbbr());
 		assertEquals(apiUc.getToAbbr(), decodesUc.getToAbbr());
@@ -212,7 +296,7 @@ final class ConfigResourcesTest
 		scriptSensor.setSensorNumber(1);
 		ApiUnitConverter unitConverter = new ApiUnitConverter();
 		unitConverter.setUcId(1234L);
-		unitConverter.setAlgorithm("None");
+		unitConverter.setAlgorithm("Poly-5");
 		unitConverter.setFromAbbr("ft");
 		unitConverter.setToAbbr("m");
 		unitConverter.setA(1.0);

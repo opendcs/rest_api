@@ -1,7 +1,7 @@
 {
   "configId": 3,
   "name": "Test Platform 2",
-  "numPlatforms": 1,
+  "numPlatforms": 0,
   "description": "Test Platform 1",
   "configSensors": [
     {
@@ -33,7 +33,7 @@
             "ucId" : null,
             "fromAbbr" : "m",
             "toAbbr" : "ft",
-            "algorithm" : "x * A",
+            "algorithm" : "None",
             "a" : 3.28084,
             "b" : null,
             "c" : null,
