@@ -1,0 +1,13 @@
+{
+  "groupId" : null,
+  "groupName" : "Test TS Group",
+  "groupType" : "Test TS Group Type",
+  "description" : "Test TS Group",
+  "tsIds" : [ ],
+  "includeGroups" : [ ],
+  "excludeGroups" : [ ],
+  "intersectGroups" : [ ],
+  "groupAttrs" : [ ],
+  "groupSites" : [ ],
+  "groupDataTypes" : [ ]
+}
