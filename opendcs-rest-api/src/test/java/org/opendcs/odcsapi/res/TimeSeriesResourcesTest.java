@@ -3,6 +3,8 @@ package org.opendcs.odcsapi.res;
 import java.sql.Date;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.List;
 
 import decodes.cwms.CwmsTsId;
 import decodes.db.Site;
@@ -25,9 +27,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.opendcs.odcsapi.res.TimeSeriesResources.dataMap;
+import static org.opendcs.odcsapi.res.TimeSeriesResources.idMap;
 import static org.opendcs.odcsapi.res.TimeSeriesResources.map;
 import static org.opendcs.odcsapi.res.TimeSeriesResources.mapRef;
 import static org.opendcs.odcsapi.res.TimeSeriesResources.specMap;
+import static org.opendcs.odcsapi.res.TimeSeriesResources.str2const;
 
 final class TimeSeriesResourcesTest
 {
@@ -55,7 +59,7 @@ final class TimeSeriesResourcesTest
 		id.setReadTime(55933124L);
 		identifiers.add(id);
 
-		ArrayList<ApiTimeSeriesIdentifier> apiIdentifiers = map(identifiers, false);
+		ArrayList<ApiTimeSeriesIdentifier> apiIdentifiers = idMap(identifiers);
 
 		assertNotNull(apiIdentifiers);
 		assertEquals(identifiers.size(), apiIdentifiers.size());
@@ -107,7 +111,7 @@ final class TimeSeriesResourcesTest
 
 		assertNotNull(apiTimeSeriesData);
 		assertMatch(cts.getTimeSeriesIdentifier(), apiTimeSeriesData.getTsid());
-		ArrayList<ApiTimeSeriesValue> values = apiTimeSeriesData.getValues();
+		List<ApiTimeSeriesValue> values = apiTimeSeriesData.getValues();
 		assertNotNull(values);
 		assertEquals(cts.size(), values.size());
 		for (int i = 0; i < cts.size(); i++)
@@ -344,5 +348,33 @@ final class TimeSeriesResourcesTest
 		assertEquals(apiTsGroupRef.getGroupName(), tsGroup.getGroupName());
 		assertEquals(apiTsGroupRef.getGroupType(), tsGroup.getGroupType());
 		assertEquals(apiTsGroupRef.getDescription(), tsGroup.getDescription());
+	}
+
+	@Test
+	void testStringToConstant()
+	{
+		String calConst = "HOUR OF DAY";
+		int constant = str2const(calConst);
+		assertEquals(Calendar.HOUR_OF_DAY, constant);
+
+		calConst = "DAY OF MONTH";
+		constant = str2const(calConst);
+		assertEquals(Calendar.DAY_OF_MONTH, constant);
+
+		calConst = "WEEK OF YEAR";
+		constant = str2const(calConst);
+		assertEquals(Calendar.WEEK_OF_YEAR, constant);
+
+		calConst = "YEAR";
+		constant = str2const(calConst);
+		assertEquals(Calendar.YEAR, constant);
+
+		calConst = "MINUTE";
+		constant = str2const(calConst);
+		assertEquals(Calendar.MINUTE, constant);
+
+		calConst = "MONTH";
+		constant = str2const(calConst);
+		assertEquals(Calendar.MONTH, constant);
 	}
 }
