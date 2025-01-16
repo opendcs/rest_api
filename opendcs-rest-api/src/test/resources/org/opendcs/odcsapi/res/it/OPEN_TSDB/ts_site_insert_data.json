@@ -1,0 +1,21 @@
+{
+  "siteId" : null,
+  "sitenames" : {
+    "Stream" : "TS test site"
+  },
+  "description" : "A TS site",
+  "latitude" : "76.3",
+  "longitude" : "-121.8",
+  "elevation" : 150.0,
+  "elevUnits" : "ft",
+  "nearestCity" : "Sacramento",
+  "timezone" : "UTC",
+  "state" : "CA",
+  "country" : "USA",
+  "region" : "Test",
+  "active" : true,
+  "locationType" : "TS",
+  "publicName" : "TS test site",
+  "properties" : { },
+  "lastModified" : 1736361778000
+}
