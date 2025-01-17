@@ -1,7 +1,7 @@
 {
   "netlistId" : null,
   "name" : "Distributed Network List",
-  "transportMediumType" : "GOES",
+  "transportMediumType" : "goes",
   "siteNameTypePref" : "Stream",
   "lastModifyTime" : 1736356819000,
   "items" : {

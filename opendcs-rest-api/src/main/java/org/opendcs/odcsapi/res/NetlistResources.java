@@ -129,7 +129,7 @@ public class NetlistResources extends OpenDcsResource
 		{
 			dbIo = getLegacyDatabase();
 			NetworkListList nlList = new NetworkListList();
-			nlList = dbIo.readNetworkListList(nlList);
+			dbIo.readNetworkListList(nlList);
 			NetworkList nl = nlList.getById(DbKey.createDbKey(netlistId));
  			if (nl == null || nl.networkListEntries == null || nl.networkListEntries.isEmpty())
 			{
@@ -191,7 +191,7 @@ public class NetlistResources extends OpenDcsResource
 			dbIo = getLegacyDatabase();
 			NetworkList nlList = map(netList);
 			dbIo.writeNetworkList(nlList);
-			return Response.status(HttpServletResponse.SC_OK).entity(map(nlList)).build();
+			return Response.status(HttpServletResponse.SC_CREATED).entity(map(nlList)).build();
 		}
 		catch(DatabaseException ex)
 		{
@@ -278,7 +278,7 @@ public class NetlistResources extends OpenDcsResource
 				nl.setId(DbKey.createDbKey(netlistId));
 			}
 			dbIo.deleteNetworkList(nl);
-			return Response.status(HttpServletResponse.SC_OK).entity("ID " + netlistId + " deleted").build();
+			return Response.status(HttpServletResponse.SC_NO_CONTENT).entity("ID " + netlistId + " deleted").build();
 		}
 		catch (DatabaseException ex)
 		{

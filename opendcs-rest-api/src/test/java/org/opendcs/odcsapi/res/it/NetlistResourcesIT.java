@@ -1,11 +1,14 @@
 package org.opendcs.odcsapi.res.it;
 
+import java.util.List;
+import java.util.Map;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.MediaType;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.restassured.filter.log.LogDetail;
 import io.restassured.filter.session.SessionFilter;
+import io.restassured.path.json.JsonPath;
 import io.restassured.response.ExtractableResponse;
 import io.restassured.response.Response;
 import org.junit.jupiter.api.AfterEach;
@@ -18,9 +21,11 @@ import org.opendcs.odcsapi.beans.ApiPlatform;
 import org.opendcs.odcsapi.fixtures.DatabaseContextProvider;
 
 import static io.restassured.RestAssured.given;
-import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Tag("integration-opentsdb-only")
 @ExtendWith(DatabaseContextProvider.class)
@@ -87,7 +92,7 @@ final class NetlistResourcesIT extends BaseIT
 		.then()
 			.log().ifValidationFails(LogDetail.ALL, true)
 		.assertThat()
-			.statusCode(is(HttpServletResponse.SC_OK))
+			.statusCode(is(HttpServletResponse.SC_CREATED))
 			.extract();
 
 		netlistId = response.body().jsonPath().getLong("netlistId");
@@ -110,7 +115,7 @@ final class NetlistResourcesIT extends BaseIT
 		.then()
 			.log().ifValidationFails(LogDetail.ALL, true)
 		.assertThat()
-			.statusCode(is(HttpServletResponse.SC_OK))
+			.statusCode(is(HttpServletResponse.SC_NO_CONTENT))
 		;
 
 		// Delete the platform
@@ -140,7 +145,13 @@ final class NetlistResourcesIT extends BaseIT
 	@TestTemplate
 	void testGetNetlistRefs()
 	{
-		given()
+		JsonPath expected = getJsonPathFromResource("netlist_insert_data.json");
+
+		assertNotNull(expected);
+
+		Map<String, Object> expectedMap = expected.getMap("");
+
+		ExtractableResponse<Response> response = given()
 			.log().ifValidationFails(LogDetail.ALL, true)
 			.accept(MediaType.APPLICATION_JSON)
 			.filter(sessionFilter)
@@ -153,15 +164,37 @@ final class NetlistResourcesIT extends BaseIT
 			.log().ifValidationFails(LogDetail.ALL, true)
 		.assertThat()
 			.statusCode(is(HttpServletResponse.SC_OK))
-			.body(hasItem(getJsonPathFromResource("netlist_get_refs_expected.json")))
+			.extract()
 		;
 
-		given()
+		JsonPath actual = response.jsonPath();
+		List<Map<String, Object>> actualList = actual.getList("");
+
+		assertNotNull(actual);
+		assertNotNull(actualList);
+
+		boolean found = false;
+		for (Map<String, Object> actualMap : actualList)
+		{
+			if (actualMap.get("name").equals(expectedMap.get("name")))
+			{
+				assertEquals(expectedMap.get("name"), actualMap.get("name"));
+				assertEquals(expectedMap.get("transportMediumType"), actualMap.get("transportMediumType"));
+				assertEquals(expectedMap.get("siteNameTypePref"), actualMap.get("siteNameTypePref"));
+				assertEquals(expectedMap.get("items[6698948].transportId"), actualMap.get("items[6698948].transportId"));
+				assertEquals(expectedMap.get("items[6698948].description"), actualMap.get("items[6698948].description"));
+				assertEquals(expectedMap.get("items[6698948].platformName"), actualMap.get("items[6698948].platformName"));
+				found = true;
+			}
+		}
+		assertTrue(found);
+
+		response = given()
 			.log().ifValidationFails(LogDetail.ALL, true)
 			.accept(MediaType.APPLICATION_JSON)
 			.filter(sessionFilter)
 			.header("Authorization", authHeader)
-			.queryParam("tmtype", "GOES")
+			.queryParam("tmtype", "goes")
 		.when()
 			.redirects().follow(true)
 			.redirects().max(3)
@@ -170,15 +203,79 @@ final class NetlistResourcesIT extends BaseIT
 			.log().ifValidationFails(LogDetail.ALL, true)
 		.assertThat()
 			.statusCode(is(HttpServletResponse.SC_OK))
-			.body(hasItem(getJsonPathFromResource("netlist_get_refs_filtered_expected.json")))
+			.extract()
 		;
 
+		actual = response.jsonPath();
+		actualList = actual.getList("");
+
+		assertNotNull(actual);
+
+		found = false;
+		for (Map<String, Object> actualMap : actualList)
+		{
+			if (actualMap.get("name").equals(expectedMap.get("name")))
+			{
+				assertEquals(expectedMap.get("name"), actualMap.get("name"));
+				assertEquals(expectedMap.get("transportMediumType"), actualMap.get("transportMediumType"));
+				assertEquals(expectedMap.get("siteNameTypePref"), actualMap.get("siteNameTypePref"));
+				assertEquals(expectedMap.get("items[6698948].transportId"), actualMap.get("items[6698948].transportId"));
+				assertEquals(expectedMap.get("items[6698948].description"), actualMap.get("items[6698948].description"));
+				assertEquals(expectedMap.get("items[6698948].platformName"), actualMap.get("items[6698948].platformName"));
+				found = true;
+			}
+		}
+
+		assertTrue(found);
+
+		response = given()
+			.log().ifValidationFails(LogDetail.ALL, true)
+			.accept(MediaType.APPLICATION_JSON)
+			.filter(sessionFilter)
+			.header("Authorization", authHeader)
+			.queryParam("tmtype", "goes-random")
+		.when()
+			.redirects().follow(true)
+			.redirects().max(3)
+			.get("netlistrefs")
+		.then()
+			.log().ifValidationFails(LogDetail.ALL, true)
+		.assertThat()
+			.statusCode(is(HttpServletResponse.SC_OK))
+			.extract()
+		;
+
+		actual = response.jsonPath();
+		actualList = actual.getList("");
+
+		assertNotNull(actual);
+
+		found = false;
+		for (Map<String, Object> actualMap : actualList)
+		{
+			if (actualMap.get("name").equals(expectedMap.get("name")))
+			{
+				assertEquals(expectedMap.get("name"), actualMap.get("name"));
+				assertEquals(expectedMap.get("transportMediumType"), actualMap.get("transportMediumType"));
+				assertEquals(expectedMap.get("siteNameTypePref"), actualMap.get("siteNameTypePref"));
+				assertEquals(expectedMap.get("items[6698948].transportId"), actualMap.get("items[6698948].transportId"));
+				assertEquals(expectedMap.get("items[6698948].description"), actualMap.get("items[6698948].description"));
+				assertEquals(expectedMap.get("items[6698948].platformName"), actualMap.get("items[6698948].platformName"));
+				found = true;
+			}
+		}
+
+		assertFalse(found);
 	}
 
 	@TestTemplate
 	void testGetNetlist()
 	{
-		given()
+		JsonPath expected = getJsonPathFromResource("netlist_get_expected.json");
+
+		assertNotNull(expected);
+
+		ExtractableResponse<Response> response = given()
 			.log().ifValidationFails(LogDetail.ALL, true)
 			.accept(MediaType.APPLICATION_JSON)
 			.header("Authorization", authHeader)
@@ -192,8 +289,21 @@ final class NetlistResourcesIT extends BaseIT
 			.log().ifValidationFails(LogDetail.ALL, true)
 		.assertThat()
 			.statusCode(is(HttpServletResponse.SC_OK))
-			.body(hasItem(getJsonPathFromResource("netlist_get_expected.json")))
+			.extract()
 		;
+
+		JsonPath actual = response.jsonPath();
+
+		assertNotNull(actual);
+		assertEquals(expected.getString("name"), actual.getString("name"));
+		assertEquals(expected.getString("transportMediumType"), actual.getString("transportMediumType"));
+		assertEquals(expected.getString("siteNameTypePref"), actual.getString("siteNameTypePref"));
+		assertEquals(expected.getString("items[6698948].transportId"),
+				actual.getString("items[6698948].transportId"));
+		assertEquals(expected.getString("items[6698948].description"),
+				actual.getString("items[6698948].description"));
+		assertEquals(expected.getString("items[6698948].platformName"),
+				actual.getString("items[6698948].platformName"));
 	}
 
 	@TestTemplate
@@ -216,14 +326,16 @@ final class NetlistResourcesIT extends BaseIT
 		.then()
 			.log().ifValidationFails(LogDetail.ALL, true)
 		.assertThat()
-			.statusCode(is(HttpServletResponse.SC_OK))
+			.statusCode(is(HttpServletResponse.SC_CREATED))
 			.extract()
 		;
 
 		Long newNetlistId = response.body().jsonPath().getLong("netlistId");
 
+		JsonPath expected = new JsonPath(netlistJson);
+
 		// Get the new netlist and assert it is as expected
-		given()
+		response = given()
 			.log().ifValidationFails(LogDetail.ALL, true)
 			.accept(MediaType.APPLICATION_JSON)
 			.filter(sessionFilter)
@@ -237,8 +349,22 @@ final class NetlistResourcesIT extends BaseIT
 			.log().ifValidationFails(LogDetail.ALL, true)
 		.assertThat()
 			.statusCode(is(HttpServletResponse.SC_OK))
-			.body(hasItem(getJsonPathFromResource("netlist_post_delete_expected.json")))
+			.extract()
 		;
+
+		JsonPath actual = response.jsonPath();
+
+		assertNotNull(actual);
+
+		assertEquals(expected.getString("name"), actual.getString("name"));
+		assertEquals(expected.getString("transportMediumType"), actual.getString("transportMediumType"));
+		assertEquals(expected.getString("siteNameTypePref"), actual.getString("siteNameTypePref"));
+		assertEquals(expected.getString("items[6698948].transportId"),
+				actual.getString("items[6698948].transportId"));
+		assertEquals(expected.getString("items[6698948].description"),
+				actual.getString("items[6698948].description"));
+		assertEquals(expected.getString("items[6698948].platformName"),
+				actual.getString("items[6698948].platformName"));
 
 		// Delete the new netlist
 		given()
@@ -254,7 +380,7 @@ final class NetlistResourcesIT extends BaseIT
 		.then()
 			.log().ifValidationFails(LogDetail.ALL, true)
 		.assertThat()
-			.statusCode(is(HttpServletResponse.SC_OK))
+			.statusCode(is(HttpServletResponse.SC_NO_CONTENT))
 		;
 
 		// Get the new netlist and assert it is not found
@@ -278,25 +404,33 @@ final class NetlistResourcesIT extends BaseIT
 	@TestTemplate
 	void testCnvtANL() throws Exception
 	{
-		String inputJson = getJsonFromResource("netlist_cnvtanl_input_data.json");
+		String inputTxt = getJsonFromResource("netlist_cnvtanl_input_data.txt");
 
-		given()
+		JsonPath expected = getJsonPathFromResource("netlist_cnvtanl_expected.json");
+
+		ExtractableResponse<Response> response = given()
 			.log().ifValidationFails(LogDetail.ALL, true)
 			.accept(MediaType.APPLICATION_JSON)
-			.contentType(MediaType.APPLICATION_JSON)
+			.contentType(MediaType.TEXT_PLAIN)
 			.filter(sessionFilter)
 			.header("Authorization", authHeader)
-			.body(inputJson)
+			.body(inputTxt)
 		.when()
 			.redirects().follow(true)
 			.redirects().max(3)
-			.post("netlist")
+			.post("cnvtnl")
 		.then()
 			.log().ifValidationFails(LogDetail.ALL, true)
 		.assertThat()
 			.statusCode(is(HttpServletResponse.SC_OK))
-			.body(hasItem(getJsonPathFromResource("netlist_cnvtanl_expected.json")))
+			.extract()
 		;
+
+		Map<String, Object> actual = response.jsonPath().getMap("items.6698948");
+		assertNotNull(actual);
+		assertEquals(expected.get("transportId"), actual.get("transportId"));
+		assertEquals(expected.get("platformName"), actual.get("platformName"));
+		assertEquals(expected.get("description"), actual.get("description"));
 	}
 
 	private Long storeSite(String jsonPath) throws Exception
