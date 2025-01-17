@@ -7,6 +7,7 @@ import decodes.db.DataType;
 import decodes.db.DataTypeSet;
 import decodes.db.EngineeringUnit;
 import decodes.db.EngineeringUnitList;
+import decodes.db.UnitConverter;
 import decodes.db.UnitConverterDb;
 import decodes.db.UnitConverterSet;
 import decodes.sql.DbKey;
@@ -19,6 +20,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.opendcs.odcsapi.res.DatatypeUnitResources.map;
+import static org.opendcs.odcsapi.res.DatatypeUnitResources.ucDbMap;
+import static org.opendcs.odcsapi.res.DatatypeUnitResources.ucMap;
 
 final class DatatypeUnitResourcesTest
 {
@@ -28,7 +31,7 @@ final class DatatypeUnitResourcesTest
 		ApiUnitConverter auc = new ApiUnitConverter();
 		auc.setFromAbbr("ft");
 		auc.setToAbbr("m");
-		auc.setAlgorithm("NULL");
+		auc.setAlgorithm("None");
 		auc.setA(1.0);
 		auc.setB(2.0);
 		auc.setC(3.0);
@@ -36,24 +39,72 @@ final class DatatypeUnitResourcesTest
 		auc.setE(5.0);
 		auc.setF(6.0);
 		auc.setUcId(1234L);
-		UnitConverterSet ucs = map(auc);
+		UnitConverterDb ucs = ucDbMap(auc);
 
 		assertNotNull(ucs);
-		UnitConverterDb ucdb = ucs.getById(DbKey.createDbKey(1234L));
-		assertNotNull(ucdb);
-		ucdb.prepareForExec();
-		assertTrue(ucdb.isPrepared());
-		assertEquals(1234L, ucdb.getId().getValue());
-		assertEquals("ft->m", ucdb.toString());
-		assertEquals("ft", ucdb.fromAbbr);
-		assertEquals("m", ucdb.toAbbr);
-		assertEquals("NULL", ucdb.algorithm);
-		assertEquals(1.0, ucdb.coefficients[0]);
-		assertEquals(2.0, ucdb.coefficients[1]);
-		assertEquals(3.0, ucdb.coefficients[2]);
-		assertEquals(4.0, ucdb.coefficients[3]);
-		assertEquals(5.0, ucdb.coefficients[4]);
-		assertEquals(6.0, ucdb.coefficients[5]);
+		ucs.prepareForExec();
+		assertTrue(ucs.isPrepared());
+		assertEquals(1234L, ucs.getId().getValue());
+		assertEquals("ft->m", ucs.toString());
+		assertEquals("ft", ucs.fromAbbr);
+		assertEquals("m", ucs.toAbbr);
+		assertEquals("None", ucs.algorithm);
+		assertEquals(1.0, ucs.coefficients[0]);
+		assertEquals(2.0, ucs.coefficients[1]);
+		assertEquals(3.0, ucs.coefficients[2]);
+		assertEquals(4.0, ucs.coefficients[3]);
+		assertEquals(5.0, ucs.coefficients[4]);
+		assertEquals(6.0, ucs.coefficients[5]);
+	}
+
+	@Test
+	void testUcMap() throws Exception
+	{
+		ApiUnitConverter auc = new ApiUnitConverter();
+		auc.setFromAbbr("ft");
+		auc.setToAbbr("m");
+		auc.setAlgorithm("None");
+		auc.setA(1.0);
+		auc.setB(2.0);
+		auc.setC(3.0);
+		auc.setD(4.0);
+		auc.setE(5.0);
+		auc.setF(6.0);
+		auc.setUcId(1234L);
+
+		UnitConverter uc = ucMap(auc);
+
+		assertNotNull(uc);
+		assertEquals("ft", uc.getFromAbbr());
+		assertEquals("m", uc.getToAbbr());
+	}
+
+	@Test
+	void testDbUcMap()
+	{
+		UnitConverterDb ucdb = new UnitConverterDb("ft", "m");
+		ucdb.algorithm = "none";
+		ucdb.coefficients[0] = 1.0;
+		ucdb.coefficients[1] = 2.0;
+		ucdb.coefficients[2] = 3.0;
+		ucdb.coefficients[3] = 4.0;
+		ucdb.coefficients[4] = 5.0;
+		ucdb.coefficients[5] = 6.0;
+		ucdb.forceSetId(DbKey.createDbKey(1234L));
+
+		ApiUnitConverter auc = map(ucdb);
+
+		assertNotNull(auc);
+		assertEquals(ucdb.fromAbbr, auc.getFromAbbr());
+		assertEquals(ucdb.toAbbr, auc.getToAbbr());
+		assertEquals(ucdb.algorithm, auc.getAlgorithm());
+		assertEquals(ucdb.coefficients[0], auc.getA());
+		assertEquals(ucdb.coefficients[1], auc.getB());
+		assertEquals(ucdb.coefficients[2], auc.getC());
+		assertEquals(ucdb.coefficients[3], auc.getD());
+		assertEquals(ucdb.coefficients[4], auc.getE());
+		assertEquals(ucdb.coefficients[5], auc.getF());
+		assertEquals(ucdb.getId().getValue(), auc.getUcId());
 	}
 
 	@Test

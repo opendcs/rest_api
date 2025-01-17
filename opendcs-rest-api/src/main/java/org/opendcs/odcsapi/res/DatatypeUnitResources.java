@@ -33,7 +33,7 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import decodes.db.CompositeConverter;
+import decodes.db.Constants;
 import decodes.db.DataTypeSet;
 import decodes.db.DatabaseException;
 import decodes.db.DatabaseIO;
@@ -51,6 +51,7 @@ import org.opendcs.odcsapi.beans.ApiDataType;
 import org.opendcs.odcsapi.beans.ApiUnit;
 import org.opendcs.odcsapi.beans.ApiUnitConverter;
 import org.opendcs.odcsapi.dao.DbException;
+import org.opendcs.odcsapi.errorhandling.MissingParameterException;
 import org.opendcs.odcsapi.errorhandling.WebAppException;
 import org.opendcs.odcsapi.util.ApiConstants;
 
@@ -63,7 +64,6 @@ import org.opendcs.odcsapi.util.ApiConstants;
 public class DatatypeUnitResources extends OpenDcsResource
 {
 	@Context HttpHeaders httpHeaders;
-	private DatabaseIO dbIo;
 
 	@GET
 	@Path("datatypelist")
@@ -71,9 +71,9 @@ public class DatatypeUnitResources extends OpenDcsResource
 	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
 	public Response getDataTypeList(@QueryParam("standard") String std) throws DbException
 	{
+		DatabaseIO dbIo = getLegacyDatabase();
 		try
 		{
-			dbIo = getLegacyDatabase();
 			DataTypeSet set = new DataTypeSet();
 			dbIo.readDataTypeSet(set, std);
 			return Response.status(HttpServletResponse.SC_OK).entity(map(set)).build();
@@ -119,9 +119,9 @@ public class DatatypeUnitResources extends OpenDcsResource
 	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
 	public Response getUnitList() throws DbException
 	{
+		DatabaseIO dbIo = getLegacyDatabase();
 		try
 		{
-			dbIo = getLegacyDatabase();
 			EngineeringUnitList euList = new EngineeringUnitList();
 			dbIo.readEngineeringUnitList(euList);
 			return Response.status(HttpServletResponse.SC_OK).entity(map(euList)).build();
@@ -162,15 +162,15 @@ public class DatatypeUnitResources extends OpenDcsResource
 	public Response postEU(@QueryParam("fromabbr") String fromabbr, ApiUnit eu)
 			throws DbException
 	{
+		DatabaseIO dbIo = getLegacyDatabase();
 		try
 		{
 			EngineeringUnit unit = new EngineeringUnit(fromabbr, eu.getName(), eu.getFamily(), eu.getMeasures());
-			dbIo = getLegacyDatabase();
 			EngineeringUnitList euList = new EngineeringUnitList();
 			dbIo.readEngineeringUnitList(euList);
 			euList.add(unit);
 			dbIo.writeEngineeringUnitList(euList);
-			return Response.status(HttpServletResponse.SC_OK)
+			return Response.status(HttpServletResponse.SC_CREATED)
 					.entity(map(euList)).build();
 		}
 		catch(DatabaseException e)
@@ -192,17 +192,15 @@ public class DatatypeUnitResources extends OpenDcsResource
 	{
 		if (abbr == null)
 		{
-			throw new WebAppException(HttpServletResponse.SC_BAD_REQUEST, "Missing required abbr parameter");
+			throw new MissingParameterException("Missing required abbr parameter");
 		}
 
+		DatabaseIO dbIo = getLegacyDatabase();
 		try
 		{
-			dbIo = getLegacyDatabase();
 			EngineeringUnit unit = new EngineeringUnit(abbr, "", "", "");
-			EngineeringUnitList euList = new EngineeringUnitList();
-			euList.add(unit);
-			dbIo.writeEngineeringUnitList(euList);
-			return Response.status(HttpServletResponse.SC_OK).entity("EU with abbr " + abbr + " deleted").build();
+			dbIo.deleteEngineeringUnit(unit);
+			return Response.status(HttpServletResponse.SC_NO_CONTENT).entity("EU with abbr " + abbr + " deleted").build();
 		}
 		catch(DatabaseException e)
 		{
@@ -220,9 +218,9 @@ public class DatatypeUnitResources extends OpenDcsResource
 	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
 	public Response getUnitConvList() throws DbException
 	{
+		DatabaseIO dbIo = getLegacyDatabase();
 		try
 		{
-			dbIo = getLegacyDatabase();
 			UnitConverterSet unitConverterSet = new UnitConverterSet();
 			dbIo.readUnitConverterSet(unitConverterSet);
 			return Response.status(HttpServletResponse.SC_OK).entity(map(unitConverterSet)).build();
@@ -244,24 +242,7 @@ public class DatatypeUnitResources extends OpenDcsResource
 		while (it.hasNext())
 		{
 			UnitConverterDb unitConv = it.next();
-			ApiUnitConverter euc = new ApiUnitConverter();
-			if (unitConv.getId() != null)
-			{
-				euc.setUcId(unitConv.getId().getValue());
-			}
-			else
-			{
-				euc.setUcId(DbKey.NullKey.getValue());
-			}
-			euc.setFromAbbr(unitConv.fromAbbr);
-			euc.setToAbbr(unitConv.toAbbr);
-			euc.setAlgorithm(unitConv.algorithm);
-			euc.setA(unitConv.coefficients[0] == 0.0 ? null : unitConv.coefficients[0]);
-			euc.setB(unitConv.coefficients[1] == 0.0 ? null : unitConv.coefficients[1]);
-			euc.setC(unitConv.coefficients[2] == 0.0 ? null : unitConv.coefficients[2]);
-			euc.setD(unitConv.coefficients[3] == 0.0 ? null : unitConv.coefficients[3]);
-			euc.setE(unitConv.coefficients[4] == 0.0 ? null : unitConv.coefficients[4]);
-			euc.setF(unitConv.coefficients[5] == 0.0 ? null : unitConv.coefficients[5]);
+			ApiUnitConverter euc = map(unitConv);
 			ret.add(euc);
 		}
 		return ret;
@@ -274,12 +255,12 @@ public class DatatypeUnitResources extends OpenDcsResource
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
 	public Response postEUConv(ApiUnitConverter euc) throws DbException
 	{
+		DatabaseIO dbIo = getLegacyDatabase();
 		try
 		{
-			dbIo = getLegacyDatabase();
-			UnitConverterSet unitSet = map(euc);
-			dbIo.writeUnitConverterSet(unitSet);
-			return Response.status(HttpServletResponse.SC_OK).entity(map(unitSet)).build();
+			UnitConverterDb unitConverterDb = ucDbMap(euc);
+			dbIo.insertUnitConverter(unitConverterDb);
+			return Response.status(HttpServletResponse.SC_CREATED).entity(map(unitConverterDb)).build();
 		}
 		catch(DatabaseException e)
 		{
@@ -291,69 +272,86 @@ public class DatatypeUnitResources extends OpenDcsResource
 		}
 	}
 
-	static UnitConverterSet map(ApiUnitConverter euc) throws DbException
+	static ApiUnitConverter map(UnitConverterDb dbConv)
 	{
-		try
+		ApiUnitConverter euc = new ApiUnitConverter();
+		if (dbConv.getId() != null)
 		{
-			UnitConverterSet unitConverterSet = new UnitConverterSet();
-			UnitConverter unitConverter = null;
-			EngineeringUnit fromEU = new EngineeringUnit(euc.getFromAbbr(), "", "", "");
-			EngineeringUnit toEU = new EngineeringUnit(euc.getToAbbr(), "", "", "");
-			switch(euc.getAlgorithm().toUpperCase())
-			{
-				case "POLY-5":
-					unitConverter = new Poly5Converter(fromEU, toEU);
-					break;
-				case "LINEAR":
-					unitConverter = new LinearConverter(fromEU, toEU);
-					break;
-				case "COMPOSITE":
-					unitConverter = CompositeConverter.build(fromEU, toEU);
-					break;
-				case "NULL":
-					unitConverter = new NullConverter(fromEU, toEU);
-					break;
-				case "USGS":
-					unitConverter = new UsgsStdConverter(fromEU, toEU);
-					break;
-				default:
-					throw new DbException("Unknown algorithm: " + euc.getAlgorithm());
-			}
-			double[] coeffs = new double[6];
-			coeffs[0] = euc.getA() == null ? 0.0 : euc.getA();
-			coeffs[1] = euc.getB() == null ? 0.0 : euc.getB();
-			coeffs[2] = euc.getC() == null ? 0.0 : euc.getC();
-			coeffs[3] = euc.getD() == null ? 0.0 : euc.getD();
-			coeffs[4] = euc.getE() == null ? 0.0 : euc.getE();
-			coeffs[5] = euc.getF() == null ? 0.0 : euc.getF();
-			unitConverter.setCoefficients(coeffs);
-			UnitConverterDb unitConverterDb = new UnitConverterDb(euc.getFromAbbr(), euc.getToAbbr());
-			if (euc.getUcId() != null)
-			{
-				unitConverterDb.setId(DbKey.createDbKey(euc.getUcId()));
-			}
-			else
-			{
-				unitConverterDb.setId(DbKey.NullKey);
-			}
+			euc.setUcId(dbConv.getId().getValue());
+		}
+		else
+		{
+			euc.setUcId(DbKey.NullKey.getValue());
+		}
+		euc.setFromAbbr(dbConv.fromAbbr);
+		euc.setToAbbr(dbConv.toAbbr);
+		euc.setAlgorithm(dbConv.algorithm);
+		euc.setA(dbConv.coefficients[0] == 0.0 ? null : dbConv.coefficients[0]);
+		euc.setB(dbConv.coefficients[1] == 0.0 ? null : dbConv.coefficients[1]);
+		euc.setC(dbConv.coefficients[2] == 0.0 ? null : dbConv.coefficients[2]);
+		euc.setD(dbConv.coefficients[3] == 0.0 ? null : dbConv.coefficients[3]);
+		euc.setE(dbConv.coefficients[4] == 0.0 ? null : dbConv.coefficients[4]);
+		euc.setF(dbConv.coefficients[5] == 0.0 ? null : dbConv.coefficients[5]);
+		return euc;
+	}
 
-			unitConverterDb.execConverter = unitConverter;
-			unitConverterDb.algorithm = euc.getAlgorithm();
-			unitConverterDb.coefficients[0] = euc.getA() == null ? 0.0 : euc.getA();
-			unitConverterDb.coefficients[1] = euc.getB() == null ? 0.0 : euc.getB();
-			unitConverterDb.coefficients[2] = euc.getC() == null ? 0.0 : euc.getC();
-			unitConverterDb.coefficients[3] = euc.getD() == null ? 0.0 : euc.getD();
-			unitConverterDb.coefficients[4] = euc.getE() == null ? 0.0 : euc.getE();
-			unitConverterDb.coefficients[5] = euc.getF() == null ? 0.0 : euc.getF();
-			unitConverterSet.addDbConverter(unitConverterDb);
-			unitConverterSet.prepareForExec();
-			unitConverterSet.addExecConverter(unitConverter);
-			return unitConverterSet;
-		}
-		catch(DatabaseException e)
+	static UnitConverterDb ucDbMap(ApiUnitConverter euc) throws DatabaseException, DbException
+	{
+		UnitConverterDb unitConverterDb = new UnitConverterDb(euc.getFromAbbr(), euc.getToAbbr());
+		if (euc.getUcId() != null)
 		{
-			throw new DbException("Unable to map Unit Converter", e);
+			unitConverterDb.setId(DbKey.createDbKey(euc.getUcId()));
 		}
+		else
+		{
+			unitConverterDb.setId(DbKey.NullKey);
+		}
+
+		unitConverterDb.algorithm = euc.getAlgorithm();
+		unitConverterDb.coefficients[0] = euc.getA() == null ? 0.0 : euc.getA();
+		unitConverterDb.coefficients[1] = euc.getB() == null ? 0.0 : euc.getB();
+		unitConverterDb.coefficients[2] = euc.getC() == null ? 0.0 : euc.getC();
+		unitConverterDb.coefficients[3] = euc.getD() == null ? 0.0 : euc.getD();
+		unitConverterDb.coefficients[4] = euc.getE() == null ? 0.0 : euc.getE();
+		unitConverterDb.coefficients[5] = euc.getF() == null ? 0.0 : euc.getF();
+		unitConverterDb.execConverter = ucMap(euc);
+		return unitConverterDb;
+	}
+
+	static UnitConverter ucMap(ApiUnitConverter euc) throws DbException
+	{
+		UnitConverter unitConverter;
+		EngineeringUnit fromEU = new EngineeringUnit(euc.getFromAbbr(), "", "", "");
+		EngineeringUnit toEU = new EngineeringUnit(euc.getToAbbr(), "", "", "");
+		if (euc.getAlgorithm().equalsIgnoreCase(Constants.eucvt_poly5))
+		{
+			unitConverter = new Poly5Converter(fromEU, toEU);
+		}
+		else if (euc.getAlgorithm().equalsIgnoreCase(Constants.eucvt_linear))
+		{
+			unitConverter = new LinearConverter(fromEU, toEU);
+		}
+		else if (euc.getAlgorithm().equalsIgnoreCase(Constants.eucvt_none))
+		{
+			unitConverter = new NullConverter(fromEU, toEU);
+		}
+		else if (euc.getAlgorithm().equalsIgnoreCase(Constants.eucvt_usgsstd))
+		{
+			unitConverter = new UsgsStdConverter(fromEU, toEU);
+		}
+		else
+		{
+			throw new DbException("Unknown algorithm: " + euc.getAlgorithm());
+		}
+		double[] coeffs = new double[6];
+		coeffs[0] = euc.getA() == null ? 0.0 : euc.getA();
+		coeffs[1] = euc.getB() == null ? 0.0 : euc.getB();
+		coeffs[2] = euc.getC() == null ? 0.0 : euc.getC();
+		coeffs[3] = euc.getD() == null ? 0.0 : euc.getD();
+		coeffs[4] = euc.getE() == null ? 0.0 : euc.getE();
+		coeffs[5] = euc.getF() == null ? 0.0 : euc.getF();
+		unitConverter.setCoefficients(coeffs);
+		return unitConverter;
 	}
 
 	@DELETE
@@ -365,14 +363,13 @@ public class DatatypeUnitResources extends OpenDcsResource
 	{
 		if (id == null)
 		{
-			throw new WebAppException(HttpServletResponse.SC_BAD_REQUEST, "Missing required euconvid parameter");
+			throw new MissingParameterException("Missing required euconvid parameter");
 		}
-
+		DatabaseIO dbIo = getLegacyDatabase();
 		try
 		{
-			dbIo = getLegacyDatabase();
-			dbIo.deleteUnitConverterSet(id);
-			return Response.status(HttpServletResponse.SC_OK).entity("EUConv with id=" + id + " deleted").build();
+			dbIo.deleteUnitConverter(id);
+			return Response.status(HttpServletResponse.SC_NO_CONTENT).entity("EUConv with id=" + id + " deleted").build();
 		}
 		catch(DatabaseException e)
 		{

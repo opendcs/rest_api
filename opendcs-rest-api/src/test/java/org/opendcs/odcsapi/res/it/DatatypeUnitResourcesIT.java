@@ -26,13 +26,14 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-@Tag("integration")
+@Tag("integration-opentsdb-only")
 @ExtendWith(DatabaseContextProvider.class)
 final class DatatypeUnitResourcesIT extends BaseIT
 {
 	private static SessionFilter sessionFilter;
 	private static Long converterId;
 	private static String euAbbr;
+	private static String euAbbr2;
 
 	@BeforeEach
 	public void setUp() throws Exception
@@ -46,9 +47,6 @@ final class DatatypeUnitResourcesIT extends BaseIT
 				ApiUnit.class);
 		euAbbr = eu.getAbbr();
 		String euJson = mapper.writeValueAsString(eu);
-
-
-		String unitConverterJson = getJsonFromResource("datatypeunit_insert_euconv_data.json");
 
 		// Store the EU
 		given()
@@ -66,11 +64,83 @@ final class DatatypeUnitResourcesIT extends BaseIT
 		.then()
 			.log().ifValidationFails(LogDetail.ALL, true)
 		.assertThat()
-			.statusCode(is(HttpServletResponse.SC_OK))
+			.statusCode(is(HttpServletResponse.SC_CREATED))
 		;
 
-		// Store the EU Converter
+		ApiUnit eu2 = getDtoFromResource("datatypeunit_engineering_unit_2_insert_data.json",
+				ApiUnit.class);
+		euAbbr2 = eu2.getAbbr();
+		euJson = mapper.writeValueAsString(eu2);
+
+		// Store the EU
+		given()
+			.log().ifValidationFails(LogDetail.ALL, true)
+			.accept(MediaType.APPLICATION_JSON)
+			.contentType(MediaType.APPLICATION_JSON)
+			.header("Authorization", authHeader)
+			.filter(sessionFilter)
+			.body(euJson)
+			.queryParam("fromabbr", euAbbr2)
+		.when()
+			.redirects().follow(true)
+			.redirects().max(3)
+			.post("eu")
+		.then()
+			.log().ifValidationFails(LogDetail.ALL, true)
+		.assertThat()
+			.statusCode(is(HttpServletResponse.SC_CREATED))
+		;
+
+		// retrieve the EU List and assert it contains the EUs
 		ExtractableResponse<Response> response = given()
+			.log().ifValidationFails(LogDetail.ALL, true)
+			.accept(MediaType.APPLICATION_JSON)
+			.contentType(MediaType.APPLICATION_JSON)
+			.header("Authorization", authHeader)
+			.filter(sessionFilter)
+			.body(euJson)
+		.when()
+			.redirects().follow(true)
+			.redirects().max(3)
+			.get("unitlist")
+		.then()
+			.log().ifValidationFails(LogDetail.ALL, true)
+		.assertThat()
+			.statusCode(is(HttpServletResponse.SC_OK))
+			.extract()
+		;
+
+		JsonPath actual = response.body().jsonPath();
+		List<Map<String, Object>> actualList = actual.getList("");
+		boolean foundFirst = false;
+		boolean foundSecond = false;
+		for (Map<String, Object> item : actualList)
+		{
+			if (item.get("abbr").equals(euAbbr))
+			{
+				assertEquals(euAbbr, item.get("abbr"));
+				assertEquals(eu.getName(), item.get("name"));
+				assertEquals(eu.getFamily(), item.get("family"));
+				assertEquals(eu.getMeasures(), item.get("measures"));
+				foundFirst = true;
+			}
+			else if (item.get("abbr").equals(euAbbr2))
+			{
+				assertEquals(euAbbr2, item.get("abbr"));
+				assertEquals(eu2.getName(), item.get("name"));
+				assertEquals(eu2.getFamily(), item.get("family"));
+				assertEquals(eu2.getMeasures(), item.get("measures"));
+				foundSecond = true;
+			}
+		}
+		assertTrue(foundFirst);
+		assertTrue(foundSecond);
+
+
+		String unitConverterJson = getJsonFromResource("datatypeunit_insert_euconv_data.json");
+
+		// Store the EU Converter
+		response = given()
 			.log().ifValidationFails(LogDetail.ALL, true)
 			.accept(MediaType.APPLICATION_JSON)
 			.contentType(MediaType.APPLICATION_JSON)
@@ -84,18 +154,17 @@ final class DatatypeUnitResourcesIT extends BaseIT
 		.then()
 			.log().ifValidationFails(LogDetail.ALL, true)
 		.assertThat()
-			.statusCode(is(HttpServletResponse.SC_OK))
+			.statusCode(is(HttpServletResponse.SC_CREATED))
 			.extract()
 		;
 
-		converterId = Long.parseLong(response.body().jsonPath().getList("ucId").get(0).toString());
+		converterId = response.body().jsonPath().getLong("ucId");
 	}
 
 	@AfterEach
 	public void tearDown()
 	{
 		// Delete the EU Converter
-		// TODO: Determine the source of the deletion error, appears to be at the SQL query level
 		given()
 			.log().ifValidationFails(LogDetail.ALL, true)
 			.accept(MediaType.APPLICATION_JSON)
@@ -109,7 +178,24 @@ final class DatatypeUnitResourcesIT extends BaseIT
 		.then()
 			.log().ifValidationFails(LogDetail.ALL, true)
 		.assertThat()
-			.statusCode(is(HttpServletResponse.SC_OK))
+			.statusCode(is(HttpServletResponse.SC_NO_CONTENT))
+		;
+
+		// Delete the EU
+		given()
+			.log().ifValidationFails(LogDetail.ALL, true)
+			.accept(MediaType.APPLICATION_JSON)
+			.header("Authorization", authHeader)
+			.filter(sessionFilter)
+			.queryParam("abbr", euAbbr2)
+		.when()
+			.redirects().follow(true)
+			.redirects().max(3)
+			.delete("eu")
+		.then()
+			.log().ifValidationFails(LogDetail.ALL, true)
+		.assertThat()
+			.statusCode(is(HttpServletResponse.SC_NO_CONTENT))
 		;
 
 		// Delete the EU
@@ -126,7 +212,7 @@ final class DatatypeUnitResourcesIT extends BaseIT
 		.then()
 			.log().ifValidationFails(LogDetail.ALL, true)
 		.assertThat()
-			.statusCode(is(HttpServletResponse.SC_OK))
+			.statusCode(is(HttpServletResponse.SC_NO_CONTENT))
 		;
 
 		logout(sessionFilter);
@@ -278,7 +364,7 @@ final class DatatypeUnitResourcesIT extends BaseIT
 		.then()
 			.log().ifValidationFails(LogDetail.ALL, true)
 		.assertThat()
-			.statusCode(is(HttpServletResponse.SC_OK))
+			.statusCode(is(HttpServletResponse.SC_CREATED))
 		;
 
 		JsonPath expected = getJsonPathFromResource("datatypeunit_eu_post_delete_data.json");
@@ -330,7 +416,7 @@ final class DatatypeUnitResourcesIT extends BaseIT
 		.then()
 			.log().ifValidationFails(LogDetail.ALL, true)
 		.assertThat()
-			.statusCode(is(HttpServletResponse.SC_OK))
+			.statusCode(is(HttpServletResponse.SC_NO_CONTENT))
 		;
 
 		// Retrieve the EU and assert it is not found
@@ -424,7 +510,7 @@ final class DatatypeUnitResourcesIT extends BaseIT
 		.then()
 			.log().ifValidationFails(LogDetail.ALL, true)
 		.assertThat()
-			.statusCode(is(HttpServletResponse.SC_OK))
+			.statusCode(is(HttpServletResponse.SC_CREATED))
 		;
 
 		// Store the EU
@@ -443,7 +529,7 @@ final class DatatypeUnitResourcesIT extends BaseIT
 		.then()
 			.log().ifValidationFails(LogDetail.ALL, true)
 		.assertThat()
-			.statusCode(is(HttpServletResponse.SC_OK))
+			.statusCode(is(HttpServletResponse.SC_CREATED))
 		;
 
 		// Store the EU Converter
@@ -461,11 +547,11 @@ final class DatatypeUnitResourcesIT extends BaseIT
 		.then()
 			.log().ifValidationFails(LogDetail.ALL, true)
 		.assertThat()
-			.statusCode(is(HttpServletResponse.SC_OK))
+			.statusCode(is(HttpServletResponse.SC_CREATED))
 			.extract()
 		;
 
-		Long convId = Long.parseLong(response.body().jsonPath().getList("ucId").get(0).toString());
+		Long convId = response.body().jsonPath().getLong("ucId");
 
 		ApiUnitConverter expected = getDtoFromResource("datatypeunit_euconv_post_delete_data.json",
 			ApiUnitConverter.class);
@@ -515,7 +601,7 @@ final class DatatypeUnitResourcesIT extends BaseIT
 		.then()
 			.log().ifValidationFails(LogDetail.ALL, true)
 		.assertThat()
-			.statusCode(is(HttpServletResponse.SC_OK))
+			.statusCode(is(HttpServletResponse.SC_NO_CONTENT))
 		;
 
 		// Delete the EU
@@ -532,7 +618,7 @@ final class DatatypeUnitResourcesIT extends BaseIT
 		.then()
 			.log().ifValidationFails(LogDetail.ALL, true)
 		.assertThat()
-			.statusCode(is(HttpServletResponse.SC_OK))
+			.statusCode(is(HttpServletResponse.SC_NO_CONTENT))
 		;
 
 		// Delete the EU
@@ -549,7 +635,7 @@ final class DatatypeUnitResourcesIT extends BaseIT
 		.then()
 			.log().ifValidationFails(LogDetail.ALL, true)
 		.assertThat()
-			.statusCode(is(HttpServletResponse.SC_OK))
+			.statusCode(is(HttpServletResponse.SC_NO_CONTENT))
 		;
 
 		// Retrieve the EU Converter and assert it is not found
