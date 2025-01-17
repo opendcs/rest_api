@@ -47,6 +47,8 @@ import org.opendcs.odcsapi.beans.ApiNetList;
 import org.opendcs.odcsapi.beans.ApiNetListItem;
 import org.opendcs.odcsapi.beans.ApiNetlistRef;
 import org.opendcs.odcsapi.dao.DbException;
+import org.opendcs.odcsapi.errorhandling.DatabaseItemNotFoundException;
+import org.opendcs.odcsapi.errorhandling.MissingParameterException;
 import org.opendcs.odcsapi.errorhandling.WebAppException;
 import org.opendcs.odcsapi.util.ApiConstants;
 
@@ -120,19 +122,18 @@ public class NetlistResources extends OpenDcsResource
 	{
 		if (netlistId == null)
 		{
-			throw new WebAppException(HttpServletResponse.SC_BAD_REQUEST, "Missing required netlistid parameter.");
+			throw new MissingParameterException("Missing required netlistid parameter.");
 		}
 
 		try
 		{
 			dbIo = getLegacyDatabase();
 			NetworkListList nlList = new NetworkListList();
-			dbIo.readNetworkListList(nlList);
+			nlList = dbIo.readNetworkListList(nlList);
 			NetworkList nl = nlList.getById(DbKey.createDbKey(netlistId));
  			if (nl == null || nl.networkListEntries == null || nl.networkListEntries.isEmpty())
 			{
-				throw new WebAppException(HttpServletResponse.SC_NOT_FOUND,
-						"No such network list with id=" + netlistId + ".");
+				throw new DatabaseItemNotFoundException("No such network list with id=" + netlistId + ".");
 			}
 			ApiNetList ret = map(nl);
 			return Response.status(HttpServletResponse.SC_OK).entity(ret).build();
@@ -185,7 +186,7 @@ public class NetlistResources extends OpenDcsResource
 		{
 			if (netList == null)
 			{
-				throw new WebAppException(HttpServletResponse.SC_BAD_REQUEST, "Missing required request body.");
+				throw new MissingParameterException("Missing required request body.");
 			}
 			dbIo = getLegacyDatabase();
 			NetworkList nlList = map(netList);
@@ -238,7 +239,7 @@ public class NetlistResources extends OpenDcsResource
 	{
 		if (netlistId == null)
 		{
-			throw new WebAppException(HttpServletResponse.SC_BAD_REQUEST, "Missing required netlistid parameter.");
+			throw new MissingParameterException("Missing required netlistid parameter.");
 		}
 
 		try
@@ -270,6 +271,11 @@ public class NetlistResources extends OpenDcsResource
 						.entity(" Cannot delete network list with ID " + netlistId
 								+ " because it is used by the following routing specs: "
 								+ errmsg).build();
+			}
+			if (nl == null)
+			{
+				nl = new NetworkList();
+				nl.setId(DbKey.createDbKey(netlistId));
 			}
 			dbIo.deleteNetworkList(nl);
 			return Response.status(HttpServletResponse.SC_OK).entity("ID " + netlistId + " deleted").build();

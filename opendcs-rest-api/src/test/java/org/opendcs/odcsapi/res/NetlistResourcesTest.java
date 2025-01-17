@@ -16,7 +16,6 @@ import org.opendcs.odcsapi.beans.ApiNetlistRef;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.opendcs.odcsapi.res.NetlistResources.map;
 
 final class NetlistResourcesTest
@@ -118,7 +117,7 @@ final class NetlistResourcesTest
 
 		input = "";
 		output = NetlistResources.getSingleWord(input);
-		assertNull(output);
+		assertEquals("", output);
 
 		input = "goes-self-timed{}";
 		output = NetlistResources.getSingleWord(input);

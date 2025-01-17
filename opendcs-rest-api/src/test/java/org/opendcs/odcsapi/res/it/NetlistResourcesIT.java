@@ -102,7 +102,7 @@ final class NetlistResourcesIT extends BaseIT
 			.accept(MediaType.APPLICATION_JSON)
 			.header("Authorization", authHeader)
 			.filter(sessionFilter)
-			.queryParam("netlistId", netlistId)
+			.queryParam("netlistid", netlistId)
 		.when()
 			.redirects().follow(true)
 			.redirects().max(3)
