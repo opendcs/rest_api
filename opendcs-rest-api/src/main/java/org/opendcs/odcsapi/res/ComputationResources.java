@@ -285,7 +285,7 @@ public class ComputationResources extends OpenDcsResource
 		{
 			DbComputation dbComp = map(comp);
 			dai.writeComputation(dbComp);
-			return Response.status(HttpServletResponse.SC_OK).entity(map(dbComp)).build();
+			return Response.status(HttpServletResponse.SC_CREATED).entity(map(dbComp)).build();
 		}
 		catch(DbIoException e)
 		{
