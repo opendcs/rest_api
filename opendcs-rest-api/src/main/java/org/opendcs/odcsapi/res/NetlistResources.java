@@ -57,7 +57,7 @@ import org.opendcs.odcsapi.util.ApiConstants;
 public class NetlistResources extends OpenDcsResource
 {
 	@Context HttpHeaders httpHeaders;
-	DatabaseIO dbIo;
+
 
 	@GET
 	@Path("netlistrefs")
@@ -66,6 +66,7 @@ public class NetlistResources extends OpenDcsResource
 	public Response getNetlistRefs(@QueryParam("tmtype") String tmtype)
 			throws DbException
 	{
+		DatabaseIO dbIo = null;
 		try
 		{
 			dbIo = getLegacyDatabase();
@@ -86,7 +87,10 @@ public class NetlistResources extends OpenDcsResource
 		}
 		finally
 		{
-			dbIo.close();
+			if (dbIo != null)
+			{
+				dbIo.close();
+			}
 		}
 	}
 
@@ -125,6 +129,7 @@ public class NetlistResources extends OpenDcsResource
 			throw new MissingParameterException("Missing required netlistid parameter.");
 		}
 
+		DatabaseIO dbIo = null;
 		try
 		{
 			dbIo = getLegacyDatabase();
@@ -144,7 +149,10 @@ public class NetlistResources extends OpenDcsResource
 		}
 		finally
 		{
-			dbIo.close();
+			if (dbIo != null)
+			{
+				dbIo.close();
+			}
 		}
 	}
 
@@ -182,6 +190,7 @@ public class NetlistResources extends OpenDcsResource
 	public Response  postNetlist(ApiNetList netList)
 			throws DbException, WebAppException
 	{
+		DatabaseIO dbIo = null;
 		try
 		{
 			if (netList == null)
@@ -199,7 +208,10 @@ public class NetlistResources extends OpenDcsResource
 		}
 		finally
 		{
-			dbIo.close();
+			if (dbIo != null)
+			{
+				dbIo.close();
+			}
 		}
 	}
 
@@ -242,6 +254,7 @@ public class NetlistResources extends OpenDcsResource
 			throw new MissingParameterException("Missing required netlistid parameter.");
 		}
 
+		DatabaseIO dbIo = null;
 		try
 		{
 			dbIo = getLegacyDatabase();
@@ -286,7 +299,10 @@ public class NetlistResources extends OpenDcsResource
 		}
 		finally
 		{
-			dbIo.close();
+			if (dbIo != null)
+			{
+				dbIo.close();
+			}
 		}
 	}
 
