@@ -128,7 +128,7 @@ class BaseIT
 
 	void logout(SessionFilter sessionFilter)
 	{
-		if(DatabaseSetupExtension.getCurrentDbType() == DbType.OPEN_TSDB)
+		if (DatabaseSetupExtension.getCurrentDbType() == DbType.OPEN_TSDB)
 		{
 			given()
 				.log().ifValidationFails(LogDetail.ALL, true)
