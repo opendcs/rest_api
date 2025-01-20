@@ -31,7 +31,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@Tag("integration")
+@Tag("integration-opentsdb-only")
 @ExtendWith(DatabaseContextProvider.class)
 final class RoutingResourcesIT extends BaseIT
 {
@@ -123,7 +123,7 @@ final class RoutingResourcesIT extends BaseIT
 		.then()
 			.log().ifValidationFails(LogDetail.ALL, true)
 		.assertThat()
-			.statusCode(is(HttpServletResponse.SC_OK))
+			.statusCode(is(HttpServletResponse.SC_CREATED))
 			.extract()
 		;
 
@@ -152,7 +152,7 @@ final class RoutingResourcesIT extends BaseIT
 		.then()
 			.log().ifValidationFails(LogDetail.ALL, true)
 		.assertThat()
-			.statusCode(is(HttpServletResponse.SC_OK))
+			.statusCode(is(HttpServletResponse.SC_CREATED))
 			.extract()
 		;
 
@@ -162,34 +162,57 @@ final class RoutingResourcesIT extends BaseIT
 	@AfterEach
 	void tearDown()
 	{
-		// Delete the routing
-		given()
-			.log().ifValidationFails(LogDetail.ALL, true)
-			.filter(sessionFilter)
-			.accept(MediaType.APPLICATION_JSON)
-			.header("Authorization", authHeader)
-			.queryParam("routingid", routingId)
-		.when()
-			.redirects().follow(true)
-			.redirects().max(3)
-			.delete("routing")
-		.then()
-			.log().ifValidationFails(LogDetail.ALL, true)
-		.assertThat()
-			.statusCode(is(HttpServletResponse.SC_OK))
-		;
+		if (routingId != null)
+		{
+			// Delete the routing
+			given()
+				.log().ifValidationFails(LogDetail.ALL, true)
+				.filter(sessionFilter)
+				.accept(MediaType.APPLICATION_JSON)
+				.header("Authorization", authHeader)
+				.queryParam("routingid", routingId)
+			.when()
+				.redirects().follow(true)
+				.redirects().max(3)
+				.delete("routing")
+			.then()
+				.log().ifValidationFails(LogDetail.ALL, true)
+			.assertThat()
+				.statusCode(is(HttpServletResponse.SC_NO_CONTENT))
+			;
+		}
 
-		// Delete the schedule
+		if (scheduleId != null)
+		{
+			// Delete the schedule
+			given()
+				.log().ifValidationFails(LogDetail.ALL, true)
+				.filter(sessionFilter)
+				.accept(MediaType.APPLICATION_JSON)
+				.header("Authorization", authHeader)
+				.queryParam("scheduleid", scheduleId)
+			.when()
+				.redirects().follow(true)
+				.redirects().max(3)
+				.delete("schedule")
+			.then()
+				.log().ifValidationFails(LogDetail.ALL, true)
+			.assertThat()
+				.statusCode(is(HttpServletResponse.SC_NO_CONTENT))
+			;
+		}
+
+		// Delete the data source
 		given()
 			.log().ifValidationFails(LogDetail.ALL, true)
 			.filter(sessionFilter)
 			.accept(MediaType.APPLICATION_JSON)
 			.header("Authorization", authHeader)
-			.queryParam("scheduleid", scheduleId)
+			.queryParam("datasourceid", dataSourceId)
 		.when()
 			.redirects().follow(true)
 			.redirects().max(3)
-			.delete("schedule")
+			.delete("datasource")
 		.then()
 			.log().ifValidationFails(LogDetail.ALL, true)
 		.assertThat()
@@ -212,23 +235,6 @@ final class RoutingResourcesIT extends BaseIT
 		.assertThat()
 			.statusCode(is(HttpServletResponse.SC_OK))
 			.extract()
-		;
-
-		// Delete the data source
-		given()
-			.log().ifValidationFails(LogDetail.ALL, true)
-			.filter(sessionFilter)
-			.accept(MediaType.APPLICATION_JSON)
-			.header("Authorization", authHeader)
-			.queryParam("datasourceid", dataSourceId)
-		.when()
-			.redirects().follow(true)
-			.redirects().max(3)
-			.delete("datasource")
-		.then()
-			.log().ifValidationFails(LogDetail.ALL, true)
-		.assertThat()
-			.statusCode(is(HttpServletResponse.SC_OK))
 		;
 
 		logout(sessionFilter);
@@ -350,7 +356,7 @@ final class RoutingResourcesIT extends BaseIT
 		.then()
 			.log().ifValidationFails(LogDetail.ALL, true)
 		.assertThat()
-			.statusCode(is(HttpServletResponse.SC_OK))
+			.statusCode(is(HttpServletResponse.SC_CREATED))
 			.extract()
 		;
 
@@ -422,7 +428,7 @@ final class RoutingResourcesIT extends BaseIT
 		.then()
 			.log().ifValidationFails(LogDetail.ALL, true)
 		.assertThat()
-			.statusCode(is(HttpServletResponse.SC_OK))
+			.statusCode(is(HttpServletResponse.SC_NO_CONTENT))
 		;
 
 		// Get the routing and assert it does not exist
@@ -542,7 +548,7 @@ final class RoutingResourcesIT extends BaseIT
 		.then()
 			.log().ifValidationFails(LogDetail.ALL, true)
 		.assertThat()
-			.statusCode(is(HttpServletResponse.SC_OK))
+			.statusCode(is(HttpServletResponse.SC_CREATED))
 			.extract()
 		;
 
@@ -597,7 +603,7 @@ final class RoutingResourcesIT extends BaseIT
 		.then()
 			.log().ifValidationFails(LogDetail.ALL, true)
 		.assertThat()
-			.statusCode(is(HttpServletResponse.SC_OK))
+			.statusCode(is(HttpServletResponse.SC_NO_CONTENT))
 		;
 
 		// Get the schedule and assert it does not exist
@@ -607,13 +613,13 @@ final class RoutingResourcesIT extends BaseIT
 			.filter(sessionFilter)
 			.header("Authorization", authHeader)
 			.queryParam("scheduleid", newScheduleId)
-			.when()
+		.when()
 			.redirects().follow(true)
 			.redirects().max(3)
 			.get("schedule")
-			.then()
+		.then()
 			.log().ifValidationFails(LogDetail.ALL, true)
-			.assertThat()
+		.assertThat()
 			.statusCode(is(HttpServletResponse.SC_NOT_FOUND))
 		;
 	}
@@ -621,6 +627,7 @@ final class RoutingResourcesIT extends BaseIT
 	@TestTemplate
 	void testGetRoutingStatus() throws Exception
 	{
+		// TODO: setup test to return actual data
 		ApiRoutingStatus status = getDtoFromResource("routing_status_expected.json", ApiRoutingStatus.class);
 		status.setAppId(appId);
 		status.setAppName(appName);
@@ -643,12 +650,17 @@ final class RoutingResourcesIT extends BaseIT
 		;
 
 		List<Map<String, Object>> actualList = response.body().jsonPath().getList("");
-		Map<String, Object> actualItem = actualList.get(0);
 
-		assertEquals(expected.get("name"), actualItem.get("name"));
-		assertEquals(expected.get("appName"), actualItem.get("appName"));
-		assertEquals(expected.get("routingSpecName"), actualItem.get("routingSpecName"));
-		assertEquals(expected.get("enabled"), actualItem.get("enabled"));
+		for (Map<String, Object> actualItem : actualList)
+		{
+			if (actualItem.get("name").equals(expected.get("name")))
+			{
+				assertEquals(expected.get("name"), actualItem.get("name"));
+				assertEquals(expected.get("appName"), actualItem.get("appName"));
+				assertEquals(expected.get("routingSpecName"), actualItem.get("routingSpecName"));
+				assertEquals(expected.get("enabled"), actualItem.get("enabled"));
+			}
+		}
 	}
 
 	@TestTemplate

@@ -10,6 +10,7 @@ import java.util.Vector;
 
 import decodes.db.RoutingSpec;
 import decodes.db.RoutingSpecList;
+import decodes.db.RoutingStatus;
 import decodes.db.ScheduleEntry;
 import decodes.db.ScheduleEntryStatus;
 import decodes.polling.DacqEvent;
@@ -20,6 +21,7 @@ import org.opendcs.odcsapi.beans.ApiDacqEvent;
 import org.opendcs.odcsapi.beans.ApiRouting;
 import org.opendcs.odcsapi.beans.ApiRoutingExecStatus;
 import org.opendcs.odcsapi.beans.ApiRoutingRef;
+import org.opendcs.odcsapi.beans.ApiRoutingStatus;
 import org.opendcs.odcsapi.beans.ApiScheduleEntry;
 import org.opendcs.odcsapi.beans.ApiScheduleEntryRef;
 
@@ -42,6 +44,9 @@ final class RoutingResourcesTest
 		assertNotNull(apiRoutingRef);
 		assertEquals(apiRoutingRef.getRoutingId(), routingSpec.getId().getValue());
 		assertEquals(apiRoutingRef.getName(), routingSpec.getName());
+		assertEquals(apiRoutingRef.getDestination(), routingSpec.consumerArg);
+		assertEquals(apiRoutingRef.getDataSourceName(), routingSpec.dataSource.getName());
+		assertEquals(apiRoutingRef.getLastModified(), routingSpec.lastModifyTime);
 	}
 
 	@Test
@@ -52,10 +57,49 @@ final class RoutingResourcesTest
 		assertNotNull(apiRouting);
 		assertEquals(apiRouting.getRoutingId(), routingSpec.getId().getValue());
 		assertEquals(apiRouting.getName(), routingSpec.getName());
-		assertEquals(apiRouting.getOutputTZ(), routingSpec.outputTimeZone.getID());
+		assertEquals(apiRouting.getOutputTZ(), routingSpec.outputTimeZoneAbbr);
 		assertEquals(apiRouting.getLastModified(), routingSpec.lastModifyTime);
 		assertEquals(apiRouting.isEnableEquations(), routingSpec.enableEquations);
 		assertEquals(new Vector<>(apiRouting.getNetlistNames()), routingSpec.networkListNames);
+	}
+
+	@Test
+	void testRoutingSpecStatusMap()
+	{
+		List<RoutingStatus> statuses = new ArrayList<>();
+		RoutingStatus status = new RoutingStatus(DbKey.createDbKey(1234L));
+		status.setLastMessageTime(Date.from(Instant.parse("2021-02-01T00:00:00Z")));
+		status.setLastActivityTime(Date.from(Instant.parse("2021-02-01T12:00:00Z")));
+		status.setNumDecodesErrors(10);
+		status.setNumMessages(20);
+		status.setRoutingSpecId(DbKey.createDbKey(5678L));
+		status.setEnabled(true);
+		status.setName("TestRoutingSpec");
+		status.setAppId(DbKey.createDbKey(9012L));
+		status.setRunInterval("1h");
+		status.setAppName("TestAppName");
+		status.setManual(true);
+		status.setScheduleEntryId(DbKey.createDbKey(3456L));
+		statuses.add(status);
+
+		List<ApiRoutingStatus> results = map(statuses);
+
+		assertNotNull(results);
+		assertEquals(1, results.size());
+		ApiRoutingStatus result = results.get(0);
+		assertNotNull(result);
+		assertEquals(status.getRoutingSpecId().getValue(), result.getRoutingSpecId());
+		assertEquals(status.getName(), result.getName());
+		assertEquals(status.getAppId().getValue(), result.getAppId());
+		assertEquals(status.getAppName(), result.getAppName());
+		assertEquals(status.getScheduleEntryId().getValue(), result.getScheduleEntryId());
+		assertEquals(status.getRunInterval(), result.getRunInterval());
+		assertEquals(status.isEnabled(), result.isEnabled());
+		assertEquals(status.isManual(), result.isManual());
+		assertEquals(status.getNumMessages(), result.getNumMessages());
+		assertEquals(status.getNumDecodesErrors(), result.getNumErrors());
+		assertEquals(status.getLastActivityTime(), result.getLastActivity());
+		assertEquals(status.getLastMessageTime(), result.getLastMsgTime());
 	}
 
 	@Test
@@ -95,7 +139,7 @@ final class RoutingResourcesTest
 		scheduleEntry.setTimezone("UTC");
 		scheduleEntry.setStartTime(Date.from(Instant.parse("2021-01-01T00:00:00Z")));
 		scheduleEntries.add(scheduleEntry);
-		List<ApiScheduleEntryRef> apiScheduleEntryRefs = map(scheduleEntries);
+		List<ApiScheduleEntryRef> apiScheduleEntryRefs = RoutingResources.entryMap(scheduleEntries);
 		assertNotNull(apiScheduleEntryRefs);
 		ApiScheduleEntryRef apiScheduleEntryRef = apiScheduleEntryRefs.get(0);
 		assertNotNull(apiScheduleEntryRef);
@@ -153,7 +197,7 @@ final class RoutingResourcesTest
 		scheduleEntry.setRunInterval("1h");
 		scheduleEntries.add(scheduleEntry);
 
-		ArrayList<ApiScheduleEntryRef> results = map(scheduleEntries);
+		List<ApiScheduleEntryRef> results = RoutingResources.entryMap(scheduleEntries);
 
 		assertNotNull(results);
 		assertEquals(1, results.size());
