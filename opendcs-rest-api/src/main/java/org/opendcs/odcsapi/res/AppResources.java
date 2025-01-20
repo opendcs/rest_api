@@ -52,7 +52,8 @@ import org.opendcs.odcsapi.beans.ApiAppRef;
 import org.opendcs.odcsapi.beans.ApiAppStatus;
 import org.opendcs.odcsapi.beans.ApiLoadingApp;
 import org.opendcs.odcsapi.dao.DbException;
-import org.opendcs.odcsapi.errorhandling.ErrorCodes;
+import org.opendcs.odcsapi.errorhandling.DatabaseItemNotFoundException;
+import org.opendcs.odcsapi.errorhandling.MissingParameterException;
 import org.opendcs.odcsapi.errorhandling.WebAppException;
 import org.opendcs.odcsapi.lrgsclient.ClientConnectionCache;
 import org.opendcs.odcsapi.util.ApiConstants;
@@ -111,8 +112,7 @@ public final class AppResources extends OpenDcsResource
 	{
 		if (appId == null)
 		{
-			throw new WebAppException(HttpServletResponse.SC_BAD_REQUEST,
-					"Missing required appid parameter.");
+			throw new MissingParameterException("Missing required appid parameter.");
 		}
 		try (LoadingAppDAI dai = getLegacyDatabase().makeLoadingAppDAO())
 		{
@@ -142,7 +142,7 @@ public final class AppResources extends OpenDcsResource
 		{
 			CompAppInfo compApp = map(app);
 			dai.writeComputationApp(compApp);
-			return Response.status(HttpServletResponse.SC_OK)
+			return Response.status(HttpServletResponse.SC_CREATED)
 					.entity(map(compApp))
 					.build();
 		}
@@ -186,7 +186,7 @@ public final class AppResources extends OpenDcsResource
 	{
 		if (appId == null)
 		{
-			throw new WebAppException(HttpServletResponse.SC_BAD_REQUEST, "Missing required appid parameter.");
+			throw new MissingParameterException("Missing required appid parameter.");
 		}
 
 		try (LoadingAppDAI dai = getLegacyDatabase().makeLoadingAppDAO())
@@ -197,13 +197,12 @@ public final class AppResources extends OpenDcsResource
 				throw new DbException(String.format(NO_APP_FOUND, appId));
 			}
 			dai.deleteComputationApp(app);
-			return Response.status(HttpServletResponse.SC_OK)
+			return Response.status(HttpServletResponse.SC_NO_CONTENT)
 					.entity("appId with ID " + appId + " deleted").build();
 		}
 		catch (NoSuchObjectException e)
 		{
-			return Response.status(HttpServletResponse.SC_NOT_FOUND)
-					.entity(String.format(NO_APP_FOUND, appId)).build();
+			throw new DatabaseItemNotFoundException(String.format(NO_APP_FOUND, appId), e);
 		}
 		catch (DbIoException | ConstraintException ex)
 		{
@@ -269,6 +268,11 @@ public final class AppResources extends OpenDcsResource
 	public Response getAppEvents(@QueryParam("appid") Long appId)
 			throws WebAppException, DbException
 	{
+		if (appId == null)
+		{
+			throw new MissingParameterException("Missing required appid parameter.");
+		}
+
 		HttpSession session = request.getSession(true);
 		ClientConnectionCache clientConnectionCache = ClientConnectionCache.getInstance();
 		Optional<ApiEventClient> cli = clientConnectionCache.getApiEventClient(appId, session.getId());
@@ -280,19 +284,19 @@ public final class AppResources extends OpenDcsResource
 			if (appStat == null)
 			{
 				cli.ifPresent(c -> clientConnectionCache.removeApiEventClient(c, session.getId()));
-				throw new WebAppException(HttpServletResponse.SC_NOT_FOUND, "appid " + appId
+				throw new DatabaseItemNotFoundException("appid " + appId
 						+ " is not running (no lock found).");
 			}
 			else if (appStat.getPid() == null)
 			{
 				cli.ifPresent(c -> clientConnectionCache.removeApiEventClient(c, session.getId()));
-				throw new WebAppException(HttpServletResponse.SC_NOT_FOUND, "appid " + appId
+				throw new DatabaseItemNotFoundException("appid " + appId
 						+ " (" + appStat.getAppName() + ") is not running.");
 			}
 			else if (System.currentTimeMillis() - appStat.getHeartbeat().getTime() > 20000L)
 			{
 				cli.ifPresent(c -> clientConnectionCache.removeApiEventClient(c, session.getId()));
-				throw new WebAppException(HttpServletResponse.SC_NOT_FOUND, "appid " + appId
+				throw new DatabaseItemNotFoundException("appid " + appId
 						+ " (" + appStat.getAppName() + ") is not running (stale heartbeat).");
 			}
 			else if (appStat.getPid() != null && (!cli.isPresent() || appStat.getPid() != cli.get().getPid()))
@@ -314,21 +318,21 @@ public final class AppResources extends OpenDcsResource
 			}
 			if(apiEventClient == null)
 			{
-				throw new WebAppException(HttpServletResponse.SC_NOT_FOUND, "No API Event Client found or created");
+				throw new DatabaseItemNotFoundException("No API Event Client found or created");
 			}
 			return Response.status(HttpServletResponse.SC_OK)
 					.entity(apiEventClient.getNewEvents()).build();
 		}
 		catch(ConnectException ex)
 		{
-			throw new WebAppException(ErrorCodes.IO_ERROR,
+			throw new WebAppException(HttpServletResponse.SC_CONFLICT,
 					String.format("Cannot connect to %s.", appStat.getAppName()), ex);
 			// Connection failed, event client not added to user token
 		}
 		catch(IOException ex)
 		{
 			cli.ifPresent(c -> clientConnectionCache.removeApiEventClient(c, session.getId()));
-			throw new WebAppException(ErrorCodes.IO_ERROR,
+			throw new WebAppException(HttpServletResponse.SC_CONFLICT,
 					String.format("Event socket to %s closed by app", appStat.getAppId()), ex);
 		}
 	}
@@ -343,8 +347,7 @@ public final class AppResources extends OpenDcsResource
 	{
 		if (appId == null)
 		{
-			throw new WebAppException(HttpServletResponse.SC_BAD_REQUEST,
-					"appId parameter required for this operation.");
+			throw new MissingParameterException("appId parameter required for this operation.");
 		}
 
 		try (LoadingAppDAI dai = getLegacyDatabase().makeLoadingAppDAO())
@@ -356,13 +359,13 @@ public final class AppResources extends OpenDcsResource
 			// Error if already running and heartbeat is current
 			if (appStat != null && appStat.getPid() != null && appStat.getHeartbeat() != null
 					&& (System.currentTimeMillis() - appStat.getHeartbeat().getTime() < 20000L))
-				throw new WebAppException(ErrorCodes.NOT_ALLOWED,
+				throw new WebAppException(HttpServletResponse.SC_METHOD_NOT_ALLOWED,
 						"App id=" + appId + " (" + loadingApp.getAppName() + ") is already running.");
 
 			// Error if no "startCmd" property
 			String startCmd = ApiPropertiesUtil.getIgnoreCase(loadingApp.getProperties(), "startCmd");
 			if (startCmd == null)
-				throw new WebAppException(ErrorCodes.BAD_CONFIG,
+				throw new WebAppException(HttpServletResponse.SC_PRECONDITION_FAILED,
 						"App id=" + appId + " (" + loadingApp.getAppName() + ") has no 'startCmd' property.");
 
 
@@ -391,7 +394,7 @@ public final class AppResources extends OpenDcsResource
 		}
 		catch (DbIoException | NoSuchObjectException | IOException | LockBusyException ex)
 		{
-			throw new WebAppException(ErrorCodes.DATABASE_ERROR,
+			throw new WebAppException(HttpServletResponse.SC_BAD_REQUEST,
 					String.format("Error attempting to start appId=%s", appId), ex);
 		}
 	}
@@ -419,8 +422,7 @@ public final class AppResources extends OpenDcsResource
 	{
 		if (appId == null)
 		{
-			throw new WebAppException(HttpServletResponse.SC_BAD_REQUEST,
-					"appId parameter required for this operation.");
+			throw new MissingParameterException("appId parameter required for this operation.");
 		}
 
 		try (LoadingAppDAI dai = getLegacyDatabase().makeLoadingAppDAO())
@@ -432,7 +434,7 @@ public final class AppResources extends OpenDcsResource
 
 			if (appStat == null || appStat.getPid() == null)
 			{
-				throw new WebAppException(HttpServletResponse.SC_NOT_FOUND,
+				throw new DatabaseItemNotFoundException(
 						"appId " + appId + "(" + loadingApp.getAppName() + ") not currently running.");
 			}
 
@@ -444,12 +446,11 @@ public final class AppResources extends OpenDcsResource
 		}
 		catch (NoSuchObjectException e)
 		{
-			return Response.status(HttpServletResponse.SC_NOT_FOUND)
-					.entity("No such app found with ID " + appId).build();
+			throw new DatabaseItemNotFoundException(String.format("No such app found with ID %s", appId), e);
 		}
 		catch (DbIoException ex)
 		{
-			throw new WebAppException(ErrorCodes.DATABASE_ERROR,
+			throw new WebAppException(HttpServletResponse.SC_BAD_REQUEST,
 					String.format("Error attempting to stop appId=%s", appId), ex);
 		}
 	}
