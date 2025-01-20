@@ -43,8 +43,10 @@ import decodes.db.DatabaseException;
 import decodes.db.DatabaseIO;
 import decodes.db.RoutingSpec;
 import decodes.db.RoutingSpecList;
+import decodes.db.RoutingStatus;
 import decodes.db.ScheduleEntry;
 import decodes.db.ScheduleEntryStatus;
+import decodes.db.ValueNotFoundException;
 import decodes.polling.DacqEvent;
 import decodes.sql.DbKey;
 import decodes.tsdb.DbIoException;
@@ -55,10 +57,12 @@ import org.opendcs.odcsapi.beans.ApiDacqEvent;
 import org.opendcs.odcsapi.beans.ApiRouting;
 import org.opendcs.odcsapi.beans.ApiRoutingExecStatus;
 import org.opendcs.odcsapi.beans.ApiRoutingRef;
+import org.opendcs.odcsapi.beans.ApiRoutingStatus;
 import org.opendcs.odcsapi.beans.ApiScheduleEntry;
 import org.opendcs.odcsapi.beans.ApiScheduleEntryRef;
 import org.opendcs.odcsapi.dao.DbException;
-import org.opendcs.odcsapi.errorhandling.ErrorCodes;
+import org.opendcs.odcsapi.errorhandling.DatabaseItemNotFoundException;
+import org.opendcs.odcsapi.errorhandling.MissingParameterException;
 import org.opendcs.odcsapi.errorhandling.WebAppException;
 import org.opendcs.odcsapi.util.ApiConstants;
 
@@ -74,19 +78,25 @@ public final class RoutingResources extends OpenDcsResource
 	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
 	public Response getRoutingRefs() throws DbException
 	{
+		DatabaseIO dbIo = null;
 		try
 		{
-			//TODO: Fix this endpoint. Currently, it is returning an empty list.
-			DatabaseIO dbio = getLegacyDatabase();
+			dbIo = getLegacyDatabase();
 			RoutingSpecList rsList = new RoutingSpecList();
-			dbio.readRoutingSpecList(rsList);
-			dbio.close();
+			rsList = dbIo.readRoutingSpecList(rsList);
 			return Response.status(HttpServletResponse.SC_OK)
 					.entity(map(rsList)).build();
 		}
 		catch(DatabaseException e)
 		{
 			throw new DbException("Unable to retrieve routing reference list", e);
+		}
+		finally
+		{
+			if (dbIo != null)
+			{
+				dbIo.close();
+			}
 		}
 	}
 
@@ -104,6 +114,12 @@ public final class RoutingResources extends OpenDcsResource
 				ref.setRoutingId(DbKey.NullKey.getValue());
 			}
 			ref.setName(rs.getName());
+			ref.setDestination(rs.consumerArg);
+			if (rs.dataSource != null)
+			{
+				ref.setDataSourceName(rs.dataSource.getName());
+			}
+			ref.setLastModified(rs.lastModifyTime);
 			refs.add(ref);
 		});
 		return refs;
@@ -119,23 +135,33 @@ public final class RoutingResources extends OpenDcsResource
 
 		if (routingId == null)
 		{
-			throw new WebAppException(ErrorCodes.MISSING_ID,
-					"Missing required routingid parameter.");
+			throw new MissingParameterException("Missing required routingid parameter.");
 		}
 
+		DatabaseIO dbIo = null;
 		try
 		{
-			DatabaseIO dbio = getLegacyDatabase();
+			dbIo = getLegacyDatabase();
 			RoutingSpec spec = new RoutingSpec();
 			spec.setId(DbKey.createDbKey(routingId));
-			dbio.readRoutingSpec(spec);
-			dbio.close();
+			dbIo.readRoutingSpec(spec);
 			return Response.status(HttpServletResponse.SC_OK)
 					.entity(map(spec)).build();
 		}
 		catch(DatabaseException e)
 		{
+			if (e.getCause() instanceof ValueNotFoundException)
+			{
+				throw new DatabaseItemNotFoundException("RoutingSpec with ID " + routingId + " not found");
+			}
 			throw new DbException("Unable to retrieve routing spec by ID", e);
+		}
+		finally
+		{
+			if (dbIo != null)
+			{
+				dbIo.close();
+			}
 		}
 	}
 
@@ -151,13 +177,25 @@ public final class RoutingResources extends OpenDcsResource
 		}
 		routing.setName(spec.getName());
 		routing.setLastModified(spec.lastModifyTime);
-		if (spec.outputTimeZone != null)
+		if (spec.outputTimeZoneAbbr != null)
 		{
-			routing.setOutputTZ(spec.outputTimeZone.toZoneId().getId());
+			routing.setOutputTZ(spec.outputTimeZoneAbbr);
 		}
 		routing.setNetlistNames(new ArrayList<>(spec.networkListNames));
 		routing.setOutputFormat(spec.outputFormat);
 		routing.setEnableEquations(spec.enableEquations);
+		if (spec.dataSource != null)
+		{
+			routing.setDataSourceId(spec.dataSource.getId().getValue());
+			routing.setDataSourceName(spec.dataSource.getName());
+		}
+		routing.setSince(spec.sinceTime);
+		routing.setUntil(spec.untilTime);
+		routing.setProperties(spec.getProperties());
+		routing.setPresGroupName(spec.presentationGroupName);
+		routing.setProduction(spec.isProduction);
+		routing.setDestinationArg(spec.consumerArg);
+		routing.setDestinationType(spec.consumerType);
 		return routing;
 	}
 
@@ -169,17 +207,24 @@ public final class RoutingResources extends OpenDcsResource
 	public Response postRouting(ApiRouting routing)
 			throws DbException
 	{
+		DatabaseIO dbIo = null;
 		try
 		{
-			DatabaseIO dbio = getLegacyDatabase();
+			dbIo = getLegacyDatabase();
 			RoutingSpec spec = map(routing);
-			dbio.writeRoutingSpec(spec);
-			dbio.close();
-			return Response.status(HttpServletResponse.SC_OK).entity(map(spec)).build();
+			dbIo.writeRoutingSpec(spec);
+			return Response.status(HttpServletResponse.SC_CREATED).entity(map(spec)).build();
 		}
 		catch(DatabaseException e)
 		{
 			throw new DbException("Unable to store routing spec", e);
+		}
+		finally
+		{
+			if (dbIo != null)
+			{
+				dbIo.close();
+			}
 		}
 	}
 
@@ -248,28 +293,35 @@ public final class RoutingResources extends OpenDcsResource
 	@Path("routing")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
+	@RolesAllowed({AuthorizationCheck.ODCS_API_ADMIN, AuthorizationCheck.ODCS_API_USER})
 	public Response deleteRouting(@QueryParam("routingid") Long routingId)
 			throws DbException, WebAppException
 	{
 		if (routingId == null)
 		{
-			throw new WebAppException(HttpServletResponse.SC_BAD_REQUEST,
-					"Missing required routingid parameter.");
+			throw new MissingParameterException("Missing required routingid parameter.");
 		}
 
+		DatabaseIO dbIo = null;
 		try
 		{
-			DatabaseIO dbio = getLegacyDatabase();
+			dbIo = getLegacyDatabase();
 			RoutingSpec spec = new RoutingSpec();
 			spec.setId(DbKey.createDbKey(routingId));
-			dbio.deleteRoutingSpec(spec);
-			dbio.close();
-			return Response.status(HttpServletResponse.SC_OK)
+			dbIo.deleteRoutingSpec(spec);
+			return Response.status(HttpServletResponse.SC_NO_CONTENT)
 					.entity("RoutingSpec with ID " + routingId + " deleted").build();
 		}
 		catch(DatabaseException e)
 		{
 			throw new DbException("Unable to delete routing spec", e);
+		}
+		finally
+		{
+			if (dbIo != null)
+			{
+				dbIo.close();
+			}
 		}
 	}
 
@@ -280,12 +332,11 @@ public final class RoutingResources extends OpenDcsResource
 	public Response getScheduleRefs()
 			throws DbException
 	{
-
 		try (ScheduleEntryDAI dai = getLegacyDatabase().makeScheduleEntryDAO())
 		{
 			List<ScheduleEntry> entries = dai.listScheduleEntries(null);
 			return Response.status(HttpServletResponse.SC_OK)
-					.entity(map(entries)).build();
+					.entity(entryMap(entries)).build();
 		}
 		catch(DbIoException e)
 		{
@@ -293,7 +344,7 @@ public final class RoutingResources extends OpenDcsResource
 		}
 	}
 
-	static List<ApiScheduleEntryRef> map(List<ScheduleEntry> entries)
+	static List<ApiScheduleEntryRef> entryMap(List<ScheduleEntry> entries)
 	{
 		List<ApiScheduleEntryRef> refs = new ArrayList<>();
 		entries.forEach(entry -> {
@@ -324,11 +375,17 @@ public final class RoutingResources extends OpenDcsResource
 			throws WebAppException, DbException
 	{
 		if (scheduleId == null)
-			throw new WebAppException(ErrorCodes.MISSING_ID,
-					"Missing required scheduleid parameter.");
+		{
+			throw new MissingParameterException("Missing required scheduleid parameter.");
+		}
+
 		try (ScheduleEntryDAI dai = getLegacyDatabase().makeScheduleEntryDAO())
 		{
 			ScheduleEntry entry = dai.readScheduleEntry(DbKey.createDbKey(scheduleId));
+			if (entry == null)
+			{
+				throw new DatabaseItemNotFoundException("ScheduleEntry with ID " + scheduleId + " not found");
+			}
 			return Response.status(HttpServletResponse.SC_OK)
 					.entity(map(entry))
 					.build();
@@ -351,7 +408,7 @@ public final class RoutingResources extends OpenDcsResource
 		{
 			ScheduleEntry entry = map(schedule);
 			dai.writeScheduleEntry(entry);
-			return Response.status(HttpServletResponse.SC_OK)
+			return Response.status(HttpServletResponse.SC_CREATED)
 					.entity(map(entry))
 					.build();
 		}
@@ -436,13 +493,13 @@ public final class RoutingResources extends OpenDcsResource
 	{
 		if (scheduleId == null)
 		{
-			throw new WebAppException(HttpServletResponse.SC_BAD_REQUEST, "missing required scheduleid argument.");
+			throw new MissingParameterException("missing required scheduleid argument.");
 		}
 		try (ScheduleEntryDAI dai = getLegacyDatabase().makeScheduleEntryDAO())
 		{
 			ScheduleEntry entry = new ScheduleEntry(DbKey.createDbKey(scheduleId));
 			dai.deleteScheduleEntry(entry);
-			return Response.status(HttpServletResponse.SC_OK)
+			return Response.status(HttpServletResponse.SC_NO_CONTENT)
 					.entity("Schedule entry with ID " + scheduleId + " deleted").build();
 		}
 		catch (DbIoException e)
@@ -459,30 +516,62 @@ public final class RoutingResources extends OpenDcsResource
 	public Response getRoutingStats()
 			throws DbException
 	{
-		try (ScheduleEntryDAI dai = getLegacyDatabase().makeScheduleEntryDAO())
+		DatabaseIO dbIo = null;
+		try
 		{
+			dbIo = getLegacyDatabase();
 			return Response.status(HttpServletResponse.SC_OK)
-					.entity(map(dai.listScheduleEntries(null))).build();
+					.entity(map(dbIo.readRoutingSpecStatus())).build();
 		}
-		catch (DbIoException e)
+		catch (DatabaseException e)
 		{
 			throw new DbException("Unable to retrieve routing status", e);
 		}
+		finally
+		{
+			if (dbIo != null)
+			{
+				dbIo.close();
+			}
+		}
 	}
 
-	static ArrayList<ApiScheduleEntryRef> map(ArrayList<ScheduleEntry> entries)
+	static List<ApiRoutingStatus> map(List<RoutingStatus> entries)
 	{
-		ArrayList<ApiScheduleEntryRef> refs = new ArrayList<>();
-		for (ScheduleEntry entry : entries)
+		List<ApiRoutingStatus> refs = new ArrayList<>();
+		for (RoutingStatus entry : entries)
 		{
-			ApiScheduleEntryRef ref = new ApiScheduleEntryRef();
-			ref.setSchedEntryId(entry.getId().getValue());
-			ref.setEnabled(entry.isEnabled());
-			ref.setAppName(entry.getLoadingAppName());
-			ref.setName(entry.getName());
-			ref.setLastModified(entry.getLastModified());
-			ref.setRoutingSpecName(entry.getRoutingSpecName());
-			refs.add(ref);
+			ApiRoutingStatus status = new ApiRoutingStatus();
+			status.setEnabled(entry.isEnabled());
+			status.setName(entry.getName());
+			if (entry.getRoutingSpecId() != null)
+			{
+				status.setRoutingSpecId(entry.getRoutingSpecId().getValue());
+			}
+			else
+			{
+				status.setRoutingSpecId(DbKey.NullKey.getValue());
+			}
+			status.setLastActivity(entry.getLastActivityTime());
+			status.setRunInterval(entry.getRunInterval());
+			if (entry.getAppId() != null)
+			{
+				status.setAppId(entry.getAppId().getValue());
+			}
+			status.setAppName(entry.getAppName());
+			status.setManual(entry.isManual());
+			status.setLastMsgTime(entry.getLastMessageTime());
+			status.setNumErrors(entry.getNumDecodesErrors());
+			status.setNumMessages(entry.getNumMessages());
+			if (entry.getScheduleEntryId() != null)
+			{
+				status.setScheduleEntryId(entry.getScheduleEntryId().getValue());
+			}
+			else
+			{
+				status.setScheduleEntryId(DbKey.NullKey.getValue());
+			}
+			refs.add(status);
 		}
 
 		return refs;
@@ -497,7 +586,7 @@ public final class RoutingResources extends OpenDcsResource
 	{
 		if (scheduleEntryId == null)
 		{
-			throw new WebAppException(HttpServletResponse.SC_BAD_REQUEST, "missing required scheduleentryid argument.");
+			throw new MissingParameterException("Missing required scheduleentryid argument.");
 		}
 
 		try (ScheduleEntryDAI dai = getLegacyDatabase().makeScheduleEntryDAO())
