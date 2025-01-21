@@ -22,12 +22,12 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.UnknownHostException;
-import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.StringTokenizer;
 import java.util.TimeZone;
 
+import decodes.db.DatabaseIO;
 import org.opendcs.odcsapi.dao.DbException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,11 +38,9 @@ import org.opendcs.odcsapi.beans.ApiLrgsStatus;
 import org.opendcs.odcsapi.beans.ApiNetList;
 import org.opendcs.odcsapi.beans.ApiRawMessageBlock;
 import org.opendcs.odcsapi.beans.ApiSearchCrit;
-import org.opendcs.odcsapi.dao.ApiPlatformDAO;
 import org.opendcs.odcsapi.errorhandling.WebAppException;
 import org.opendcs.odcsapi.util.ApiBasicClient;
 import org.opendcs.odcsapi.util.ApiByteUtil;
-import org.opendcs.odcsapi.util.ApiConstants;
 import org.opendcs.odcsapi.util.ApiTextUtil;
 import org.xml.sax.SAXException;
 
@@ -107,6 +105,7 @@ public class ApiLddsClient extends ApiBasicClient
 	  @throws IOException on socket error.
 	  @throws UnknownHostException if can't resolve specified host name.
 	*/
+	@Override
 	public void connect() throws IOException, UnknownHostException
 	{
 		debug(module +
@@ -126,6 +125,7 @@ public class ApiLddsClient extends ApiBasicClient
 	  an exception. You can then call connect() again to reconnect to the
 	  server.
 	*/
+	@Override
 	public void disconnect()
 	{
 		try 
@@ -151,6 +151,7 @@ public class ApiLddsClient extends ApiBasicClient
 	/**
 	 * @return true if this is currently connected to a server.
 	 */
+	@Override
 	public boolean isConnected()
 	{
 		return linput != null;
@@ -380,9 +381,9 @@ debug(module + ".sendAuthHello authenticator '" + authStr + "'");
 			"DDS Connection (" + host + ":" + port + ") Goodbye response OK");
 	}
 
-	public void sendSearchCrit(ApiSearchCrit sc, ApiPlatformDAO platformDAO)
-			throws IOException, DdsProtocolError, DdsServerError, SQLException, DbException {
-		sendSearchCrit(SearchCritUtil.sc2String(sc,  platformDAO));
+	public void sendSearchCrit(ApiSearchCrit sc, DatabaseIO dbio)
+			throws IOException, DdsProtocolError, DdsServerError, DbException {
+		sendSearchCrit(SearchCritUtil.sc2String(sc,  dbio));
 	}
 
 	private void sendSearchCrit(String scdata)

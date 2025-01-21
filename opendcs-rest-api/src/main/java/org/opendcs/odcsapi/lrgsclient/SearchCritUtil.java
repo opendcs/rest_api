@@ -15,12 +15,11 @@
 
 package org.opendcs.odcsapi.lrgsclient;
 
-import java.sql.SQLException;
-
+import decodes.db.DatabaseException;
+import decodes.db.DatabaseIO;
 import org.opendcs.odcsapi.beans.ApiNetList;
 import org.opendcs.odcsapi.beans.ApiNetListItem;
 import org.opendcs.odcsapi.beans.ApiSearchCrit;
-import org.opendcs.odcsapi.dao.ApiPlatformDAO;
 import org.opendcs.odcsapi.dao.DbException;
 
 import org.slf4j.Logger;
@@ -28,7 +27,7 @@ import org.slf4j.LoggerFactory;
 
 public class SearchCritUtil
 {
-	public static String module = "SearchCritUtil";
+	public static final String module = "SearchCritUtil";
 	private static final Logger LOGGER = LoggerFactory.getLogger(SearchCritUtil.class);
 
 	/**
@@ -37,9 +36,10 @@ public class SearchCritUtil
 	 * unchanged.
 	 * @param sc the searchcrit
 	 * @return a string version suitable for transmit over DDS.
-	 * @throws SQLException 
+	 * @throws DbException if a database error occurs
 	 */
-	public static String sc2String(ApiSearchCrit sc, ApiPlatformDAO platformDAO) throws SQLException, DbException {
+	public static String sc2String(ApiSearchCrit sc, DatabaseIO dbio) throws DbException
+	{
 		StringBuffer ret = new StringBuffer("#\n# API Search Criteria\n#\n");
 		String lineSep = "\n";
 		
@@ -61,14 +61,14 @@ public class SearchCritUtil
 			String tmid;
 			try
 			{
-				tmid = platformDAO.platformName2transportId(platname);
+				tmid = dbio.platformNameToTransportId(platname);
 				LOGGER.debug("translate name '{}' to ID={}", platname, tmid);
 				if (tmid != null)
 					ret.append("DCP_ADDRESS: " + tmid + lineSep);
 				else
 					ret.append("DCP_NAME: " + platname + lineSep);
 			}
-			catch (DbException ex)
+			catch (DatabaseException ex)
 			{
 				throw new DbException(module, ex,
 						String.format("SearchCritUtil.sc2String cannot lookup platname '%s'", platname));

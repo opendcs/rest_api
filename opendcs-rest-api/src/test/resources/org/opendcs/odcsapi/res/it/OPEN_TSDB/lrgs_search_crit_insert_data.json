@@ -1,0 +1,18 @@
+{
+  "since" : "2021-01-01",
+  "until" : "2021-01-02",
+  "settlingTimeDelay" : false,
+  "platformIds" : [ "USGS-12345678" ],
+  "platformNames" : [ "TEST-PLATFORM" ],
+  "netlistNames" : [ "USGS-TEST" ],
+  "goesChannels" : [ 12 ],
+  "goesSelfTimed" : true,
+  "goesRandom" : true,
+  "networkDCP" : true,
+  "iridium" : true,
+  "qualityNotifications" : true,
+  "goesSpacecraftCheck" : true,
+  "goesSpacecraftSelection" : "East",
+  "parityCheck" : true,
+  "paritySelection" : "Good"
+}
