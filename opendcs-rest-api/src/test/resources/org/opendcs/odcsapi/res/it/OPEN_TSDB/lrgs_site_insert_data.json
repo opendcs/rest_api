@@ -1,0 +1,21 @@
+{
+  "siteId" : null,
+  "sitenames" : {
+    "locationtype" : "Platform"
+  },
+  "description" : null,
+  "latitude" : "38.6",
+  "longitude" : "-77.3",
+  "elevation" : 100.0,
+  "elevUnits" : "ft",
+  "nearestCity" : "Davis",
+  "timezone" : "PST",
+  "state" : "CA",
+  "country" : "US",
+  "region" : "West",
+  "active" : true,
+  "locationType" : "Platform",
+  "publicName" : "publicPlatName",
+  "properties" : { },
+  "lastModified" : null
+}

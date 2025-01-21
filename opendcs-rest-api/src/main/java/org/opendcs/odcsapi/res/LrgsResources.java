@@ -57,6 +57,7 @@ import org.opendcs.odcsapi.beans.ApiRawMessageBlock;
 import org.opendcs.odcsapi.beans.ApiSearchCrit;
 import org.opendcs.odcsapi.dao.DbException;
 import org.opendcs.odcsapi.errorhandling.DatabaseItemNotFoundException;
+import org.opendcs.odcsapi.errorhandling.MissingParameterException;
 import org.opendcs.odcsapi.errorhandling.WebAppException;
 import org.opendcs.odcsapi.lrgsclient.ApiLddsClient;
 import org.opendcs.odcsapi.lrgsclient.ClientConnectionCache;
@@ -74,7 +75,7 @@ public class LrgsResources extends OpenDcsResource
 {
 	@Context private HttpServletRequest request;
 	@Context private HttpHeaders httpHeaders;
-	private DatabaseIO dbIo;
+
 
 	@POST
 	@Path("searchcrit")
@@ -91,7 +92,7 @@ public class LrgsResources extends OpenDcsResource
 		String searchCritSessionAttribute = ApiSearchCrit.ATTRIBUTE;
 		session.setAttribute(searchCritSessionAttribute, searchcrit);
 
-		return Response.status(HttpServletResponse.SC_OK).entity(
+		return Response.status(HttpServletResponse.SC_CREATED).entity(
 				"Searchcrit cached for current session.").build();
 	}
 
@@ -104,8 +105,7 @@ public class LrgsResources extends OpenDcsResource
 		HttpSession session = request.getSession(false);
 		if(session == null)
 		{
-			throw new WebAppException(HttpServletResponse.SC_NOT_FOUND,
-					"No searchcrit is currently stored.");
+			throw new DatabaseItemNotFoundException("No searchcrit is currently stored.");
 		}
 		String sessionAttribute = ApiSearchCrit.ATTRIBUTE;
 		ApiSearchCrit searchcrit = (ApiSearchCrit) session.getAttribute(sessionAttribute);
@@ -120,15 +120,14 @@ public class LrgsResources extends OpenDcsResource
 	@Path("messages")
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({AuthorizationCheck.ODCS_API_ADMIN, AuthorizationCheck.ODCS_API_USER})
-	public ApiRawMessageBlock getMessages() throws WebAppException, SQLException
+	public ApiRawMessageBlock getMessages() throws WebAppException
 	{
 		HttpSession session = request.getSession(true);
 		String sessionAttribute = ApiSearchCrit.ATTRIBUTE;
 		ApiSearchCrit searchcrit = (ApiSearchCrit) session.getAttribute(sessionAttribute);
 		if (searchcrit == null)
 		{
-			throw new WebAppException(HttpServletResponse.SC_NOT_FOUND,
-					"POST searchcrit required prior to GET messages.");
+			throw new DatabaseItemNotFoundException("POST searchcrit required prior to GET messages.");
 		}
 
 		ApiDataSource dataSource = null;
@@ -142,6 +141,7 @@ public class LrgsResources extends OpenDcsResource
 		// Just skip to getting the next message block
 		if (client == null)
 		{
+			DatabaseIO dbIo = null;
 			// This is a new retrieval. Create client, send netlists & searchcrit.
 			dbIo = getLegacyDatabase();
 			try
@@ -307,14 +307,15 @@ public class LrgsResources extends OpenDcsResource
 	/**
 	 *
 	 * @param dsName The name of the data source to retrieve
-	 * @return
-	 * @throws DbException
-	 * @throws SQLException
+	 * @return The data source
+	 * @throws DbException If there is an error getting the data source
+	 * @throws WebAppException If there is no usable LRGS data source
 	 */
 	private ApiDataSource getApiDataSource(String dsName)
 			throws DbException, WebAppException
 	{
 		TimeSeriesDb tsdb = getLegacyTimeseriesDB();
+		DatabaseIO dbIo = null;
 		try
 		{
 			dbIo = getLegacyDatabase();
@@ -442,11 +443,11 @@ public class LrgsResources extends OpenDcsResource
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({AuthorizationCheck.ODCS_API_ADMIN, AuthorizationCheck.ODCS_API_USER})
 	public ApiRawMessage getMessage(@QueryParam("tmid") String tmid, @QueryParam("tmtype") String tmtype)
-			throws WebAppException, SQLException
+			throws WebAppException
 	{
 		if (tmid == null)
 		{
-			throw new WebAppException(HttpServletResponse.SC_BAD_REQUEST, "Missing required tmid argument.");
+			throw new MissingParameterException("Missing required tmid argument.");
 		}
 
 		// Create and save searchcrit for tmid for last 8 hours
@@ -460,7 +461,7 @@ public class LrgsResources extends OpenDcsResource
 		ApiRawMessageBlock mb = getMessages();
 		if (mb.getMessages().isEmpty())
 		{
-			throw new WebAppException(HttpServletResponse.SC_NOT_FOUND, "No message for '"
+			throw new DatabaseItemNotFoundException("No message for '"
 					+ tmid + "' in last 12 hours.");
 		}
 
