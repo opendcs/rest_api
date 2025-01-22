@@ -25,10 +25,30 @@ configurations {
 }
 
 dependencies {
+    implementation(files("temp-deps/opendcs.jar"))
+    implementation(files("temp-deps/opendcs-api.jar"))
+    implementation(files("temp-deps/opendcs-annotations.jar"))
+
+
+    //TODO - remove after https://github.com/opendcs/opendcs/pull/768 is merged
+    //Hacky workaround to still get transitive dependencies for runtime, but use
+    //branched code
     api(libs.opendcs) {
-        //Workaround for the excessive opendcs dependencies
-        exclude group: '*', module: '*'
+        exclude group: "org.opendcs", module: "opendcs"
+        exclude group: "org.opendcs", module: "opendcs-annotations"
+        exclude group: "javax.media", module: "jai_core"
+        exclude group: "javax.media", module: "jai_codec"
+        exclude group: "org.jooq.pro", module: "jooq-meta"
+        exclude group: "org.jooq.pro", module: "jooq-codegen"
+        exclude group: "com.oracle.database.jdbc", module: "jmscommon"
+        exclude group: "com.oracle.database.jdbc", module: "aqapi"
+        exclude group: "com.oracle.database.jdbc", module: "xmlparserv2"
+        exclude group: "com.oracle.database.jdbc", module: "xdb"
+        exclude group: "com.sun.media", module: "jai_imageio"
+        exclude group: "com.mrsid", module: "mrsidreader"
     }
+//    api(libs.opendcs.api)
+
     implementation(libs.servlet.api)
     implementation(libs.json.jackson)
     implementation(libs.jersey.container.servlet)
@@ -47,6 +67,20 @@ dependencies {
     testImplementation(libs.rest.assured)
     testImplementation(libs.hamcrest)
     testImplementation(libs.bundles.tomcat)
+    testImplementation(libs.commons.io)
+    testImplementation(libs.apache.derby)
+    testImplementation(libs.webcompere.system.stubs.jupiter)
+    testImplementation(libs.testcontainers.core)
+    testImplementation(libs.testcontainers.postgresql)
+    testImplementation(libs.hec.testcontainers.cwms)
+    testImplementation(libs.bundles.jdbi)
+    implementation(libs.org.flywaydb.flyway.core)
+
+    //TODO - remove after https://github.com/opendcs/opendcs/pull/768 is merged
+    implementation(files("temp-deps/opendcs-integrationtesting-fixtures.jar"))
+
+
+//    implementation(libs.opendcs.integrationtesting.fixtures)
     compileOnly(libs.auto.service)
     annotationProcessor(libs.auto.service)
 }
@@ -93,6 +127,9 @@ if (JavaVersion.current() != JavaVersion.VERSION_1_8) {
     sonarqube {
         properties {
             property 'sonar.exclusions', 'src/main/resources/swaggerui/**'
+            property 'sonar.coverage.jacoco.xmlReportPaths', "${layout.buildDirectory.get().asFile.toString()}/reports/jacoco/test/jacocoTestReport.xml," +
+                    "${layout.buildDirectory.get().asFile.toString()}/reports/jacoco/integrationTestReportCWMS/integrationTestReportCWMS.xml," +
+                    "${layout.buildDirectory.get().asFile.toString()}/reports/jacoco/integrationTestReportOpenTSDB/integrationTestReportOpenTSDB.xml"
         }
     }
 }
@@ -100,44 +137,121 @@ if (JavaVersion.current() != JavaVersion.VERSION_1_8) {
 
 tasks.register('generateConfig', Copy) {
     doFirst {
-        project.delete "$buildDir/tomcat/"
-        project.mkdir "$buildDir/tomcat/logs"
+        project.delete layout.buildDirectory.file("tomcat/")
+        project.mkdir layout.buildDirectory.file("tomcat/logs")
     }
     from 'src/test/resources/tomcat'
-    into "$buildDir/tomcat"
+    into layout.buildDirectory.file("tomcat")
 
     //rename "context.xml", "context.xml.template"
     rename "tomcat-server.xml", "server.xml"
 
     inputs.dir "src/test/resources"
-    outputs.dir "$buildDir/tomcat/conf"
+    outputs.dir layout.buildDirectory.file("tomcat/conf")
 }
 
-tasks.register('integrationTest', Test) {
+tasks.register('integrationTestOpenTSDB', Test) {
     group "verification"
     useJUnitPlatform {
         includeTags "integration"
+        includeTags "integration-opentsdb-only"
+    }
+    doFirst {
+        classpath = classpath.filter {
+            !it.name.endsWith('opendcs-7.0.13.jar')
+        }
     }
     shouldRunAfter test
     dependsOn war
     dependsOn generateConfig
+    dependsOn downloadAndUnzipInstaller
     jvmArgs += "-DwarContext=/opendcs-rest-api"
     jvmArgs += "-Djava.util.logging.config.file=$projectDir/test/resources/logging.properties"
     jvmArgs += "-Dorg.apache.tomcat.util.digester.PROPERTY_SOURCE=org.apache.tomcat.util.digester.EnvironmentPropertySource"
-    jvmArgs += "-Dcatalina.base=$buildDir/tomcat"
-    systemProperties += project.properties.findAll { k, v -> k.startsWith("opendcs") }
-    systemProperties += project.properties.findAll { k, v -> k.startsWith("postgresdb") }
-    if (!project.hasProperty("postgresdb.url")) {
-        systemProperties.put("postgresdb.url", "jdbc:postgresql://localhost:5432/open_tsdb")
-        systemProperties.put("opendcs.db.username", "tsdbadm")
-        systemProperties.put("opendcs.db.password", "postgres_pass")
+    jvmArgs += "-Dcatalina.base=${layout.buildDirectory.file("tomcat")}"
+    jvmArgs += "-Dopendcs.test.integration.db=OpenDCS-Postgres"
+    def outputDir = downloadAndUnzipInstaller.outputs.files.singleFile
+    systemProperties.put("DCSTOOL_HOME", outputDir)
+    finalizedBy integrationTestReportOpenTSDB
+}
+
+tasks.register('integrationTestCWMS', Test) {
+    group "verification"
+    useJUnitPlatform {
+        includeTags "integration"
+        includeTags "integration-cwms-only"
     }
-    dependsOn(":opendcs-rest-api-jetty:startPostgresContainer")
-    finalizedBy(":opendcs-rest-api-jetty:stopPostgresContainer")
+    doFirst {
+        classpath = classpath.filter {
+            !it.name.endsWith('opendcs-7.0.13.jar')
+        }
+    }
+    shouldRunAfter test
+    dependsOn war
+    dependsOn generateConfig
+    dependsOn downloadAndUnzipInstaller
+    jvmArgs += "-DwarContext=/opendcs-rest-api"
+    jvmArgs += "-Djava.util.logging.config.file=$projectDir/test/resources/logging.properties"
+    jvmArgs += "-Dorg.apache.tomcat.util.digester.PROPERTY_SOURCE=org.apache.tomcat.util.digester.EnvironmentPropertySource"
+    jvmArgs += "-Dcatalina.base=${layout.buildDirectory.file("tomcat")}"
+    jvmArgs += "-Dopendcs.test.integration.db=CWMS-Oracle"
+    jvmArgs += "-Dopendcs.cwms.oracle.image=registry-public.hecdev.net/cwms/database-ready-ora-23.5:24.12.04-RC3"
+    def outputDir = downloadAndUnzipInstaller.outputs.files.singleFile
+    systemProperties.put("DCSTOOL_HOME", outputDir)
+    finalizedBy integrationTestReportCWMS
+}
+
+
+task downloadAndUnzipInstaller {
+    def zipUrl = 'https://github.com/opendcs/opendcs/releases/download/7.0.14/opendcs-7.0.14.zip'
+    def outputDir = file("${buildDir}/opendcs-install")
+    def zipFile = file("${buildDir}/download/opendcs-install.zip")
+
+    outputs.dir(new File(outputDir, "opendcs-7.0.14"))
+
+    doLast {
+        if(!zipFile.exists()) {
+            outputDir.mkdirs()
+            zipFile.parentFile.mkdirs()
+            new URL(zipUrl).withInputStream { inp ->
+                zipFile.withOutputStream { out -> out << inp }
+            }
+            copy {
+                //Skip the root dir as it is contains the version number which makes it hard
+                //to work with through automation
+                from zipTree(zipFile)
+                into outputDir
+            }
+        }
+    }
 }
 
 test {
     useJUnitPlatform {
         excludeTags "integration"
+        excludeTags "integration-opentsdb-only"
+        excludeTags "integration-cwms-only"
+    }
+}
+
+tasks.register('integrationTestReportCWMS', JacocoReport) {
+    group = "verification"
+    dependsOn tasks.named('integrationTestCWMS')
+    executionData = files(layout.buildDirectory.dir("jacoco").get().file("integrationTestCWMS.exec"))
+    sourceDirectories.setFrom(files("src/main/java"))
+    classDirectories.setFrom(files(layout.buildDirectory.dir("classes/java/main").get().getAsFile()))
+    reports {
+        xml.required.set(true)
+    }
+}
+
+tasks.register('integrationTestReportOpenTSDB', JacocoReport) {
+    group = "verification"
+    dependsOn tasks.named('integrationTestOpenTSDB')
+    executionData = files(layout.buildDirectory.dir("jacoco").get().file("integrationTestOpenTSDB.exec"))
+    sourceDirectories.setFrom(files("src/main/java"))
+    classDirectories.setFrom(files(layout.buildDirectory.dir("classes/java/main").get().getAsFile()))
+    reports {
+        xml.required.set(true)
     }
 }
