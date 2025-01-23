@@ -1,5 +1,5 @@
 /*
- *  Copyright 2024 OpenDCS Consortium and its Contributors
+ *  Copyright 2025 OpenDCS Consortium and its Contributors
  *
  *  Licensed under the Apache License, Version 2.0 (the "License")
  *  you may not use this file except in compliance with the License.
@@ -55,7 +55,7 @@ final class ServletSsoAuthIT
 
 	private static void setupSession()
 	{
-		String username = System.getProperty("opendcs.db.username");
+		String username = System.getProperty("DB_USERNAME");
 		TomcatServer tomcat = DatabaseSetupExtension.getCurrentTomcat();
 		StandardSession session = (StandardSession) tomcat.getTestSessionManager()
 				.createSession(COOKIE);

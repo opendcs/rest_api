@@ -1,5 +1,5 @@
 /*
- *  Copyright 2024 OpenDCS Consortium and its Contributors
+ *  Copyright 2025 OpenDCS Consortium and its Contributors
  *
  *  Licensed under the Apache License, Version 2.0 (the "License")
  *  you may not use this file except in compliance with the License.
@@ -36,9 +36,11 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import org.opendcs.odcsapi.dao.ApiAuthorizationDAI;
 import org.opendcs.odcsapi.dao.DbException;
 import org.opendcs.odcsapi.errorhandling.WebAppException;
 import org.opendcs.odcsapi.hydrojson.DbInterface;
+import org.opendcs.odcsapi.res.OpenDcsResource;
 import org.opendcs.odcsapi.sec.AuthorizationCheck;
 import org.opendcs.odcsapi.sec.OpenDcsApiRoles;
 import org.opendcs.odcsapi.sec.OpenDcsPrincipal;
@@ -47,14 +49,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @Path("/")
-public class BasicAuthResource
+public class BasicAuthResource extends OpenDcsResource
 {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(BasicAuthResource.class);
 	private static final String MODULE = "BasicAuthResource";
 
-	@Context private HttpServletRequest request;
-	@Context private HttpHeaders httpHeaders;
+	@Context
+	private HttpServletRequest request;
+	@Context
+	private HttpHeaders httpHeaders;
 
 	@POST
 	@Path("credentials")
@@ -77,7 +81,7 @@ public class BasicAuthResource
 		String authorizationHeader = httpHeaders.getHeaderString(HttpHeaders.AUTHORIZATION);
 		credentials = getCredentials(credentials, authorizationHeader);
 		validateDbCredentials(credentials);
-		Set<OpenDcsApiRoles> roles = BasicAuthCheck.getUserRoles(credentials.getUsername());
+		Set<OpenDcsApiRoles> roles = getUserRoles(credentials.getUsername());
 		OpenDcsPrincipal principal = new OpenDcsPrincipal(credentials.getUsername(), roles);
 		HttpSession oldSession = request.getSession(false);
 		if(oldSession != null)
@@ -215,6 +219,18 @@ public class BasicAuthResource
 		{
 			throw new WebAppException(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
 					"Failed to obtain database URL.", e);
+		}
+	}
+
+	private Set<OpenDcsApiRoles> getUserRoles(String username)
+	{
+		try(ApiAuthorizationDAI dao = getDao(ApiAuthorizationDAI.class))
+		{
+			return dao.getRoles(username);
+		}
+		catch(Exception e)
+		{
+			throw new IllegalStateException("Unable to query the database for user authorization", e);
 		}
 	}
 }

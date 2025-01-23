@@ -1,5 +1,5 @@
 /*
- *  Copyright 2024 OpenDCS Consortium and its Contributors
+ *  Copyright 2025 OpenDCS Consortium and its Contributors
  *
  *  Licensed under the Apache License, Version 2.0 (the "License")
  *  you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.Collections;
+import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.sql.DataSource;
 import javax.ws.rs.container.ContainerRequestContext;
@@ -70,6 +71,7 @@ final class ServletSsoAuthCheckTest
 			setupDataSource();
 			DbInterface.isCwms = true;
 			HttpServletRequest requestMock = mock(HttpServletRequest.class);
+			ServletContext servletContextMock = mock(ServletContext.class);
 			ContainerRequestContext contextMock = mock(ContainerRequestContext.class);
 			SecurityContext originalSecurityContext = mock(SecurityContext.class);
 			when(contextMock.getSecurityContext()).thenReturn(originalSecurityContext);
@@ -78,7 +80,7 @@ final class ServletSsoAuthCheckTest
 			when(principal.getName()).thenReturn("TEST");
 			when(contextMock.getCookies()).thenReturn(Collections.singletonMap(SESSION_COOKIE_NAME, new Cookie(SESSION_COOKIE_NAME, "TEST")));
 			ServletSsoAuthCheck servletSsoAuthCheck = new ServletSsoAuthCheck();
-			OpenDcsSecurityContext securityContext = servletSsoAuthCheck.authorize(contextMock, requestMock);
+			OpenDcsSecurityContext securityContext = servletSsoAuthCheck.authorize(contextMock, requestMock, servletContextMock);
 			assertTrue(securityContext.isUserInRole(OpenDcsApiRoles.ODCS_API_USER.getRole()), "User should be authorized for USER role");
 		}
 	}

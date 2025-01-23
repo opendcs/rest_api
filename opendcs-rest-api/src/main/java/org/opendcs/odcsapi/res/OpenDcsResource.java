@@ -1,5 +1,5 @@
 /*
- *  Copyright 2024 OpenDCS Consortium and its Contributors
+ *  Copyright 2025 OpenDCS Consortium and its Contributors
  *
  *  Licensed under the Apache License, Version 2.0 (the "License")
  *  you may not use this file except in compliance with the License.
@@ -24,6 +24,7 @@ import javax.ws.rs.core.Context;
 import decodes.cwms.CwmsDatabaseProvider;
 import decodes.db.Database;
 import decodes.db.DatabaseException;
+import decodes.sql.OracleSequenceKeyGenerator;
 import decodes.db.DatabaseIO;
 import decodes.tsdb.TimeSeriesDb;
 import decodes.util.DecodesSettings;
@@ -37,7 +38,7 @@ import org.slf4j.LoggerFactory;
 
 import static org.opendcs.odcsapi.res.DataSourceContextCreator.DATA_SOURCE_ATTRIBUTE_KEY;
 
-class OpenDcsResource
+public class OpenDcsResource
 {
 	private static final Logger LOGGER = LoggerFactory.getLogger(OpenDcsResource.class);
 	private static final String UNSUPPORTED_OPERATION_MESSAGE = "Endpoint is unsupported by the OpenDCS REST API.";
@@ -45,7 +46,7 @@ class OpenDcsResource
 	@Context
 	private ServletContext context;
 
-	final <T extends OpenDcsDao> T getDao(Class<T> daoClass)
+	protected final <T extends OpenDcsDao> T getDao(Class<T> daoClass)
 	{
 		return createDb().getDao(daoClass)
 				.orElseThrow(() -> new UnsupportedOperationException(UNSUPPORTED_OPERATION_MESSAGE));
@@ -67,6 +68,7 @@ class OpenDcsResource
 			//Temporary workaround until database_properties table is implemented in the schema
 			LOGGER.atWarn().setCause(e).log("Temporary solution forcing OpenTSDB");
 			DecodesSettings decodesSettings = new DecodesSettings();
+			decodesSettings.CwmsOfficeId = System.getProperty("DB_OFFICE");
 			try(Connection connection = dataSource.getConnection())
 			{
 				DatabaseProvider databaseProvider;
@@ -74,6 +76,7 @@ class OpenDcsResource
 				if(databaseProductName.toLowerCase().startsWith("oracle"))
 				{
 					databaseProvider = new CwmsDatabaseProvider();
+					decodesSettings.sqlKeyGenerator = OracleSequenceKeyGenerator.class.getName();
 				}
 				else
 				{

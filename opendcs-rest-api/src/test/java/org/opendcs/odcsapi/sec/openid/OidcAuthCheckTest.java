@@ -1,5 +1,5 @@
 /*
- *  Copyright 2024 OpenDCS Consortium and its Contributors
+ *  Copyright 2025 OpenDCS Consortium and its Contributors
  *
  *  Licensed under the Apache License, Version 2.0 (the "License")
  *  you may not use this file except in compliance with the License.
@@ -30,6 +30,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.UUID;
+import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.sql.DataSource;
 import javax.ws.rs.container.ContainerRequestContext;
@@ -88,6 +89,7 @@ final class OidcAuthCheckTest
 			setupDataSource();
 			DbInterface.isCwms = true;
 			HttpServletRequest requestMock = mock(HttpServletRequest.class);
+			ServletContext servletContextMock = mock(ServletContext.class);
 			ContainerRequestContext contextMock = mock(ContainerRequestContext.class);
 			SecurityContext originalSecurityContext = mock(SecurityContext.class);
 			when(contextMock.getSecurityContext()).thenReturn(originalSecurityContext);
@@ -104,7 +106,7 @@ final class OidcAuthCheckTest
 			JWKSource<com.nimbusds.jose.proc.SecurityContext> keySource = (jwkSelector, securityContext) ->
 					jwkSet.getKeys();
 			OidcAuthCheck authCheck = new OidcAuthCheck(keySource);
-			OpenDcsSecurityContext securityContext = authCheck.authorize(contextMock, requestMock);
+			OpenDcsSecurityContext securityContext = authCheck.authorize(contextMock, requestMock, servletContextMock);
 			assertTrue(securityContext.isUserInRole(OpenDcsApiRoles.ODCS_API_USER.getRole()), "User should be authorized for USER role");
 		}
 	}

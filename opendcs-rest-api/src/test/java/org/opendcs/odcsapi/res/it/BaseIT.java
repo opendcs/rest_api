@@ -1,5 +1,5 @@
 /*
- *  Copyright 2024 OpenDCS Consortium and its Contributors
+ *  Copyright 2025 OpenDCS Consortium and its Contributors
  *
  *  Licensed under the Apache License, Version 2.0 (the "License")
  *  you may not use this file except in compliance with the License.
@@ -29,6 +29,7 @@ import io.restassured.filter.session.SessionFilter;
 import io.restassured.path.json.JsonPath;
 import org.opendcs.odcsapi.fixtures.DatabaseSetupExtension;
 import org.opendcs.odcsapi.fixtures.DbType;
+import org.opendcs.odcsapi.hydrojson.DbInterface;
 import org.opendcs.odcsapi.res.ObjectMapperContextResolver;
 import org.opendcs.odcsapi.sec.basicauth.Credentials;
 
@@ -118,6 +119,29 @@ class BaseIT
 				.redirects().follow(true)
 				.redirects().max(3)
 				.post("credentials")
+			.then()
+				.log().ifValidationFails(LogDetail.ALL, true)
+			.assertThat()
+				.statusCode(is(HttpServletResponse.SC_OK))
+			;
+		}
+		else if(DatabaseSetupExtension.getCurrentDbType() == DbType.CWMS)
+		{
+			String parameterKey = "opendcs.rest.api.authorization.type";
+			DbInterface.decodesProperties.setProperty(parameterKey, "apikey");
+			Credentials credentials = new Credentials();
+			credentials.setUsername(System.getProperty("DB_USERNAME"));
+			credentials.setPassword(System.getProperty("DB_PASSWORD"));
+			given()
+				.log().ifValidationFails(LogDetail.ALL, true)
+				.accept("application/json")
+				.contentType("application/json")
+				.header("Authorization", "apikey " + DatabaseSetupExtension.APIKEY)
+				.filter(sessionFilter)
+			.when()
+				.redirects().follow(true)
+				.redirects().max(3)
+				.get("check")
 			.then()
 				.log().ifValidationFails(LogDetail.ALL, true)
 			.assertThat()
