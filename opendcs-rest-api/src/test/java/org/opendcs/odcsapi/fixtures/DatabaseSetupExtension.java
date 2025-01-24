@@ -96,6 +96,8 @@ public class DatabaseSetupExtension implements BeforeEachCallback
 		environment.getVariables().forEach(System::setProperty);
 		if(dbType == DbType.CWMS)
 		{
+			String webuser = System.getProperty("DB_USERNAME").substring(0, 2) + "webtest";
+			System.setProperty("DB_USERNAME", webuser);
 			DbInterface.isCwms = true;
 			System.setProperty("DB_DRIVER_CLASS", "oracle.jdbc.driver.OracleDriver");
 			System.setProperty("DB_DATASOURCE_CLASS", "org.apache.tomcat.jdbc.pool.DataSourceFactory");
@@ -134,6 +136,26 @@ public class DatabaseSetupExtension implements BeforeEachCallback
 				preparedStatement.setString(1, System.getProperty("DB_USERNAME"));
 				preparedStatement.setString(2, APIKEY);
 				preparedStatement.setString(3, APIKEY);
+				preparedStatement.executeQuery();
+			}
+			catch(SQLException e)
+			{
+				LOGGER.atDebug().setCause(e).log("Cannot register apikey for user");
+			}
+			String setWebUserPermissions = "begin\n" +
+					"   cwms_sec.add_user_to_group(?, 'CCP Mgr',?) ;\n" +
+					"   cwms_sec.add_user_to_group(?, 'CCP Proc',?) ;\n" +
+					"   commit;\n" +
+					"end;";
+			String dbOffice = System.getProperty("DB_OFFICE");
+			try(Connection connection = DriverManager.getConnection(System.getProperty("DB_URL"), "CWMS_20",
+					System.getProperty("DB_PASSWORD"));
+				PreparedStatement preparedStatement = connection.prepareStatement(setWebUserPermissions))
+			{
+				preparedStatement.setString(1, webuser);
+				preparedStatement.setString(2, dbOffice);
+				preparedStatement.setString(3, webuser);
+				preparedStatement.setString(4, dbOffice);
 				preparedStatement.executeQuery();
 			}
 			catch(SQLException e)
