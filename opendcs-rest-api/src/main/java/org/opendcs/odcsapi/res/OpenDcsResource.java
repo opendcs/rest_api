@@ -43,7 +43,7 @@ public class OpenDcsResource
 	private static final Logger LOGGER = LoggerFactory.getLogger(OpenDcsResource.class);
 	private static final String UNSUPPORTED_OPERATION_MESSAGE = "Endpoint is unsupported by the OpenDCS REST API.";
 
-	private static OpenDcsDatabase DATABASE;
+	private static OpenDcsDatabase database;
 
 	@Context
 	private ServletContext context;
@@ -56,9 +56,9 @@ public class OpenDcsResource
 
 	protected final synchronized OpenDcsDatabase createDb()
 	{
-		if(DATABASE != null)
+		if(database != null)
 		{
-			return DATABASE;
+			return database;
 		}
 		DataSource dataSource = (DataSource) context.getAttribute(DATA_SOURCE_ATTRIBUTE_KEY);
 		try
@@ -67,7 +67,7 @@ public class OpenDcsResource
 			{
 				throw new IllegalStateException("No data source defined in context.xml");
 			}
-			DATABASE = DatabaseService.getDatabaseFor(dataSource);
+			database = DatabaseService.getDatabaseFor(dataSource);
 		}
 		catch(DatabaseException e)
 		{
@@ -88,14 +88,14 @@ public class OpenDcsResource
 				{
 					databaseProvider = new OpenTsdbProvider();
 				}
-				DATABASE = databaseProvider.createDatabase(dataSource, decodesSettings);
+				database = databaseProvider.createDatabase(dataSource, decodesSettings);
 			}
 			catch(DatabaseException | SQLException ex)
 			{
 				throw new IllegalStateException("Error connecting to the database via JNDI", ex);
 			}
 		}
-		return DATABASE;
+		return database;
 	}
 
 	DatabaseIO getLegacyDatabase()
