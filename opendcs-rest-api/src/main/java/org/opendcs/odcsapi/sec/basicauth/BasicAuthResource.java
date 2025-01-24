@@ -36,6 +36,10 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import decodes.cwms.CwmsTimeSeriesDb;
+import decodes.tsdb.TimeSeriesDb;
+import opendcs.opentsdb.OpenTsdb;
+import org.opendcs.database.api.OpenDcsDatabase;
 import org.opendcs.odcsapi.dao.ApiAuthorizationDAI;
 import org.opendcs.odcsapi.dao.DbException;
 import org.opendcs.odcsapi.errorhandling.WebAppException;
@@ -44,6 +48,7 @@ import org.opendcs.odcsapi.res.OpenDcsResource;
 import org.opendcs.odcsapi.sec.AuthorizationCheck;
 import org.opendcs.odcsapi.sec.OpenDcsApiRoles;
 import org.opendcs.odcsapi.sec.OpenDcsPrincipal;
+import org.opendcs.odcsapi.sec.cwms.CwmsAuthorizationDAO;
 import org.opendcs.odcsapi.util.ApiHttpUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -224,7 +229,7 @@ public class BasicAuthResource extends OpenDcsResource
 
 	private Set<OpenDcsApiRoles> getUserRoles(String username)
 	{
-		try(ApiAuthorizationDAI dao = getDao(ApiAuthorizationDAI.class))
+		try(ApiAuthorizationDAI dao = getAuthDao())
 		{
 			return dao.getRoles(username);
 		}
@@ -232,5 +237,22 @@ public class BasicAuthResource extends OpenDcsResource
 		{
 			throw new IllegalStateException("Unable to query the database for user authorization", e);
 		}
+	}
+
+	private ApiAuthorizationDAI getAuthDao()
+	{
+		OpenDcsDatabase db = createDb();
+		TimeSeriesDb timeSeriesDb = db.getLegacyDatabase(TimeSeriesDb.class)
+				.orElseThrow(() -> new UnsupportedOperationException("Endpoint is unsupported by the OpenDCS REST API."));
+		//Need to figure out a better way to extend the toolkit API to be able to add dao's within the REST API
+		if(timeSeriesDb instanceof CwmsTimeSeriesDb)
+		{
+			return new CwmsAuthorizationDAO(timeSeriesDb);
+		}
+		else if(timeSeriesDb instanceof OpenTsdb)
+		{
+			return new OpenTsdbAuthorizationDAO(timeSeriesDb);
+		}
+		throw new UnsupportedOperationException("Endpoint is unsupported by the OpenDCS REST API.");
 	}
 }
