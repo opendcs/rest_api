@@ -173,17 +173,15 @@ public class DbCompFilter implements Predicate<DbComputation>
 		}
 	};
 
-	private final Predicate<DbComputation> validComputation = comp -> validProcess.test(comp.getApplicationName())
+	public boolean test(DbComputation comp)
+	{
+		return validProcess.test(comp.getApplicationName())
 			&& validAlgorithm.test(comp.getAlgorithmName())
 			&& enabled.test(comp.isEnabled())
 			&& validGroup.test(comp.getGroupName())
 			&& validSite.test(comp)
 			&& validDataType.test(comp)
 			&& validInterval.test(comp);
-
-	public boolean test(DbComputation comp)
-	{
-		return validComputation.test(comp);
 	}
 
 	public String toString()
@@ -208,6 +206,7 @@ public class DbCompFilter implements Predicate<DbComputation>
 	/** Constructor */
 	public DbCompFilter()
 	{
+		// Empty constructor
 	}
 
 	public void setSite(String x)
