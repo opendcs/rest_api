@@ -35,7 +35,6 @@ import javax.ws.rs.core.Response;
 import decodes.db.DataType;
 import decodes.db.Site;
 import decodes.sql.DbKey;
-import decodes.tsdb.CompRefFilter;
 import decodes.tsdb.ConstraintException;
 import decodes.tsdb.DbCompAlgorithm;
 import decodes.tsdb.DbCompParm;
@@ -48,6 +47,7 @@ import opendcs.dai.ComputationDAI;
 import org.opendcs.odcsapi.beans.ApiCompParm;
 import org.opendcs.odcsapi.beans.ApiComputation;
 import org.opendcs.odcsapi.beans.ApiComputationRef;
+import org.opendcs.odcsapi.beans.DbCompFilter;
 import org.opendcs.odcsapi.dao.DbException;
 import org.opendcs.odcsapi.errorhandling.DatabaseItemNotFoundException;
 import org.opendcs.odcsapi.errorhandling.MissingParameterException;
@@ -74,7 +74,7 @@ public class ComputationResources extends OpenDcsResource
 	{
 		try (ComputationDAI dai = getLegacyTimeseriesDB().makeComputationDAO())
 		{
-			CompRefFilter refFilter = new CompRefFilter();
+			DbCompFilter refFilter = new DbCompFilter();
 			if (enabled != null)
 			{
 				refFilter.setEnabledOnly(enabled);
@@ -103,7 +103,7 @@ public class ComputationResources extends OpenDcsResource
 			{
 				refFilter.setIntervalCode(interval);
 			}
-			List<ApiComputation> comps = dai.listCompRefsMatching(refFilter)
+			List<ApiComputation> comps = dai.listComps(refFilter)
 				.stream()
 				.map(ComputationResources::map)
 				.collect(Collectors.toList());
