@@ -23,6 +23,4 @@ import org.opendcs.odcsapi.sec.OpenDcsApiRoles;
 public interface ApiAuthorizationDAI extends OpenDcsDao, AutoCloseable
 {
 	Set<OpenDcsApiRoles> getRoles(String username) throws DbException;
-
-	String getUserForApiKey(String apiKey) throws DbException;
 }

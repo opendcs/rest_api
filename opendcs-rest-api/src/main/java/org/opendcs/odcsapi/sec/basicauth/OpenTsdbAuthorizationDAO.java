@@ -81,10 +81,4 @@ public final class OpenTsdbAuthorizationDAO extends DaoBase implements ApiAuthor
 		}
 
 	}
-
-	@Override
-	public String getUserForApiKey(String apiKey) throws DbException
-	{
-		throw new UnsupportedOperationException("OpenTSDB does not support apikey authorization.");
-	}
 }

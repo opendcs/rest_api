@@ -20,6 +20,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.Base64;
+import java.util.EnumSet;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.MediaType;
 
@@ -27,10 +28,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.restassured.filter.log.LogDetail;
 import io.restassured.filter.session.SessionFilter;
 import io.restassured.path.json.JsonPath;
+import org.apache.catalina.session.StandardSession;
 import org.opendcs.odcsapi.fixtures.DatabaseSetupExtension;
 import org.opendcs.odcsapi.fixtures.DbType;
+import org.opendcs.odcsapi.fixtures.TomcatServer;
 import org.opendcs.odcsapi.hydrojson.DbInterface;
 import org.opendcs.odcsapi.res.ObjectMapperContextResolver;
+import org.opendcs.odcsapi.sec.OpenDcsApiRoles;
+import org.opendcs.odcsapi.sec.OpenDcsPrincipal;
 import org.opendcs.odcsapi.sec.basicauth.Credentials;
 
 import static io.restassured.RestAssured.given;
@@ -103,51 +108,39 @@ class BaseIT
 
 	void authenticate(SessionFilter sessionFilter)
 	{
-		if(DatabaseSetupExtension.getCurrentDbType() == DbType.OPEN_TSDB)
-		{
-			//TODO - create a test user and use its credentials
-			Credentials credentials = new Credentials();
-			credentials.setUsername(System.getProperty("DB_USERNAME"));
-			credentials.setPassword(System.getProperty("DB_PASSWORD"));
-			given()
-				.log().ifValidationFails(LogDetail.ALL, true)
-				.accept("application/json")
-				.contentType("application/json")
-				.body(credentials)
-				.filter(sessionFilter)
-			.when()
-				.redirects().follow(true)
-				.redirects().max(3)
-				.post("credentials")
-			.then()
-				.log().ifValidationFails(LogDetail.ALL, true)
-			.assertThat()
-				.statusCode(is(HttpServletResponse.SC_OK))
-			;
+		String COOKIE = "IntegrationTestAuthCookie";
+		String parameterKey = "opendcs.rest.api.authorization.type";
+		DbInterface.decodesProperties.setProperty(parameterKey, "sso");
+		String username = System.getProperty("DB_USERNAME");
+		TomcatServer tomcat = DatabaseSetupExtension.getCurrentTomcat();
+		StandardSession session = (StandardSession) tomcat.getTestSessionManager()
+				.createSession(COOKIE);
+		if(session == null) {
+			throw new RuntimeException("Test Session Manager is unusable.");
 		}
-		else if(DatabaseSetupExtension.getCurrentDbType() == DbType.CWMS)
-		{
-			String parameterKey = "opendcs.rest.api.authorization.type";
-			DbInterface.decodesProperties.setProperty(parameterKey, "apikey");
-			Credentials credentials = new Credentials();
-			credentials.setUsername(System.getProperty("DB_USERNAME"));
-			credentials.setPassword(System.getProperty("DB_PASSWORD"));
-			given()
-				.log().ifValidationFails(LogDetail.ALL, true)
-				.accept("application/json")
-				.contentType("application/json")
-				.header("Authorization", "apikey " + DatabaseSetupExtension.APIKEY)
-				.filter(sessionFilter)
-			.when()
-				.redirects().follow(true)
-				.redirects().max(3)
-				.get("check")
-			.then()
-				.log().ifValidationFails(LogDetail.ALL, true)
-			.assertThat()
-				.statusCode(is(HttpServletResponse.SC_OK))
-			;
-		}
+		OpenDcsPrincipal mcup = new OpenDcsPrincipal(username, EnumSet.allOf(OpenDcsApiRoles.class));
+		session.setAuthType("CLIENT-CERT");
+		session.setPrincipal(mcup);
+		session.activate();
+		tomcat.getSsoValve()
+				.wrappedRegister(COOKIE, mcup, "CLIENT-CERT", null,null);
+
+
+		//Check while passing in cookie
+		given()
+			.log().ifValidationFails(LogDetail.ALL, true)
+			.accept("application/json")
+			.filter(sessionFilter)
+			.cookie("JSESSIONIDSSO", COOKIE)
+		.when()
+			.redirects().follow(true)
+			.redirects().max(3)
+			.get("check")
+		.then()
+			.log().ifValidationFails(LogDetail.ALL, true)
+		.assertThat()
+			.statusCode(is(HttpServletResponse.SC_OK))
+		;
 	}
 
 	void logout(SessionFilter sessionFilter)

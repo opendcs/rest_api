@@ -38,7 +38,6 @@ import static org.hamcrest.Matchers.is;
 
 public class DatabaseSetupExtension implements BeforeEachCallback
 {
-	public static final String APIKEY = "OPENDCS_IT_KEY";
 	private static final Logger LOGGER = LoggerFactory.getLogger(DatabaseSetupExtension.class);
 	private static DbType currentDbType;
 	private static TomcatServer currentTomcat;
@@ -96,13 +95,11 @@ public class DatabaseSetupExtension implements BeforeEachCallback
 		environment.getVariables().forEach(System::setProperty);
 		if(dbType == DbType.CWMS)
 		{
-			String webuser = System.getProperty("DB_USERNAME").substring(0, 2) + "webtest";
-			System.setProperty("DB_USERNAME", webuser);
 			DbInterface.isCwms = true;
 			System.setProperty("DB_DRIVER_CLASS", "oracle.jdbc.driver.OracleDriver");
 			System.setProperty("DB_DATASOURCE_CLASS", "org.apache.tomcat.jdbc.pool.DataSourceFactory");
 			String dbOffice = System.getProperty("DB_OFFICE");
-			String initScript = String.format("BEGIN cwms_ccp_vpd.set_ccp_session_ctx(cwms_util.get_office_code('%s'), 1, '%s' ); END;", dbOffice, dbOffice);
+			String initScript = String.format("BEGIN cwms_ccp_vpd.set_ccp_session_ctx(cwms_util.get_office_code('%s'), 2, '%s' ); END;", dbOffice, dbOffice);
 			System.setProperty("DB_CONNECTION_INIT", initScript);
 			DbInterface.decodesProperties.setProperty("CwmsOfficeId", dbOffice);
 			DbInterface.setDatabaseType("cwms");
@@ -114,55 +111,14 @@ public class DatabaseSetupExtension implements BeforeEachCallback
 			System.setProperty("DB_DATASOURCE_CLASS", "org.apache.tomcat.jdbc.pool.DataSourceFactory");
 			System.setProperty("DB_CONNECTION_INIT", "SELECT 1");
 		}
+		setupClientUser();
 		TomcatServer tomcat = new TomcatServer("build/tomcat", 0, warContext);
 		tomcat.start();
 		RestAssured.baseURI = "http://localhost";
 		RestAssured.port = tomcat.getPort();
 		RestAssured.basePath = warContext;
 		healthCheck();
-		setupClientUser();
 		return tomcat;
-	}
-
-	private void setupClientUser()
-	{
-		if(dbType == DbType.CWMS)
-		{
-			String createApiKey = "insert into cwms_20.at_api_keys(userid,key_name,apikey) values(upper(?),?,?)";
-			String webuser = System.getProperty("DB_USERNAME").substring(0, 2) + "webtest";
-			try(Connection connection = DriverManager.getConnection(System.getProperty("DB_URL"), webuser, System.getProperty("DB_PASSWORD"));
-				PreparedStatement preparedStatement = connection.prepareStatement(createApiKey))
-			{
-				preparedStatement.setString(1, System.getProperty("DB_USERNAME"));
-				preparedStatement.setString(2, APIKEY);
-				preparedStatement.setString(3, APIKEY);
-				preparedStatement.executeQuery();
-			}
-			catch(SQLException e)
-			{
-				LOGGER.atDebug().setCause(e).log("Cannot register apikey for user");
-			}
-			String setWebUserPermissions = "begin\n" +
-					"   cwms_sec.add_user_to_group(?, 'CCP Mgr',?) ;\n" +
-					"   cwms_sec.add_user_to_group(?, 'CCP Proc',?) ;\n" +
-					"   commit;\n" +
-					"end;";
-			String dbOffice = System.getProperty("DB_OFFICE");
-			try(Connection connection = DriverManager.getConnection(System.getProperty("DB_URL"), "CWMS_20",
-					System.getProperty("DB_PASSWORD"));
-				PreparedStatement preparedStatement = connection.prepareStatement(setWebUserPermissions))
-			{
-				preparedStatement.setString(1, webuser);
-				preparedStatement.setString(2, dbOffice);
-				preparedStatement.setString(3, webuser);
-				preparedStatement.setString(4, dbOffice);
-				preparedStatement.executeQuery();
-			}
-			catch(SQLException e)
-			{
-				LOGGER.atDebug().setCause(e).log("Cannot register apikey for user");
-			}
-		}
 	}
 
 	private static void healthCheck() throws InterruptedException
@@ -191,6 +147,25 @@ public class DatabaseSetupExtension implements BeforeEachCallback
 		if(attempts == maxAttempts)
 		{
 			throw new PreconditionViolationException("Server didn't start in time...");
+		}
+	}
+
+	private void setupClientUser()
+	{
+		if(dbType == DbType.CWMS)
+		{
+			String userPermissions = "begin execute immediate 'grant web_user to " + System.getProperty("DB_USERNAME") + "'; end;";
+			String dbOffice = System.getProperty("DB_OFFICE");
+			try(Connection connection = DriverManager.getConnection(System.getProperty("DB_URL"), "CWMS_20",
+					System.getProperty("DB_PASSWORD"));
+				PreparedStatement preparedStatement = connection.prepareStatement(userPermissions))
+			{
+				preparedStatement.executeQuery();
+			}
+			catch(SQLException e)
+			{
+				throw new RuntimeException(e);
+			}
 		}
 	}
 }

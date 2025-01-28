@@ -94,23 +94,4 @@ public final class CwmsAuthorizationDAO extends DaoBase implements ApiAuthorizat
 					+ " and office: " + cwmsOfficeId, ex);
 		}
 	}
-
-	@Override
-	public String getUserForApiKey(String apiKey) throws DbException
-	{
-		try
-		{
-			String firstResult = getFirstResult("select userid from cwms_20.at_api_keys where apikey = ?",
-					rs -> rs.getString(1), apiKey);
-			if(firstResult == null)
-			{
-				throw new IllegalArgumentException("Client apikey does not exist: " + apiKey);
-			}
-			return firstResult;
-		}
-		catch(SQLException ex)
-		{
-			throw new DbException("Unable to determine user for apikey: " + apiKey, ex);
-		}
-	}
 }
