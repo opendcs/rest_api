@@ -45,10 +45,10 @@ import org.opendcs.odcsapi.dao.DbException;
 import org.opendcs.odcsapi.errorhandling.WebAppException;
 import org.opendcs.odcsapi.hydrojson.DbInterface;
 import org.opendcs.odcsapi.res.OpenDcsResource;
-import org.opendcs.odcsapi.sec.AuthorizationCheck;
 import org.opendcs.odcsapi.sec.OpenDcsApiRoles;
 import org.opendcs.odcsapi.sec.OpenDcsPrincipal;
 import org.opendcs.odcsapi.sec.cwms.CwmsAuthorizationDAO;
+import org.opendcs.odcsapi.util.ApiConstants;
 import org.opendcs.odcsapi.util.ApiHttpUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -69,7 +69,7 @@ public class BasicAuthResource extends OpenDcsResource
 	@Path("credentials")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	@RolesAllowed({AuthorizationCheck.ODCS_API_GUEST})
+	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
 	public Response postCredentials(Credentials credentials) throws WebAppException
 	{
 		if(!DbInterface.isOpenTsdb)

@@ -43,9 +43,6 @@ import static org.opendcs.odcsapi.res.DataSourceContextCreator.DATA_SOURCE_ATTRI
 
 public abstract class AuthorizationCheck
 {
-	public static final String ODCS_API_GUEST = "ODCS_API_GUEST";
-	public static final String ODCS_API_USER = "ODCS_API_USER";
-	public static final String ODCS_API_ADMIN = "ODCS_API_ADMIN";
 	private static final Logger LOGGER = LoggerFactory.getLogger(AuthorizationCheck.class);
 
 	/**
