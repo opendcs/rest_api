@@ -25,6 +25,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.UUID;
 import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.core.MediaType;
 
 import com.nimbusds.jose.JOSEObjectType;
 import com.nimbusds.jose.JWSAlgorithm;
@@ -86,7 +87,7 @@ final class OpenIdAuthIT
 		//Initial session should be unauthorized
 		given()
 			.log().ifValidationFails(LogDetail.ALL, true)
-			.accept("application/json")
+			.accept(MediaType.APPLICATION_JSON)
 			.filter(sessionFilter)
 		.when()
 			.redirects().follow(true)
@@ -101,7 +102,7 @@ final class OpenIdAuthIT
 		//Check while passing in JWT
 		given()
 			.log().ifValidationFails(LogDetail.ALL, true)
-			.accept("application/json")
+			.accept(MediaType.APPLICATION_JSON)
 			.filter(sessionFilter)
 			.header("Authorization", "Bearer " + jwt())
 		.when()
@@ -117,7 +118,7 @@ final class OpenIdAuthIT
 		//Session should be cached even without JWT
 		given()
 			.log().ifValidationFails(LogDetail.ALL, true)
-			.accept("application/json")
+			.accept(MediaType.APPLICATION_JSON)
 			.filter(sessionFilter)
 		.when()
 			.redirects().follow(true)
@@ -132,7 +133,7 @@ final class OpenIdAuthIT
 		//Logout and clear session
 		given()
 			.log().ifValidationFails(LogDetail.ALL, true)
-			.accept("application/json")
+			.accept(MediaType.APPLICATION_JSON)
 			.filter(sessionFilter)
 		.when()
 			.redirects().follow(true)
@@ -147,7 +148,7 @@ final class OpenIdAuthIT
 		//Session should now be cleared
 		given()
 			.log().ifValidationFails(LogDetail.ALL, true)
-			.accept("application/json")
+			.accept(MediaType.APPLICATION_JSON)
 			.filter(sessionFilter)
 		.when()
 			.redirects().follow(true)

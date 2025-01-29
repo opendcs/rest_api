@@ -129,7 +129,7 @@ class BaseIT
 		//Check while passing in cookie
 		given()
 			.log().ifValidationFails(LogDetail.ALL, true)
-			.accept("application/json")
+			.accept(MediaType.APPLICATION_JSON)
 			.filter(sessionFilter)
 			.cookie("JSESSIONIDSSO", COOKIE)
 		.when()
