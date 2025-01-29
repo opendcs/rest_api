@@ -52,7 +52,6 @@ import org.opendcs.odcsapi.dao.DbException;
 import org.opendcs.odcsapi.errorhandling.DatabaseItemNotFoundException;
 import org.opendcs.odcsapi.errorhandling.MissingParameterException;
 import org.opendcs.odcsapi.errorhandling.WebAppException;
-import org.opendcs.odcsapi.sec.AuthorizationCheck;
 import org.opendcs.odcsapi.util.ApiConstants;
 
 @Path("/")
@@ -208,7 +207,7 @@ public class PresentationResources extends OpenDcsResource
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
-	public Response postPresentation(ApiPresentationGroup presGrp) throws WebAppException, DbException, SQLException
+	public Response postPresentation(ApiPresentationGroup presGrp) throws DbException
 	{
 		DatabaseIO dbIo = null;
 		try (DataTypeDAI dai = getLegacyTimeseriesDB().makeDataTypeDAO())
