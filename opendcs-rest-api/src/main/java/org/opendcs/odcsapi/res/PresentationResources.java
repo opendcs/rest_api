@@ -65,10 +65,9 @@ public class PresentationResources extends OpenDcsResource
 	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
  	public Response getPresentationRefs() throws DbException
 	{
-		DatabaseIO dbIo = null;
+		DatabaseIO dbIo = getLegacyDatabase();
 		try
 		{
-			dbIo = getLegacyDatabase();
 			PresentationGroupList groupList = new PresentationGroupList();
 			dbIo.readPresentationGroupList(groupList);
 			return Response.status(HttpServletResponse.SC_OK).entity(map(groupList)).build();
@@ -79,10 +78,7 @@ public class PresentationResources extends OpenDcsResource
 		}
 		finally
 		{
-			if (dbIo != null)
-			{
-				dbIo.close();
-			}
+			dbIo.close();
 		}
 	}
 
@@ -136,10 +132,9 @@ public class PresentationResources extends OpenDcsResource
 			throw new MissingParameterException("Missing required groupid parameter.");
 		}
 
-		DatabaseIO dbIo = null;
+		DatabaseIO dbIo = getLegacyDatabase();
 		try
 		{
-			dbIo = getLegacyDatabase();
 			PresentationGroup group = new PresentationGroup();
 			group.setId(DbKey.createDbKey(groupId));
 			dbIo.readPresentationGroup(group);
@@ -155,10 +150,7 @@ public class PresentationResources extends OpenDcsResource
 		}
 		finally
 		{
-			if (dbIo != null)
-			{
-				dbIo.close();
-			}
+			dbIo.close();
 		}
 	}
 
@@ -209,10 +201,9 @@ public class PresentationResources extends OpenDcsResource
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
 	public Response postPresentation(ApiPresentationGroup presGrp) throws DbException
 	{
-		DatabaseIO dbIo = null;
+		DatabaseIO dbIo = getLegacyDatabase();
 		try (DataTypeDAI dai = getLegacyTimeseriesDB().makeDataTypeDAO())
 		{
-			dbIo = getLegacyDatabase();
 			PresentationGroup group = map(dai, presGrp);
 			dbIo.writePresentationGroup(group);
 			return Response.status(HttpServletResponse.SC_CREATED)
@@ -225,10 +216,7 @@ public class PresentationResources extends OpenDcsResource
 		}
 		finally
 		{
-			if (dbIo != null)
-			{
-				dbIo.close();
-			}
+			dbIo.close();
 		}
 	}
 
@@ -319,10 +307,9 @@ public class PresentationResources extends OpenDcsResource
 			throw new MissingParameterException("Missing required groupid parameter.");
 		}
 
-		DatabaseIO dbIo = null;
+		DatabaseIO dbIo = getLegacyDatabase();
 		try
 		{
-			dbIo = getLegacyDatabase();
 			PresentationGroup group = new PresentationGroup();
 			group.setId(DbKey.createDbKey(groupId));
 
@@ -354,10 +341,7 @@ public class PresentationResources extends OpenDcsResource
 		}
 		finally
 		{
-			if (dbIo != null)
-			{
-				dbIo.close();
-			}
+			dbIo.close();
 		}
 	}
 }
