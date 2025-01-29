@@ -239,7 +239,7 @@ final class ReflistResourcesIT extends BaseIT
 
 		// Store RefList
 		ExtractableResponse<Response> response = given()
-			.log().ifValidationFails(LogDetail.ALL, true)
+			.log().ifValidationFails(LogDetail.ALL,  true)
 			.accept(MediaType.APPLICATION_JSON)
 			.header("Authorization", authHeader)
 			.contentType(MediaType.APPLICATION_JSON)
@@ -265,7 +265,7 @@ final class ReflistResourcesIT extends BaseIT
 			.accept(MediaType.APPLICATION_JSON)
 			.header("Authorization", authHeader)
 			.filter(sessionFilter)
-			.queryParam("reflistid", newRefListId)
+			.queryParam("name", newRefListName)
 		.when()
 			.redirects().follow(true)
 			.redirects().max(3)
@@ -280,6 +280,7 @@ final class ReflistResourcesIT extends BaseIT
 		JsonPath actual = response.body().jsonPath();
 		Map<String, Object> actualMap = actual.getMap("");
 
+		boolean found = false;
 		for (Map.Entry<String, Object> item : actualMap.entrySet())
 		{
 			if (item.getKey().equalsIgnoreCase(expected.getString("enumName")))
@@ -300,8 +301,10 @@ final class ReflistResourcesIT extends BaseIT
 					assertEquals(expectedVal.get("editClassName"), actualVal.get("editClassName"));
 					assertEquals(expectedVal.get("sortNumber"), actualVal.get("sortNumber"));
 				}
+				found = true;
 			}
 		}
+		assertTrue(found);
 
 		// Delete the reflist
 		given()

@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import decodes.db.DbEnum;
-import decodes.db.EnumList;
 import decodes.db.EnumValue;
 import decodes.sql.DbKey;
 import org.junit.jupiter.api.Test;
@@ -36,15 +35,15 @@ final class ReflistResourcesTest
 		items.put(refList.getEnumName(), item);
 		refList.setItems(items);
 
-		EnumList enumList = mapToEnum(refList);
+		DbEnum dbEnum = mapToEnum(refList);
 
-		assertNotNull(enumList);
-		assertEquals(refList.getReflistId(), enumList.getEnum(refList.getEnumName()).getId().getValue());
+		assertNotNull(dbEnum);
+		assertEquals(refList.getReflistId(), dbEnum.getId().getValue());
 		assertEquals(refList.getItems().get(refList.getEnumName()).getDescription(),
-				enumList.getEnum(refList.getEnumName()).getDescription());
-		assertEquals(refList.getDefaultValue(), enumList.getEnum(refList.getEnumName()).getDefault());
-		assertEquals(refList.getItems().size(), enumList.size());
-		assertEquals(refList.getEnumName(), enumList.getEnum(refList.getEnumName()).enumName);
+				dbEnum.getDescription());
+		assertEquals(refList.getDefaultValue(), dbEnum.getDefault());
+		assertEquals(refList.getItems().size(), dbEnum.size());
+		assertEquals(refList.getEnumName(), dbEnum.enumName);
 	}
 
 	@Test
@@ -84,7 +83,7 @@ final class ReflistResourcesTest
 
 		assertNotNull(apiSeason);
 		assertEquals(season.getValue(), apiSeason.getAbbr());
-		assertEquals(season.getFullName(), apiSeason.getName());
+		assertEquals(season.getDescription(), apiSeason.getName());
 		assertEquals("start", apiSeason.getStart());
 		assertEquals("end", apiSeason.getEnd());
 		assertEquals("UTC", apiSeason.getTz());
@@ -134,7 +133,6 @@ final class ReflistResourcesTest
 	@Test
 	void testEnumListMap() throws Exception
 	{
-		EnumList enumList = new EnumList();
 		DbEnum dbEnum = new DbEnum("Unique Enum Name");
 		dbEnum.setDescription("A unique enum");
 		dbEnum.setId(DbKey.createDbKey(55674L));
@@ -143,20 +141,20 @@ final class ReflistResourcesTest
 		enumValue.setSortNumber(8);
 		enumValue.setEditClassName("String.class");
 		enumValue.setExecClassName("Integer.class");
+		enumValue.setDescription("A value");
 		dbEnum.addValue(enumValue);
-		enumList.addEnum(dbEnum);
 
-		ApiRefList refList = map(enumList);
+		ApiRefList refList = map(dbEnum);
 
 		assertNotNull(refList);
 		assertEquals(dbEnum.getId().getValue(), refList.getReflistId());
 		assertEquals(dbEnum.getDescription(), refList.getDescription());
 		assertEquals(dbEnum.getDefault(), refList.getDefaultValue());
+		assertEquals(dbEnum.getUniqueName(), refList.getEnumName());
 		assertEquals(1, refList.getItems().size());
 		ApiRefListItem item = refList.getItems().get(dbEnum.getUniqueName());
 		assertNotNull(item);
-		assertEquals(dbEnum.getUniqueName(), refList.getEnumName());
-		assertEquals(dbEnum.getDescription(), item.getDescription());
+		assertEquals(enumValue.getDescription(), item.getDescription());
 		assertEquals(enumValue.getSortNumber(), item.getSortNumber());
 		assertEquals(enumValue.getEditClassName(), item.getEditClassName());
 		assertEquals(enumValue.getExecClassName(), item.getExecClassName());

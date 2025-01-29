@@ -57,7 +57,7 @@ import org.opendcs.odcsapi.util.ApiConstants;
  *
  */
 @Path("/")
-public class ReflistResources extends OpenDcsResource
+public final class ReflistResources extends OpenDcsResource
 {
 	@Context HttpHeaders httpHeaders;
 
@@ -69,13 +69,11 @@ public class ReflistResources extends OpenDcsResource
 	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
 	public Response getRefLists(@QueryParam("name") String listNames) throws DbException, WebAppException
 	{
-		DatabaseIO dbIo = null;
+		DatabaseIO dbIo = getLegacyDatabase();
 		try
 		{
-			dbIo = getLegacyDatabase();
 			EnumList returnedEnums = new EnumList();
 			dbIo.readEnumList(returnedEnums);
-			returnedEnums = returnedEnums.getDatabase().enumList;
 			HashMap<String, ApiRefList> ret = new HashMap<>();
 			for (DbEnum enumVal : returnedEnums.getEnumList())
 			{
@@ -136,10 +134,7 @@ public class ReflistResources extends OpenDcsResource
 		}
 		finally
 		{
-			if (dbIo != null)
-			{
-				dbIo.close();
-			}
+			dbIo.close();
 		}
 	}
 
@@ -150,81 +145,65 @@ public class ReflistResources extends OpenDcsResource
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
 	public Response postRefList(ApiRefList reflist) throws DbException
 	{
-		DatabaseIO dbIo = null;
-		try
+		try (EnumDAI dai = getLegacyTimeseriesDB().makeEnumDAO())
 		{
-			dbIo = getLegacyDatabase();
-			EnumList enumList = mapToEnum(reflist);
-			dbIo.writeEnumList(enumList);
+			DbEnum dbEnum = mapToEnum(reflist);
+			dai.writeEnum(dbEnum);
+
 			return Response.status(HttpServletResponse.SC_CREATED)
-					.entity(map(enumList))
+					.entity(map(dbEnum))
 					.build();
 		}
-		catch( DatabaseException e)
+		catch( DatabaseException | DbIoException e)
 		{
 			throw new DbException("Unable to write reference list", e);
 		}
-		finally
-		{
-			if (dbIo != null)
-			{
-				dbIo.close();
-			}
-		}
 	}
 
-	static EnumList mapToEnum(ApiRefList refList) throws DatabaseException
+	static DbEnum mapToEnum(ApiRefList refList) throws DatabaseException
 	{
-		EnumList el = new EnumList();
-		for (Map.Entry<String, ApiRefListItem> item : refList.getItems().entrySet())
+		DbEnum ev = new DbEnum(refList.getEnumName());
+		ev.setDescription(refList.getDescription());
+		ev.setDefault(refList.getDefaultValue());
+		if (refList.getReflistId() != null)
 		{
-			DbEnum ev = new DbEnum(item.getKey());
-			ev.setDescription(refList.getDescription());
-			ev.setDefault(refList.getDefaultValue());
-			ev.enumName = refList.getEnumName();
-			if (refList.getReflistId() != null)
-			{
-				ev.setId(DbKey.createDbKey(refList.getReflistId()));
-			}
-			else
-			{
-				ev.setId(DbKey.NullKey);
-			}
-			for (Map.Entry<String, ApiRefListItem> itemMap : refList.getItems().entrySet())
-			{
-				EnumValue val = new EnumValue(ev, itemMap.getValue().getValue());
-				val.setDescription(itemMap.getValue().getDescription());
-				val.setSortNumber(itemMap.getValue().getSortNumber());
-				val.setExecClassName(itemMap.getValue().getExecClassName());
-				val.setEditClassName(itemMap.getValue().getEditClassName());
-				ev.addValue(val);
-			}
-			el.addEnum(ev);
+			ev.setId(DbKey.createDbKey(refList.getReflistId()));
 		}
-		return el;
+		else
+		{
+			ev.setId(DbKey.NullKey);
+		}
+		for (Map.Entry<String, ApiRefListItem> itemMap : refList.getItems().entrySet())
+		{
+			EnumValue val = new EnumValue(ev, itemMap.getValue().getValue());
+			val.setDescription(itemMap.getValue().getDescription());
+			val.setSortNumber(itemMap.getValue().getSortNumber());
+			val.setExecClassName(itemMap.getValue().getExecClassName());
+			val.setEditClassName(itemMap.getValue().getEditClassName());
+			ev.addValue(val);
+		}
+		return ev;
 	}
 
-	static ApiRefList map(EnumList enumList)
+	static ApiRefList map(DbEnum dbEnum)
 	{
 		ApiRefList ret = new ApiRefList();
 		HashMap<String, ApiRefListItem> items = new HashMap<>();
-		for (DbEnum ev : enumList.getEnumList())
+		ret.setEnumName(dbEnum.getUniqueName());
+		ret.setDefaultValue(dbEnum.getDefault());
+		ret.setDescription(dbEnum.getDescription());
+		ret.setReflistId(dbEnum.getId().getValue());
+		for (EnumValue val : dbEnum.values())
 		{
-			for (EnumValue val : ev.values())
-			{
-				ApiRefListItem item = new ApiRefListItem();
-				item.setDescription(ev.getDescription());
-				item.setValue(val.getValue());
-				item.setExecClassName(val.getExecClassName());
-				item.setEditClassName(val.getEditClassName());
-				item.setSortNumber(val.getSortNumber());
-				items.put(ev.getUniqueName(), item);
-			}
-			ret.setEnumName(ev.getUniqueName());
-			ret.setDefaultValue(ev.getDefault());
-			ret.setDescription(ev.getDescription());
-			ret.setReflistId(ev.getId().getValue());
+			ApiRefListItem item = new ApiRefListItem();
+			item.setDescription(val.getDescription());
+			item.setValue(val.getValue());
+			item.setExecClassName(val.getExecClassName());
+			item.setEditClassName(val.getEditClassName());
+			item.setSortNumber(val.getSortNumber());
+			items.put(dbEnum.getUniqueName(), item);
 		}
+
 		ret.setItems(items);
 		return ret;
 	}
