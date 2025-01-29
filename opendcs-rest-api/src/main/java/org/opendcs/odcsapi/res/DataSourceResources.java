@@ -60,10 +60,9 @@ public class DataSourceResources extends OpenDcsResource
 	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
 	public Response getDataSourceRefs() throws DbException
 	{
-		DatabaseIO dbIo = null;
+		DatabaseIO dbIo = getLegacyDatabase();
 		try
 		{
-			dbIo = getLegacyDatabase();
 			DataSourceList dsl = new DataSourceList();
 			dbIo.readDataSourceList(dsl);
 			return Response.status(HttpServletResponse.SC_OK).entity(map(dsl)).build();
@@ -74,10 +73,7 @@ public class DataSourceResources extends OpenDcsResource
 		}
 		finally
 		{
-			if (dbIo != null)
-			{
-				dbIo.close();
-			}
+			dbIo.close();
 		}
 	}
 
@@ -139,10 +135,9 @@ public class DataSourceResources extends OpenDcsResource
 			throw new MissingParameterException("Missing required datasourceid parameter.");
 		}
 
-		DatabaseIO dbIo = null;
+		DatabaseIO dbIo = getLegacyDatabase();
 		try
 		{
-			dbIo = getLegacyDatabase();
 			DataSource ds = new DataSource(DbKey.createDbKey(dataSourceId));
 			dbIo.readDataSource(ds);
 
@@ -163,17 +158,16 @@ public class DataSourceResources extends OpenDcsResource
 		}
 		finally
 		{
-			if (dbIo != null)
-			{
-				dbIo.close();
-			}
+			dbIo.close();
 		}
 	}
 
 	static ApiDataSource map(DataSource ds)
 	{
 		if (ds == null)
+		{
 			return null;
+		}
 		ApiDataSource ads = new ApiDataSource();
 		if (ds.getId() != null)
 		{
@@ -234,10 +228,9 @@ public class DataSourceResources extends OpenDcsResource
 			throw new MissingParameterException("Missing required data source object.");
 		}
 
-		DatabaseIO dbIo = null;
+		DatabaseIO dbIo = getLegacyDatabase();
 		try
 		{
-			dbIo = getLegacyDatabase();
 			DataSource source = map(datasource);
 			dbIo.writeDataSource(source);
 			return Response.status(HttpServletResponse.SC_CREATED)
@@ -250,10 +243,7 @@ public class DataSourceResources extends OpenDcsResource
 		}
 		finally
 		{
-			if (dbIo != null)
-			{
-				dbIo.close();
-			}
+			dbIo.close();
 		}
 	}
 
@@ -306,10 +296,9 @@ public class DataSourceResources extends OpenDcsResource
 			throw new MissingParameterException("Missing required datasourceid parameter.");
 		}
 
-		DatabaseIO dbIo = null;
+		DatabaseIO dbIo = getLegacyDatabase();
 		try
 		{
-			dbIo = getLegacyDatabase();
 			DataSource ds = new DataSource(DbKey.createDbKey(datasourceId));
 			dbIo.readDataSource(ds);
 			if (ds.getName() == null)
@@ -335,10 +324,7 @@ public class DataSourceResources extends OpenDcsResource
 		}
 		finally
 		{
-			if (dbIo != null)
-			{
-				dbIo.close();
-			}
+			dbIo.close();
 		}
 	}
 
