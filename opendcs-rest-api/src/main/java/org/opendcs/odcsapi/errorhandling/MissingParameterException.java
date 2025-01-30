@@ -2,7 +2,7 @@ package org.opendcs.odcsapi.errorhandling;
 
 import javax.servlet.http.HttpServletResponse;
 
-public class MissingParameterException extends WebAppException
+public final class MissingParameterException extends WebAppException
 {
   /** detailed error msg */
   private String errMessage = "";

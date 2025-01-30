@@ -2,7 +2,7 @@ package org.opendcs.odcsapi.errorhandling;
 
 import javax.servlet.http.HttpServletResponse;
 
-public class DatabaseItemNotFoundException extends WebAppException
+public final class DatabaseItemNotFoundException extends WebAppException
 {
   /** detailed error msg */
   private String errMessage = "";
