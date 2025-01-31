@@ -59,7 +59,10 @@ import org.opendcs.odcsapi.lrgsclient.ClientConnectionCache;
 import org.opendcs.odcsapi.util.ApiConstants;
 import org.opendcs.odcsapi.util.ApiEnvExpander;
 import org.opendcs.odcsapi.util.ApiPropertiesUtil;
+import org.opendcs.odcsapi.util.ProcWaiterCallback;
 import org.opendcs.odcsapi.util.ProcWaiterThread;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Resources for editing, monitoring, stopping, and starting processes.
@@ -67,9 +70,11 @@ import org.opendcs.odcsapi.util.ProcWaiterThread;
 @Path("/")
 public final class AppResources extends OpenDcsResource
 {
+	private static final String NO_APP_FOUND = "No such app with ID: %s";
+	private static final Logger LOGGER = LoggerFactory.getLogger(AppResources.class);
+
 	@Context private HttpServletRequest request;
 	@Context private HttpHeaders httpHeaders;
-	private static final String NO_APP_FOUND = "No such app with ID: %s";
 
 	@GET
 	@Path("apprefs")
@@ -356,6 +361,8 @@ public final class AppResources extends OpenDcsResource
 			ApiLoadingApp loadingApp = mapLoading(dai.getComputationApp(DbKey.createDbKey(appId)));
 			ApiAppStatus appStat = getAppStatus(dai, appId);
 
+
+
 			// Error if already running and heartbeat is current
 			if (appStat != null && appStat.getPid() != null && appStat.getHeartbeat() != null
 					&& (System.currentTimeMillis() - appStat.getHeartbeat().getTime() < 20000L))
@@ -386,8 +393,16 @@ public final class AppResources extends OpenDcsResource
 			dai.obtainCompProcLock(dai.getComputationApp(DbKey.createDbKey(loadingApp.getAppId())),
 					pid, settings.getHostName());
 
+			// ProcWaiterThread runBackground to execute command, use callback.
+			ProcWaiterCallback pwcb = (procName, obj, exitStatus) ->
+			{
+				ApiLoadingApp loadingApp1 = (ApiLoadingApp)obj;
+				LOGGER.info("App Termination: app {} was terminated with exit status {}",
+						loadingApp1.getAppName(), exitStatus);
+			};
+
 			ProcWaiterThread.runBackground(ApiEnvExpander.expand(startCmd), "App:" + loadingApp.getAppName(),
-					null, loadingApp);
+					pwcb, loadingApp);
 
 			return Response.status(HttpServletResponse.SC_OK)
 					.entity("App with ID " + appId + " (" + loadingApp.getAppName() + ") started.").build();
