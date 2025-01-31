@@ -27,6 +27,7 @@ import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -78,15 +79,18 @@ final class PlatformResourcesIT extends BaseIT
 			JsonPath jsonPath = resp.body().jsonPath();
 
 			List<Map<String, Object>> netLists = jsonPath.getList("");
-			assertNotNull(netLists);
+			assertFalse(netLists.isEmpty());
+			boolean found = false;
 			for(Map<String, Object> entry : netLists)
 			{
 				if(entry.get("name").equals("PlatformTest"))
 				{
 					netListId = Long.parseLong(entry.get("netlistId").toString());
+					found = true;
 					break;
 				}
 			}
+			assertTrue(found);
 
 			// get schedule entry id
 			resp = given()

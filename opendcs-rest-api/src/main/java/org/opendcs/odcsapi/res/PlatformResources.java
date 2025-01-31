@@ -20,6 +20,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Properties;
 import java.util.Vector;
 
@@ -283,7 +284,7 @@ public final class PlatformResources extends OpenDcsResource
 		ret.setAgency(platform.getAgency());
 		ret.setDescription(platform.getDescription());
 		ret.setPlatformDesignator(platform.getDesignator());
-		ret.lastModifyTime = platform.getLastModified();
+		ret.lastModifyTime = Objects.requireNonNull(platform.getLastModified());
 		ret.platformSensors = platMap(platform.getPlatformSensors());
 		if (platform.getConfigId() != null)
 		{
@@ -334,23 +335,46 @@ public final class PlatformResources extends OpenDcsResource
 		{
 			Platform platform = new Platform();
 			TransportMedium t = new TransportMedium(platform);
-			t.setMediumId(tm.getMediumId());
+			if (tm.getMediumId() != null)
+			{
+				t.setMediumId(tm.getMediumId());
+			}
 			t.setMediumType(tm.getMediumType());
 			t.setBaud(tm.getBaud());
-			t.assignedTime = tm.getAssignedTime();
-			t.channelNum = tm.getChannelNum();
-			t.setDataBits(tm.getDataBits());
+			if (tm.getAssignedTime() != null)
+			{
+				t.assignedTime = tm.getAssignedTime();
+			}
+			if (tm.getChannelNum() != null)
+			{
+				t.channelNum = tm.getChannelNum();
+			}
+			if (tm.getDataBits() != null)
+			{
+				t.setDataBits(tm.getDataBits());
+			}
 			t.setTimeZone(tm.getTimezone());
-			t.setStopBits(tm.getStopBits());
+			if (tm.getStopBits() != null)
+			{
+				t.setStopBits(tm.getStopBits());
+			}
 			t.setParity(tm.getParity().charAt(0));
 			t.setDoLogin(tm.getDoLogin());
 			t.setPassword(tm.getPassword());
 			t.setUsername(tm.getUsername());
 			t.scriptName = tm.getScriptName();
-			t.transmitInterval = tm.getTransportInterval();
-			t.transmitWindow = tm.getTransportWindow();
-			t.channelNum = tm.getChannelNum();
-			t.assignedTime = tm.getAssignedTime();
+			if (tm.getTransportInterval() != null)
+			{
+				t.transmitInterval = tm.getTransportInterval();
+			}
+			if (tm.getTransportWindow() != null)
+			{
+				t.transmitWindow = tm.getTransportWindow();
+			}
+			if (tm.getChannelNum() != null)
+			{
+				t.channelNum = tm.getChannelNum();
+			}
 			ret.add(t);
 		}
 		return ret;
