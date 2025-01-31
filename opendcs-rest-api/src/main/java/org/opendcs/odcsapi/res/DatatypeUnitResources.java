@@ -47,6 +47,8 @@ import decodes.db.UnitConverterDb;
 import decodes.db.UnitConverterSet;
 import decodes.db.UsgsStdConverter;
 import decodes.sql.DbKey;
+import decodes.tsdb.DbIoException;
+import opendcs.dai.DataTypeDAI;
 import org.opendcs.odcsapi.beans.ApiDataType;
 import org.opendcs.odcsapi.beans.ApiUnit;
 import org.opendcs.odcsapi.beans.ApiUnitConverter;
@@ -71,20 +73,15 @@ public class DatatypeUnitResources extends OpenDcsResource
 	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
 	public Response getDataTypeList(@QueryParam("standard") String std) throws DbException
 	{
-		DatabaseIO dbIo = getLegacyDatabase();
-		try
+		try (DataTypeDAI dai = getLegacyTimeseriesDB().makeDataTypeDAO())
 		{
 			DataTypeSet set = new DataTypeSet();
-			dbIo.readDataTypeSet(set, std);
+			dai.readDataTypeSet(set, std);
 			return Response.status(HttpServletResponse.SC_OK).entity(map(set)).build();
 		}
-		catch(DatabaseException e)
+		catch(DbIoException e)
 		{
 			throw new DbException("Unable to retrieve data type list", e);
-		}
-		finally
-		{
-			dbIo.close();
 		}
 	}
 
