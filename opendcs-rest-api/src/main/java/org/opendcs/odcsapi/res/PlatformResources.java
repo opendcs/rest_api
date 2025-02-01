@@ -16,11 +16,11 @@
 package org.opendcs.odcsapi.res;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Properties;
 import java.util.Vector;
 
@@ -284,7 +284,7 @@ public final class PlatformResources extends OpenDcsResource
 		ret.setAgency(platform.getAgency());
 		ret.setDescription(platform.getDescription());
 		ret.setPlatformDesignator(platform.getDesignator());
-		ret.lastModifyTime = Objects.requireNonNull(platform.getLastModified());
+		ret.lastModifyTime = new Date();
 		ret.platformSensors = platMap(platform.getPlatformSensors());
 		if (platform.getConfigId() != null)
 		{
