@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.TimeZone;
 import java.util.Vector;
 
+import decodes.db.DataSource;
 import decodes.db.RoutingSpec;
 import decodes.db.RoutingSpecList;
 import decodes.db.RoutingStatus;
@@ -39,7 +40,9 @@ final class RoutingResourcesTest
 		RoutingSpecList routingSpecList = new RoutingSpecList();
 		RoutingSpec routingSpec = buildRoutingSpec();
 		routingSpecList.add(routingSpec);
+
 		List<ApiRoutingRef> apiRoutingRefs = map(routingSpecList);
+
 		ApiRoutingRef apiRoutingRef = apiRoutingRefs.get(0);
 		assertNotNull(apiRoutingRef);
 		assertEquals(apiRoutingRef.getRoutingId(), routingSpec.getId().getValue());
@@ -303,6 +306,10 @@ final class RoutingResourcesTest
 
 	private RoutingSpec buildRoutingSpec() throws Exception
 	{
+		DataSource dataSource = new DataSource();
+		dataSource.setName("TestDataSource");
+		dataSource.setId(DbKey.createDbKey(2345L));
+		dataSource.setDataSourceArg("TestDataSourceArg");
 		RoutingSpec routingSpec = new RoutingSpec();
 		routingSpec.setName("TestRoutingSpec");
 		routingSpec.setId(DbKey.createDbKey(1234L));
@@ -310,6 +317,7 @@ final class RoutingResourcesTest
 		routingSpec.lastModifyTime = Date.from(Instant.parse("2021-02-01T00:00:00Z"));
 		routingSpec.enableEquations = true;
 		routingSpec.networkListNames = new Vector<>(Arrays.asList("TestNet", "TestNet2"));
+		routingSpec.dataSource = dataSource;
 		return routingSpec;
 	}
 }

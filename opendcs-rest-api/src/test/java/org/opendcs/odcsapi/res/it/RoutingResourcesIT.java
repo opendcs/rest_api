@@ -1,12 +1,16 @@
 package org.opendcs.odcsapi.res.it;
 
 import java.time.Instant;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.MediaType;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import decodes.db.ScheduleEntryStatus;
+import decodes.polling.DacqEvent;
+import decodes.sql.DbKey;
 import io.restassured.filter.log.LogDetail;
 import io.restassured.filter.session.SessionFilter;
 import io.restassured.path.json.JsonPath;
@@ -25,10 +29,14 @@ import org.opendcs.odcsapi.beans.ApiRoutingStatus;
 import org.opendcs.odcsapi.beans.ApiScheduleEntry;
 import org.opendcs.odcsapi.beans.ApiScheduleEntryRef;
 import org.opendcs.odcsapi.fixtures.DatabaseContextProvider;
+import org.opendcs.odcsapi.fixtures.DatabaseSetupExtension;
 
 import static io.restassured.RestAssured.given;
+import static org.hamcrest.CoreMatchers.anyOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Tag("integration-opentsdb-only")
@@ -41,7 +49,10 @@ final class RoutingResourcesIT extends BaseIT
 	private static Long scheduleId;
 	private static Long dataSourceId;
 	private static Long appId;
+	private static Long siteId;
 	private static String appName;
+	private static Long platformId;
+	private static Long scheduleEntryStatusId;
 
 	@BeforeEach
 	void setUp() throws Exception
@@ -157,11 +168,84 @@ final class RoutingResourcesIT extends BaseIT
 		;
 
 		scheduleId = response.body().jsonPath().getLong("schedEntryId");
+
+		ScheduleEntryStatus status = new ScheduleEntryStatus(DbKey.NullKey);
+		status.setScheduleEntryId(DbKey.createDbKey(scheduleId));
+		status.setHostname("localhost");
+		status.setRunStatus("Running");
+		status.setLastMessageTime(Date.from(Instant.parse("2025-01-31T00:00:00Z")));
+		status.setNumMessages(10);
+		status.setNumDecodesErrors(1);
+		status.setNumPlatforms(1);
+		status.setRunStart(Date.from(Instant.parse("2025-01-29T00:00:00Z")));
+		status.setRunStop(Date.from(Instant.parse("2025-01-30T00:00:00Z")));
+		status.setScheduleEntryName("Test schedule");
+
+		// Insert the schedule entry status
+		DatabaseSetupExtension.storeScheduleEntryStatus(status);
+
+		siteId = storeSite("routing_site_insert.json");
+
+		platformId = storePlatform("routing_platform_insert.json", siteId);
+
+		// Retrieve the schedule entry status id
+		response = given()
+			.log().ifValidationFails(LogDetail.ALL, true)
+			.filter(sessionFilter)
+			.accept(MediaType.APPLICATION_JSON)
+			.contentType(MediaType.APPLICATION_JSON)
+			.header("Authorization", authHeader)
+			.queryParam("scheduleentryid", scheduleId)
+		.when()
+			.redirects().follow(true)
+			.redirects().max(3)
+			.get("routingexecstatus")
+		.then()
+			.log().ifValidationFails(LogDetail.ALL, true)
+		.assertThat()
+			.statusCode(is(HttpServletResponse.SC_OK))
+			.extract()
+		;
+
+		scheduleEntryStatusId = DbKey.NullKey.getValue();
+		JsonPath responseJson = response.body().jsonPath();
+		List<Map<String, Object>> responseList = responseJson.getList("");
+		assertFalse(responseList.isEmpty());
+		boolean found = false;
+		for (Map<String, Object> responseMap : responseList)
+		{
+			if (((Integer) responseMap.get("scheduleEntryId")).longValue() == scheduleId)
+			{
+				scheduleEntryStatusId = ((Integer) responseMap.get("routingExecId")).longValue();
+				found = true;
+				break;
+			}
+		}
+		assertTrue(found);
+
+		// Insert the dacq event
+		DacqEvent event = new DacqEvent();
+		event.setAppId(DbKey.createDbKey(appId));
+		event.setEventPriority(1);
+		event.setEventText("Test event");
+		event.setSubsystem("Routing");
+		event.setEventTime(Date.from(Instant.parse("2025-01-31T00:00:00Z")));
+		event.setMsgRecvTime(Date.from(Instant.parse("2025-01-31T00:30:00Z")));
+		event.setPlatformId(DbKey.createDbKey(platformId));
+		event.setScheduleEntryStatusId(DbKey.createDbKey(scheduleEntryStatusId));
+
+		DatabaseSetupExtension.storeDacqEvent(event);
 	}
 
 	@AfterEach
-	void tearDown()
+	void tearDown() throws Exception
 	{
+		// Delete the dacq event
+		DatabaseSetupExtension.deleteEventsForPlatform(DbKey.createDbKey(platformId));
+
+		// Delete the schedule entry status
+		DatabaseSetupExtension.deleteScheduleEntryStatus(DbKey.createDbKey(scheduleEntryStatusId));
+
 		if (routingId != null)
 		{
 			// Delete the routing
@@ -236,6 +320,10 @@ final class RoutingResourcesIT extends BaseIT
 			.statusCode(is(HttpServletResponse.SC_OK))
 			.extract()
 		;
+
+		tearDownPlatform(platformId);
+
+		tearDownSite(siteId);
 
 		logout(sessionFilter);
 	}
@@ -627,7 +715,6 @@ final class RoutingResourcesIT extends BaseIT
 	@TestTemplate
 	void testGetRoutingStatus() throws Exception
 	{
-		// TODO: setup test to return actual data
 		ApiRoutingStatus status = getDtoFromResource("routing_status_expected.json", ApiRoutingStatus.class);
 		status.setAppId(appId);
 		status.setAppName(appName);
@@ -651,6 +738,7 @@ final class RoutingResourcesIT extends BaseIT
 
 		List<Map<String, Object>> actualList = response.body().jsonPath().getList("");
 
+		boolean found = false;
 		for (Map<String, Object> actualItem : actualList)
 		{
 			if (actualItem.get("name").equals(expected.get("name")))
@@ -659,14 +747,16 @@ final class RoutingResourcesIT extends BaseIT
 				assertEquals(expected.get("appName"), actualItem.get("appName"));
 				assertEquals(expected.get("routingSpecName"), actualItem.get("routingSpecName"));
 				assertEquals(expected.get("enabled"), actualItem.get("enabled"));
+				found = true;
 			}
 		}
+		assertTrue(found);
 	}
 
 	@TestTemplate
 	void testGetRoutingExecStatus()
 	{
-		// TODO: Setup tests to give an actual response with data, currently null
+		// Note: Routing spec id is not mapped here!
 		JsonPath expected = getJsonPathFromResource("routing_exec_status_expected.json");
 
 		ExtractableResponse<Response> response = given()
@@ -687,19 +777,38 @@ final class RoutingResourcesIT extends BaseIT
 		;
 
 		JsonPath actual = response.body().jsonPath();
+		List<Map<String, Object>> actualList = actual.getList("");
 
-		assertEquals(expected.getString("routingName"), actual.getString("routingName"));
-		assertEquals(expected.getString("destination"), actual.getString("destination"));
-		assertEquals(expected.getString("datasourcename"), actual.getString("datasourcename"));
+		boolean found = false;
+		for (Map<String, Object> actualItem : actualList)
+		{
+			if (((Integer) actualItem.get("scheduleEntryId")).longValue() == scheduleId)
+			{
+				assertEquals(expected.getString("runStart"), actualItem.get("runStart"));
+				assertEquals(expected.getString("runStop"), actualItem.get("runStop"));
+				assertEquals(expected.getInt("numMessages"), actualItem.get("numMessages"));
+				assertEquals(expected.getInt("numErrors"), actualItem.get("numErrors"));
+				assertEquals(expected.getInt("numPlatforms"), actualItem.get("numPlatforms"));
+				assertEquals(expected.getString("lastMsgTime"), actualItem.get("lastMsgTime"));
+				assertEquals(expected.getString("runStatus"), actualItem.get("runStatus"));
+				assertEquals(expected.getString("hostname"), actualItem.get("hostname"));
+				assertEquals(expected.getString("lastInput"), actualItem.get("lastInput"));
+				assertEquals(expected.getString("lastOutput"), actualItem.get("lastOutput"));
+
+				found = true;
+			}
+		}
+		assertTrue(found);
 	}
 
 	@TestTemplate
 	void testGetDacqEvents() throws Exception
 	{
-		// TODO: Create expected JSON, make sure to setup the tests to give an actual response with data
 		ApiDacqEvent event = getDtoFromResource("routing_dacq_events_expected.json", ApiDacqEvent.class);
 		event.setAppId(appId);
 		event.setAppName(appName);
+		event.setRoutingExecId(scheduleEntryStatusId);
+		event.setSubsystem("Routing");
 		JsonPath expected = new JsonPath(MAPPER.writeValueAsString(event));
 
 		ExtractableResponse<Response> response = given()
@@ -707,7 +816,9 @@ final class RoutingResourcesIT extends BaseIT
 			.accept(MediaType.APPLICATION_JSON)
 			.filter(sessionFilter)
 			.header("Authorization", authHeader)
-			.queryParam("routingexecid", routingId)
+			.queryParam("routingexecid", scheduleEntryStatusId)
+			.queryParam("appid", appId)
+			.queryParam("platformid", platformId)
 		.when()
 			.redirects().follow(true)
 			.redirects().max(3)
@@ -720,15 +831,154 @@ final class RoutingResourcesIT extends BaseIT
 		;
 
 		JsonPath actual = response.body().jsonPath();
+		List<Map<String, Object>> actualList = actual.getList("");
+		assertFalse(actualList.isEmpty());
 
-		assertEquals(expected.get("routingExecId").toString(), actual.get("routingExecId").toString());
-		assertEquals(expected.get("platformId").toString(), actual.get("platformId").toString());
-		assertEquals(expected.get("eventTime").toString(), actual.get("eventTime").toString());
-		assertEquals(expected.get("priority").toString(), actual.get("priority").toString());
-		assertEquals(expected.get("subsystem").toString(), actual.get("subsystem").toString());
-		assertEquals(expected.get("appName").toString(), actual.get("appName").toString());
-		assertEquals(expected.get("msgRecvTime").toString(), actual.get("msgRecvTime").toString());
-		assertEquals(expected.get("eventText").toString(), actual.get("eventText").toString());
-		assertEquals(expected.get("appId").toString(), actual.get("appId").toString());
+		boolean found = false;
+		for (Map<String, Object> actualItem : actualList)
+		{
+			if (((Integer) actualItem.get("platformId")).longValue() == platformId
+					&& ((Integer) actualItem.get("appId")).longValue() == appId
+					&& ((Integer) actualItem.get("routingExecId")).longValue() == scheduleEntryStatusId)
+			{
+				// The event time updated based on current time, so we can't compare it directly
+				// The app name is not present in the Toolkit DTO, so it won't be returned in the response
+				assertEquals(expected.get("priority").toString(), actualItem.get("priority").toString());
+				assertEquals(expected.get("subsystem"), actualItem.get("subsystem"));
+				String messageRcvTime = actualItem.get("msgRecvTime").toString();
+				// substring date text to remove timezone and milliseconds
+				assertEquals(Instant.ofEpochMilli(expected.get("msgRecvTime")).toString(),
+						messageRcvTime.substring(0, messageRcvTime.indexOf(".")) + "Z");
+				assertEquals(expected.get("eventText").toString(), actualItem.get("eventText").toString());
+				found = true;
+			}
+		}
+		assertTrue(found);
+	}
+
+	private Long storeSite(String jsonPath) throws Exception
+	{
+		assertNotNull(jsonPath);
+		String siteJson = getJsonFromResource(jsonPath);
+
+		ExtractableResponse<Response> response = given()
+			.log().ifValidationFails(LogDetail.ALL, true)
+			.accept(MediaType.APPLICATION_JSON)
+			.header("Authorization", authHeader)
+			.contentType(MediaType.APPLICATION_JSON)
+			.filter(sessionFilter)
+			.body(siteJson)
+		.when()
+			.redirects().follow(true)
+			.redirects().max(3)
+			.post("site")
+		.then()
+			.log().ifValidationFails(LogDetail.ALL, true)
+		.assertThat()
+			.statusCode(is(HttpServletResponse.SC_OK))
+			.extract()
+		;
+
+		return response.body().jsonPath().getLong("siteId");
+	}
+
+	private void tearDownSite(Long siteId)
+	{
+		given()
+			.log().ifValidationFails(LogDetail.ALL, true)
+			.accept(MediaType.APPLICATION_JSON)
+			.header("Authorization", authHeader)
+			.queryParam("siteid", siteId)
+			.filter(sessionFilter)
+		.when()
+			.redirects().follow(true)
+			.redirects().max(3)
+			.delete("site")
+		.then()
+			.log().ifValidationFails(LogDetail.ALL, true)
+		.assertThat()
+			.statusCode(is(HttpServletResponse.SC_OK))
+		;
+
+		given()
+			.log().ifValidationFails(LogDetail.ALL, true)
+			.accept(MediaType.APPLICATION_JSON)
+			.header("Authorization", authHeader)
+			.queryParam("siteid", siteId)
+			.filter(sessionFilter)
+		.when()
+			.redirects().follow(true)
+			.redirects().max(3)
+			.get("site")
+		.then()
+			.log().ifValidationFails(LogDetail.ALL, true)
+		.assertThat()
+			.statusCode(is(HttpServletResponse.SC_NOT_FOUND))
+		;
+	}
+
+	private Long storePlatform(String jsonPath, Long siteId) throws Exception
+	{
+		assertNotNull(jsonPath);
+		String platformJson = getJsonFromResource(jsonPath);
+
+		platformJson = platformJson.replace("[SITE_ID]", siteId.toString());
+
+		ExtractableResponse<Response> response = given()
+			.log().ifValidationFails(LogDetail.ALL, true)
+			.accept(MediaType.APPLICATION_JSON)
+			.header("Authorization", authHeader)
+			.contentType(MediaType.APPLICATION_JSON)
+			.filter(sessionFilter)
+			.body(platformJson)
+		.when()
+			.redirects().follow(true)
+			.redirects().max(3)
+			.post("platform")
+		.then()
+			.log().ifValidationFails(LogDetail.ALL, true)
+		.assertThat()
+			.statusCode(is(HttpServletResponse.SC_OK))
+			.extract()
+		;
+
+		return response.body().jsonPath().getLong("platformId");
+	}
+
+	private void tearDownPlatform(Long platformId)
+	{
+		given()
+			.log().ifValidationFails(LogDetail.ALL, true)
+			.accept(MediaType.APPLICATION_JSON)
+			.header("Authorization", authHeader)
+			.queryParam("platformid", platformId)
+			.filter(sessionFilter)
+		.when()
+			.redirects().follow(true)
+			.redirects().max(3)
+			.delete("platform")
+		.then()
+			.log().ifValidationFails(LogDetail.ALL, true)
+		.assertThat()
+			.statusCode(is(HttpServletResponse.SC_OK))
+		;
+
+		given()
+			.log().ifValidationFails(LogDetail.ALL, true)
+			.accept(MediaType.APPLICATION_JSON)
+			.header("Authorization", authHeader)
+			.queryParam("platformid", platformId)
+			.filter(sessionFilter)
+		.when()
+			.redirects().follow(true)
+			.redirects().max(3)
+			.get("platform")
+		.then()
+			.log().ifValidationFails(LogDetail.ALL, true)
+		.assertThat()
+			// TODO: This is here to support older implementations of the PlatformResources controller and should be removed
+			.statusCode(anyOf(is(HttpServletResponse.SC_NOT_FOUND),
+					is(HttpServletResponse.SC_GONE)))
+		;
 	}
 }
