@@ -60,13 +60,34 @@ final class NetlistResourcesIT extends BaseIT
 
 		ObjectMapper mapper = new ObjectMapper();
 
-		siteId = storeSite("netlist_site_insert_data.json");
+		siteId = storeSite("netlist_site_insert_data.json");String configJson = getJsonFromResource("config_input_data.json");
+
+		ExtractableResponse<Response> response = given()
+			.log().ifValidationFails(LogDetail.ALL, true)
+			.accept(MediaType.APPLICATION_JSON)
+			.contentType(MediaType.APPLICATION_JSON)
+			.header("Authorization", authHeader)
+			.filter(sessionFilter)
+			.body(configJson)
+		.when()
+			.redirects().follow(true)
+			.redirects().max(3)
+			.post("config")
+		.then()
+			.log().ifValidationFails(LogDetail.ALL, true)
+		.assertThat()
+			.statusCode(is(HttpServletResponse.SC_CREATED))
+			.extract()
+		;
+
+		long configId = response.body().jsonPath().getLong("configId");
 
 		ApiPlatform platform = getDtoFromResource("netlist_platform_insert_data.json", ApiPlatform.class);
 		platform.setSiteId(siteId);
+		platform.setConfigId(configId);
 		String platformJson = mapper.writeValueAsString(platform);
 
-		ExtractableResponse<Response> response = given()
+		response = given()
 			.log().ifValidationFails(LogDetail.ALL, true)
 			.accept(MediaType.APPLICATION_JSON)
 			.contentType(MediaType.APPLICATION_JSON)
