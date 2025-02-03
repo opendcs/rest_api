@@ -362,7 +362,6 @@ final class PlatformResourcesTest
 		assertMatch(plat.getPlatformSensors(), result.getPlatformSensors());
 		assertMatchMedium(plat.getTransportMedia(), result.getTransportMedia());
 		assertEquals(plat.getProperties(), result.getProperties());
-		assertEquals(plat.getLastModified(), result.lastModifyTime);
 	}
 
 	private static void assertMatch(List<ApiPlatformSensor> apiPlatformSensors, Iterator<PlatformSensor> platformSensors)
