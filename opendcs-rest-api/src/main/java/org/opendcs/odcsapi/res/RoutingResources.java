@@ -603,6 +603,7 @@ public final class RoutingResources extends OpenDcsResource
 
 	static ArrayList<ApiRoutingExecStatus> statusMap(ArrayList<ScheduleEntryStatus> statuses)
 	{
+		// Note: Routing spec id is not mapped here!
 		ArrayList<ApiRoutingExecStatus> execStatuses = new ArrayList<>();
 		for (ScheduleEntryStatus status : statuses)
 		{
@@ -619,10 +620,19 @@ public final class RoutingResources extends OpenDcsResource
 			execStatus.setNumErrors(status.getNumDecodesErrors());
 			execStatus.setRunStatus(status.getRunStatus());
 			execStatus.setRunStop(status.getRunStop());
+			execStatus.setLastMsgTime(status.getLastMessageTime());
 			execStatus.setRunStart(status.getRunStart());
 			execStatus.setNumPlatforms(status.getNumPlatforms());
 			execStatus.setNumMessages(status.getNumMessages());
 			execStatus.setLastActivity(status.getLastModified());
+			if (status.getId() != null)
+			{
+				execStatus.setRoutingExecId(status.getId().getValue());
+			}
+			else
+			{
+				execStatus.setRoutingExecId(DbKey.NullKey.getValue());
+			}
 			execStatuses.add(execStatus);
 		}
 		return execStatuses;
@@ -634,8 +644,34 @@ public final class RoutingResources extends OpenDcsResource
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
 	public Response getDacqEvents(@QueryParam("appid") Long appId, @QueryParam("routingexecid") Long routingExecId,
 			@QueryParam("platformid") Long platformId, @QueryParam("backlog") String backlog)
-			throws DbException
+			throws DbException, MissingParameterException
 	{
+		if (appId == null || routingExecId == null || platformId == null)
+		{
+			StringBuilder parameter = new StringBuilder();
+			if (appId == null)
+			{
+				parameter.append("appid");
+			}
+			if (routingExecId == null)
+			{
+				if (parameter.length() > 0)
+				{
+					parameter.append(", ");
+				}
+				parameter.append("routingexecid");
+			}
+			if (platformId == null)
+			{
+				if (parameter.length() > 0)
+				{
+					parameter.append(", ");
+				}
+				parameter.append("platformid");
+			}
+			throw new MissingParameterException(String.format("Missing required parameter(s): %s", parameter));
+		}
+
 		try (DacqEventDAI dai = getLegacyTimeseriesDB().makeDacqEventDAO())
 		{
 			HttpSession session = request.getSession(true);
@@ -653,6 +689,7 @@ public final class RoutingResources extends OpenDcsResource
 
 	static ApiDacqEvent map(DacqEvent event)
 	{
+		// The app name is not present in the Toolkit DTO, so it won't be mapped here.
 		ApiDacqEvent apiEvent = new ApiDacqEvent();
 		apiEvent.setEventId(event.getDacqEventId().getValue());
 		apiEvent.setAppId(event.getAppId().getValue());
