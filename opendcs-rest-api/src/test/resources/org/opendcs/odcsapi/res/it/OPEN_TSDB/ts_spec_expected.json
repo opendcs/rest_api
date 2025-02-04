@@ -1,0 +1,31 @@
+{
+  "tsid": {
+    "uniqueString": "TS test site.Flow.Inst.5Minutes.20Minutes.Calc",
+    "key": 1,
+    "description": null,
+    "storageUnits": "cfs",
+    "active": true
+  },
+  "location": "TS test site",
+  "param": null,
+  "statCode": null,
+  "interval": "5Minutes",
+  "duration": "20Minutes",
+  "version": "Calc",
+  "siteId": 1,
+  "datatypeId": 104,
+  "intervalId": null,
+  "durationId": null,
+  "lastModified": null,
+  "active": true,
+  "allowDSTVariation": false,
+  "utcOffset": 0,
+  "offsetErrorAction": "IGNORE",
+  "storageType": "N",
+  "storageTable": 0,
+  "numValues": 0,
+  "min": null,
+  "max": null,
+  "oldest": null,
+  "newest": null
+}

@@ -1,17 +1,35 @@
+/*
+ * Copyright 2025 OpenDCS Consortium and its Contributors
+ * Licensed under the Apache License, Version 2.0 (the "License")
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ */
+
 package org.opendcs.odcsapi.res;
 
-import java.sql.Date;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 
 import decodes.cwms.CwmsTsId;
 import decodes.db.Site;
 import decodes.sql.DbKey;
+import decodes.tsdb.BadTimeSeriesException;
 import decodes.tsdb.CTimeSeries;
+import decodes.tsdb.IntervalCodes;
 import decodes.tsdb.TimeSeriesIdentifier;
 import decodes.tsdb.TsGroup;
+import ilex.var.NoConversionException;
 import ilex.var.TimedVariable;
 import opendcs.opentsdb.Interval;
 import org.junit.jupiter.api.Test;
@@ -27,9 +45,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.opendcs.odcsapi.res.TimeSeriesResources.dataMap;
+import static org.opendcs.odcsapi.res.TimeSeriesResources.iMap;
 import static org.opendcs.odcsapi.res.TimeSeriesResources.idMap;
 import static org.opendcs.odcsapi.res.TimeSeriesResources.map;
 import static org.opendcs.odcsapi.res.TimeSeriesResources.mapRef;
+import static org.opendcs.odcsapi.res.TimeSeriesResources.processSample;
 import static org.opendcs.odcsapi.res.TimeSeriesResources.specMap;
 import static org.opendcs.odcsapi.res.TimeSeriesResources.str2const;
 
@@ -59,7 +79,7 @@ final class TimeSeriesResourcesTest
 		id.setReadTime(55933124L);
 		identifiers.add(id);
 
-		ArrayList<ApiTimeSeriesIdentifier> apiIdentifiers = idMap(identifiers);
+		List<ApiTimeSeriesIdentifier> apiIdentifiers = idMap(identifiers);
 
 		assertNotNull(apiIdentifiers);
 		assertEquals(identifiers.size(), apiIdentifiers.size());
@@ -131,6 +151,24 @@ final class TimeSeriesResourcesTest
 		}
 	}
 
+	@Test
+	void testProcessSample() throws NoConversionException
+	{
+		TimedVariable tv = new TimedVariable(Date.from(Instant.parse("2021-08-01T00:15:00Z")), 10.0, 0);
+		Date start = Date.from(Instant.parse("2021-08-01T00:00:00Z"));
+		Date end = Date.from(Instant.parse("2021-08-01T01:00:00Z"));
+
+		List<ApiTimeSeriesValue> values = new ArrayList<>();
+
+		Date current = processSample(tv, start, end, values);
+		assertNotNull(current);
+		assertTrue(current.after(start));
+		assertTrue(current.before(end));
+		assertEquals(1, values.size());
+		assertEquals(tv.getTime(), values.get(0).getSampleTime());
+		assertEquals(tv.getDoubleValue(), values.get(0).getValue());
+	}
+
 	private void assertMatch(TimeSeriesIdentifier id, ApiTimeSeriesIdentifier apiId)
 	{
 		assertEquals(id.getDescription(), apiId.getDescription());
@@ -140,11 +178,51 @@ final class TimeSeriesResourcesTest
 	}
 
 	@Test
+	void testIMap()
+	{
+		List<Interval> intervals = new ArrayList<>();
+		Interval interval = new Interval("Hourly");
+		interval.setKey(DbKey.createDbKey(1234L));
+		interval.setCalConstant(Calendar.HOUR_OF_DAY);
+		interval.setCalMultiplier(2);
+		intervals.add(interval);
+
+		List<ApiInterval> apiIntervals = iMap(intervals);
+
+		assertNotNull(apiIntervals);
+		assertEquals(intervals.size(), apiIntervals.size());
+		ApiInterval apiInterval = apiIntervals.get(0);
+		assertNotNull(apiInterval);
+		assertEquals(interval.getKey().getValue(), apiInterval.getIntervalId());
+		assertEquals(IntervalCodes.getCalConstName(interval.getCalConstant()), apiInterval.getCalConstant());
+		assertEquals(interval.getName(), apiInterval.getName());
+	}
+
+	@Test
+	void testTimeSeriesIdMap() throws BadTimeSeriesException
+	{
+		ApiTimeSeriesIdentifier apiId = new ApiTimeSeriesIdentifier();
+		apiId.setDescription("TimeSeries data for USACE");
+		apiId.setKey(1234L);
+		apiId.setUniqueString("USACE_TF.Vol.Avg.1Minute.1.latest");
+		apiId.setStorageUnits("m3");
+		apiId.setActive(true);
+
+		TimeSeriesIdentifier id = map(apiId);
+
+		assertNotNull(id);
+		assertEquals(apiId.getDescription(), id.getDescription());
+		assertEquals(apiId.getUniqueString(), id.getUniqueString());
+		assertEquals(apiId.getKey(), id.getKey().getValue());
+		assertEquals(apiId.getStorageUnits(), id.getStorageUnits());
+	}
+
+	@Test
 	void testIntervalMap()
 	{
 		ApiInterval apiInterval = new ApiInterval();
 		apiInterval.setIntervalId(1234L);
-		apiInterval.setCalConstant("10");
+		apiInterval.setCalConstant("YEAR");
 		apiInterval.setName("Hourly");
 		apiInterval.setCalMultilier(2);
 
@@ -152,7 +230,7 @@ final class TimeSeriesResourcesTest
 
 		assertNotNull(interval);
 		assertEquals(apiInterval.getIntervalId(), interval.getKey().getValue());
-		assertEquals(Integer.parseInt(apiInterval.getCalConstant()), interval.getCalConstant());
+		assertEquals(str2const(apiInterval.getCalConstant()), interval.getCalConstant());
 		assertEquals(apiInterval.getName(), interval.getName());
 		assertEquals(apiInterval.getCalMultilier(), interval.getCalMultiplier());
 	}
@@ -162,14 +240,14 @@ final class TimeSeriesResourcesTest
 	{
 		Interval interval = new Interval("Daily");
 		interval.setKey(DbKey.createDbKey(1234L));
-		interval.setCalConstant(10);
+		interval.setCalConstant(Calendar.DAY_OF_MONTH);
 		interval.setCalMultiplier(2);
 
 		ApiInterval apiInterval = map(interval);
 
 		assertNotNull(apiInterval);
 		assertEquals(interval.getKey().getValue(), apiInterval.getIntervalId());
-		assertEquals(String.valueOf(interval.getCalConstant()), apiInterval.getCalConstant());
+		assertEquals(IntervalCodes.getCalConstName(interval.getCalConstant()), apiInterval.getCalConstant());
 		assertEquals(interval.getName(), apiInterval.getName());
 		assertEquals(interval.getCalMultiplier(), apiInterval.getCalMultilier());
 	}
@@ -242,7 +320,7 @@ final class TimeSeriesResourcesTest
 	}
 
 	@Test
-	void testApiTSGroupMap()
+	void testApiTSGroupMap() throws Exception
 	{
 		ApiTsGroup apiTsGroup = new ApiTsGroup();
 		apiTsGroup.setDescription("Basin TimeSeries data group");

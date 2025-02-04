@@ -50,7 +50,9 @@ import opendcs.dai.IntervalDAI;
 import opendcs.dai.TimeSeriesDAI;
 import opendcs.dai.TsGroupDAI;
 import opendcs.opentsdb.Interval;
+import org.opendcs.odcsapi.beans.ApiDataType;
 import org.opendcs.odcsapi.beans.ApiInterval;
+import org.opendcs.odcsapi.beans.ApiSiteRef;
 import org.opendcs.odcsapi.beans.ApiTimeSeriesData;
 import org.opendcs.odcsapi.beans.ApiTimeSeriesIdentifier;
 import org.opendcs.odcsapi.beans.ApiTimeSeriesSpec;
@@ -90,7 +92,7 @@ public final class TimeSeriesResources extends OpenDcsResource
 		try (TimeSeriesDAI dai = tsdb.makeTimeSeriesDAO())
 		{
 			return Response.status(HttpServletResponse.SC_OK)
-					.entity(idMap(dai.listTimeSeries( activeOnly)))
+					.entity(idMap(dai.listTimeSeriesActiveFilter( activeOnly)))
 					.build();
 		}
 		catch (DbIoException ex)
@@ -99,31 +101,28 @@ public final class TimeSeriesResources extends OpenDcsResource
 		}
 	}
 
-	static ArrayList<ApiTimeSeriesIdentifier> idMap(ArrayList<TimeSeriesIdentifier> identifiers)
+	static List<ApiTimeSeriesIdentifier> idMap(List<TimeSeriesIdentifier> identifiers)
 	{
-		ArrayList<ApiTimeSeriesIdentifier> ret = new ArrayList<>();
+		List<ApiTimeSeriesIdentifier> ret = new ArrayList<>();
 		for(TimeSeriesIdentifier id : identifiers)
 		{
 			if (id instanceof CwmsTsId)
 			{
 				CwmsTsId ctsid = (CwmsTsId)id;
-				if (ctsid.isActive())
+				ApiTimeSeriesIdentifier apiId = new ApiTimeSeriesIdentifier();
+				if (id.getKey() != null)
 				{
-					ApiTimeSeriesIdentifier apiId = new ApiTimeSeriesIdentifier();
-					if (id.getKey() != null)
-					{
-						apiId.setKey(id.getKey().getValue());
-					}
-					else
-					{
-						apiId.setKey(DbKey.NullKey.getValue());
-					}
-					apiId.setActive(ctsid.isActive());
-					apiId.setDescription(id.getDescription());
-					apiId.setStorageUnits(id.getStorageUnits());
-					apiId.setUniqueString(id.getUniqueString());
-					ret.add(apiId);
+					apiId.setKey(id.getKey().getValue());
 				}
+				else
+				{
+					apiId.setKey(DbKey.NullKey.getValue());
+				}
+				apiId.setActive(ctsid.isActive());
+				apiId.setDescription(id.getDescription());
+				apiId.setStorageUnits(id.getStorageUnits());
+				apiId.setUniqueString(id.getUniqueString());
+				ret.add(apiId);
 			} else {
 				ApiTimeSeriesIdentifier apiId = new ApiTimeSeriesIdentifier();
 				if (id.getKey() != null)
@@ -298,47 +297,81 @@ public final class TimeSeriesResources extends OpenDcsResource
 		return ret;
 	}
 
-	static ArrayList<ApiTimeSeriesValue> map(CTimeSeries cts, Date start, Date end)
+	static List<ApiTimeSeriesValue> map(CTimeSeries cts, Date start, Date end)
 	{
-		ArrayList<ApiTimeSeriesValue> ret = new ArrayList<>();
+		List<ApiTimeSeriesValue> ret = new ArrayList<>();
 		Date current = start;
+		TimedVariable tv = cts.findWithin(current, 5);
+		if (tv != null && !tv.getTime().before(current))
+		{
+			current = processSample(tv, current, end, ret);
+		}
+
 		while (current.before(end) || current.equals(end))
 		{
-			TimedVariable value = cts.findWithin(current, 0);
+			TimedVariable value = cts.findNext(current);
+
 			if (value == null)
 			{
 				break;
 			}
-			double val = Double.parseDouble(value.valueString());
-			ApiTimeSeriesValue apiValue = new ApiTimeSeriesValue(value.getTime(), val, value.getFlags());
-			ret.add(apiValue);
-			if (current.equals(end))
-			{
-				current = Date.from(end.toInstant().plusSeconds(1));
-			}
-			else
-			{
-				current = cts.findNext(value.getTime()).getTime();
-			}
+			current = processSample(value, current, end, ret);
 		}
 		return ret;
 	}
 
-	static ApiTimeSeriesIdentifier map(TimeSeriesIdentifier tsid)
+	static Date processSample(TimedVariable value, Date current, Date end, List<ApiTimeSeriesValue> ret)
 	{
-		ApiTimeSeriesIdentifier ret = new ApiTimeSeriesIdentifier();
-		if (tsid.getKey() != null)
+		double val = Double.parseDouble(value.valueString());
+		ApiTimeSeriesValue apiValue = new ApiTimeSeriesValue(value.getTime(), val, value.getFlags());
+		ret.add(apiValue);
+		if (current.equals(end))
 		{
-			ret.setKey(tsid.getKey().getValue());
+			return Date.from(end.toInstant().plusSeconds(1));
 		}
 		else
 		{
-			ret.setKey(DbKey.NullKey.getValue());
+			return value.getTime();
 		}
-		ret.setUniqueString(tsid.getUniqueString());
-		ret.setDescription(tsid.getDescription());
-		ret.setStorageUnits(tsid.getStorageUnits());
-		return ret;
+	}
+
+	static ApiTimeSeriesIdentifier map(TimeSeriesIdentifier tsid)
+	{
+		if (tsid instanceof CwmsTsId)
+		{
+			CwmsTsId cTsId = (CwmsTsId)tsid;
+			ApiTimeSeriesIdentifier ret = new ApiTimeSeriesIdentifier();
+			if(tsid.getKey() != null)
+			{
+				ret.setKey(cTsId.getKey().getValue());
+			}
+			else
+			{
+				ret.setKey(DbKey.NullKey.getValue());
+			}
+			ret.setUniqueString(cTsId.getUniqueString());
+			ret.setDescription(cTsId.getDescription());
+			ret.setStorageUnits(cTsId.getStorageUnits());
+			ret.setActive(cTsId.isActive());
+			return ret;
+		}
+		else
+		{
+			// Active flag is not set here because it is not part of the TimeSeriesIdentifier
+			ApiTimeSeriesIdentifier ret = new ApiTimeSeriesIdentifier();
+			if(tsid.getKey() != null)
+			{
+				ret.setKey(tsid.getKey().getValue());
+			}
+			else
+			{
+				ret.setKey(DbKey.NullKey.getValue());
+			}
+			ret.setUniqueString(tsid.getUniqueString());
+			ret.setDescription(tsid.getDescription());
+			ret.setStorageUnits(tsid.getStorageUnits());
+			return ret;
+		}
 	}
 
 	@GET
@@ -512,12 +545,17 @@ public final class TimeSeriesResources extends OpenDcsResource
 	@Path("tsgroup")
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
-	public Response getTsGroup(@QueryParam("groupid") Long groupId) throws DbException
+	public Response getTsGroup(@QueryParam("groupid") Long groupId) throws DbException, WebAppException
 	{
 		try (TsGroupDAI dai = getLegacyTimeseriesDB().makeTsGroupDAO())
 		{
+			TsGroup group = dai.getTsGroupById(DbKey.createDbKey(groupId));
+			if (group == null)
+			{
+				throw new DatabaseItemNotFoundException("Time series group with ID=" + groupId + " not found");
+			}
 			return Response.status(HttpServletResponse.SC_OK)
-					.entity(map(dai.getTsGroupById(DbKey.createDbKey(groupId)))).build();
+					.entity(map(group)).build();
 		}
 		catch (DbIoException ex)
 		{
@@ -527,6 +565,10 @@ public final class TimeSeriesResources extends OpenDcsResource
 
 	static ApiTsGroup map(TsGroup group)
 	{
+		if (group == null)
+		{
+			return null;
+		}
 		ApiTsGroup ret = new ApiTsGroup();
 		ret.setGroupName(group.getGroupName());
 		ret.setDescription(group.getDescription());
@@ -540,6 +582,31 @@ public final class TimeSeriesResources extends OpenDcsResource
 			ret.setGroupId(DbKey.NullKey.getValue());
 		}
 		ret.getIntersectGroups().addAll(mapRef(group.getIntersectedGroups()));
+		List<ApiTimeSeriesIdentifier> tsids = new ArrayList<>();
+		for (TimeSeriesIdentifier tsid : group.getTsMemberList())
+		{
+			tsids.add(map(tsid));
+		}
+		ret.getTsIds().addAll(tsids);
+		List<ApiSiteRef> sites = new ArrayList<>();
+		for (int i = 0; i < group.getSiteNameList().size(); i++)
+		{
+			ApiSiteRef site = new ApiSiteRef();
+			site.setSiteId(group.getSiteIdList().get(i).getValue());
+			site.setPublicName(group.getSiteNameList().get(i));
+			sites.add(site);
+		}
+		ret.getGroupSites().addAll(sites);
+		List<ApiDataType> dts = new ArrayList<>();
+		for (DbKey dtid : group.getDataTypeIdList())
+		{
+			ApiDataType dt = new ApiDataType();
+			dt.setId(dtid.getValue());
+			dts.add(dt);
+		}
+		ret.getGroupDataTypes().addAll(dts);
+		ret.getIncludeGroups().addAll(mapRef(group.getIncludedSubGroups()));
+		ret.getExcludeGroups().addAll(mapRef(group.getExcludedSubGroups()));
 		return ret;
 	}
 
@@ -557,13 +624,13 @@ public final class TimeSeriesResources extends OpenDcsResource
 			return Response.status(HttpServletResponse.SC_OK)
 					.entity(map(group)).build();
 		}
-		catch (DbIoException ex)
+		catch (DbIoException | BadTimeSeriesException ex)
 		{
 			throw new DbException("Unable to store time series group", ex);
 		}
 	}
 
-	static TsGroup map(ApiTsGroup grp)
+	static TsGroup map(ApiTsGroup grp) throws BadTimeSeriesException
 	{
 		TsGroup ret = new TsGroup();
 		ret.setDescription(grp.getDescription());
@@ -578,6 +645,56 @@ public final class TimeSeriesResources extends OpenDcsResource
 		{
 			ret.setGroupId(DbKey.NullKey);
 		}
+		for (ApiTimeSeriesIdentifier ident : grp.getTsIds())
+		{
+			ret.addTsMember(map(ident));
+		}
+		for (ApiSiteRef site : grp.getGroupSites())
+		{
+			ret.addSiteId(DbKey.createDbKey(site.getSiteId()));
+			ret.addSiteName(site.getPublicName());
+		}
+		for (ApiDataType dt : grp.getGroupDataTypes())
+		{
+			ret.addDataTypeId(DbKey.createDbKey(dt.getId()));
+		}
+		for (ApiTsGroupRef include : grp.getIncludeGroups())
+		{
+			TsGroup inc = new TsGroup();
+			inc.setGroupName(include.getGroupName());
+			inc.setDescription(include.getDescription());
+			inc.setGroupId(DbKey.createDbKey(include.getGroupId()));
+			inc.setGroupType(include.getGroupType());
+
+			ret.addSubGroup(inc,'A');
+		}
+		for (ApiTsGroupRef exclude : grp.getExcludeGroups())
+		{
+			TsGroup exc = new TsGroup();
+			exc.setGroupName(exclude.getGroupName());
+			exc.setDescription(exclude.getDescription());
+			exc.setGroupId(DbKey.createDbKey(exclude.getGroupId()));
+			exc.setGroupType(exclude.getGroupType());
+
+			ret.addSubGroup(exc,'S');
+		}
+		return ret;
+	}
+
+	static TimeSeriesIdentifier map(ApiTimeSeriesIdentifier tsid) throws BadTimeSeriesException
+	{
+		TimeSeriesIdentifier ret = new CwmsTsId();
+		if (tsid.getKey() != null)
+		{
+			ret.setKey(DbKey.createDbKey(tsid.getKey()));
+		}
+		else
+		{
+			ret.setKey(DbKey.NullKey);
+		}
+		ret.setUniqueString(tsid.getUniqueString());
+		ret.setDescription(tsid.getDescription());
+		ret.setStorageUnits(tsid.getStorageUnits());
 		return ret;
 	}
 
