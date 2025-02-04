@@ -34,18 +34,18 @@ dependencies {
     testImplementation(files("../opendcs-rest-api/temp-deps/opendcs-api.jar"))
     testImplementation(libs.commons.lang)
     testImplementation(libs.slf4j.jdk)
-    testImplementation(libs.oracle.jdbc)
-    testImplementation(libs.oracle.ucp)
-    testImplementation(libs.cwms.db.jooq) {
+    testRuntimeOnly(libs.oracle.jdbc)
+    testRuntimeOnly(libs.oracle.ucp)
+    testRuntimeOnly(libs.cwms.db.jooq) {
         exclude group: "com.oracle.database.jdbc"
     }
-    testImplementation(libs.cwms.db.codegen) {
+    testRuntimeOnly(libs.cwms.db.codegen) {
         exclude group: "com.oracle.database.jdbc"
     }
-    testImplementation(libs.cwms.db.aspects)
-    testImplementation(libs.cwms.db.dao)
-    testImplementation(libs.hec.cwms.ratings.core)
-    implementation(libs.hec.monolith) {
+    testRuntimeOnly(libs.cwms.db.aspects)
+    testRuntimeOnly(libs.cwms.db.dao)
+    testRuntimeOnly(libs.hec.cwms.ratings.core)
+    testRuntimeOnly(libs.hec.monolith) {
         exclude group: "org.jdom"
         exclude group: "org.bouncycastle"
         exclude group: "org.eclipse.jetty.aggregate"
@@ -67,7 +67,7 @@ dependencies {
     testImplementation(files("../opendcs-rest-api/temp-deps/opendcs-integrationtesting-fixtures.jar"))
 }
 
-configurations.testImplementation {
+configurations.all {
     exclude group: 'org.eclipse.jetty', module: 'jetty-jsp'
     exclude group: "com.oracle.database.jdbc", module: "jmscommon"
     exclude group: "org.jooq.pro", module: "jooq-meta"
