@@ -143,3 +143,11 @@ tasks.register('downloadAndUnzipInstaller') {
         }
     }
 }
+
+if (JavaVersion.current() != JavaVersion.VERSION_1_8) {
+    sonarqube {
+        properties {
+            property "sonar.skip", "true"
+        }
+    }
+}
