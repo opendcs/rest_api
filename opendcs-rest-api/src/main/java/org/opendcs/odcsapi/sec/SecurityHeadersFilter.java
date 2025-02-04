@@ -21,6 +21,7 @@ import javax.ws.rs.Priorities;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerResponseContext;
 import javax.ws.rs.container.ContainerResponseFilter;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.ext.Provider;
 
 import org.opendcs.odcsapi.res.SwaggerResources;
@@ -46,7 +47,7 @@ public final class SecurityHeadersFilter implements ContainerResponseFilter
 				.map(Object::getClass)
 				.noneMatch(c -> c == SwaggerResources.class))
 		{
-			response.getHeaders().putSingle("Content-Type", "application/json");
+			response.getHeaders().putSingle("Content-Type", MediaType.APPLICATION_JSON_TYPE);
 		}
 	}
 }
