@@ -80,11 +80,13 @@ public final class TomcatServer
 		restApiContext.setParentClassLoader(TomcatServer.class.getClassLoader());
 		restApiContext.getPipeline().addValve(new TestSingleSignOn());
 		restApiContext.setReloadable(true);
+		restApiContext.setPrivileged(true);
 
 		StandardContext guiContext = (StandardContext) tomcatInstance.addWebapp("/", guiWar);
 		guiContext.setDelegate(true);
 		guiContext.setParentClassLoader(TomcatServer.class.getClassLoader());
 		guiContext.setReloadable(true);
+		guiContext.setPrivileged(true);
 
 		Context context = tomcatInstance.addContext("/sso", new File(".").getAbsolutePath());
 		Tomcat.addServlet(context, "sso", new SsoServlet());
