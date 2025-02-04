@@ -243,15 +243,20 @@ final class DatatypeUnitResourcesIT extends BaseIT
 		List<Map<String, Object>> actualList = actual.getList("");
 		List<Map<String, Object>> expectedList = expected.getList("");
 
-		for (int i = 0; i < expectedList.size(); i++)
+		int numFound = 0;
+		for (Map<String, Object> expectedItem : expectedList)
 		{
-			Map<String, Object> expectedItem = expectedList.get(i);
-			Map<String, Object> actualItem = actualList.get(i);
-			assertEquals(expectedItem.get("code"), actualItem.get("code"));
-			assertEquals(expectedItem.get("name"), actualItem.get("name"));
-			assertEquals(expectedItem.get("unit"), actualItem.get("unit"));
-			assertEquals(expectedItem.get("unitAbbr"), actualItem.get("unitAbbr"));
+			for (Map<String, Object> actualItem : actualList)
+			{
+				if (expectedItem.get("displayName").equals(actualItem.get("displayName")))
+				{
+					assertEquals(expectedItem.get("displayName"), actualItem.get("displayName"));
+					assertEquals(expectedItem.get("standard"), actualItem.get("standard"));
+					numFound++;
+				}
+			}
 		}
+		assertEquals(expectedList.size(), numFound);
 	}
 
 	@TestTemplate
