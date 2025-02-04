@@ -1,3 +1,18 @@
+/*
+ *  Copyright 2025 OpenDCS Consortium and its Contributors
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License")
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ */
+
 buildscript {
     repositories {
         maven {
@@ -45,13 +60,19 @@ subprojects {
 }
 if (JavaVersion.current() != JavaVersion.VERSION_1_8) {
     sonar {
-        properties {
-            property "sonar.projectKey", "opendcs_rest_api"
-            property "sonar.organization", "opendcs"
-            property "sonar.host.url", "https://sonarcloud.io"
-            property "sonar.pullrequest.provider", "GitHub"
-            property "sonar.pullrequest.github.repository", "opendcs/rest_api"
-            property "sonar.projectVersion", sonarVersion()
+        if (project.name != 'subproject-name-to-skip') {
+            properties {
+                property "sonar.skip", "true"
+            }
+        } else {
+            properties {
+                property "sonar.projectKey", "opendcs_rest_api"
+                property "sonar.organization", "opendcs"
+                property "sonar.host.url", "https://sonarcloud.io"
+                property "sonar.pullrequest.provider", "GitHub"
+                property "sonar.pullrequest.github.repository", "opendcs/rest_api"
+                property "sonar.projectVersion", sonarVersion()
+            }
         }
     }
 }

@@ -143,9 +143,3 @@ tasks.register('downloadAndUnzipInstaller') {
         }
     }
 }
-
-sonarqube {
-    properties {
-        property "sonar.skip", "true"
-    }
-}
