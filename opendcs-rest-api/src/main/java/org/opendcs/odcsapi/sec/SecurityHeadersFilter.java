@@ -38,7 +38,6 @@ public final class SecurityHeadersFilter implements ContainerResponseFilter
 		response.getHeaders().putSingle("Strict-Transport-Security", "max-age=63072000");
 		response.getHeaders().putSingle("Access-Control-Allow-Credentials", "true");
 		response.getHeaders().putSingle("Access-Control-Allow-Headers", "Content-Type");
-		response.getHeaders().putSingle("X-Content-Type-Options", "nosniff");
 		response.getHeaders().remove("Server");
 		//swagger returns html/js/css/png/etc
 		if(request.getUriInfo()
@@ -47,6 +46,7 @@ public final class SecurityHeadersFilter implements ContainerResponseFilter
 				.map(Object::getClass)
 				.noneMatch(c -> c == SwaggerResources.class))
 		{
+			response.getHeaders().putSingle("X-Content-Type-Options", "nosniff");
 			response.getHeaders().putSingle("Content-Type", MediaType.APPLICATION_JSON_TYPE);
 		}
 	}
