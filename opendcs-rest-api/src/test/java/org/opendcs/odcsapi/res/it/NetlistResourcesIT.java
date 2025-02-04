@@ -60,8 +60,9 @@ final class NetlistResourcesIT extends BaseIT
 
 		ObjectMapper mapper = new ObjectMapper();
 
-		siteId = storeSite("netlist_site_insert_data.json");String configJson = getJsonFromResource("config_input_data.json");
+		siteId = storeSite("netlist_site_insert_data.json");
 
+		String configJson = getJsonFromResource("config_input_data.json");
 		ExtractableResponse<Response> response = given()
 			.log().ifValidationFails(LogDetail.ALL, true)
 			.accept(MediaType.APPLICATION_JSON)
