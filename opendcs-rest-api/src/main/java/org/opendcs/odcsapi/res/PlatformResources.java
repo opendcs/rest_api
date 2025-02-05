@@ -23,7 +23,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Vector;
-
 import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.Consumes;
@@ -164,6 +163,10 @@ public final class PlatformResources extends OpenDcsResource
 			platform.setId(DbKey.createDbKey(platformId));
 			platform = dbIo.readPlatform(platform);
 			return Response.status(HttpServletResponse.SC_OK).entity(map(platform)).build();
+		}
+		catch(ValueNotFoundException ex)
+		{
+			throw new DatabaseItemNotFoundException("Platform with ID " + platformId + " not found.");
 		}
 		catch (DatabaseException ex)
 		{

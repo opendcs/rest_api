@@ -139,6 +139,10 @@ public final class PresentationResources extends OpenDcsResource
 			dbIo.readPresentationGroup(group);
 			return Response.status(HttpServletResponse.SC_OK).entity(map(group)).build();
 		}
+		catch (ValueNotFoundException e)
+		{
+			throw new DatabaseItemNotFoundException(String.format("Presentation group with ID %s not found", groupId));
+		}
 		catch (DatabaseException e)
 		{
 			if (e.getCause() instanceof ValueNotFoundException)
