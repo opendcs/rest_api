@@ -83,7 +83,7 @@ public final class RoutingResources extends OpenDcsResource
 		{
 			dbIo = getLegacyDatabase();
 			RoutingSpecList rsList = new RoutingSpecList();
-			rsList = dbIo.readRoutingSpecList(rsList);
+			dbIo.readRoutingSpecList(rsList);
 			return Response.status(HttpServletResponse.SC_OK)
 					.entity(map(rsList)).build();
 		}
