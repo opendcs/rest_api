@@ -293,7 +293,7 @@ public final class RoutingResources extends OpenDcsResource
 	@Path("routing")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	@RolesAllowed({AuthorizationCheck.ODCS_API_ADMIN, AuthorizationCheck.ODCS_API_USER})
+	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
 	public Response deleteRouting(@QueryParam("routingid") Long routingId)
 			throws DbException, WebAppException
 	{
