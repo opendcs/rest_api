@@ -166,13 +166,13 @@ public final class PlatformResources extends OpenDcsResource
 		}
 		catch(ValueNotFoundException ex)
 		{
-			throw new DatabaseItemNotFoundException("Platform with ID " + platformId + " not found.");
+			throw new DatabaseItemNotFoundException("Platform with ID " + platformId + " not found.", ex);
 		}
 		catch (DatabaseException ex)
 		{
 			if (ex.getCause() instanceof ValueNotFoundException)
 			{
-				throw new DatabaseItemNotFoundException("Platform with ID " + platformId + " not found.");
+				throw new DatabaseItemNotFoundException("Platform with ID " + platformId + " not found.", ex);
 			}
 			throw new DbException("Unable to retrieve platform", ex);
 		}
