@@ -42,7 +42,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-@Tag("integration-opentsdb-only")
+@Tag("integration")
 @ExtendWith(DatabaseContextProvider.class)
 final class OdcsapiResourceIT extends BaseIT
 {
@@ -231,11 +231,34 @@ final class OdcsapiResourceIT extends BaseIT
 		ApiPlatform platform = getDtoFromResource("odcsapi_platform_dto.json", ApiPlatform.class);
 
 		siteId = storeSite();
+
+		String configJson = getJsonFromResource("config_input_data.json");
+
+		ExtractableResponse<Response> response = given()
+			.log().ifValidationFails(LogDetail.ALL, true)
+			.accept(MediaType.APPLICATION_JSON)
+			.contentType(MediaType.APPLICATION_JSON)
+			.header("Authorization", authHeader)
+			.filter(sessionFilter)
+			.body(configJson)
+		.when()
+			.redirects().follow(true)
+			.redirects().max(3)
+			.post("config")
+		.then()
+			.log().ifValidationFails(LogDetail.ALL, true)
+		.assertThat()
+			.statusCode(is(HttpServletResponse.SC_CREATED))
+			.extract()
+		;
+
+		long configId = response.body().jsonPath().getLong("configId");
+		platform.setConfigId(configId);
 		platform.setSiteId(siteId);
 
 		String platformJson = MAPPER.writeValueAsString(platform);
 
-		ExtractableResponse<Response> response = given()
+		response = given()
 			.log().ifValidationFails(LogDetail.ALL, true)
 			.accept(MediaType.APPLICATION_JSON)
 			.contentType(MediaType.APPLICATION_JSON)
@@ -249,11 +272,29 @@ final class OdcsapiResourceIT extends BaseIT
 		.then()
 			.log().ifValidationFails(LogDetail.ALL, true)
 		.assertThat()
-			.statusCode(is(HttpServletResponse.SC_OK))
+			.statusCode(is(HttpServletResponse.SC_CREATED))
 			.extract()
 		;
 
-		return response.body().jsonPath().getLong("platformId");
+		Long platformId = response.body().jsonPath().getLong("platformId");
+
+		given()
+			.log().ifValidationFails(LogDetail.ALL, true)
+			.accept(MediaType.APPLICATION_JSON)
+			.header("Authorization", authHeader)
+			.filter(sessionFilter)
+			.queryParam("platformid", platformId)
+		.when()
+			.redirects().follow(true)
+			.redirects().max(3)
+			.get("platform")
+		.then()
+			.log().ifValidationFails(LogDetail.ALL, true)
+		.assertThat()
+			.statusCode(is(HttpServletResponse.SC_OK))
+		;
+
+		return platformId;
 	}
 
 	private void deletePlatform(Long platformId)
@@ -271,7 +312,7 @@ final class OdcsapiResourceIT extends BaseIT
 		.then()
 			.log().ifValidationFails(LogDetail.ALL, true)
 		.assertThat()
-			.statusCode(is(HttpServletResponse.SC_OK))
+			.statusCode(is(HttpServletResponse.SC_NO_CONTENT))
 		;
 	}
 
