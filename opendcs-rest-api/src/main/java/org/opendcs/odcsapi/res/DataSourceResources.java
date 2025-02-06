@@ -148,6 +148,10 @@ public class DataSourceResources extends OpenDcsResource
 			ApiDataSource ret = map(ds);
 			return Response.status(HttpServletResponse.SC_OK).entity(ret).build();
 		}
+		catch (ValueNotFoundException ex)
+		{
+			throw new DatabaseItemNotFoundException(notFound + dataSourceId + ".");
+		}
 		catch (DatabaseException ex)
 		{
 			if (ex.getCause() instanceof ValueNotFoundException)
