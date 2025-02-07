@@ -150,7 +150,7 @@ public class DataSourceResources extends OpenDcsResource
 		}
 		catch (ValueNotFoundException ex)
 		{
-			throw new DatabaseItemNotFoundException(notFound + dataSourceId + ".");
+			throw new DatabaseItemNotFoundException(notFound + dataSourceId + ".", ex);
 		}
 		catch (DatabaseException ex)
 		{
