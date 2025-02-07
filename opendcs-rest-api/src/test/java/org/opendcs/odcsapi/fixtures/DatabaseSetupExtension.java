@@ -21,9 +21,12 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import javax.servlet.http.HttpServletResponse;
 
+import decodes.db.DatabaseException;
 import decodes.db.PlatformStatus;
 import decodes.db.ScheduleEntryStatus;
 import io.restassured.RestAssured;
+import opendcs.dai.PlatformStatusDAI;
+import opendcs.dai.ScheduleEntryDAI;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.platform.commons.PreconditionViolationException;
@@ -167,14 +170,28 @@ public class DatabaseSetupExtension implements BeforeEachCallback
 		currentConfig.loadXMLData(filePaths, new SystemExit(), new SystemProperties());
 	}
 
-	public static void storeScheduleEntryStatus(ScheduleEntryStatus status) throws Exception
+	public static void storeScheduleEntryStatus(ScheduleEntryStatus status) throws DatabaseException
 	{
-		currentConfig.storeScheduleEntryStatus(status);
+		try (ScheduleEntryDAI dai = currentConfig.getTsdb().makeScheduleEntryDAO())
+		{
+			dai.writeScheduleStatus(status);
+		}
+		catch(Throwable e)
+		{
+			throw new DatabaseException("Unable to store schedule entry status", e);
+		}
 	}
 
-	public static void storePlatformStatus(PlatformStatus status) throws Exception
+	public static void storePlatformStatus(PlatformStatus status) throws DatabaseException
 	{
-		currentConfig.storePlatformStatus(status);
+		try (PlatformStatusDAI dai = currentConfig.getTsdb().makePlatformStatusDAO())
+		{
+			dai.writePlatformStatus(status);
+		}
+		catch(Throwable e)
+		{
+			throw new DatabaseException("Unable to store platform status", e);
+		}
 	}
 
 	private void setupClientUser()
