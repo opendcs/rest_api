@@ -29,12 +29,14 @@ import decodes.db.DatabaseException;
 import decodes.db.PlatformStatus;
 import decodes.db.ScheduleEntry;
 import decodes.db.ScheduleEntryStatus;
+import decodes.polling.DacqEvent;
 import decodes.sql.DbKey;
 import decodes.tsdb.CTimeSeries;
 import decodes.tsdb.TimeSeriesIdentifier;
 import io.restassured.filter.log.LogDetail;
 import io.restassured.filter.session.SessionFilter;
 import io.restassured.path.json.JsonPath;
+import opendcs.dai.DacqEventDAI;
 import opendcs.dai.PlatformStatusDAI;
 import opendcs.dai.ScheduleEntryDAI;
 import opendcs.dai.TimeSeriesDAI;
@@ -262,6 +264,32 @@ class BaseIT
 		catch (Throwable ex)
 		{
 			throw new DatabaseException("Error deleting time series", ex);
+		}
+	}
+
+	public static void storeDacqEvent(DacqEvent event) throws DatabaseException
+	{
+		Configuration currentConfig = DatabaseSetupExtension.getCurrentConfig();
+		try (DacqEventDAI dai = currentConfig.getTsdb().makeDacqEventDAO())
+		{
+			dai.writeEvent(event);
+		}
+		catch (Throwable e)
+		{
+			throw new DatabaseException("Error storing dacq event", e);
+		}
+	}
+
+	public static void deleteEventsForPlatform(DbKey platformId) throws DatabaseException
+	{
+		Configuration currentConfig = DatabaseSetupExtension.getCurrentConfig();
+		try (DacqEventDAI dai = currentConfig.getTsdb().makeDacqEventDAO())
+		{
+			dai.deleteEventsForPlatform(platformId);
+		}
+		catch (Throwable e)
+		{
+			throw new DatabaseException("Error deleting dacq event for specified platform", e);
 		}
 	}
 }

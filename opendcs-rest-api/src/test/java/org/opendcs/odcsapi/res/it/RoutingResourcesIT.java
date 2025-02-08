@@ -29,7 +29,6 @@ import org.opendcs.odcsapi.beans.ApiRoutingStatus;
 import org.opendcs.odcsapi.beans.ApiScheduleEntry;
 import org.opendcs.odcsapi.beans.ApiScheduleEntryRef;
 import org.opendcs.odcsapi.fixtures.DatabaseContextProvider;
-import org.opendcs.odcsapi.fixtures.DatabaseSetupExtension;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.CoreMatchers.anyOf;
@@ -182,7 +181,7 @@ final class RoutingResourcesIT extends BaseIT
 		status.setScheduleEntryName("Test schedule");
 
 		// Insert the schedule entry status
-		DatabaseSetupExtension.storeScheduleEntryStatus(status);
+		storeScheduleEntryStatus(status);
 
 		siteId = storeSite("routing_site_insert.json");
 
@@ -234,17 +233,17 @@ final class RoutingResourcesIT extends BaseIT
 		event.setPlatformId(DbKey.createDbKey(platformId));
 		event.setScheduleEntryStatusId(DbKey.createDbKey(scheduleEntryStatusId));
 
-		DatabaseSetupExtension.storeDacqEvent(event);
+		storeDacqEvent(event);
 	}
 
 	@AfterEach
 	void tearDown() throws Exception
 	{
 		// Delete the dacq event
-		DatabaseSetupExtension.deleteEventsForPlatform(DbKey.createDbKey(platformId));
+		deleteEventsForPlatform(DbKey.createDbKey(platformId));
 
 		// Delete the schedule entry status
-		DatabaseSetupExtension.deleteScheduleEntryStatus(DbKey.createDbKey(scheduleEntryStatusId));
+		deleteScheduleEntryStatus(DbKey.createDbKey(scheduleEntryStatusId));
 
 		if (routingId != null)
 		{
