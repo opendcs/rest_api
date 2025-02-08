@@ -25,9 +25,16 @@ import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.MediaType;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import decodes.db.DatabaseException;
+import decodes.db.ScheduleEntry;
+import decodes.db.ScheduleEntryStatus;
+import decodes.polling.DacqEvent;
+import decodes.sql.DbKey;
 import io.restassured.filter.log.LogDetail;
 import io.restassured.filter.session.SessionFilter;
 import io.restassured.path.json.JsonPath;
+import opendcs.dai.DacqEventDAI;
+import opendcs.dai.ScheduleEntryDAI;
 import org.apache.catalina.session.StandardSession;
 import org.opendcs.fixtures.configuration.Configuration;
 import org.opendcs.odcsapi.fixtures.DatabaseSetupExtension;
@@ -174,5 +181,58 @@ class BaseIT
 		String credentialsJson = Base64.getEncoder()
 				.encodeToString(String.format("%s:%s", adminCreds.getUsername(), adminCreds.getPassword()).getBytes());
 		authHeader = authHeaderPrefix + credentialsJson;
+	}
+
+	public static void storeScheduleEntryStatus(ScheduleEntryStatus status) throws DatabaseException
+	{
+		Configuration currentConfig = DatabaseSetupExtension.getCurrentConfig();
+		try (ScheduleEntryDAI dai = currentConfig.getTsdb().makeScheduleEntryDAO())
+		{
+			dai.writeScheduleStatus(status);
+		}
+		catch (Throwable e)
+		{
+			throw new DatabaseException("Error storing schedule entry status", e);
+		}
+	}
+
+	public static void deleteScheduleEntryStatus(DbKey entryId) throws DatabaseException
+	{
+		Configuration currentConfig = DatabaseSetupExtension.getCurrentConfig();
+		try (ScheduleEntryDAI dai = currentConfig.getTsdb().makeScheduleEntryDAO())
+		{
+			ScheduleEntry entry = new ScheduleEntry(entryId);
+			dai.deleteScheduleStatusFor(entry);
+		}
+		catch (Throwable e)
+		{
+			throw new DatabaseException("Error deleting schedule entry status", e);
+		}
+	}
+
+	public static void storeDacqEvent(DacqEvent event) throws DatabaseException
+	{
+		Configuration currentConfig = DatabaseSetupExtension.getCurrentConfig();
+		try (DacqEventDAI dai = currentConfig.getTsdb().makeDacqEventDAO())
+		{
+			dai.writeEvent(event);
+		}
+		catch (Throwable e)
+		{
+			throw new DatabaseException("Error storing dacq event", e);
+		}
+	}
+
+	public static void deleteEventsForPlatform(DbKey platformId) throws DatabaseException
+	{
+		Configuration currentConfig = DatabaseSetupExtension.getCurrentConfig();
+		try (DacqEventDAI dai = currentConfig.getTsdb().makeDacqEventDAO())
+		{
+			dai.deleteEventsForPlatform(platformId);
+		}
+		catch (Throwable e)
+		{
+			throw new DatabaseException("Error deleting dacq event for specified platform", e);
+		}
 	}
 }
