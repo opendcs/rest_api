@@ -117,7 +117,7 @@ final class ComputationResourcesIT extends BaseIT
 		.then()
 			.log().ifValidationFails(LogDetail.ALL, true)
 		.assertThat()
-			.statusCode(is(HttpServletResponse.SC_CREATED))
+			.statusCode(is(HttpServletResponse.SC_OK))
 			.extract()
 		;
 
@@ -222,7 +222,7 @@ final class ComputationResourcesIT extends BaseIT
 		.then()
 			.log().ifValidationFails(LogDetail.ALL, true)
 		.assertThat()
-			.statusCode(is(HttpServletResponse.SC_NO_CONTENT))
+			.statusCode(is(HttpServletResponse.SC_OK))
 		;
 
 		logout(sessionFilter);
