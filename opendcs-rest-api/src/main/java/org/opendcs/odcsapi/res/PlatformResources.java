@@ -46,6 +46,7 @@ import decodes.db.PlatformSensor;
 import decodes.db.PlatformStatus;
 import decodes.db.RoutingSpec;
 import decodes.db.ScheduleEntry;
+import decodes.db.ScheduleEntryStatus;
 import decodes.db.Site;
 import decodes.db.TransportMedium;
 import decodes.db.ValueNotFoundException;
@@ -471,7 +472,8 @@ public final class PlatformResources extends OpenDcsResource
 			{
 				try (ScheduleEntryDAI dai = dbIo.makeScheduleEntryDAO())
 				{
-					ScheduleEntry scheduleEntry = dai.readScheduleEntry(status.getLastScheduleEntryStatusId());
+					ScheduleEntryStatus scheduleEntryStatus = dai.readScheduleStatusById(status.getLastScheduleEntryStatusId());
+					ScheduleEntry scheduleEntry = dai.readScheduleEntry(scheduleEntryStatus.getScheduleEntryId());
 					long routingId = scheduleEntry.getRoutingSpecId().getValue();
 					RoutingSpec rs = new RoutingSpec();
 					rs.setId(DbKey.createDbKey(routingId));
