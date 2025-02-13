@@ -69,6 +69,8 @@ import org.opendcs.odcsapi.util.ApiConstants;
 @Path("/")
 public final class RoutingResources extends OpenDcsResource
 {
+	private static final String LAST_DACQ_ATTRIBUTE = "last-dacq-event-id";
+
 	@Context private HttpServletRequest request;
 	@Context private HttpHeaders httpHeaders;
 
@@ -676,8 +678,15 @@ public final class RoutingResources extends OpenDcsResource
 		{
 			HttpSession session = request.getSession(true);
 			ArrayList<DacqEvent> events = new ArrayList<>();
+			Object lastDacqEventId = session.getAttribute(LAST_DACQ_ATTRIBUTE);
+			DacqEventDAI.DacqEventAttr attr = new DacqEventDAI.DacqEventAttr(lastDacqEventId);
 			dai.readEvents(events, DbKey.createDbKey(appId), DbKey.createDbKey(routingExecId),
-					DbKey.createDbKey(platformId), backlog, session);
+					DbKey.createDbKey(platformId), backlog, attr);
+			if (attr.isToRemove())
+			{
+				session.removeAttribute(LAST_DACQ_ATTRIBUTE);
+			}
+
 			return Response.status(HttpServletResponse.SC_OK)
 					.entity(events.stream().map(RoutingResources::map).collect(Collectors.toList())).build();
 		}
