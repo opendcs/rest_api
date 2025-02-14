@@ -17,6 +17,7 @@ package org.opendcs.odcsapi.res;
 
 import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 import java.util.TimeZone;
 import java.util.Vector;
@@ -50,9 +51,12 @@ import decodes.db.ValueNotFoundException;
 import decodes.polling.DacqEvent;
 import decodes.sql.DbKey;
 import decodes.tsdb.DbIoException;
+import decodes.tsdb.IntervalCodes;
 import ilex.util.Logger;
 import opendcs.dai.DacqEventDAI;
+import opendcs.dai.IntervalDAI;
 import opendcs.dai.ScheduleEntryDAI;
+import opendcs.opentsdb.Interval;
 import org.opendcs.odcsapi.beans.ApiDacqEvent;
 import org.opendcs.odcsapi.beans.ApiRouting;
 import org.opendcs.odcsapi.beans.ApiRoutingExecStatus;
@@ -679,13 +683,52 @@ public final class RoutingResources extends OpenDcsResource
 			HttpSession session = request.getSession(true);
 			ArrayList<DacqEvent> events = new ArrayList<>();
 			Object lastDacqEventId = session.getAttribute(LAST_DACQ_ATTRIBUTE);
-			DacqEventDAI.DacqEventAttr attr = new DacqEventDAI.DacqEventAttr(lastDacqEventId);
-			dai.readEvents(events, DbKey.createDbKey(appId), DbKey.createDbKey(routingExecId),
-					DbKey.createDbKey(platformId), backlog, attr);
-			if (attr.isToRemove())
+			boolean backLogValid = false;
+			Long dacqEventId = null;
+			Long timeInMillis = null;
+			if (backlog != null && !backlog.trim().isEmpty())
 			{
-				session.removeAttribute(LAST_DACQ_ATTRIBUTE);
+				backLogValid = true;
+				if (backlog.equalsIgnoreCase("last"))
+				{
+					if (lastDacqEventId != null)
+					{
+						dacqEventId = (Long) lastDacqEventId;
+					}
+				}
+				else
+				{
+					try (IntervalDAI intDai = getLegacyTimeseriesDB().makeIntervalDAO())
+					{
+						intDai.loadAllIntervals();
+						String[] intervalCodes = intDai.getValidIntervalCodes();
+						for (String intervalCode : intervalCodes)
+						{
+							Interval intV = IntervalCodes.getInterval(intervalCode);
+							if (intV == null)
+							{
+								continue;
+							}
+							if (backlog.equalsIgnoreCase(intV.getName()))
+							{
+								Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+								cal.setTimeInMillis(System.currentTimeMillis());
+								int calConstant = intV.getCalConstant();
+								if (calConstant != -1)
+								{
+									cal.add(calConstant, -intV.getCalMultiplier());
+									timeInMillis = cal.getTimeInMillis();
+									session.removeAttribute(LAST_DACQ_ATTRIBUTE);
+								}
+								break;
+							}
+						}
+					}
+				}
 			}
+
+			dai.readEvents(events, DbKey.createDbKey(appId), DbKey.createDbKey(routingExecId),
+					DbKey.createDbKey(platformId), backLogValid, dacqEventId, timeInMillis);
 
 			return Response.status(HttpServletResponse.SC_OK)
 					.entity(events.stream().map(RoutingResources::map).collect(Collectors.toList())).build();
