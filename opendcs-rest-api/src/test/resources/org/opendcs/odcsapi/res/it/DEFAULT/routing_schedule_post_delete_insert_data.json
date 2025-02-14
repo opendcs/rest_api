@@ -7,7 +7,7 @@
   "routingSpecName" : "Routing test",
   "enabled" : true,
   "lastModified" : 1735932339051,
-  "startTime" : 1735932339051,
+  "startTime" : 1735932339000,
   "timeZone" : "EST",
   "runInterval" : "monthly"
 }

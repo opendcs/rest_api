@@ -1,9 +1,13 @@
 package org.opendcs.odcsapi.res.it;
 
 import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.TimeZone;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.MediaType;
 
@@ -33,12 +37,13 @@ import org.opendcs.odcsapi.fixtures.DatabaseContextProvider;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.CoreMatchers.anyOf;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@Tag("integration-opentsdb-only")
+@Tag("integration")
 @ExtendWith(DatabaseContextProvider.class)
 final class RoutingResourcesIT extends BaseIT
 {
@@ -49,13 +54,23 @@ final class RoutingResourcesIT extends BaseIT
 	private static Long dataSourceId;
 	private static Long appId;
 	private static Long siteId;
+	private static Long configId;
 	private static String appName;
 	private static Long platformId;
 	private static Long scheduleEntryStatusId;
+	private static int OFFSET_IN_MILLI;
 
 	@BeforeEach
 	void setUp() throws Exception
 	{
+		// get the timezone offset to account for CWMS times being returned with a local timezone offset
+		String timeZone = System.getProperty("user.timezone");
+		if (timeZone == null || timeZone.isEmpty())
+		{
+			timeZone = TimeZone.getDefault().getID();
+		}
+		OFFSET_IN_MILLI = TimeZone.getTimeZone(timeZone).getRawOffset();
+
 		setUpCreds();
 		sessionFilter = new SessionFilter();
 		authenticate(sessionFilter);
@@ -108,7 +123,7 @@ final class RoutingResourcesIT extends BaseIT
 		.then()
 			.log().ifValidationFails(LogDetail.ALL, true)
 		.assertThat()
-			.statusCode(is(HttpServletResponse.SC_OK))
+			.statusCode(is(HttpServletResponse.SC_CREATED))
 			.extract()
 		;
 
@@ -185,7 +200,29 @@ final class RoutingResourcesIT extends BaseIT
 
 		siteId = storeSite("routing_site_insert.json");
 
-		platformId = storePlatform("routing_platform_insert.json", siteId);
+		String configJson = getJsonFromResource("routing_config_insert_data.json");
+
+		response = given()
+			.log().ifValidationFails(LogDetail.ALL, true)
+			.filter(sessionFilter)
+			.accept(MediaType.APPLICATION_JSON)
+			.contentType(MediaType.APPLICATION_JSON)
+			.header("Authorization", authHeader)
+			.body(configJson)
+		.when()
+			.redirects().follow(true)
+			.redirects().max(3)
+			.post("config")
+		.then()
+			.log().ifValidationFails(LogDetail.ALL, true)
+		.assertThat()
+			.statusCode(is(HttpServletResponse.SC_CREATED))
+			.extract()
+		;
+
+		configId = response.body().jsonPath().getLong("configId");
+
+		platformId = storePlatform("routing_platform_insert.json", siteId, configId);
 
 		// Retrieve the schedule entry status id
 		response = given()
@@ -299,7 +336,7 @@ final class RoutingResourcesIT extends BaseIT
 		.then()
 			.log().ifValidationFails(LogDetail.ALL, true)
 		.assertThat()
-			.statusCode(is(HttpServletResponse.SC_OK))
+			.statusCode(is(HttpServletResponse.SC_NO_CONTENT))
 		;
 
 		// Delete the application
@@ -317,10 +354,26 @@ final class RoutingResourcesIT extends BaseIT
 			.log().ifValidationFails(LogDetail.ALL, true)
 		.assertThat()
 			.statusCode(is(HttpServletResponse.SC_OK))
-			.extract()
 		;
 
 		tearDownPlatform(platformId);
+
+		// Delete the config
+		given()
+			.log().ifValidationFails(LogDetail.ALL, true)
+			.filter(sessionFilter)
+			.accept(MediaType.APPLICATION_JSON)
+			.header("Authorization", authHeader)
+			.queryParam("configid", configId)
+		.when()
+			.redirects().follow(true)
+			.redirects().max(3)
+			.delete("config")
+		.then()
+			.log().ifValidationFails(LogDetail.ALL, true)
+		.assertThat()
+			.statusCode(is(HttpServletResponse.SC_NO_CONTENT))
+		;
 
 		tearDownSite(siteId);
 
@@ -358,7 +411,6 @@ final class RoutingResourcesIT extends BaseIT
 			{
 				assertEquals(expected.getString("name"), actualMap.get("name"));
 				assertEquals(expected.getString("dataSourceName"), actualMap.get("dataSourceName"));
-				assertEquals(expected.getString("lastModified"), actualMap.get("lastModified"));
 				found = true;
 			}
 		}
@@ -391,7 +443,6 @@ final class RoutingResourcesIT extends BaseIT
 		assertEquals(expected.getString("name"), actual.getString("name"));
 		assertEquals(expected.getString("destination"), actual.getString("destination"));
 		assertEquals(expected.getString("dataSourceName"), actual.getString("dataSourceName"));
-		assertEquals(expected.getString("lastModified"), actual.getString("lastModified"));
 		assertEquals(expected.getString("destinationType"), actual.getString("destinationType"));
 		assertEquals(expected.getString("destinationArg"), actual.getString("destinationArg"));
 		assertEquals(expected.getString("enableEquations"), actual.getString("enableEquations"));
@@ -499,7 +550,6 @@ final class RoutingResourcesIT extends BaseIT
 		assertEquals(expected.getString("parityCheck"), actual.getString("parityCheck"));
 		assertEquals(expected.getString("paritySelection"), actual.getString("paritySelection"));
 		assertEquals(expected.getString("production"), actual.getString("production"));
-		assertEquals(expected.getString("lastModified"), actual.getString("lastModified"));
 
 		// Delete the routing
 		given()
@@ -671,8 +721,11 @@ final class RoutingResourcesIT extends BaseIT
 		assertEquals(expected.getString("appName"), actual.getString("appName"));
 		assertEquals(expected.getString("routingSpecName"), actual.getString("routingSpecName"));
 		assertEquals(expected.getString("enabled"), actual.getString("enabled"));
-		assertEquals(Instant.ofEpochMilli(expected.getLong("startTime")).toString() + "[UTC]",
-				actual.getString("startTime")); // This comparison requires some manipulation to match up
+		assertThat(ZonedDateTime.ofInstant(Instant.ofEpochMilli(expected.getLong("startTime")),
+						ZoneId.of("UTC")).toString(),
+				anyOf(is(ZonedDateTime.parse(actual.getString("startTime")).plus(OFFSET_IN_MILLI, ChronoUnit.MILLIS).toString()),
+						is(ZonedDateTime.parse(actual.getString("startTime")).toString()),
+						is(ZonedDateTime.parse(actual.getString("startTime")).minus(OFFSET_IN_MILLI, ChronoUnit.MILLIS).toString())));
 		assertEquals(expected.getString("timeZone"), actual.getString("timeZone"));
 		assertEquals(expected.getString("runInterval"), actual.getString("runInterval"));
 
@@ -783,12 +836,21 @@ final class RoutingResourcesIT extends BaseIT
 		{
 			if (((Integer) actualItem.get("scheduleEntryId")).longValue() == scheduleId)
 			{
-				assertEquals(expected.getString("runStart"), actualItem.get("runStart"));
-				assertEquals(expected.getString("runStop"), actualItem.get("runStop"));
+				assertThat(ZonedDateTime.parse(actualItem.get("runStart").toString()).toInstant().toString(),
+					anyOf(is(expected.get("runStart").toString()),
+							is(ZonedDateTime.parse(expected.get("runStart")).toInstant().toString()),
+						is(ZonedDateTime.parse(expected.get("runStart")).toInstant().plusMillis(OFFSET_IN_MILLI).toString())));
+				assertThat(ZonedDateTime.parse(actualItem.get("runStop").toString()).toInstant().toString(),
+					anyOf(is(expected.get("runStop").toString()),
+						is(ZonedDateTime.parse(expected.get("runStop")).toInstant().toString()),
+						is(ZonedDateTime.parse(expected.get("runStop")).toInstant().plusMillis(OFFSET_IN_MILLI).toString())));
 				assertEquals(expected.getInt("numMessages"), actualItem.get("numMessages"));
 				assertEquals(expected.getInt("numErrors"), actualItem.get("numErrors"));
 				assertEquals(expected.getInt("numPlatforms"), actualItem.get("numPlatforms"));
-				assertEquals(expected.getString("lastMsgTime"), actualItem.get("lastMsgTime"));
+				assertThat(ZonedDateTime.parse(actualItem.get("lastMsgTime").toString()).toInstant().toString(),
+					anyOf(is(expected.get("lastMsgTime").toString()),
+						is(ZonedDateTime.parse(expected.get("lastMsgTime")).toInstant().toString()),
+						is(ZonedDateTime.parse(expected.get("lastMsgTime")).toInstant().plusMillis(OFFSET_IN_MILLI).toString())));
 				assertEquals(expected.getString("runStatus"), actualItem.get("runStatus"));
 				assertEquals(expected.getString("hostname"), actualItem.get("hostname"));
 				assertEquals(expected.getString("lastInput"), actualItem.get("lastInput"));
@@ -844,10 +906,12 @@ final class RoutingResourcesIT extends BaseIT
 				// The app name is not present in the Toolkit DTO, so it won't be returned in the response
 				assertEquals(expected.get("priority").toString(), actualItem.get("priority").toString());
 				assertEquals(expected.get("subsystem"), actualItem.get("subsystem"));
-				String messageRcvTime = actualItem.get("msgRecvTime").toString();
+				Instant messageRcvTime = ZonedDateTime.parse(actualItem.get("msgRecvTime").toString()).toInstant();
 				// substring date text to remove timezone and milliseconds
-				assertEquals(Instant.ofEpochMilli(expected.get("msgRecvTime")).toString(),
-						messageRcvTime.substring(0, messageRcvTime.indexOf(".")) + "Z");
+				assertThat(Instant.ofEpochMilli(expected.get("msgRecvTime")).toString(),
+						anyOf(is(messageRcvTime.minusMillis(OFFSET_IN_MILLI).toString()),
+								is(messageRcvTime.toString()),
+								is(messageRcvTime.plusMillis(OFFSET_IN_MILLI).toString())));
 				assertEquals(expected.get("eventText").toString(), actualItem.get("eventText").toString());
 				found = true;
 			}
@@ -916,12 +980,13 @@ final class RoutingResourcesIT extends BaseIT
 		;
 	}
 
-	private Long storePlatform(String jsonPath, Long siteId) throws Exception
+	private Long storePlatform(String jsonPath, Long siteId, Long configId) throws Exception
 	{
 		assertNotNull(jsonPath);
 		String platformJson = getJsonFromResource(jsonPath);
 
 		platformJson = platformJson.replace("[SITE_ID]", siteId.toString());
+		platformJson = platformJson.replace("[CONFIG_ID]", configId.toString());
 
 		ExtractableResponse<Response> response = given()
 			.log().ifValidationFails(LogDetail.ALL, true)
@@ -937,7 +1002,7 @@ final class RoutingResourcesIT extends BaseIT
 		.then()
 			.log().ifValidationFails(LogDetail.ALL, true)
 		.assertThat()
-			.statusCode(is(HttpServletResponse.SC_OK))
+			.statusCode(is(HttpServletResponse.SC_CREATED))
 			.extract()
 		;
 
@@ -959,7 +1024,7 @@ final class RoutingResourcesIT extends BaseIT
 		.then()
 			.log().ifValidationFails(LogDetail.ALL, true)
 		.assertThat()
-			.statusCode(is(HttpServletResponse.SC_OK))
+			.statusCode(is(HttpServletResponse.SC_NO_CONTENT))
 		;
 
 		given()

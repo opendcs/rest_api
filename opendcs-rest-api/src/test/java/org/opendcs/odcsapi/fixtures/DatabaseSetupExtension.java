@@ -68,11 +68,6 @@ public class DatabaseSetupExtension implements BeforeEachCallback
 		return currentTomcat;
 	}
 
-	public static Configuration getCurrentConfig()
-	{
-		return currentConfig;
-	}
-
 	@Override
 	public void beforeEach(ExtensionContext context) throws Exception
 	{
