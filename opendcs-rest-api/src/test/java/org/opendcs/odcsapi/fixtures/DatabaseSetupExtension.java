@@ -156,7 +156,7 @@ public class DatabaseSetupExtension implements BeforeEachCallback
 			throw new PreconditionViolationException("Server didn't start in time...");
 		}
 	}
-
+  
 	public static void loadXMLDataIntoDb(String[] files) throws Exception
 	{
 		String[] filePaths = new String[files.length];
