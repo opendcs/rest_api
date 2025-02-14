@@ -68,6 +68,11 @@ public class DatabaseSetupExtension implements BeforeEachCallback
 		return currentTomcat;
 	}
 
+	public static Configuration getCurrentConfig()
+	{
+		return currentConfig;
+	}
+
 	@Override
 	public void beforeEach(ExtensionContext context) throws Exception
 	{
@@ -156,7 +161,7 @@ public class DatabaseSetupExtension implements BeforeEachCallback
 			throw new PreconditionViolationException("Server didn't start in time...");
 		}
 	}
-
+  
 	public static void loadXMLDataIntoDb(String[] files) throws Exception
 	{
 		String[] filePaths = new String[files.length];
