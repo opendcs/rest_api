@@ -18,7 +18,9 @@ package org.opendcs.odcsapi.res;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.TimeZone;
 import java.util.Vector;
 import java.util.stream.Collectors;
@@ -84,10 +86,9 @@ public final class RoutingResources extends OpenDcsResource
 	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
 	public Response getRoutingRefs() throws DbException
 	{
-		DatabaseIO dbIo = null;
+		DatabaseIO dbIo = getLegacyDatabase();
 		try
 		{
-			dbIo = getLegacyDatabase();
 			RoutingSpecList rsList = new RoutingSpecList();
 			dbIo.readRoutingSpecList(rsList);
 			return Response.status(HttpServletResponse.SC_OK)
@@ -99,10 +100,7 @@ public final class RoutingResources extends OpenDcsResource
 		}
 		finally
 		{
-			if (dbIo != null)
-			{
-				dbIo.close();
-			}
+			dbIo.close();
 		}
 	}
 
@@ -144,10 +142,9 @@ public final class RoutingResources extends OpenDcsResource
 			throw new MissingParameterException("Missing required routingid parameter.");
 		}
 
-		DatabaseIO dbIo = null;
+		DatabaseIO dbIo = getLegacyDatabase();
 		try
 		{
-			dbIo = getLegacyDatabase();
 			RoutingSpec spec = new RoutingSpec();
 			spec.setId(DbKey.createDbKey(routingId));
 			dbIo.readRoutingSpec(spec);
@@ -164,10 +161,7 @@ public final class RoutingResources extends OpenDcsResource
 		}
 		finally
 		{
-			if (dbIo != null)
-			{
-				dbIo.close();
-			}
+			dbIo.close();
 		}
 	}
 
@@ -213,10 +207,9 @@ public final class RoutingResources extends OpenDcsResource
 	public Response postRouting(ApiRouting routing)
 			throws DbException
 	{
-		DatabaseIO dbIo = null;
+		DatabaseIO dbIo = getLegacyDatabase();
 		try
 		{
-			dbIo = getLegacyDatabase();
 			RoutingSpec spec = map(routing);
 			dbIo.writeRoutingSpec(spec);
 			return Response.status(HttpServletResponse.SC_CREATED).entity(map(spec)).build();
@@ -227,10 +220,7 @@ public final class RoutingResources extends OpenDcsResource
 		}
 		finally
 		{
-			if (dbIo != null)
-			{
-				dbIo.close();
-			}
+			dbIo.close();
 		}
 	}
 
@@ -308,10 +298,9 @@ public final class RoutingResources extends OpenDcsResource
 			throw new MissingParameterException("Missing required routingid parameter.");
 		}
 
-		DatabaseIO dbIo = null;
+		DatabaseIO dbIo = getLegacyDatabase();
 		try
 		{
-			dbIo = getLegacyDatabase();
 			RoutingSpec spec = new RoutingSpec();
 			spec.setId(DbKey.createDbKey(routingId));
 			dbIo.deleteRoutingSpec(spec);
@@ -324,10 +313,7 @@ public final class RoutingResources extends OpenDcsResource
 		}
 		finally
 		{
-			if (dbIo != null)
-			{
-				dbIo.close();
-			}
+			dbIo.close();
 		}
 	}
 
@@ -522,10 +508,9 @@ public final class RoutingResources extends OpenDcsResource
 	public Response getRoutingStats()
 			throws DbException
 	{
-		DatabaseIO dbIo = null;
+		DatabaseIO dbIo = getLegacyDatabase();
 		try
 		{
-			dbIo = getLegacyDatabase();
 			return Response.status(HttpServletResponse.SC_OK)
 					.entity(map(dbIo.readRoutingSpecStatus())).build();
 		}
@@ -535,10 +520,7 @@ public final class RoutingResources extends OpenDcsResource
 		}
 		finally
 		{
-			if (dbIo != null)
-			{
-				dbIo.close();
-			}
+			dbIo.close();
 		}
 	}
 
@@ -682,46 +664,10 @@ public final class RoutingResources extends OpenDcsResource
 		{
 			HttpSession session = request.getSession(true);
 			ArrayList<DacqEvent> events = new ArrayList<>();
-			Object lastDacqEventId = session.getAttribute(LAST_DACQ_ATTRIBUTE);
-			boolean backLogValid = false;
-			Long dacqEventId = null;
-			Long timeInMillis = null;
-			if (backlog != null && !backlog.trim().isEmpty())
-			{
-				backLogValid = true;
-				if (backlog.equalsIgnoreCase("last"))
-				{
-					if (lastDacqEventId != null)
-					{
-						dacqEventId = (Long) lastDacqEventId;
-					}
-				}
-				else
-				{
-					try (IntervalDAI intDai = getLegacyTimeseriesDB().makeIntervalDAO())
-					{
-						intDai.loadAllIntervals();
-						String[] intervalCodes = intDai.getValidIntervalCodes();
-						for (String intervalCode : intervalCodes)
-						{
-							Interval intV = IntervalCodes.getInterval(intervalCode);
-							if (intV != null && backlog.equalsIgnoreCase(intV.getName()))
-							{
-								Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
-								cal.setTimeInMillis(System.currentTimeMillis());
-								int calConstant = intV.getCalConstant();
-								if (calConstant != -1)
-								{
-									cal.add(calConstant, -intV.getCalMultiplier());
-									timeInMillis = cal.getTimeInMillis();
-									session.removeAttribute(LAST_DACQ_ATTRIBUTE);
-								}
-								break;
-							}
-						}
-					}
-				}
-			}
+			Map<String, Object> backlogMap = handleBacklog(backlog, session);
+			boolean backLogValid = (boolean) backlogMap.get("backLogValid");
+			Long dacqEventId = (Long) backlogMap.get("dacqEventId");
+			Long timeInMillis = (Long) backlogMap.get("timeInMillis");
 			dai.readEvents(events, DbKey.createDbKey(appId), DbKey.createDbKey(routingExecId),
 					DbKey.createDbKey(platformId), backLogValid, dacqEventId, timeInMillis);
 			return Response.status(HttpServletResponse.SC_OK)
@@ -731,6 +677,55 @@ public final class RoutingResources extends OpenDcsResource
 		{
 			throw new DbException("Unable to retrieve dacq events", e);
 		}
+	}
+
+	Map<String, Object> handleBacklog(String backlog, HttpSession session) throws DbIoException
+	{
+		Map<String, Object> backlogMap = new HashMap<>();
+		Object lastDacqEventId = session.getAttribute(LAST_DACQ_ATTRIBUTE);
+		boolean backLogValid = false;
+		Long dacqEventId = null;
+		Long timeInMillis = null;
+		if (backlog != null && !backlog.trim().isEmpty())
+		{
+			backLogValid = true;
+			if (backlog.equalsIgnoreCase("last"))
+			{
+				if (lastDacqEventId != null)
+				{
+					dacqEventId = (Long) lastDacqEventId;
+				}
+			}
+			else
+			{
+				try (IntervalDAI intDai = getLegacyTimeseriesDB().makeIntervalDAO())
+				{
+					intDai.loadAllIntervals();
+					String[] intervalCodes = intDai.getValidIntervalCodes();
+					for (String intervalCode : intervalCodes)
+					{
+						Interval intV = IntervalCodes.getInterval(intervalCode);
+						if (intV != null && backlog.equalsIgnoreCase(intV.getName()))
+						{
+							Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+							cal.setTimeInMillis(System.currentTimeMillis());
+							int calConstant = intV.getCalConstant();
+							if (calConstant != -1)
+							{
+								cal.add(calConstant, -intV.getCalMultiplier());
+								timeInMillis = cal.getTimeInMillis();
+								session.removeAttribute(LAST_DACQ_ATTRIBUTE);
+							}
+							break;
+						}
+					}
+				}
+			}
+		}
+		backlogMap.put("backLogValid", backLogValid);
+		backlogMap.put("dacqEventId", dacqEventId);
+		backlogMap.put("timeInMillis", timeInMillis);
+		return backlogMap;
 	}
 
 	static ApiDacqEvent map(DacqEvent event)
