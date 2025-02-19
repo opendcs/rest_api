@@ -12,6 +12,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.MediaType;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import decodes.db.DatabaseException;
 import decodes.db.ScheduleEntryStatus;
 import decodes.polling.DacqEvent;
 import decodes.sql.DbKey;
@@ -20,11 +21,13 @@ import io.restassured.filter.session.SessionFilter;
 import io.restassured.path.json.JsonPath;
 import io.restassured.response.ExtractableResponse;
 import io.restassured.response.Response;
+import opendcs.dai.DacqEventDAI;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.TestTemplate;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.opendcs.fixtures.configuration.Configuration;
 import org.opendcs.odcsapi.beans.ApiDacqEvent;
 import org.opendcs.odcsapi.beans.ApiDataSource;
 import org.opendcs.odcsapi.beans.ApiLoadingApp;
@@ -33,6 +36,7 @@ import org.opendcs.odcsapi.beans.ApiRoutingStatus;
 import org.opendcs.odcsapi.beans.ApiScheduleEntry;
 import org.opendcs.odcsapi.beans.ApiScheduleEntryRef;
 import org.opendcs.odcsapi.fixtures.DatabaseContextProvider;
+import org.opendcs.odcsapi.fixtures.DatabaseSetupExtension;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.CoreMatchers.anyOf;
@@ -896,6 +900,153 @@ final class RoutingResourcesIT extends BaseIT
 		assertFalse(actualList.isEmpty());
 
 		boolean found = false;
+		Long lastEventId = null;
+		for (Map<String, Object> actualItem : actualList)
+		{
+			if (((Integer) actualItem.get("platformId")).longValue() == platformId
+					&& ((Integer) actualItem.get("appId")).longValue() == appId
+					&& ((Integer) actualItem.get("routingExecId")).longValue() == scheduleEntryStatusId)
+			{
+				// The event time updated based on current time, so we can't compare it directly
+				// The app name is not present in the Toolkit DTO, so it won't be returned in the response
+				assertEquals(expected.get("priority").toString(), actualItem.get("priority").toString());
+				assertEquals(expected.get("subsystem"), actualItem.get("subsystem"));
+				Instant messageRcvTime = ZonedDateTime.parse(actualItem.get("msgRecvTime").toString()).toInstant();
+				// substring date text to remove timezone and milliseconds
+				assertThat(Instant.ofEpochMilli(expected.get("msgRecvTime")).toString(),
+						anyOf(is(messageRcvTime.minusMillis(OFFSET_IN_MILLI).toString()),
+								is(messageRcvTime.toString()),
+								is(messageRcvTime.plusMillis(OFFSET_IN_MILLI).toString())));
+				assertEquals(expected.get("eventText").toString(), actualItem.get("eventText").toString());
+				lastEventId = ((Integer) actualItem.get("eventId")).longValue();
+				found = true;
+			}
+		}
+		assertTrue(found);
+
+		// Test with backlog parameter set to "last"
+		response = given()
+			.log().ifValidationFails(LogDetail.ALL, true)
+			.accept(MediaType.APPLICATION_JSON)
+			.filter(sessionFilter)
+			.header("Authorization", authHeader)
+			.queryParam("routingexecid", scheduleEntryStatusId)
+			.queryParam("appid", appId)
+			.queryParam("platformid", platformId)
+			.queryParam("backlog", "last")
+			// TODO: Set the session variable to use the last event id set above
+		.when()
+			.redirects().follow(true)
+			.redirects().max(3)
+			.get("dacqevents")
+		.then()
+			.log().ifValidationFails(LogDetail.ALL, true)
+		.assertThat()
+			.statusCode(is(HttpServletResponse.SC_OK))
+			.extract()
+		;
+
+		actual = response.body().jsonPath();
+		actualList = actual.getList("");
+		assertFalse(actualList.isEmpty());
+
+		found = false;
+		for (Map<String, Object> actualItem : actualList)
+		{
+			if (((Integer) actualItem.get("platformId")).longValue() == platformId
+					&& ((Integer) actualItem.get("appId")).longValue() == appId
+					&& ((Integer) actualItem.get("routingExecId")).longValue() == scheduleEntryStatusId)
+			{
+				// The event time updated based on current time, so we can't compare it directly
+				// The app name is not present in the Toolkit DTO, so it won't be returned in the response
+				assertEquals(expected.get("priority").toString(), actualItem.get("priority").toString());
+				assertEquals(expected.get("subsystem"), actualItem.get("subsystem"));
+				Instant messageRcvTime = ZonedDateTime.parse(actualItem.get("msgRecvTime").toString()).toInstant();
+				// substring date text to remove timezone and milliseconds
+				assertThat(Instant.ofEpochMilli(expected.get("msgRecvTime")).toString(),
+						anyOf(is(messageRcvTime.minusMillis(OFFSET_IN_MILLI).toString()),
+								is(messageRcvTime.toString()),
+								is(messageRcvTime.plusMillis(OFFSET_IN_MILLI).toString())));
+				assertEquals(expected.get("eventText").toString(), actualItem.get("eventText").toString());
+				found = true;
+			}
+		}
+		assertTrue(found);
+
+		// Test with backlog parameter set to name of an interval
+		response = given()
+			.log().ifValidationFails(LogDetail.ALL, true)
+			.accept(MediaType.APPLICATION_JSON)
+			.filter(sessionFilter)
+			.header("Authorization", authHeader)
+			.queryParam("routingexecid", scheduleEntryStatusId)
+			.queryParam("appid", appId)
+			.queryParam("platformid", platformId)
+			.queryParam("backlog", "1Hour")
+		.when()
+			.redirects().follow(true)
+			.redirects().max(3)
+			.get("dacqevents")
+		.then()
+			.log().ifValidationFails(LogDetail.ALL, true)
+		.assertThat()
+			.statusCode(is(HttpServletResponse.SC_OK))
+			.extract()
+		;
+
+		actual = response.body().jsonPath();
+		actualList = actual.getList("");
+		assertFalse(actualList.isEmpty());
+
+		found = false;
+		for (Map<String, Object> actualItem : actualList)
+		{
+			if (((Integer) actualItem.get("platformId")).longValue() == platformId
+					&& ((Integer) actualItem.get("appId")).longValue() == appId
+					&& ((Integer) actualItem.get("routingExecId")).longValue() == scheduleEntryStatusId)
+			{
+				// The event time updated based on current time, so we can't compare it directly
+				// The app name is not present in the Toolkit DTO, so it won't be returned in the response
+				assertEquals(expected.get("priority").toString(), actualItem.get("priority").toString());
+				assertEquals(expected.get("subsystem"), actualItem.get("subsystem"));
+				Instant messageRcvTime = ZonedDateTime.parse(actualItem.get("msgRecvTime").toString()).toInstant();
+				// substring date text to remove timezone and milliseconds
+				assertThat(Instant.ofEpochMilli(expected.get("msgRecvTime")).toString(),
+						anyOf(is(messageRcvTime.minusMillis(OFFSET_IN_MILLI).toString()),
+								is(messageRcvTime.toString()),
+								is(messageRcvTime.plusMillis(OFFSET_IN_MILLI).toString())));
+				assertEquals(expected.get("eventText").toString(), actualItem.get("eventText").toString());
+				found = true;
+			}
+		}
+		assertTrue(found);
+
+		// Test with backlog parameter set to invalid value, will be ignored
+		response = given()
+			.log().ifValidationFails(LogDetail.ALL, true)
+			.accept(MediaType.APPLICATION_JSON)
+			.filter(sessionFilter)
+			.header("Authorization", authHeader)
+			.queryParam("routingexecid", scheduleEntryStatusId)
+			.queryParam("appid", appId)
+			.queryParam("platformid", platformId)
+			.queryParam("backlog", "invalid value")
+		.when()
+			.redirects().follow(true)
+			.redirects().max(3)
+			.get("dacqevents")
+		.then()
+			.log().ifValidationFails(LogDetail.ALL, true)
+		.assertThat()
+			.statusCode(is(HttpServletResponse.SC_OK))
+			.extract()
+		;
+
+		actual = response.body().jsonPath();
+		actualList = actual.getList("");
+		assertFalse(actualList.isEmpty());
+
+		found = false;
 		for (Map<String, Object> actualItem : actualList)
 		{
 			if (((Integer) actualItem.get("platformId")).longValue() == platformId
@@ -1044,5 +1195,31 @@ final class RoutingResourcesIT extends BaseIT
 			.statusCode(anyOf(is(HttpServletResponse.SC_NOT_FOUND),
 					is(HttpServletResponse.SC_GONE)))
 		;
+	}
+
+	private static void storeDacqEvent(DacqEvent event) throws DatabaseException
+	{
+		Configuration currentConfig = DatabaseSetupExtension.getCurrentConfig();
+		try (DacqEventDAI dai = currentConfig.getTsdb().makeDacqEventDAO())
+		{
+			dai.writeEvent(event);
+		}
+		catch (Throwable e)
+		{
+			throw new DatabaseException("Error storing dacq event", e);
+		}
+	}
+
+	private static void deleteEventsForPlatform(DbKey platformId) throws DatabaseException
+	{
+		Configuration currentConfig = DatabaseSetupExtension.getCurrentConfig();
+		try (DacqEventDAI dai = currentConfig.getTsdb().makeDacqEventDAO())
+		{
+			dai.deleteEventsForPlatform(platformId);
+		}
+		catch (Throwable e)
+		{
+			throw new DatabaseException("Error deleting dacq event for specified platform", e);
+		}
 	}
 }

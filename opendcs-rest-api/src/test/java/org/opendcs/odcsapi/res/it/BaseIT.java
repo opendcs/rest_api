@@ -26,7 +26,6 @@ import javax.ws.rs.core.MediaType;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import decodes.db.DatabaseException;
-import decodes.polling.DacqEvent;
 import decodes.db.PlatformStatus;
 import decodes.db.ScheduleEntry;
 import decodes.db.ScheduleEntryStatus;
@@ -34,7 +33,6 @@ import decodes.sql.DbKey;
 import io.restassured.filter.log.LogDetail;
 import io.restassured.filter.session.SessionFilter;
 import io.restassured.path.json.JsonPath;
-import opendcs.dai.DacqEventDAI;
 import opendcs.dai.PlatformStatusDAI;
 import opendcs.dai.ScheduleEntryDAI;
 import org.apache.catalina.session.StandardSession;
@@ -209,32 +207,6 @@ public class BaseIT
 		catch (Throwable e)
 		{
 			throw new DatabaseException("Error deleting schedule entry status", e);
-		}
-	}
-
-	public static void storeDacqEvent(DacqEvent event) throws DatabaseException
-	{
-		Configuration currentConfig = DatabaseSetupExtension.getCurrentConfig();
-		try (DacqEventDAI dai = currentConfig.getTsdb().makeDacqEventDAO())
-		{
-			dai.writeEvent(event);
-		}
-		catch (Throwable e)
-		{
-			throw new DatabaseException("Error storing dacq event", e);
-		}
-	}
-
-	public static void deleteEventsForPlatform(DbKey platformId) throws DatabaseException
-	{
-		Configuration currentConfig = DatabaseSetupExtension.getCurrentConfig();
-		try (DacqEventDAI dai = currentConfig.getTsdb().makeDacqEventDAO())
-		{
-			dai.deleteEventsForPlatform(platformId);
-		}
-		catch (Throwable e)
-		{
-			throw new DatabaseException("Error deleting dacq event for specified platform", e);
 		}
 	}
 
