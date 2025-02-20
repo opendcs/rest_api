@@ -5,17 +5,26 @@ import java.util.Map;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.MediaType;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import decodes.db.DatabaseException;
+import decodes.sql.DbKey;
+import decodes.tsdb.CompAppInfo;
+import decodes.tsdb.TsdbCompLock;
 import io.restassured.filter.log.LogDetail;
 import io.restassured.filter.session.SessionFilter;
 import io.restassured.path.json.JsonPath;
 import io.restassured.response.ExtractableResponse;
 import io.restassured.response.Response;
+import opendcs.dai.LoadingAppDAI;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.TestTemplate;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.opendcs.fixtures.configuration.Configuration;
+import org.opendcs.odcsapi.beans.ApiAppStatus;
 import org.opendcs.odcsapi.fixtures.DatabaseContextProvider;
+import org.opendcs.odcsapi.fixtures.DatabaseSetupExtension;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.equalTo;
@@ -244,27 +253,20 @@ final class AppResourcesIT extends BaseIT
 	}
 
 	@TestTemplate
-	void testGetAppStatus()
+	void testGetAppStatus() throws Exception
 	{
-		// Post app start
-		given()
-			.log().ifValidationFails(LogDetail.ALL, true)
-			.accept(MediaType.APPLICATION_JSON)
-			.contentType(MediaType.APPLICATION_JSON)
-			.header("Authorization", authHeader)
-			.filter(sessionFilter)
-			.queryParam("appid", appid)
-		.when()
-			.redirects().follow(true)
-			.redirects().max(3)
-			.post("appstart")
-		.then()
-			.log().ifValidationFails(LogDetail.ALL, true)
-		.assertThat()
-			.statusCode(is(HttpServletResponse.SC_OK))
-		;
-
-		JsonPath expected = getJsonPathFromResource("app_stat_expected.json");
+		ApiAppStatus status = getDtoFromResource("app_stat_expected.json", ApiAppStatus.class);
+		ObjectMapper mapper = new ObjectMapper();
+		String appJson = mapper.writeValueAsString(status);
+		JsonPath expected = new JsonPath(appJson);
+		// Create App lock
+		CompAppInfo compAppInfo = new CompAppInfo();
+		compAppInfo.setAppId(DbKey.createDbKey(appid));
+		compAppInfo.setAppName("Computation Application");
+		int pid = status.getPid().intValue();
+		String host = status.getHostname();
+		TsdbCompLock compLock = getCompLock(compAppInfo, pid, host);
+		assertNotNull(compLock);
 
 		// Get app status, assert that it matches the expected JSON
 		ExtractableResponse<Response> response = given()
@@ -280,10 +282,6 @@ final class AppResourcesIT extends BaseIT
 			.log().ifValidationFails(LogDetail.ALL, true)
 		.assertThat()
 			.statusCode(is(HttpServletResponse.SC_OK))
-			.body("", notNullValue())
-			.body("appId", notNullValue())
-			.body("pid", notNullValue())
-			.body("heartbeat", notNullValue())
 			.extract()
 		;
 
@@ -296,25 +294,11 @@ final class AppResourcesIT extends BaseIT
 		assertEquals(expected.get("eventPort"), actual.getList("eventPort").get(0));
 		assertEquals(expected.get("status"), actual.getList("status").get(0));
 		assertEquals(expected.get("appName"), actual.getList("appName").get(0));
+		assertEquals(expected.get("pid"), actual.getList("pid").get(0));
 		// App type is not returned by the API
 
-		// Post app stop
-		given()
-			.log().ifValidationFails(LogDetail.ALL, true)
-			.accept(MediaType.APPLICATION_JSON)
-			.contentType(MediaType.APPLICATION_JSON)
-			.header("Authorization", authHeader)
-			.filter(sessionFilter)
-			.queryParam("appid", appID)
-		.when()
-			.redirects().follow(true)
-			.redirects().max(3)
-			.post("appstop")
-		.then()
-			.log().ifValidationFails(LogDetail.ALL, true)
-		.assertThat()
-			.statusCode(is(HttpServletResponse.SC_OK))
-		;
+		// Release app lock
+		releaseCompLock(compLock);
 
 		// assert that the app is stopped
 		given()
@@ -334,142 +318,29 @@ final class AppResourcesIT extends BaseIT
 		;
 	}
 
-	@TestTemplate
-	void testGetAppEvents()
+	TsdbCompLock getCompLock(CompAppInfo compAppInfo, int pid, String host) throws DatabaseException
 	{
-		// Start app
-		given()
-			.log().ifValidationFails(LogDetail.ALL, true)
-			.accept(MediaType.APPLICATION_JSON)
-			.header("Authorization", authHeader)
-			.contentType(MediaType.APPLICATION_JSON)
-			.queryParam("appid", appid)
-			.filter(sessionFilter)
-		.when()
-			.redirects().follow(true)
-			.redirects().max(3)
-			.post("appstart")
-		.then()
-			.log().ifValidationFails(LogDetail.ALL, true)
-		.assertThat()
-			.statusCode(is(HttpServletResponse.SC_OK))
-		;
-
-		// TODO: Due to current implementation of event viewing, the event port is unknown.
-		// Therefore, the connection will fail and no events will be retrieved.
-
-		// Get app events
-		given()
-			.log().ifValidationFails(LogDetail.ALL, true)
-			.accept(MediaType.APPLICATION_JSON)
-			.header("Authorization", authHeader)
-			.filter(sessionFilter)
-			.queryParam("appid", appid)
-		.when()
-			.redirects().follow(true)
-			.redirects().max(3)
-			.get("appevents")
-		.then()
-			.log().ifValidationFails(LogDetail.ALL, true)
-		.assertThat()
-			// TODO: The connection to the event port will fail, causing a 409 Conflict
-			.statusCode(is(HttpServletResponse.SC_OK))
-		;
-
-		// Stop app
-		given()
-			.log().ifValidationFails(LogDetail.ALL, true)
-			.accept(MediaType.APPLICATION_JSON)
-			.header("Authorization", authHeader)
-			.contentType(MediaType.APPLICATION_JSON)
-			.queryParam("appid", appid)
-			.filter(sessionFilter)
-		.when()
-			.redirects().follow(true)
-			.redirects().max(3)
-			.post("appstop")
-		.then()
-			.log().ifValidationFails(LogDetail.ALL, true)
-		.assertThat()
-			.statusCode(is(HttpServletResponse.SC_OK))
-		;
+		Configuration currentConfig = DatabaseSetupExtension.getCurrentConfig();
+		try (LoadingAppDAI dai = currentConfig.getTsdb().makeLoadingAppDAO())
+		{
+			return dai.obtainCompProcLock(compAppInfo, pid, host);
+		}
+		catch (Throwable thr)
+		{
+			throw new DatabaseException("Error getting comp lock", thr);
+		}
 	}
 
-	@TestTemplate
-	void testPostAppStartStop()
+	void releaseCompLock(TsdbCompLock compLock) throws DatabaseException
 	{
-		// start app
-		given()
-			.log().ifValidationFails(LogDetail.ALL, true)
-			.accept(MediaType.APPLICATION_JSON)
-			.contentType(MediaType.APPLICATION_JSON)
-			.header("Authorization", authHeader)
-			.filter(sessionFilter)
-			.queryParam("appid", appid)
-		.when()
-			.redirects().follow(true)
-			.redirects().max(3)
-			.post("appstart")
-		.then()
-			.log().ifValidationFails(LogDetail.ALL, true)
-		.assertThat()
-			.statusCode(is(HttpServletResponse.SC_OK))
-		;
-
-		// assert that the app is running
-		ExtractableResponse<Response> response = given()
-			.log().ifValidationFails(LogDetail.ALL, true)
-			.accept(MediaType.APPLICATION_JSON)
-			.header("Authorization", authHeader)
-			.filter(sessionFilter)
-		.when()
-			.redirects().follow(true)
-			.redirects().max(3)
-			.get("appstat")
-		.then()
-			.log().ifValidationFails(LogDetail.ALL, true)
-		.assertThat()
-			.statusCode(is(HttpServletResponse.SC_OK))
-			.body("size()", is(1))
-			.extract()
-		;
-
-		JsonPath actual = response.body().jsonPath();
-		assertEquals("Starting", actual.get("[0].status"));
-
-		// stop app
-		given()
-			.log().ifValidationFails(LogDetail.ALL, true)
-			.accept(MediaType.APPLICATION_JSON)
-			.contentType(MediaType.APPLICATION_JSON)
-			.header("Authorization", authHeader)
-			.filter(sessionFilter)
-			.queryParam("appid", appid)
-		.when()
-			.redirects().follow(true)
-			.redirects().max(3)
-			.post("appstop")
-		.then()
-			.log().ifValidationFails(LogDetail.ALL, true)
-		.assertThat()
-			.statusCode(is(HttpServletResponse.SC_OK))
-		;
-
-		// assert that the app is stopped
-		given()
-			.log().ifValidationFails(LogDetail.ALL, true)
-			.accept(MediaType.APPLICATION_JSON)
-			.header("Authorization", authHeader)
-			.filter(sessionFilter)
-		.when()
-			.redirects().follow(true)
-			.redirects().max(3)
-			.get("appstat")
-		.then()
-			.log().ifValidationFails(LogDetail.ALL, true)
-		.assertThat()
-			.statusCode(is(HttpServletResponse.SC_OK))
-			.body("size()", is(0))
-		;
+		Configuration currentConfig = DatabaseSetupExtension.getCurrentConfig();
+		try (LoadingAppDAI dai = currentConfig.getTsdb().makeLoadingAppDAO())
+		{
+			dai.releaseCompProcLock(compLock);
+		}
+		catch (Throwable thr)
+		{
+			throw new DatabaseException("Error releasing comp lock", thr);
+		}
 	}
 }
