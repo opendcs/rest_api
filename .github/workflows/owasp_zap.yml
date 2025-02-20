@@ -28,6 +28,13 @@ jobs:
           restore-keys: ${{ runner.os }}-gradle
       - name: Run OWASP Zap
         run: ./gradlew owaspZap --stacktrace
+      - name: Upload Full HTML Report
+        uses: actions/upload-artifact@v4.4.3
+        with:
+          name: zap_report.html
+          path: ./opendcs-integration-test/build/test-results/owasp_zap/zap_report.html
+          retention-days: 1
+          if-no-files-found: error
       - name: Trim Summary Report
         run: |
           sudo sed '/## Alert Detail/Q' ./opendcs-integration-test/build/test-results/owasp_zap/zap_report.md > ./zap_report_summary.md
@@ -37,10 +44,3 @@ jobs:
           file: ./zap_report_summary.md
           vars: |
             empty: empty
-      - name: Upload Full HTML Report
-        uses: actions/upload-artifact@v4.4.3
-        with:
-          name: zap_report.html
-          path: ./opendcs-integration-test/build/test-results/owasp_zap/zap_report.html
-          retention-days: 1
-          if-no-files-found: error
