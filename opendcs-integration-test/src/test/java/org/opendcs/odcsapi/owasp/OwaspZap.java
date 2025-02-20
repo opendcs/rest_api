@@ -75,8 +75,6 @@ public final class OwaspZap
 			Testcontainers.exposeHostPorts(tomcat.getPort());
 			zapContainer.start();
 
-			System.out.println("ZAP scan is running...");
-
 			zapContainer.followOutput(outputFrame ->
 			{
 				String utf8Str = outputFrame.getUtf8String().trim();
@@ -89,6 +87,7 @@ public final class OwaspZap
 			{
 				Thread.sleep(200);
 			}
+			LOGGER.atInfo().log("OWASP ZAP scan complete");
 		}
 
 	}
