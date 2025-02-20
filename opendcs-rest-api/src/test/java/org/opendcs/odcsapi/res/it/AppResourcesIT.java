@@ -34,7 +34,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@Tag("integration-opentsdb-only")
+@Tag("integration")
 @ExtendWith(DatabaseContextProvider.class)
 final class AppResourcesIT extends BaseIT
 {
@@ -116,22 +116,19 @@ final class AppResourcesIT extends BaseIT
 
 		JsonPath actual = response.body().jsonPath();
 		List<Map<String, Object>> actualList = actual.getList("");
-		List<Map<String, Object>> expectedList = expected.getList("");
+		String expectedAppName = expected.get("appName").toString();
 
 		boolean found = false;
-		for (int i = 0; i < actualList.size(); i++)
+		for(Map<String, Object> actualApp : actualList)
 		{
-			Map<String, Object> actualApp = actualList.get(i);
-			Map<String, Object> expectedApp = expectedList.get(i);
 			String actualAppName = actualApp.get("appName").toString();
-			String expectedAppName = expectedApp.get("appName").toString();
-			if (actualAppName.equalsIgnoreCase(expectedAppName))
+			if(actualAppName.equalsIgnoreCase(expectedAppName))
 			{
 				assertEquals(actualAppName, expectedAppName);
 				assertEquals(actualApp.get("appType").toString(),
-						expectedApp.get("appType").toString());
+						expected.get("appType").toString());
 				assertEquals(actualApp.get("comment").toString(),
-						expectedApp.get("comment").toString());
+						expected.get("comment").toString());
 				found = true;
 				break;
 			}

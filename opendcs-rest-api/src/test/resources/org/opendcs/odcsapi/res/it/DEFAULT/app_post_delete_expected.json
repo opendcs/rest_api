@@ -5,7 +5,5 @@
   "comment": "Generates a pseudo-random hostname",
   "lastModified": "2024-12-30T18:59:51.000Z[UTC]",
   "manualEditingApp": false,
-  "properties": {
-    "startCmd" : "$DCSTOOL_HOME\\bin\\hostname.bat"
-  }
+  "properties": {}
 }
