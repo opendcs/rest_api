@@ -27,7 +27,7 @@ jobs:
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle') }}
           restore-keys: ${{ runner.os }}-gradle
       - name: Run OWASP Zap
-        run: ./gradlew owaspZap --stacktrace
+        run: ./gradlew :opendcs-integration-test:owaspZap --stacktrace
       - name: Upload Full HTML Report
         uses: actions/upload-artifact@v4.4.3
         with:
