@@ -6,7 +6,6 @@
   "lastModified" : 1612137600000,
   "manualEditingApp" : false,
   "properties" : {
-    "startCmd" : "$DCSTOOL_HOME/bin/compproc",
     "EventPort" : 12345
   }
 }

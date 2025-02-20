@@ -234,11 +234,10 @@ public final class AppResources extends OpenDcsResource
 		{
 			try {
 				ApiLoadingApp app = mapLoading(dai.getComputationApp(lock.getAppId()));
-				if (app.getProperties() == null || app.getProperties().getProperty("EventPort") == null)
+				if (app.getProperties() != null && app.getProperties().getProperty("EventPort") != null)
 				{
-					throw new DbIoException("EventPort property not found");
+					ret.setEventPort(Integer.parseInt(app.getProperties().getProperty("EventPort")));
 				}
-				ret.setEventPort(Integer.parseInt(app.getProperties().getProperty("EventPort")));
 				ret.setAppType(app.getAppType());
 			}
 			catch (DbIoException | NoSuchObjectException | NumberFormatException ex)
