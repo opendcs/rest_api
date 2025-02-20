@@ -50,7 +50,7 @@ import static io.restassured.RestAssured.given;
 import static java.util.stream.Collectors.joining;
 import static org.hamcrest.Matchers.is;
 
-class BaseIT
+public class BaseIT
 {
 	protected static String authHeader = null;
 
