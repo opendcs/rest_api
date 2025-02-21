@@ -15,6 +15,11 @@
 
 package org.opendcs.odcsapi.owasp;
 
+import java.io.IOException;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.Duration;
 
 import org.opendcs.odcsapi.tomcat.TomcatServer;
@@ -60,6 +65,7 @@ public final class OwaspZap
 
 	private static void runOwaspZap(TomcatServer tomcat) throws Exception
 	{
+		printAllFilesInDirectory("./build/test-results/owasp_zap");
 		String restApiUrl = "http://host.testcontainers.internal:" + tomcat.getPort() + "/odcsapi";
 		String exec = String.format("zap-api-scan.py -I -t %s/open_api.json -f openapi -r zap_report.html -w zap_report.md"
 				+ " -O %s -f openapi -r zap_report.html -w zap_report.md", restApiUrl, restApiUrl);
@@ -87,9 +93,28 @@ public final class OwaspZap
 			{
 				Thread.sleep(200);
 			}
+			printAllFilesInDirectory("./build/test-results/owasp_zap");
+			
 			LOGGER.atInfo().log("OWASP ZAP scan complete");
 		}
 
+	}
+
+	private static void printAllFilesInDirectory(String directoryPath)
+	{
+		Path parentDir = Paths.get(directoryPath);
+		LOGGER.atInfo().log("Directory: " + parentDir.toAbsolutePath());
+		try(DirectoryStream<Path> stream = Files.newDirectoryStream(parentDir))
+		{
+			for(Path path : stream)
+			{
+				LOGGER.atInfo().log("File: " + path.toAbsolutePath());
+			}
+		}
+		catch(IOException e)
+		{
+			LOGGER.atError().setCause(e).log("Error reading directory: " + directoryPath);
+		}
 	}
 
 }
