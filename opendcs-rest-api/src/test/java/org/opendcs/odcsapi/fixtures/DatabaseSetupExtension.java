@@ -21,11 +21,7 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import javax.servlet.http.HttpServletResponse;
 
-import decodes.db.DatabaseException;
-import decodes.tsdb.CTimeSeries;
-import decodes.tsdb.TimeSeriesIdentifier;
 import io.restassured.RestAssured;
-import opendcs.dai.TimeSeriesDAI;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.platform.commons.PreconditionViolationException;
@@ -46,7 +42,6 @@ public class DatabaseSetupExtension implements BeforeEachCallback
 	private static DbType currentDbType;
 	private static Configuration currentConfig;
 	private static TomcatServer currentTomcat;
-	private static Configuration currentConfig;
 	private final Configuration config;
 	private final DbType dbType;
 	private TomcatServer tomcatServer;
@@ -86,30 +81,6 @@ public class DatabaseSetupExtension implements BeforeEachCallback
 		RestAssured.basePath = warContext;
 		currentDbType = dbType;
 		currentTomcat = tomcatServer;
-	}
-
-	public static void storeTimeSeries(CTimeSeries ts) throws Exception
-	{
-		try (TimeSeriesDAI dai = currentConfig.getTsdb().makeTimeSeriesDAO())
-		{
-			dai.saveTimeSeries(ts);
-		}
-		catch (Throwable ex)
-		{
-			throw new DatabaseException("Error storing time series", ex);
-		}
-	}
-
-	public static void deleteTimeSeries(TimeSeriesIdentifier id) throws Exception
-	{
-		try (TimeSeriesDAI dai = currentConfig.getTsdb().makeTimeSeriesDAO())
-		{
-			dai.deleteTimeSeries(id);
-		}
-		catch (Throwable ex)
-		{
-			throw new DatabaseException("Error deleting time series", ex);
-		}
 	}
 
 	private TomcatServer startTomcat(String warContext) throws Exception

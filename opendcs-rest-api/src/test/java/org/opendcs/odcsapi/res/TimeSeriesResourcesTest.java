@@ -45,7 +45,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.opendcs.odcsapi.res.TimeSeriesResources.dataMap;
-import static org.opendcs.odcsapi.res.TimeSeriesResources.iMap;
 import static org.opendcs.odcsapi.res.TimeSeriesResources.idMap;
 import static org.opendcs.odcsapi.res.TimeSeriesResources.map;
 import static org.opendcs.odcsapi.res.TimeSeriesResources.mapRef;
@@ -175,27 +174,6 @@ final class TimeSeriesResourcesTest
 		assertEquals(id.getUniqueString(), apiId.getUniqueString());
 		assertEquals(id.getKey().getValue(), apiId.getKey());
 		assertEquals(id.getStorageUnits(), apiId.getStorageUnits());
-	}
-
-	@Test
-	void testIMap()
-	{
-		List<Interval> intervals = new ArrayList<>();
-		Interval interval = new Interval("Hourly");
-		interval.setKey(DbKey.createDbKey(1234L));
-		interval.setCalConstant(Calendar.HOUR_OF_DAY);
-		interval.setCalMultiplier(2);
-		intervals.add(interval);
-
-		List<ApiInterval> apiIntervals = iMap(intervals);
-
-		assertNotNull(apiIntervals);
-		assertEquals(intervals.size(), apiIntervals.size());
-		ApiInterval apiInterval = apiIntervals.get(0);
-		assertNotNull(apiInterval);
-		assertEquals(interval.getKey().getValue(), apiInterval.getIntervalId());
-		assertEquals(IntervalCodes.getCalConstName(interval.getCalConstant()), apiInterval.getCalConstant());
-		assertEquals(interval.getName(), apiInterval.getName());
 	}
 
 	@Test

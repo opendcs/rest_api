@@ -18,7 +18,6 @@ package org.opendcs.odcsapi.res;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletResponse;
@@ -83,16 +82,22 @@ public final class TimeSeriesResources extends OpenDcsResource
 	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
 	public Response getTimeSeriesRefs(@QueryParam("active") Boolean activeOnly) throws DbException
 	{
-		if (activeOnly == null)
-		{
-			activeOnly = false;
-		}
+		boolean filterActive = activeOnly != null && activeOnly;
 
 		TimeSeriesDb tsdb = getLegacyTimeseriesDB();
 		try (TimeSeriesDAI dai = tsdb.makeTimeSeriesDAO())
 		{
+			List<ApiTimeSeriesIdentifier> tsIds = idMap(dai.listTimeSeries());
+			List<ApiTimeSeriesIdentifier> returnList = new ArrayList<>();
+			for (ApiTimeSeriesIdentifier tsId : tsIds)
+			{
+				if (!filterActive || tsId.isActive())
+				{
+					returnList.add(tsId);
+				}
+			}
 			return Response.status(HttpServletResponse.SC_OK)
-					.entity(idMap(dai.listTimeSeriesActiveFilter( activeOnly)))
+					.entity(returnList)
 					.build();
 		}
 		catch (DbIoException ex)
@@ -383,7 +388,13 @@ public final class TimeSeriesResources extends OpenDcsResource
 	{
 		try (IntervalDAI dai = getLegacyTimeseriesDB().makeIntervalDAO())
 		{
-			List<ApiInterval> intervals = iMap(dai.getAllIntervals());
+			dai.loadAllIntervals();
+			List<ApiInterval> intervals = new ArrayList<>();
+			for (String code : dai.getValidIntervalCodes())
+			{
+				Interval intV = IntervalCodes.getInterval(code);
+				intervals.add(map(intV));
+			}
 			return Response.status(HttpServletResponse.SC_OK)
 					.entity(intervals).build();
 		}
@@ -391,16 +402,6 @@ public final class TimeSeriesResources extends OpenDcsResource
 		{
 			throw new DbException("Unable to retrieve intervals", ex);
 		}
-	}
-
-	static List<ApiInterval> iMap(List<Interval> intervals)
-	{
-		ArrayList<ApiInterval> ret = new ArrayList<>();
-		for(Interval intv : intervals)
-		{
-			ret.add(map(intv));
-		}
-		return ret;
 	}
 
 	@POST
@@ -484,22 +485,13 @@ public final class TimeSeriesResources extends OpenDcsResource
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
 	public Response deleteInterval(@QueryParam("intvid") Long intvId)
-			throws DbException, MissingParameterException
+			throws MissingParameterException
 	{
 		if (intvId == null)
 		{
 			throw new MissingParameterException("Missing required intvid parameter.");
 		}
-		try (IntervalDAI dai = getLegacyTimeseriesDB().makeIntervalDAO())
-		{
-			dai.deleteInterval(DbKey.createDbKey(intvId));
-			return Response.status(HttpServletResponse.SC_NO_CONTENT)
-					.entity("interval with ID=" + intvId + " deleted").build();
-		}
-		catch (DbIoException ex)
-		{
-			throw new DbException("Unable to delete interval", ex);
-		}
+		throw new UnsupportedOperationException("Deletion of intervals is not implemented");
 	}
 
 	@GET
