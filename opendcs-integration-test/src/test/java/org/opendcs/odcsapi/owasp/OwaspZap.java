@@ -65,7 +65,8 @@ public final class OwaspZap
 
 	private static void runOwaspZap(TomcatServer tomcat) throws Exception
 	{
-		printAllFilesInDirectory("./build/test-results/owasp_zap");
+		Path reportDir = Paths.get("./build/test-results/owasp_zap").toAbsolutePath().normalize();
+		Files.createDirectories(reportDir);
 		String restApiUrl = "http://host.testcontainers.internal:" + tomcat.getPort() + "/odcsapi";
 		String exec = String.format("zap-api-scan.py -I -t %s/open_api.json -f openapi -r zap_report.html -w zap_report.md"
 				+ " -O %s -f openapi -r zap_report.html -w zap_report.md", restApiUrl, restApiUrl);
@@ -76,7 +77,7 @@ public final class OwaspZap
 				.withExposedPorts(tomcat.getPort())
 				.withAccessToHost(true)
 				.withCommand("/bin/sh", "-c", exec)
-				.withFileSystemBind("./build/test-results/owasp_zap", "/zap/wrk"))
+				.withFileSystemBind(reportDir.toString(), "/zap/wrk"))
 		{
 			Testcontainers.exposeHostPorts(tomcat.getPort());
 			zapContainer.start();
@@ -93,18 +94,17 @@ public final class OwaspZap
 			{
 				Thread.sleep(200);
 			}
-			printAllFilesInDirectory("./build/test-results/owasp_zap");
+			printAllFilesInDirectory(reportDir);
 			
 			LOGGER.atInfo().log("OWASP ZAP scan complete");
 		}
 
 	}
 
-	private static void printAllFilesInDirectory(String directoryPath)
+	private static void printAllFilesInDirectory(Path directoryPath)
 	{
-		Path parentDir = Paths.get(directoryPath);
-		LOGGER.atInfo().log("Directory: " + parentDir.toAbsolutePath());
-		try(DirectoryStream<Path> stream = Files.newDirectoryStream(parentDir))
+		LOGGER.atInfo().log("Directory: " + directoryPath);
+		try(DirectoryStream<Path> stream = Files.newDirectoryStream(directoryPath))
 		{
 			for(Path path : stream)
 			{
