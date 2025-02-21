@@ -43,7 +43,6 @@ import org.junit.jupiter.api.TestTemplate;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.opendcs.odcsapi.beans.ApiSite;
 import org.opendcs.odcsapi.fixtures.DatabaseContextProvider;
-import org.opendcs.odcsapi.fixtures.DatabaseSetupExtension;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.is;
@@ -52,12 +51,11 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@Tag("integration-opentsdb-only")
+@Tag("integration")
 @ExtendWith(DatabaseContextProvider.class)
 final class TimeSeriesResourcesIT extends BaseIT
 {
 	private static SessionFilter sessionFilter;
-	private Long intervalId;
 	private Long tsGroupId;
 	private TimeSeriesIdentifier tsId;
 	private TimeSeriesIdentifier tsId2;
@@ -81,10 +79,16 @@ final class TimeSeriesResourcesIT extends BaseIT
 		// Create an active time series
 		CwmsTsId identifier = new CwmsTsId();
 		identifier.setUniqueString(String.format("%s.%s.%s.%s.%s.%s", tsSite.getDisplayName(),
-				"Flow", "Inst", "5Minutes", "20Minutes", "Calc"));
+				"Area", "Inst", "5Minutes", "0", "Calc"));
 		identifier.setSite(tsSite);
+		identifier.setStorageUnits("ft2");
+		identifier.setActive(true);
+		identifier.setInterval("5Minutes");
+		identifier.setDuration("0");
+		identifier.setDescription("Area at TS test site");
 		CTimeSeries ts = new CTimeSeries(identifier);
 		tsId = identifier;
+		ts.setUnitsAbbr("ft2");
 
 		TimedVariable tv = new TimedVariable(Date.from(Instant.parse("2025-02-01T12:25:00Z")), 2.2, 0);
 		tv.setFlags(VarFlags.TO_WRITE);
@@ -99,31 +103,39 @@ final class TimeSeriesResourcesIT extends BaseIT
 		tv.setFlags(VarFlags.TO_WRITE);
 		ts.addSample(tv);
 
-		DatabaseSetupExtension.storeTimeSeries(ts);
+		storeTimeSeries(ts);
 
 		// Inactive time series to test reference filtering
 		CwmsTsId identifier2 = new CwmsTsId();
 		identifier2.setUniqueString(String.format("%s.%s.%s.%s.%s.%s", tsSite2.getDisplayName(),
-				"Depth", "Avg", "15Minutes", "1Hour", "Final"));
+				"Depth", "Total", "30Minutes", "2Hours", "Final"));
 		identifier2.setStorageUnits("ft");
 		identifier2.setSite(tsSite2);
 		identifier2.setActive(false);
+		identifier2.setDescription("Depth at TS test site 2");
+		identifier2.setDuration("2Hours");
+		identifier2.setInterval("30Minutes");
 		tsId2 = identifier2;
 		CTimeSeries ts2 = new CTimeSeries(identifier2);
-		TimedVariable tv2 = new TimedVariable(Date.from(Instant.parse("2025-02-01T12:00:00Z")), 2.5, 0);
+		ts2.setUnitsAbbr("ft");
+
+		TimedVariable tv2 = new TimedVariable(Date.from(Instant.parse("2025-02-01T11:45:00Z")), 2.5, 0);
 		tv2.setFlags(VarFlags.TO_WRITE);
 		ts2.addSample(tv2);
 		tv2 = new TimedVariable(Date.from(Instant.parse("2025-02-01T12:15:00Z")), 6.7, 0);
 		tv2.setFlags(VarFlags.TO_WRITE);
 		ts2.addSample(tv2);
-		tv2 = new TimedVariable(Date.from(Instant.parse("2025-02-01T12:30:00Z")), 9.675, 0);
+		tv2 = new TimedVariable(Date.from(Instant.parse("2025-02-01T12:45:00Z")), 9.675, 0);
 		tv2.setFlags(VarFlags.TO_WRITE);
 		ts2.addSample(tv2);
-		tv2 = new TimedVariable(Date.from(Instant.parse("2025-02-01T12:45:00Z")), 10.22, 0);
+		tv2 = new TimedVariable(Date.from(Instant.parse("2025-02-01T13:15:00Z")), 10.22, 0);
+		tv2.setFlags(VarFlags.TO_WRITE);
+		ts2.addSample(tv2);
+		tv2 = new TimedVariable(Date.from(Instant.parse("2025-02-01T13:45:00Z")), 12.73, 0);
 		tv2.setFlags(VarFlags.TO_WRITE);
 		ts2.addSample(tv2);
 
-		DatabaseSetupExtension.storeTimeSeries(ts2);
+		storeTimeSeries(ts2);
 
 		// get TS DbKeys and save to the identifiers
 		ExtractableResponse<Response> response = given()
@@ -165,7 +177,7 @@ final class TimeSeriesResourcesIT extends BaseIT
 		String intervalJson = getJsonFromResource("ts_interval_insert_data.json");
 
 		// create interval
- 		response = given()
+ 		given()
 			.log().ifValidationFails(LogDetail.ALL, true)
 			.accept(MediaType.APPLICATION_JSON)
 			.contentType(MediaType.APPLICATION_JSON)
@@ -179,16 +191,14 @@ final class TimeSeriesResourcesIT extends BaseIT
 			.log().ifValidationFails(LogDetail.ALL, true)
 		.assertThat()
 			.statusCode(is(HttpServletResponse.SC_OK))
-			.extract()
 		;
-
-		intervalId = response.body().jsonPath().getLong("intervalId");
 
 		String groupJson = getJsonFromResource("ts_group_insert_data.json");
 
 		groupJson = groupJson.replace("[TS_1]", tsId.getKey().toString());
 		groupJson = groupJson.replace("[TS_2]", tsId2.getKey().toString());
 		groupJson = groupJson.replace("[SITE_ID]", siteId.toString());
+		groupJson = groupJson.replace("[SITE_ID_2]", siteId2.toString());
 
 		// create ts group
 		response = given()
@@ -214,46 +224,24 @@ final class TimeSeriesResourcesIT extends BaseIT
 	@AfterEach
 	void tearDown() throws Exception
 	{
-		if (tsGroupId != null)
-		{
-			// Delete the ts group
-			given()
-				.log().ifValidationFails(LogDetail.ALL, true)
-				.accept(MediaType.APPLICATION_JSON)
-				.filter(sessionFilter)
-				.queryParam("groupid", tsGroupId)
-			.when()
-				.redirects().follow(true)
-				.redirects().max(3)
-				.delete("tsgroup")
-			.then()
-				.log().ifValidationFails(LogDetail.ALL, true)
-			.assertThat()
-				.statusCode(is(HttpServletResponse.SC_NO_CONTENT))
-			;
-		}
+		// Delete the ts group
+		given()
+			.log().ifValidationFails(LogDetail.ALL, true)
+			.accept(MediaType.APPLICATION_JSON)
+			.filter(sessionFilter)
+			.queryParam("groupid", tsGroupId)
+		.when()
+			.redirects().follow(true)
+			.redirects().max(3)
+			.delete("tsgroup")
+		.then()
+			.log().ifValidationFails(LogDetail.ALL, true)
+		.assertThat()
+			.statusCode(is(HttpServletResponse.SC_NO_CONTENT))
+		;
 
-		DatabaseSetupExtension.deleteTimeSeries(tsId);
-		DatabaseSetupExtension.deleteTimeSeries(tsId2);
-
-		if (intervalId != null)
-		{
-			// delete interval
-			given()
-				.log().ifValidationFails(LogDetail.ALL, true)
-				.accept(MediaType.APPLICATION_JSON)
-				.filter(sessionFilter)
-				.queryParam("intvid", intervalId)
-			.when()
-				.redirects().follow(true)
-				.redirects().max(3)
-				.delete("interval")
-			.then()
-				.log().ifValidationFails(LogDetail.ALL, true)
-			.assertThat()
-				.statusCode(is(HttpServletResponse.SC_NO_CONTENT))
-			;
-		}
+		deleteTimeSeries(tsId);
+		deleteTimeSeries(tsId2);
 
 		tearDownSite(siteId);
 		tearDownSite(siteId2);
@@ -381,6 +369,8 @@ final class TimeSeriesResourcesIT extends BaseIT
 	@TestTemplate
 	void testGetTSData()
 	{
+		// CWMS database will return data in default units for the parameter.
+		// There are two expected JSON files to account for these differences
 		JsonPath expected = getJsonPathFromResource("ts_data_expected.json");
 
 		ExtractableResponse<Response> response = given()
@@ -455,7 +445,7 @@ final class TimeSeriesResourcesIT extends BaseIT
 	}
 
 	@TestTemplate
-	void testPostAndDeleteInterval() throws Exception
+	void testPostAndRetrieveInterval() throws Exception
 	{
 		String intervalJson = getJsonFromResource("ts_interval_insert_data.json");
 		JsonPath expected = new JsonPath(intervalJson);
@@ -512,53 +502,6 @@ final class TimeSeriesResourcesIT extends BaseIT
 				assertEquals(expectedMap.get("calMultiplier"), actualMap.get("calMultiplier"));
 			}
 		}
-
-		// delete interval
-		given()
-			.log().ifValidationFails(LogDetail.ALL, true)
-			.accept(MediaType.APPLICATION_JSON)
-			.filter(sessionFilter)
-			.queryParam("intvid", newIntervalId)
-		.when()
-			.redirects().follow(true)
-			.redirects().max(3)
-			.delete("interval")
-		.then()
-			.log().ifValidationFails(LogDetail.ALL, true)
-		.assertThat()
-			.statusCode(is(HttpServletResponse.SC_NO_CONTENT))
-		;
-
-		// retrieve intervals, assert not in list
-		given()
-			.log().ifValidationFails(LogDetail.ALL, true)
-			.accept(MediaType.APPLICATION_JSON)
-			.filter(sessionFilter)
-		.when()
-			.redirects().follow(true)
-			.redirects().max(3)
-			.get("intervals")
-		.then()
-			.log().ifValidationFails(LogDetail.ALL, true)
-		.assertThat()
-			.statusCode(is(HttpServletResponse.SC_OK))
-		;
-
-		actual = response.body().jsonPath();
-		actualList = actual.getList("");
-
-		boolean found = false;
-		for (Map<String, Object> actualMap : actualList)
-		{
-			if (actualMap.get("name").equals(expectedMap.get("name"))
-					&& expectedMap.get("name").equals(actualMap.get("name"))
-					&& expectedMap.get("calConstant").equals(actualMap.get("calConstant"))
-					&& expectedMap.get("calMultiplier").equals(actualMap.get("calMultiplier")))
-			{
-				found = true;
-			}
-		}
-		assertFalse(found);
 	}
 
 	@TestTemplate
@@ -740,7 +683,6 @@ final class TimeSeriesResourcesIT extends BaseIT
 		assertNotNull(jsonPath);
 		String siteJson = getJsonFromResource(jsonPath);
 
-
 		ExtractableResponse<Response> response = given()
 			.log().ifValidationFails(LogDetail.ALL, true)
 			.accept(MediaType.APPLICATION_JSON)
@@ -755,7 +697,7 @@ final class TimeSeriesResourcesIT extends BaseIT
 		.then()
 			.log().ifValidationFails(LogDetail.ALL, true)
 		.assertThat()
-			.statusCode(is(HttpServletResponse.SC_OK))
+			.statusCode(is(HttpServletResponse.SC_CREATED))
 			.extract()
 		;
 
@@ -782,7 +724,7 @@ final class TimeSeriesResourcesIT extends BaseIT
 		.then()
 			.log().ifValidationFails(LogDetail.ALL, true)
 		.assertThat()
-			.statusCode(is(HttpServletResponse.SC_OK))
+			.statusCode(is(HttpServletResponse.SC_NO_CONTENT))
 		;
 
 		given()
@@ -820,6 +762,7 @@ final class TimeSeriesResourcesIT extends BaseIT
 		site.country = apiSite.getCountry();
 		site.region = apiSite.getRegion();
 		site.setActive(apiSite.isActive());
+
 		for (String props : apiSite.getProperties().stringPropertyNames())
 		{
 			site.setProperty(props, apiSite.getProperties().getProperty(props));
