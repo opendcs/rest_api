@@ -26,6 +26,7 @@ import javax.ws.rs.core.MediaType;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import decodes.db.DatabaseException;
+import decodes.db.PlatformStatus;
 import decodes.db.ScheduleEntry;
 import decodes.db.ScheduleEntryStatus;
 import decodes.polling.DacqEvent;
@@ -34,6 +35,7 @@ import io.restassured.filter.log.LogDetail;
 import io.restassured.filter.session.SessionFilter;
 import io.restassured.path.json.JsonPath;
 import opendcs.dai.DacqEventDAI;
+import opendcs.dai.PlatformStatusDAI;
 import opendcs.dai.ScheduleEntryDAI;
 import org.apache.catalina.session.StandardSession;
 import org.opendcs.fixtures.configuration.Configuration;
@@ -233,6 +235,32 @@ public class BaseIT
 		catch (Throwable e)
 		{
 			throw new DatabaseException("Error deleting dacq event for specified platform", e);
+		}
+	}
+
+	public static void storePlatformStatus(PlatformStatus status) throws DatabaseException
+	{
+		Configuration currentConfig = DatabaseSetupExtension.getCurrentConfig();
+		try (PlatformStatusDAI dai = currentConfig.getTsdb().makePlatformStatusDAO())
+		{
+			dai.writePlatformStatus(status);
+		}
+		catch (Throwable e)
+		{
+			throw new DatabaseException("Error storing platform status", e);
+		}
+	}
+
+	public static void deletePlatformStatus(DbKey platformId) throws DatabaseException
+	{
+		Configuration currentConfig = DatabaseSetupExtension.getCurrentConfig();
+		try (PlatformStatusDAI dai = currentConfig.getTsdb().makePlatformStatusDAO())
+		{
+			dai.deletePlatformStatus(platformId);
+		}
+		catch (Throwable e)
+		{
+			throw new DatabaseException("Error deleting platform status", e);
 		}
 	}
 }
