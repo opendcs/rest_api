@@ -471,7 +471,7 @@ public final class PlatformResources extends OpenDcsResource
 			{
 				try (ScheduleEntryDAI dai = dbIo.makeScheduleEntryDAO())
 				{
-					ScheduleEntry scheduleEntry = dai.readScheduleEntryByStatusId(status.getLastScheduleEntryStatusId());
+					ScheduleEntry scheduleEntry = dai.readScheduleEntry(status.getLastScheduleEntryStatusId());
 					long routingId = scheduleEntry.getRoutingSpecId().getValue();
 					RoutingSpec rs = new RoutingSpec();
 					rs.setId(DbKey.createDbKey(routingId));
