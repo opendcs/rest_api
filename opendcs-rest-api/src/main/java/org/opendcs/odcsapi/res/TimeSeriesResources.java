@@ -167,7 +167,7 @@ public final class TimeSeriesResources extends OpenDcsResource
 		}
 		catch (NoSuchObjectException e)
 		{
-			throw new DatabaseItemNotFoundException("Time series with key=" + tsKey + " not found");
+			throw new DatabaseItemNotFoundException(String.format("Time series with key: %dnot found", tsKey));
 		}
 		catch (DbIoException ex)
 		{
@@ -281,12 +281,18 @@ public final class TimeSeriesResources extends OpenDcsResource
 			}
 		}
 
-		try (TimeSeriesDAI dai = getLegacyTimeseriesDB().makeTimeSeriesDAO())
+		TimeSeriesDb tsdb = getLegacyTimeseriesDB();
+		try (TimeSeriesDAI dai = tsdb.makeTimeSeriesDAO())
 		{
-			CTimeSeries cts = new CTimeSeries(DbKey.createDbKey(tsKey), null, null);
+			TimeSeriesIdentifier tsId = dai.getTimeSeriesIdentifier(DbKey.createDbKey(tsKey));
+			CTimeSeries cts = tsdb.makeTimeSeries(tsId);
 			dai.fillTimeSeries(cts, dStart, dEnd);
 			return Response.status(HttpServletResponse.SC_OK)
 					.entity(dataMap(cts, dStart, dEnd)).build();
+		}
+		catch (NoSuchObjectException ex)
+		{
+			throw new DatabaseItemNotFoundException("Time series with key=" + tsKey + " not found");
 		}
 		catch (DbIoException | BadTimeSeriesException ex)
 		{

@@ -405,6 +405,25 @@ final class TimeSeriesResourcesIT extends BaseIT
 			assertEquals(expectedData.get(i).get("value"), actualData.get(i).get("value"));
 			assertEquals(expectedData.get(i).get("flags"), actualData.get(i).get("flags"));
 		}
+
+		// Test with an invalid key
+		given()
+			.log().ifValidationFails(LogDetail.ALL, true)
+			.accept(MediaType.APPLICATION_JSON)
+			.filter(sessionFilter)
+			.queryParam("key", DbKey.NullKey.getValue())
+			.queryParam("start", "2000/365/12:00:00")
+			.queryParam("end", "2030/360/12:45:00")
+		.when()
+			.redirects().follow(true)
+			.redirects().max(3)
+			.get("tsdata")
+		.then()
+			.log().ifValidationFails(LogDetail.ALL, true)
+		.assertThat()
+			.statusCode(is(HttpServletResponse.SC_NOT_FOUND))
+		;
+
 	}
 
 	@TestTemplate
