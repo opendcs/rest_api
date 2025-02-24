@@ -50,7 +50,7 @@ import static io.restassured.RestAssured.given;
 import static java.util.stream.Collectors.joining;
 import static org.hamcrest.Matchers.is;
 
-class BaseIT
+public class BaseIT
 {
 	protected static String authHeader = null;
 
@@ -186,27 +186,27 @@ class BaseIT
 	public static void storeScheduleEntryStatus(ScheduleEntryStatus status) throws DatabaseException
 	{
 		Configuration currentConfig = DatabaseSetupExtension.getCurrentConfig();
-		try (ScheduleEntryDAI dai = currentConfig.getTsdb().makeScheduleEntryDAO())
+		try (ScheduleEntryDAI dai = currentConfig.getDecodesDatabase().getDbIo().makeScheduleEntryDAO())
 		{
 			dai.writeScheduleStatus(status);
 		}
-		catch (Throwable ex)
+		catch (Throwable e)
 		{
-			throw new DatabaseException("Error storing schedule entry status", ex);
+			throw new DatabaseException("Error storing schedule entry status", e);
 		}
 	}
 
 	public static void deleteScheduleEntryStatus(DbKey statusId) throws DatabaseException
 	{
 		Configuration currentConfig = DatabaseSetupExtension.getCurrentConfig();
-		try (ScheduleEntryDAI dai = currentConfig.getTsdb().makeScheduleEntryDAO())
+		try (ScheduleEntryDAI dai = currentConfig.getDecodesDatabase().getDbIo().makeScheduleEntryDAO())
 		{
 			ScheduleEntry entry = new ScheduleEntry(statusId);
 			dai.deleteScheduleStatusFor(entry);
 		}
-		catch (Throwable ex)
+		catch (Throwable e)
 		{
-			throw new DatabaseException("Error deleting schedule entry status", ex);
+			throw new DatabaseException("Error deleting schedule entry status", e);
 		}
 	}
 
