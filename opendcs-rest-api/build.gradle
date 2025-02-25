@@ -89,7 +89,6 @@ task extractWebJars(type: Copy) {
     from zipTree(configurations.webjars.singleFile)
 
     into file("${project.layout.getBuildDirectory().get().getAsFile().toString()}/resources/main/swaggerui")
-    includeEmptyDirs false
     eachFile {
         path -= ~/^.+?\/.+?\/.+?\/.+?\/.+?\//
     }

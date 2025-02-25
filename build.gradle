@@ -16,7 +16,7 @@
 buildscript {
     repositories {
         maven {
-            url "https://plugins.gradle.org/m2/"
+            url = "https://plugins.gradle.org/m2/"
         }
     }
     dependencies {
@@ -51,9 +51,9 @@ subprojects {
     if (JavaVersion.current() != JavaVersion.VERSION_1_8) {
         sonarqube {
             properties {
-                property "sonar.sources", "src/main/java"
-                property "sonar.tests", "src/test/java"
-                property 'sonar.coverage.jacoco.xmlReportPaths', "${buildDir}/reports/jacoco/test/jacocoTestReport.xml"
+                sonar.sources = "src/main/java"
+                sonar.tests = "src/test/java"
+                sonar.coverage.jacoco.xmlReportPaths = layout.buildDirectory.file("reports/jacoco/test/jacocoTestReport.xml").getAsFile()
             }
         }
     }
@@ -61,12 +61,12 @@ subprojects {
 if (JavaVersion.current() != JavaVersion.VERSION_1_8) {
     sonar {
         properties {
-            property "sonar.projectKey", "opendcs_rest_api"
-            property "sonar.organization", "opendcs"
-            property "sonar.host.url", "https://sonarcloud.io"
-            property "sonar.pullrequest.provider", "GitHub"
-            property "sonar.pullrequest.github.repository", "opendcs/rest_api"
-            property "sonar.projectVersion", sonarVersion()
+            sonar.projectKey = "opendcs_rest_api"
+            sonar.organization = "opendcs"
+            sonar.host.url = "https://sonarcloud.io"
+            sonar.pullrequest.provider = "GitHub"
+            sonar.pullrequest.github.repository = "opendcs/rest_api"
+            sonar.projectVersion = sonarVersion()
         }
     }
     project(":opendcs-integration-test") {
@@ -79,7 +79,7 @@ if (JavaVersion.current() != JavaVersion.VERSION_1_8) {
 ext.sonarVersion = {
     def stdout = new ByteArrayOutputStream()
     exec {
-        commandLine 'git', 'describe', '--tags', '--abbrev=0', "--always"
+        commandLine = ['git', 'describe', '--tags', '--abbrev=0', "--always"]
         standardOutput = stdout
     }
     return stdout.toString().trim() + "+"

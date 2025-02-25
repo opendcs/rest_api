@@ -114,7 +114,7 @@ tasks.register('run', JavaExec) {
     def port = project.findProperty("opendcs.tomcat.port") ?: "7000"
     def databaseType = project.findProperty("opendcs.test.integration.db") ?: "OpenDCS-Postgres"
     def tomcatDir = layout.buildDirectory.file("tomcat").get()
-    args tomcatDir, port, restWar, guiWar, databaseType
+    args = [tomcatDir, port, restWar, guiWar, databaseType]
 }
 
 tasks.register('owaspZap', JavaExec) {
@@ -140,5 +140,5 @@ tasks.register('owaspZap', JavaExec) {
     def port = project.findProperty("opendcs.tomcat.port") ?: "8910"
     def databaseType = project.findProperty("opendcs.test.integration.db") ?: "OpenDCS-Postgres"
     def tomcatDir = layout.buildDirectory.file("tomcat").get()
-    args tomcatDir, port, restWar, guiWar, databaseType
+    args = [tomcatDir, port, restWar, guiWar, databaseType]
 }
