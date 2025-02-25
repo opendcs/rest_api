@@ -164,14 +164,11 @@ tasks.register('integrationTestOpenTSDB', Test) {
     shouldRunAfter test
     dependsOn war
     dependsOn generateConfig
-    dependsOn downloadAndUnzipInstaller
     jvmArgs += "-DwarContext=/opendcs-rest-api"
     jvmArgs += "-Djava.util.logging.config.file=$projectDir/test/resources/logging.properties"
     jvmArgs += "-Dorg.apache.tomcat.util.digester.PROPERTY_SOURCE=org.apache.tomcat.util.digester.EnvironmentPropertySource"
     jvmArgs += "-Dcatalina.base=${layout.buildDirectory.file("tomcat")}"
     jvmArgs += "-Dopendcs.test.integration.db=OpenDCS-Postgres"
-    def outputDir = downloadAndUnzipInstaller.outputs.files.singleFile
-    systemProperties.put("DCSTOOL_HOME", outputDir)
     finalizedBy integrationTestReportOpenTSDB
 }
 
@@ -189,40 +186,12 @@ tasks.register('integrationTestCWMS', Test) {
     shouldRunAfter test
     dependsOn war
     dependsOn generateConfig
-    dependsOn downloadAndUnzipInstaller
     jvmArgs += "-DwarContext=/opendcs-rest-api"
     jvmArgs += "-Djava.util.logging.config.file=$projectDir/test/resources/logging.properties"
     jvmArgs += "-Dorg.apache.tomcat.util.digester.PROPERTY_SOURCE=org.apache.tomcat.util.digester.EnvironmentPropertySource"
     jvmArgs += "-Dcatalina.base=${layout.buildDirectory.file("tomcat")}"
     jvmArgs += "-Dopendcs.test.integration.db=CWMS-Oracle"
-    def outputDir = downloadAndUnzipInstaller.outputs.files.singleFile
-    systemProperties.put("DCSTOOL_HOME", outputDir)
     finalizedBy integrationTestReportCWMS
-}
-
-
-task downloadAndUnzipInstaller {
-    def zipUrl = 'https://github.com/opendcs/opendcs/releases/download/7.0.14/opendcs-7.0.14.zip'
-    def outputDir = file("${buildDir}/opendcs-install")
-    def zipFile = file("${buildDir}/download/opendcs-install.zip")
-
-    outputs.dir(new File(outputDir, "opendcs-7.0.14"))
-
-    doLast {
-        if(!zipFile.exists()) {
-            outputDir.mkdirs()
-            zipFile.parentFile.mkdirs()
-            new URL(zipUrl).withInputStream { inp ->
-                zipFile.withOutputStream { out -> out << inp }
-            }
-            copy {
-                //Skip the root dir as it is contains the version number which makes it hard
-                //to work with through automation
-                from zipTree(zipFile)
-                into outputDir
-            }
-        }
-    }
 }
 
 test {

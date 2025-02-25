@@ -103,7 +103,6 @@ tasks.register('run', JavaExec) {
     }
     dependsOn(':opendcs-rest-api:war', ':opendcs-web-client:war')
     dependsOn generateConfig
-    dependsOn downloadAndUnzipInstaller
 
 
     mainClass = "org.opendcs.odcsapi.tomcat.TomcatServer"
@@ -116,8 +115,6 @@ tasks.register('run', JavaExec) {
     def databaseType = project.findProperty("opendcs.test.integration.db") ?: "OpenDCS-Postgres"
     def tomcatDir = layout.buildDirectory.file("tomcat").get()
     args tomcatDir, port, restWar, guiWar, databaseType
-    def outputDir = downloadAndUnzipInstaller.outputs.files.singleFile
-    systemProperties.put("DCSTOOL_HOME", outputDir)
 }
 
 tasks.register('owaspZap', JavaExec) {
@@ -132,7 +129,6 @@ tasks.register('owaspZap', JavaExec) {
     }
     dependsOn(':opendcs-rest-api:war', ':opendcs-web-client:war')
     dependsOn generateConfig
-    dependsOn downloadAndUnzipInstaller
 
 
     mainClass = "org.opendcs.odcsapi.owasp.OwaspZap"
@@ -145,31 +141,4 @@ tasks.register('owaspZap', JavaExec) {
     def databaseType = project.findProperty("opendcs.test.integration.db") ?: "OpenDCS-Postgres"
     def tomcatDir = layout.buildDirectory.file("tomcat").get()
     args tomcatDir, port, restWar, guiWar, databaseType
-    def outputDir = downloadAndUnzipInstaller.outputs.files.singleFile
-    systemProperties.put("DCSTOOL_HOME", outputDir)
-}
-
-
-tasks.register('downloadAndUnzipInstaller') {
-    def zipUrl = 'https://github.com/opendcs/opendcs/releases/download/7.0.14/opendcs-7.0.14.zip'
-    def outputDir = file("${buildDir}/opendcs-install")
-    def zipFile = file("${buildDir}/download/opendcs-install.zip")
-
-    outputs.dir(new File(outputDir, "opendcs-7.0.14"))
-
-    doLast {
-        if (!zipFile.exists()) {
-            outputDir.mkdirs()
-            zipFile.parentFile.mkdirs()
-            new URL(zipUrl).withInputStream { inp ->
-                zipFile.withOutputStream { out -> out << inp }
-            }
-            copy {
-                //Skip the root dir as it is contains the version number which makes it hard
-                //to work with through automation
-                from zipTree(zipFile)
-                into outputDir
-            }
-        }
-    }
 }
