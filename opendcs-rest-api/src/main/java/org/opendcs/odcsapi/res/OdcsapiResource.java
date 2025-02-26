@@ -31,6 +31,10 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.media.Content;
+
 import decodes.tsdb.DbIoException;
 import decodes.tsdb.TimeSeriesDb;
 import org.opendcs.database.api.OpenDcsDatabase;
@@ -52,6 +56,14 @@ public final class OdcsapiResource extends OpenDcsResource
 	@Path("tsdb_properties")
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
+	@Operation(
+			summary = "Get TSDB Properties",
+			description = "Fetches properties for the Time Series Database (TSDB).",
+			responses = {
+					@ApiResponse(responseCode = "200", description = "TSDB properties successfully retrieved."),
+					@ApiResponse(responseCode = "500", description = "Error reading TSDB properties.", content = @Content)
+			}
+	)
 	public Response getTsdbProperties() throws DbException
 	{
 		try
@@ -78,6 +90,15 @@ public final class OdcsapiResource extends OpenDcsResource
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
+	@Operation(
+			summary = "Create or Update TSDB Properties",
+			description = "Allows updating properties for the Time Series Database (TSDB).",
+			responses = {
+					@ApiResponse(responseCode = "200", description = "TSDB properties successfully updated."),
+					@ApiResponse(responseCode = "400", description = "Invalid properties provided.", content = @Content),
+					@ApiResponse(responseCode = "500", description = "Error writing TSDB properties.", content = @Content)
+			}
+	)
 	public Response postTsdbProperties(Properties props) throws DbException
 	{
 		try
@@ -96,6 +117,15 @@ public final class OdcsapiResource extends OpenDcsResource
 	@Path("propspecs")
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
+	@Operation(
+			summary = "Get Property Specifications",
+			description = "Fetches property specifications for a specific class.",
+			responses = {
+					@ApiResponse(responseCode = "200", description = "Property specifications successfully retrieved."),
+					@ApiResponse(responseCode = "400", description = "Missing or invalid class name.", content = @Content),
+					@ApiResponse(responseCode = "500", description = "Error fetching property specifications.", content = @Content)
+			}
+	)
 	public Response getPropSpecs(@QueryParam("class") String className)
 			throws WebAppException
 	{
@@ -112,6 +142,15 @@ public final class OdcsapiResource extends OpenDcsResource
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
+	@Operation(
+			summary = "Execute Decode Script",
+			description = "Executes a decoding script on the provided raw message.",
+			responses = {
+					@ApiResponse(responseCode = "200", description = "Decoding successfully completed."),
+					@ApiResponse(responseCode = "400", description = "Missing or invalid script name.", content = @Content),
+					@ApiResponse(responseCode = "500", description = "Error executing decoding script.", content = @Content)
+			}
+	)
 	public Response postDecode(@QueryParam("script") String scriptName, DecodeRequest request)
 			throws WebAppException, DbException
 	{

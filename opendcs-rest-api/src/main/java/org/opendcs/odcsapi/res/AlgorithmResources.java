@@ -39,6 +39,10 @@ import decodes.tsdb.NoSuchObjectException;
 import decodes.tsdb.ScriptType;
 import decodes.tsdb.TsdbException;
 import decodes.tsdb.compedit.AlgorithmInList;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import opendcs.dai.AlgorithmDAI;
 import org.opendcs.odcsapi.beans.ApiAlgoParm;
 import org.opendcs.odcsapi.beans.ApiAlgorithm;
@@ -60,6 +64,14 @@ public final class AlgorithmResources extends OpenDcsResource
 	@Path("algorithmrefs")
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed(ApiConstants.ODCS_API_GUEST)
+	@Operation(
+			summary = "Retrieve all algorithm references",
+			description = "Fetches a list of available algorithm references with essential information.",
+			responses = {
+					@ApiResponse(responseCode = "200", description = "Successful retrieval of algorithm references"),
+					@ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
+			}
+	)
 	public Response getAlgorithmRefs() throws DbIoException
 	{
 		try(AlgorithmDAI dai = getLegacyTimeseriesDB().makeAlgorithmDAO())
@@ -89,7 +101,19 @@ public final class AlgorithmResources extends OpenDcsResource
 	@Path("algorithm")
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed(ApiConstants.ODCS_API_GUEST)
-	public Response getAlgorithm(@QueryParam("algorithmid") Long algoId)
+	@Operation(
+			summary = "Retrieve an algorithm by ID",
+			description = "Fetches the details of an algorithm based on the provided algorithm ID.",
+			responses = {
+					@ApiResponse(responseCode = "200", description = "Successful retrieval of the algorithm"),
+					@ApiResponse(responseCode = "400", description = "Invalid or missing algorithm ID", content = @Content),
+					@ApiResponse(responseCode = "404", description = "Algorithm not found", content = @Content),
+					@ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
+			}
+	)
+	public Response getAlgorithm(
+			@Parameter(description = "ID of the algorithm to retrieve", required = true)
+			@QueryParam("algorithmid") Long algoId)
 			throws WebAppException, DbIoException
 	{
 		if(algoId == null)
@@ -153,7 +177,17 @@ public final class AlgorithmResources extends OpenDcsResource
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
-	public Response postAlgorithm(ApiAlgorithm algo) throws DbIoException
+	@Operation(
+			summary = "Create or update an algorithm",
+			description = "Adds a new algorithm or updates an existing one based on the input data.",
+			responses = {
+					@ApiResponse(responseCode = "201", description = "Algorithm created or updated successfully"),
+					@ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
+			}
+	)
+	public Response postAlgorithm(
+			@Parameter(description = "Algorithm object to create or update", required = true)
+			ApiAlgorithm algo) throws DbIoException
 	{
 		try(AlgorithmDAI dai = getLegacyTimeseriesDB().makeAlgorithmDAO())
 		{
@@ -196,8 +230,18 @@ public final class AlgorithmResources extends OpenDcsResource
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
-	public Response deleteAlgorithm(@QueryParam("algorithmid") Long algorithmId)
-			throws TsdbException, MissingParameterException
+	@Operation(
+			summary = "Delete an algorithm by ID",
+			description = "Deletes an algorithm based on the provided algorithm ID.",
+			responses = {
+					@ApiResponse(responseCode = "204", description = "Algorithm deleted successfully"),
+					@ApiResponse(responseCode = "404", description = "Algorithm not found", content = @Content),
+					@ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
+			}
+	)
+	public Response deleteAlgorithm(
+			@Parameter(description = "ID of the algorithm to delete", required = true)
+			@QueryParam("algorithmid") Long algorithmId) throws TsdbException, MissingParameterException
 	{
 		if (algorithmId == null)
 		{

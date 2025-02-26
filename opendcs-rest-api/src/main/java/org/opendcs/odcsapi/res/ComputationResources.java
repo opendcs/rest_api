@@ -43,6 +43,9 @@ import decodes.tsdb.DbIoException;
 import decodes.tsdb.NoSuchObjectException;
 import decodes.tsdb.TsGroup;
 import decodes.tsdb.compedit.ComputationInList;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import opendcs.dai.ComputationDAI;
 import org.opendcs.odcsapi.beans.ApiCompParm;
 import org.opendcs.odcsapi.beans.ApiComputation;
@@ -63,14 +66,23 @@ public final class ComputationResources extends OpenDcsResource
 	@Path("computationrefs")
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
+	@Operation(
+			summary = "Retrieve Computation References",
+			description = "Returns a list of computation references filtered by various criteria such as site, algorithm, datatype, group, and interval.",
+			responses = {
+					@ApiResponse(responseCode = "200", description = "Successfully retrieved computation references"),
+					@ApiResponse(responseCode = "404", description = "No computations found matching the filter criteria", content = @Content),
+					@ApiResponse(responseCode = "500", description = "Unable to retrieve computation references", content = @Content)
+			}
+	)
 	public Response getComputationRefs(@QueryParam("site") String site,
-			@QueryParam("algorithm") String algorithm,
-			@QueryParam("datatype") String datatype,
-			@QueryParam("group") String group,
-			@QueryParam("process") String process,
-			@QueryParam("enabled") Boolean enabled,
-			@QueryParam("interval") String interval)
-			throws DbException, WebAppException
+		@QueryParam("algorithm") String algorithm,
+		@QueryParam("datatype") String datatype,
+		@QueryParam("group") String group,
+		@QueryParam("process") String process,
+		@QueryParam("enabled") Boolean enabled,
+		@QueryParam("interval") String interval)
+		throws DbException, WebAppException
 	{
 		try (ComputationDAI dai = getLegacyTimeseriesDB().makeComputationDAO())
 		{
@@ -156,6 +168,16 @@ public final class ComputationResources extends OpenDcsResource
 	@Path("computation")
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
+	@Operation(
+			summary = "Retrieve Computation by ID",
+			description = "Fetches a computation object based on its unique ID.",
+			responses = {
+					@ApiResponse(responseCode = "200", description = "Successfully retrieved computation object"),
+					@ApiResponse(responseCode = "400", description = "Missing required computationid parameter", content = @Content),
+					@ApiResponse(responseCode = "404", description = "Computation with the specified ID not found", content = @Content),
+					@ApiResponse(responseCode = "500", description = "Unable to retrieve computation by ID", content = @Content)
+			}
+	)
 	public Response getComputation(@QueryParam("computationid") Long compId)
 			throws WebAppException, DbException
 	{
@@ -278,6 +300,14 @@ public final class ComputationResources extends OpenDcsResource
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
+	@Operation(
+			summary = "Create or Update Computation",
+			description = "Creates a new computation or updates an existing one based on the provided payload.",
+			responses = {
+					@ApiResponse(responseCode = "201", description = "Successfully created or updated the computation"),
+					@ApiResponse(responseCode = "500", description = "Unable to store computation", content = @Content)
+			}
+	)
 	public Response postComputation(ApiComputation comp)
 			throws DbException
 	{
@@ -392,6 +422,15 @@ public final class ComputationResources extends OpenDcsResource
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
+	@Operation(
+			summary = "Delete Computation by ID",
+			description = "Deletes a computation based on its unique ID.",
+			responses = {
+					@ApiResponse(responseCode = "204", description = "Successfully deleted the computation"),
+					@ApiResponse(responseCode = "400", description = "Missing required computationid parameter", content = @Content),
+					@ApiResponse(responseCode = "500", description = "Unable to delete computation by ID", content = @Content)
+			}
+	)
 	public Response deleteComputation(@QueryParam("computationid") Long computationId)
 			throws DbException, WebAppException
 	{

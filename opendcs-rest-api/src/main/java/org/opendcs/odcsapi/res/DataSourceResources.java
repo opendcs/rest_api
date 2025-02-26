@@ -33,6 +33,10 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+
 import decodes.db.DataSource;
 import decodes.db.DataSourceList;
 import decodes.db.DatabaseException;
@@ -61,6 +65,14 @@ public class DataSourceResources extends OpenDcsResource
 	@Path("datasourcerefs")
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
+	@Operation(
+			summary = "Get Data Source References",
+			description = "Fetches a list of references to existing data sources.",
+			responses = {
+					@ApiResponse(responseCode = "200", description = "Successfully retrieved data source references"),
+					@ApiResponse(responseCode = "500", description = "Database error occurred", content = @Content)
+			}
+	)
 	public Response getDataSourceRefs() throws DbException
 	{
 		DatabaseIO dbIo = getLegacyDatabase();
@@ -114,6 +126,16 @@ public class DataSourceResources extends OpenDcsResource
 	@Path("datasource")
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
+	@Operation(
+			summary = "Get Data Source Details",
+			description = "Fetches detailed information about a specific data source using its ID.",
+			responses = {
+					@ApiResponse(responseCode = "200", description = "Successfully retrieved data source details"),
+					@ApiResponse(responseCode = "400", description = "Missing or invalid datasourceid parameter", content = @Content),
+					@ApiResponse(responseCode = "404", description = "Data source not found", content = @Content),
+					@ApiResponse(responseCode = "500", description = "Database error occurred", content = @Content)
+			}
+	)
 	public Response getDataSource(@QueryParam("datasourceid") Long dataSourceId)
 		throws WebAppException, DbException
 	{
@@ -213,7 +235,16 @@ public class DataSourceResources extends OpenDcsResource
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
-	public Response postDatasource(ApiDataSource datasource) throws DbException
+	@Operation(
+			summary = "Create or Update Data Source",
+			description = "Creates a new data source or updates an existing one with the provided details.",
+			responses = {
+					@ApiResponse(responseCode = "201", description = "Successfully created or updated the data source"),
+					@ApiResponse(responseCode = "400", description = "Invalid data source information", content = @Content),
+					@ApiResponse(responseCode = "500", description = "Database error occurred", content = @Content)
+			}
+	)
+	public Response postDatasource(ApiDataSource datasource) throws DbException, MissingParameterException
 	{
 		DatabaseIO dbIo = getLegacyDatabase();
 		try
@@ -278,6 +309,17 @@ public class DataSourceResources extends OpenDcsResource
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
+	@Operation(
+			summary = "Delete Data Source",
+			description = "Deletes the specified data source by its ID.",
+			responses = {
+					@ApiResponse(responseCode = "204", description = "Successfully deleted the data source"),
+					@ApiResponse(responseCode = "400", description = "Invalid or missing datasourceid parameter", content = @Content),
+					@ApiResponse(responseCode = "404", description = "Data source not found", content = @Content),
+					@ApiResponse(responseCode = "405", description = "Data source cannot be deleted as it is in use", content = @Content),
+					@ApiResponse(responseCode = "500", description = "Database error occurred", content = @Content)
+			}
+	)
 	public Response deleteDatasource(@QueryParam("datasourceid") Long datasourceId)
 			throws DbException, WebAppException
 	{

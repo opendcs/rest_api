@@ -15,6 +15,10 @@
 
 package org.opendcs.odcsapi.res;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.media.Content;
+import java.util.logging.Logger;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -24,7 +28,6 @@ import java.util.Map;
 import java.util.TimeZone;
 import java.util.Vector;
 import java.util.stream.Collectors;
-
 import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -54,7 +57,6 @@ import decodes.polling.DacqEvent;
 import decodes.sql.DbKey;
 import decodes.tsdb.DbIoException;
 import decodes.tsdb.IntervalCodes;
-import ilex.util.Logger;
 import opendcs.dai.DacqEventDAI;
 import opendcs.dai.IntervalDAI;
 import opendcs.dai.ScheduleEntryDAI;
@@ -84,6 +86,14 @@ public final class RoutingResources extends OpenDcsResource
 	@Path("routingrefs")
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
+	@Operation(
+			summary = "Get Routing References",
+			description = "Retrieves a list of all routing references.",
+			responses = {
+					@ApiResponse(responseCode = "200", description = "Successfully retrieved routing references"),
+					@ApiResponse(responseCode = "500", description = "Database error occurred", content = @Content)
+			}
+	)
 	public Response getRoutingRefs() throws DbException
 	{
 		DatabaseIO dbIo = getLegacyDatabase();
@@ -133,6 +143,15 @@ public final class RoutingResources extends OpenDcsResource
 	@Path("routing")
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
+	@Operation(
+			summary = "Get Routing",
+			description = "Fetches a specific routing object based on the provided routing ID.",
+			responses = {
+					@ApiResponse(responseCode = "200", description = "Successfully retrieved routing object"),
+					@ApiResponse(responseCode = "400", description = "Missing or invalid routing ID parameter", content = @Content),
+					@ApiResponse(responseCode = "500", description = "Database error occurred", content = @Content)
+			}
+	)
 	public Response getRouting(@QueryParam("routingid") Long routingId)
 			throws WebAppException, DbException
 	{
@@ -204,6 +223,15 @@ public final class RoutingResources extends OpenDcsResource
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
+	@Operation(
+			summary = "Post Routing",
+			description = "Creates or updates a routing using the provided routing object.",
+			responses = {
+					@ApiResponse(responseCode = "200", description = "Successfully created or updated the routing"),
+					@ApiResponse(responseCode = "400", description = "Invalid routing data provided", content = @Content),
+					@ApiResponse(responseCode = "500", description = "Database error occurred", content = @Content)
+			}
+	)
 	public Response postRouting(ApiRouting routing)
 			throws DbException
 	{
@@ -290,6 +318,15 @@ public final class RoutingResources extends OpenDcsResource
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
+	@Operation(
+			summary = "Delete Routing",
+			description = "Deletes a specific routing based on the provided routing ID.",
+			responses = {
+					@ApiResponse(responseCode = "200", description = "Successfully deleted routing"),
+					@ApiResponse(responseCode = "400", description = "Invalid routing ID provided", content = @Content),
+					@ApiResponse(responseCode = "500", description = "Database error occurred", content = @Content)
+			}
+	)
 	public Response deleteRouting(@QueryParam("routingid") Long routingId)
 			throws DbException, WebAppException
 	{
@@ -321,6 +358,14 @@ public final class RoutingResources extends OpenDcsResource
 	@Path("schedulerefs")
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
+	@Operation(
+			summary = "Get Schedule References",
+			description = "Retrieves a list of all schedule references.",
+			responses = {
+					@ApiResponse(responseCode = "200", description = "Successfully retrieved schedule references"),
+					@ApiResponse(responseCode = "500", description = "Database error occurred", content = @Content)
+			}
+	)
 	public Response getScheduleRefs()
 			throws DbException
 	{
@@ -363,8 +408,17 @@ public final class RoutingResources extends OpenDcsResource
 	@Path("schedule")
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
+	@Operation(
+			summary = "Get Schedule",
+			description = "Fetches a specific schedule object based on the provided schedule ID.",
+			responses = {
+					@ApiResponse(responseCode = "200", description = "Successfully retrieved schedule object"),
+					@ApiResponse(responseCode = "400", description = "Missing or invalid schedule ID parameter", content = @Content),
+					@ApiResponse(responseCode = "500", description = "Database error occurred", content = @Content)
+			}
+	)
 	public Response getSchedule(@QueryParam("scheduleid") Long scheduleId)
-			throws WebAppException, DbException
+		throws WebAppException, DbException
 	{
 		if (scheduleId == null)
 		{
@@ -393,6 +447,15 @@ public final class RoutingResources extends OpenDcsResource
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
+	@Operation(
+			summary = "Post Schedule",
+			description = "Creates or updates a schedule using the provided schedule object.",
+			responses = {
+					@ApiResponse(responseCode = "200", description = "Successfully created or updated the schedule"),
+					@ApiResponse(responseCode = "400", description = "Invalid schedule data provided", content = @Content),
+					@ApiResponse(responseCode = "500", description = "Database error occurred", content = @Content)
+			}
+	)
 	public Response postSchedule(ApiScheduleEntry schedule)
 			throws DbException
 	{
@@ -480,6 +543,15 @@ public final class RoutingResources extends OpenDcsResource
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
+	@Operation(
+			summary = "Delete Schedule",
+			description = "Deletes a specific schedule based on the provided schedule ID.",
+			responses = {
+					@ApiResponse(responseCode = "200", description = "Successfully deleted schedule"),
+					@ApiResponse(responseCode = "400", description = "Invalid schedule ID provided", content = @Content),
+					@ApiResponse(responseCode = "500", description = "Database error occurred", content = @Content)
+			}
+	)
 	public Response deleteSchedule(@QueryParam("scheduleid") Long scheduleId)
 			throws DbException, WebAppException
 	{
@@ -505,6 +577,14 @@ public final class RoutingResources extends OpenDcsResource
 	@Path("routingstatus")
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
+	@Operation(
+			summary = "Get Routing Status",
+			description = "Retrieves the status of various routings.",
+			responses = {
+					@ApiResponse(responseCode = "200", description = "Successfully retrieved routing statistics"),
+					@ApiResponse(responseCode = "500", description = "Database error occurred", content = @Content)
+			}
+	)
 	public Response getRoutingStats()
 			throws DbException
 	{
@@ -569,6 +649,15 @@ public final class RoutingResources extends OpenDcsResource
 	@Path("routingexecstatus")
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
+	@Operation(
+			summary = "Get Routing Execution Status",
+			description = "Fetches the execution status of a specific routing based on the provided schedule entry ID.",
+			responses = {
+					@ApiResponse(responseCode = "200", description = "Successfully retrieved routing execution status"),
+					@ApiResponse(responseCode = "400", description = "Missing or invalid schedule entry ID parameter", content = @Content),
+					@ApiResponse(responseCode = "500", description = "Database error occurred", content = @Content)
+			}
+	)
 	public Response getRoutingExecStatus(@QueryParam("scheduleentryid") Long scheduleEntryId)
 			throws WebAppException, DbException
 	{
@@ -630,6 +719,15 @@ public final class RoutingResources extends OpenDcsResource
 	@Path("dacqevents")
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
+	@Operation(
+			summary = "Get Data Acquisition Events",
+			description = "Retrieves data acquisition events based on various filter criteria, such as app ID, routing execution ID, and platform ID.",
+			responses = {
+					@ApiResponse(responseCode = "200", description = "Successfully retrieved data acquisition events"),
+					@ApiResponse(responseCode = "400", description = "Invalid input parameters", content = @Content),
+					@ApiResponse(responseCode = "500", description = "Database error occurred", content = @Content)
+			}
+	)
 	public Response getDacqEvents(@QueryParam("appid") Long appId, @QueryParam("routingexecid") Long routingExecId,
 			@QueryParam("platformid") Long platformId, @QueryParam("backlog") String backlog)
 			throws DbException, MissingParameterException

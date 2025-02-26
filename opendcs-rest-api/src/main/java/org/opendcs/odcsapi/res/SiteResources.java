@@ -36,6 +36,10 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+
 import decodes.db.DatabaseException;
 import decodes.db.Site;
 import decodes.db.SiteList;
@@ -62,6 +66,14 @@ public final class SiteResources extends OpenDcsResource
 	@Path("siterefs")
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
+	@Operation(
+			summary = "Retrieve site references",
+			description = "Fetch a list of site references available in the database, including basic metadata.",
+			responses = {
+					@ApiResponse(responseCode = "200", description = "Successfully retrieved site references"),
+					@ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
+			}
+	)
 	public Response getSiteRefs()
 			throws DbException
 	{
@@ -105,6 +117,16 @@ public final class SiteResources extends OpenDcsResource
 	@Path("site")
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
+	@Operation(
+			summary = "Retrieve a site by ID",
+			description = "Fetch a detailed site object using its unique ID, including full metadata and properties.",
+			responses = {
+					@ApiResponse(responseCode = "200", description = "Successfully fetched site details"),
+					@ApiResponse(responseCode = "400", description = "Missing or invalid site ID parameter", content = @Content),
+					@ApiResponse(responseCode = "404", description = "Site with matching ID not found", content = @Content),
+					@ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
+			}
+	)
 	public Response getSiteFull(@QueryParam("siteid") Long siteId)
 			throws WebAppException, DbException
 	{
@@ -179,6 +201,15 @@ public final class SiteResources extends OpenDcsResource
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
+	@Operation(
+			summary = "Create or update a site",
+			description = "Store a new site or update an existing site in the database with provided metadata and properties.",
+			responses = {
+					@ApiResponse(responseCode = "201", description = "Site created or updated successfully"),
+					@ApiResponse(responseCode = "400", description = "Missing or invalid site object", content = @Content),
+					@ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
+			}
+	)
 	public Response postSite(ApiSite site)
 			throws DbException, WebAppException
 	{
@@ -245,6 +276,15 @@ public final class SiteResources extends OpenDcsResource
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
+	@Operation(
+			summary = "Delete a site by ID",
+			description = "Delete a site from the database using its unique ID.",
+			responses = {
+					@ApiResponse(responseCode = "204", description = "Site deleted successfully"),
+					@ApiResponse(responseCode = "400", description = "Missing or invalid site ID parameter", content = @Content),
+					@ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
+			}
+	)
 	public Response deleteSite(@QueryParam("siteid") Long siteId) throws DbException
 	{
 		try (SiteDAI dai = getLegacyTimeseriesDB().makeSiteDAO())

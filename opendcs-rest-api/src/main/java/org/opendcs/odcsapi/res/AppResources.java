@@ -40,6 +40,9 @@ import decodes.tsdb.DbIoException;
 import decodes.tsdb.NoSuchObjectException;
 import decodes.tsdb.TsdbCompLock;
 import opendcs.dai.LoadingAppDAI;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import org.opendcs.odcsapi.beans.ApiAppRef;
 import org.opendcs.odcsapi.beans.ApiAppStatus;
 import org.opendcs.odcsapi.beans.ApiLoadingApp;
@@ -64,6 +67,14 @@ public final class AppResources extends OpenDcsResource
 	@Path("apprefs")
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
+	@Operation(
+			summary = "Get Application References",
+			description = "Fetches a list of application references.",
+			responses = {
+					@ApiResponse(responseCode = "200", description = "Successfully retrieved application references"),
+					@ApiResponse(responseCode = "500", description = "Database error occurred", content = @Content)
+			}
+	)
 	public Response getAppRefs() throws DbException
 	{
 		try (LoadingAppDAI dai = getLegacyDatabase().makeLoadingAppDAO())
@@ -96,6 +107,15 @@ public final class AppResources extends OpenDcsResource
 	@Path("app")
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
+	@Operation(
+			summary = "Get Application Details",
+			description = "Fetches details of a specific application by ID.",
+			responses = {
+					@ApiResponse(responseCode = "200", description = "Successfully retrieved application details"),
+					@ApiResponse(responseCode = "400", description = "Missing or invalid appid parameter", content = @Content),
+					@ApiResponse(responseCode = "500", description = "Database error occurred", content = @Content)
+			}
+	)
 	public Response getApp(@QueryParam("appid") Long appId)
 			throws WebAppException, DbException
 	{
@@ -123,6 +143,15 @@ public final class AppResources extends OpenDcsResource
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
+	@Operation(
+			summary = "Create or Update Application",
+			description = "Creates a new application or updates an existing one.",
+			responses = {
+					@ApiResponse(responseCode = "200", description = "Successfully created or updated the application"),
+					@ApiResponse(responseCode = "400", description = "Invalid application data", content = @Content),
+					@ApiResponse(responseCode = "500", description = "Database error occurred", content = @Content)
+			}
+	)
 	public Response postApp(ApiLoadingApp app)
 			throws DbException
 	{
@@ -169,6 +198,15 @@ public final class AppResources extends OpenDcsResource
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
+	@Operation(
+			summary = "Delete Application",
+			description = "Deletes an application by its ID.",
+			responses = {
+					@ApiResponse(responseCode = "200", description = "Successfully deleted the application"),
+					@ApiResponse(responseCode = "400", description = "Invalid appid parameter", content = @Content),
+					@ApiResponse(responseCode = "500", description = "Database error occurred", content = @Content)
+			}
+	)
 	public Response deleteApp(@QueryParam("appid") Long appId)
 			throws DbException, WebAppException
 	{
@@ -202,7 +240,15 @@ public final class AppResources extends OpenDcsResource
 	@Path("appstat")
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
-	public Response getAppStatus() throws DbException
+	@Operation(
+			summary = "Get Application Statistics",
+			description = "Fetches statistics for all applications.",
+			responses = {
+					@ApiResponse(responseCode = "200", description = "Successfully retrieved application statistics"),
+					@ApiResponse(responseCode = "500", description = "Database error occurred", content = @Content)
+			}
+	)
+	public Response getAppStat() throws DbException
 	{
 		List<ApiAppStatus> ret = new ArrayList<>();
 		try (LoadingAppDAI dai = getLegacyDatabase().makeLoadingAppDAO())
