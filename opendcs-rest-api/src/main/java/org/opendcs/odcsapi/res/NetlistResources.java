@@ -15,6 +15,10 @@
 
 package org.opendcs.odcsapi.res;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+
 import java.io.LineNumberReader;
 import java.io.StringReader;
 import java.util.ArrayList;
@@ -62,6 +66,15 @@ public final class NetlistResources extends OpenDcsResource
 	@Path("netlistrefs")
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
+	@Operation(
+			summary = "Get Network List References",
+			description = "Fetch a list of network list references, optionally filtered by transport medium type.",
+			responses = {
+					@ApiResponse(responseCode = "200", description = "Successfully retrieved network list references"),
+					@ApiResponse(responseCode = "400", description = "Invalid input parameter", content = @Content),
+					@ApiResponse(responseCode = "500", description = "Database error occurred", content = @Content)
+			}
+	)
 	public Response getNetlistRefs(@QueryParam("tmtype") String tmtype)
 			throws DbException
 	{
@@ -116,6 +129,16 @@ public final class NetlistResources extends OpenDcsResource
 	@Path("netlist")
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
+	@Operation(
+			summary = "Get Network List Details",
+			description = "Retrieve the detailed information of a network list by providing the netlist ID.",
+			responses = {
+					@ApiResponse(responseCode = "200", description = "Successfully retrieved network list details"),
+					@ApiResponse(responseCode = "400", description = "Missing or invalid netlist ID parameter", content = @Content),
+					@ApiResponse(responseCode = "404", description = "Network list not found", content = @Content),
+					@ApiResponse(responseCode = "500", description = "Database error occurred", content = @Content)
+			}
+	)
 	public Response getNetList(@QueryParam("netlistid") Long netlistId)
 			throws WebAppException, DbException
 	{
@@ -178,7 +201,16 @@ public final class NetlistResources extends OpenDcsResource
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
-	public Response  postNetlist(ApiNetList netList)
+	@Operation(
+			summary = "Create or Update a Network List",
+			description = "Store a network list with the provided details. If the netlist ID exists, updates the list; otherwise, creates a new one.",
+			responses = {
+					@ApiResponse(responseCode = "201", description = "Network list successfully created or updated"),
+					@ApiResponse(responseCode = "400", description = "Missing or invalid request body", content = @Content),
+					@ApiResponse(responseCode = "500", description = "Database error occurred", content = @Content)
+			}
+	)
+	public Response postNetlist(ApiNetList netList)
 			throws DbException
 	{
 		DatabaseIO dbIo = getLegacyDatabase();
@@ -229,6 +261,16 @@ public final class NetlistResources extends OpenDcsResource
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
+	@Operation(
+			summary = "Delete a Network List",
+			description = "Delete a network list specified by the given netlist ID.",
+			responses = {
+					@ApiResponse(responseCode = "204", description = "Network list successfully deleted"),
+					@ApiResponse(responseCode = "400", description = "Missing or invalid netlist ID parameter", content = @Content),
+					@ApiResponse(responseCode = "409", description = "Cannot delete the network list because it is currently in use", content = @Content),
+					@ApiResponse(responseCode = "500", description = "Database error occurred", content = @Content)
+			}
+	)
 	public Response deleteNetlist(@QueryParam("netlistid") Long netlistId)
 			throws DbException, WebAppException
 	{
@@ -290,6 +332,15 @@ public final class NetlistResources extends OpenDcsResource
 	@Consumes(MediaType.TEXT_PLAIN)
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
+	@Operation(
+			summary = "Convert Network List File",
+			description = "Parses a network list file (in text format) and converts it to an object representation.",
+			responses = {
+					@ApiResponse(responseCode = "200", description = "Network list successfully parsed"),
+					@ApiResponse(responseCode = "406", description = "File parsing error or invalid format", content = @Content),
+					@ApiResponse(responseCode = "500", description = "Server error occurred", content = @Content)
+			}
+	)
 	public Response cnvtANL(String nldata)
 			throws WebAppException
 	{

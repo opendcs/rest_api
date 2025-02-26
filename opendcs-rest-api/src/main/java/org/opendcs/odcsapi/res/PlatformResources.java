@@ -37,6 +37,10 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.media.Content;
+
 import decodes.db.DatabaseException;
 import decodes.db.DatabaseIO;
 import decodes.db.Platform;
@@ -73,6 +77,15 @@ public final class PlatformResources extends OpenDcsResource
 	@Path("platformrefs")
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
+	@Operation(
+			summary = "Retrieve Platform References",
+			description = "Fetches a list of platform references based on the provided transport medium type.",
+			responses = {
+					@ApiResponse(responseCode = "200", description = "Successfully retrieved platform references"),
+					@ApiResponse(responseCode = "400", description = "Invalid input parameters", content = @Content),
+					@ApiResponse(responseCode = "500", description = "Database error occurred", content = @Content)
+			}
+	)
 	public Response getPlatformRefs(@QueryParam("tmtype") String tmtype)
 			throws DbException
 	{
@@ -148,6 +161,16 @@ public final class PlatformResources extends OpenDcsResource
 	@Path("platform")
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
+	@Operation(
+			summary = "Retrieve Platform Details",
+			description = "Fetches detailed information about a specific platform based on its ID.",
+			responses = {
+					@ApiResponse(responseCode = "200", description = "Platform details retrieved successfully"),
+					@ApiResponse(responseCode = "400", description = "Missing or invalid platform ID", content = @Content),
+					@ApiResponse(responseCode = "404", description = "Platform not found", content = @Content),
+					@ApiResponse(responseCode = "500", description = "Database error occurred", content = @Content)
+			}
+	)
 	public Response getPlatform(@QueryParam("platformid") Long platformId)
 			throws WebAppException, DbException
 	{
@@ -251,6 +274,15 @@ public final class PlatformResources extends OpenDcsResource
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
+	@Operation(
+			summary = "Create or Update Platform",
+			description = "Creates a new platform or updates an existing platform with the provided details.",
+			responses = {
+					@ApiResponse(responseCode = "201", description = "Platform created successfully"),
+					@ApiResponse(responseCode = "400", description = "Invalid platform data", content = @Content),
+					@ApiResponse(responseCode = "500", description = "Database error occurred while storing the platform", content = @Content)
+			}
+	)
 	public Response postPlatform(ApiPlatform platform)
 			throws DbException
 	{
@@ -388,6 +420,15 @@ public final class PlatformResources extends OpenDcsResource
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
+	@Operation(
+			summary = "Delete Platform",
+			description = "Deletes a platform identified by the provided platform ID.",
+			responses = {
+					@ApiResponse(responseCode = "204", description = "Platform deleted successfully"),
+					@ApiResponse(responseCode = "400", description = "Missing or invalid platform ID", content = @Content),
+					@ApiResponse(responseCode = "500", description = "Database error occurred while deleting the platform", content = @Content)
+			}
+	)
 	public Response deletePlatform(@QueryParam("platformid") Long platformId)
 			throws DbException, WebAppException
 	{
@@ -420,6 +461,15 @@ public final class PlatformResources extends OpenDcsResource
 	@Path("platformstat")
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
+	@Operation(
+			summary = "Retrieve Platform Status",
+			description = "Retrieves the status of platforms within a specified network list ID.",
+			responses = {
+					@ApiResponse(responseCode = "200", description = "Successfully retrieved platform status"),
+					@ApiResponse(responseCode = "400", description = "Missing or invalid network list ID", content = @Content),
+					@ApiResponse(responseCode = "500", description = "Database error occurred", content = @Content)
+			}
+	)
 	public Response getPlatformStats(@QueryParam("netlistid") Long netlistId)
 			throws DbException
 	{

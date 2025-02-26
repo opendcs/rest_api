@@ -19,6 +19,10 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import javax.annotation.security.RolesAllowed;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -70,6 +74,15 @@ public final class DatatypeUnitResources extends OpenDcsResource
 	@Path("datatypelist")
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
+	@Operation(
+			summary = "Retrieve Data Type List",
+			description = "Fetches a list of data types based on the provided standard.",
+			responses = {
+					@ApiResponse(responseCode = "200", description = "Successfully retrieved data type list."),
+					@ApiResponse(responseCode = "400", description = "Invalid standard parameter.", content = @Content),
+					@ApiResponse(responseCode = "500", description = "Failed to retrieve data type list.", content = @Content)
+			}
+	)
 	public Response getDataTypeList(@QueryParam("standard") String std) throws DbException
 	{
 		try (DataTypeDAI dai = getLegacyTimeseriesDB().makeDataTypeDAO())
@@ -113,6 +126,14 @@ public final class DatatypeUnitResources extends OpenDcsResource
 	@Path("unitlist")
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
+	@Operation(
+			summary = "Retrieve Engineering Units",
+			description = "Fetches a complete list of defined engineering units.",
+			responses = {
+					@ApiResponse(responseCode = "200", description = "Successfully retrieved engineering unit list."),
+					@ApiResponse(responseCode = "500", description = "Internal server error occurred while fetching the engineering unit list.", content = @Content)
+			}
+	)
 	public Response getUnitList() throws DbException
 	{
 		DatabaseIO dbIo = getLegacyDatabase();
@@ -155,8 +176,18 @@ public final class DatatypeUnitResources extends OpenDcsResource
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
-	public Response postEU(@QueryParam("fromabbr") String fromabbr, ApiUnit eu)
-			throws DbException
+	@Operation(
+			summary = "Add Engineering Unit",
+			description = "Adds a new engineering unit to the database.",
+			responses = {
+					@ApiResponse(responseCode = "201", description = "Successfully added the engineering unit."),
+					@ApiResponse(responseCode = "500", description = "Failed to store the engineering unit.", content = @Content)
+			}
+	)
+	public Response postEU(
+			@Parameter(description = "The abbreviation of the engineering unit being added.") @QueryParam("fromabbr") String fromabbr,
+			@Parameter(description = "Engineering unit details.") ApiUnit eu
+	) throws DbException
 	{
 		DatabaseIO dbIo = getLegacyDatabase();
 		try
@@ -184,9 +215,19 @@ public final class DatatypeUnitResources extends OpenDcsResource
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
-	public Response deleteEU(@QueryParam("abbr") String abbr) throws DbException, WebAppException
+	@Operation(
+			summary = "Delete Engineering Unit",
+			description = "Deletes an engineering unit based on the provided abbreviation.",
+			responses = {
+					@ApiResponse(responseCode = "204", description = "Successfully deleted the engineering unit."),
+					@ApiResponse(responseCode = "400", description = "Missing required abbreviation parameter.", content = @Content),
+					@ApiResponse(responseCode = "500", description = "Failed to delete the engineering unit.", content = @Content)
+			}
+	)
+	public Response deleteEU(@Parameter(description = "The abbreviation of the engineering unit to delete.") @QueryParam("abbr") String abbr)
+			throws DbException, WebAppException
 	{
-		if (abbr == null)
+		if(abbr == null)
 		{
 			throw new MissingParameterException("Missing required abbr parameter");
 		}
@@ -212,6 +253,14 @@ public final class DatatypeUnitResources extends OpenDcsResource
 	@Path("euconvlist")
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
+	@Operation(
+			summary = "Retrieve Unit Converter List",
+			description = "Fetches a list of all unit converters available in the database.",
+			responses = {
+					@ApiResponse(responseCode = "200", description = "Successfully retrieved the unit converter list."),
+					@ApiResponse(responseCode = "500", description = "Failed to retrieve unit converter list.", content = @Content)
+			}
+	)
 	public Response getUnitConvList() throws DbException
 	{
 		DatabaseIO dbIo = getLegacyDatabase();
@@ -249,6 +298,15 @@ public final class DatatypeUnitResources extends OpenDcsResource
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
+	@Operation(
+			summary = "Add Unit Converter",
+			description = "Adds a new unit converter to the database.",
+			responses = {
+					@ApiResponse(responseCode = "201", description = "Successfully added the unit converter."),
+					@ApiResponse(responseCode = "400", description = "Invalid input parameters.", content = @Content),
+					@ApiResponse(responseCode = "500", description = "Internal server error occurred while storing the unit converter.", content = @Content)
+			}
+	)
 	public Response postEUConv(ApiUnitConverter euc) throws DbException
 	{
 		DatabaseIO dbIo = getLegacyDatabase();
@@ -355,6 +413,15 @@ public final class DatatypeUnitResources extends OpenDcsResource
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
+	@Operation(
+			summary = "Delete Unit Converter",
+			description = "Deletes a unit converter based on the provided ID.",
+			responses = {
+					@ApiResponse(responseCode = "204", description = "Successfully deleted the unit converter."),
+					@ApiResponse(responseCode = "400", description = "Missing required ID parameter.", content = @Content),
+					@ApiResponse(responseCode = "500", description = "Failed to delete the unit converter due to a database error.", content = @Content)
+			}
+	)
 	public Response deleteEUConv(@QueryParam("euconvid") Long id) throws DbException, WebAppException
 	{
 		if (id == null)
