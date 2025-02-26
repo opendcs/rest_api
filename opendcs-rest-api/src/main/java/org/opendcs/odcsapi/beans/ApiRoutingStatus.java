@@ -15,6 +15,8 @@
 
 package org.opendcs.odcsapi.beans;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 import java.util.Date;
 
 /**
@@ -24,20 +26,34 @@ import java.util.Date;
  * Note: scheduleEntryId will be null for routing specs that do not have explicit
  * schedule entries and have never been run via the "rs" command.
  */
+@Schema(description = "Represents the status of a routing specification, including schedule details, app information, and activity metrics.")
 public final class ApiRoutingStatus
 {
+	@Schema(description = "The unique identifier of the routing specification.")
 	private Long routingSpecId = null;
+	@Schema(description = "The name of the routing specification.")
 	private String name = null;
+	@Schema(description = "The identifier of the scheduled entry associated with the routing spec. It can be null if it has never been explicitly scheduled.")
 	private Long scheduleEntryId = null;
+	@Schema(description = "Indicates whether the routing specification is enabled.")
 	private boolean isEnabled = false;
+	@Schema(description = "Indicates whether the routing specification is set to run manually.")
 	private boolean isManual = false;
+	@Schema(description = "The identifier of the application associated with this routing specification.")
 	private Long appId = null;
+	@Schema(description = "The name of the application associated with this routing specification.")
 	private String appName = null;
+	@Schema(description = "The interval at which this routing spec is executed, typically expressed in cron format.")
 	private String runInterval = null;
+	@Schema(description = "The timestamp of the last activity recorded for this routing specification.")
 	private Date lastActivity = null;
+	@Schema(description = "The timestamp of the last message processed by this routing specification.")
 	private Date lastMsgTime = null;
+	@Schema(description = "The total number of messages processed by this routing specification.")
 	private int numMessages = 0;
+	@Schema(description = "The total number of errors encountered by this routing specification.")
 	private int numErrors = 0;
+
 	public Long getRoutingSpecId()
 	{
 		return routingSpecId;

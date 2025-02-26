@@ -17,20 +17,34 @@ package org.opendcs.odcsapi.beans;
 
 import java.util.Date;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(description = "Represents a schedule entry, including its related application details, routing specification, and timing information.")
 public final class ApiScheduleEntry
 {
+	@Schema(description = "Unique ID of the schedule entry.")
 	private Long schedEntryId = null;
+	@Schema(description = "Name of the schedule entry.")
 	private String name = null;
+	@Schema(description = "ID of the associated application.")
 	private Long appId = null;
+	@Schema(description = "Name of the associated application.")
 	private String appName = null;
+	@Schema(description = "ID of the associated routing specification.")
 	private Long routingSpecId = null;
+	@Schema(description = "Name of the associated routing specification.")
 	private String routingSpecName = null;
+	@Schema(description = "Flag indicating whether the schedule entry is enabled.")
 	private boolean enabled = false;
+	@Schema(description = "Timestamp of the last modification.")
 	private Date lastModified = null;
+	@Schema(description = "Start time of the schedule entry.")
 	private Date startTime = null;
+	@Schema(description = "Time zone associated with the schedule entry.")
 	private String timeZone = null;
+	@Schema(description = "Running interval for the schedule entry.")
 	private String runInterval = null;
-	
+
 	public Long getSchedEntryId()
 	{
 		return schedEntryId;

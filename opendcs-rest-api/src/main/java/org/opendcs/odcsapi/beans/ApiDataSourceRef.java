@@ -20,15 +20,26 @@ import java.util.Collections;
 import java.util.Properties;
 
 import org.opendcs.odcsapi.util.ApiPropertiesUtil;
+import io.swagger.v3.oas.annotations.media.Schema;
 
+@Schema(description = "Represents a data source reference including its identifier, name, and additional configuration details.")
 public final class ApiDataSourceRef
 {
+	@Schema(description = "The unique identifier for the data source.")
 	private Long dataSourceId = null;
+
+	@Schema(description = "The name of the data source.")
 	private String name = null;
+
+	@Schema(description = "The type of the data source.")
 	private String type = null;
+
+	@Schema(description = "Serialized arguments associated with the data source.")
 	private String arguments = null;
+
+	@Schema(description = "Specifies the number of references that use this data source.")
 	private int usedBy = 0;
-	
+
 	public Long getDataSourceId()
 	{
 		return dataSourceId;
@@ -92,7 +103,7 @@ public final class ApiDataSourceRef
 	{
 		this.usedBy = usedBy;
 	}
-	
+
 
 
 }

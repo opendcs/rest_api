@@ -15,15 +15,26 @@
 
 package org.opendcs.odcsapi.beans;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 
+@Schema(description = "Represents a time series identifier including its unique string, key, description, storage units, and active status.")
 public final class ApiTimeSeriesIdentifier
 {
+	@Schema(description = "A unique string identifying the time series.")
 	private String uniqueString = null;
+
+	@Schema(description = "The unique key for the time series.")
 	private Long key = null;
+
+	@Schema(description = "A short description of the time series.")
 	private String description = null;
+
+	@Schema(description = "The storage units associated with the time series. Used to denote the units used in the database.")
 	private String storageUnits = null;
+
+	@Schema(description = "Indicates whether the time series is active.")
 	private boolean active = true;
-	
+
 	public ApiTimeSeriesIdentifier() {}
 	
 	public ApiTimeSeriesIdentifier(String uniqueString, long key, String description, String storageUnits)

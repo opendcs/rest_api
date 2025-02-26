@@ -17,16 +17,28 @@ package org.opendcs.odcsapi.beans;
 
 import java.util.Date;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(description = "Represents the status of an application instance including details such as name, type, hostname, and current state.")
 public final class ApiAppStatus
 {
+	@Schema(description = "Unique identifier for the application instance.")
 	private Long appId = null;
+	@Schema(description = "Name of the application.")
 	private String appName = null;
+	@Schema(description = "Type of the application.")
 	private String appType = null;
+	@Schema(description = "Hostname of the machine running the application.")
 	private String hostname = null;
+	@Schema(description = "Process ID (PID) of the application's instance.")
 	private Long pid = null;
+	@Schema(description = "Last recorded heartbeat timestamp for the application.")
 	private Date heartbeat = null;
+	@Schema(description = "Port number used for event communication.")
 	private Integer eventPort = null;
+	@Schema(description = "Current status of the application. Default is 'Inactive'.")
 	private String status = "Inactive";
+
 	public Long getAppId()
 	{
 		return appId;
