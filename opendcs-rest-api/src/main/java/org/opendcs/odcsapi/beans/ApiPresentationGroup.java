@@ -19,20 +19,30 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(description = "Represents a presentation group that can inherit properties from a parent group.")
 public final class ApiPresentationGroup
 {
+	@Schema(description = "Unique ID of the presentation group.")
 	private Long groupId = null;
-	
+
+	@Schema(description = "Name of the presentation group.")
 	private String name = null;
-	
+
+	@Schema(description = "Name of the group this presentation group inherits from.")
 	private String inheritsFrom = null;
-	
+
+	@Schema(description = "ID of the parent group this presentation group inherits from.")
 	private Long inheritsFromId = null;
-	
+
+	@Schema(description = "Date when the presentation group was last modified.")
 	private Date lastModified = null;
-	
+
+	@Schema(description = "Flag to indicate if this group is a production group.")
 	private boolean isProduction = false;
 
+	@Schema(description = "List of presentation elements that belong to this group.")
 	private List<ApiPresentationElement> elements = new ArrayList<>();
 
 	public Long getGroupId()

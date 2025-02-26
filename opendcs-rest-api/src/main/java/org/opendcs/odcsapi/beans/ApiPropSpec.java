@@ -15,17 +15,29 @@
 
 package org.opendcs.odcsapi.beans;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(description = "Represents the specifications of a property, including its name, type, and description.")
 public final class ApiPropSpec
 {
-	/** The name of the property in a Properties object */
-	private String name = null;
-	
 	/**
-	 * A coded string describing the type of the property (see constant prop types herein).
+	 * The name of the property in a Properties object
 	 */
+	@Schema(description = "The name of the property in a Properties object.")
+	private String name = null;
+
+	/**
+	 * A coded string describing the type of the property (see constant prop types in the Toolkit PropertySpec class).
+	 */
+	@Schema(description = "A coded string describing the type of the property. Valid values are i (int), n (number)," +
+			" b (boolean), f (filename), d (directory), s (string), t (timezone), e:<enumName> (decodes enum)," +
+			" h (hostname), E:<fullEnumClassPath> (java enum), l (longstring), or c (color).")
 	private String type = null;
-	
-	/** A description of this property */
+
+	/**
+	 * A description of this property
+	 */
+	@Schema(description = "A detailed description of the property.")
 	private String description = null;
 
 	public ApiPropSpec(String name, String type, String description)

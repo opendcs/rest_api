@@ -20,33 +20,60 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(description = "Represents a site with geographic, descriptive, and operational attributes.")
 public final class ApiSite
 {
+	@Schema(description = "Unique ID of the site.")
 	private Long siteId = null;
-	
-	/** nametype - namevalue */
+
+	/**
+	 * nametype - namevalue
+	 */
+	@Schema(description = "Map of site names where the key is the name type and the value is the name value.")
 	private Map<String, String> sitenames = new HashMap<>();
-	
+
+	@Schema(description = "A brief description of the site.")
 	private String description = null;
-	
+
+	@Schema(description = "Latitude of the site's location.", example = "34.052235")
 	private String latitude = null;
+
+	@Schema(description = "Longitude of the site's location.", example = "-118.243683")
 	private String longitude = null;
+	@Schema(description = "Elevation of the site in specified units.")
 	private double elevation = 0.0;
+
+	@Schema(description = "Units for the site's elevation.", example = "meters")
 	private String elevUnits = null;
+	@Schema(description = "The nearest city to the site.")
 	private String nearestCity = null;
+
+	@Schema(description = "The timezone of the site's location.", example = "UTC")
 	private String timezone = null;
+	@Schema(description = "The state or province where the site is located.")
 	private String state = null;
+
+	@Schema(description = "The country where the site is located.")
 	private String country = null;
+
+	@Schema(description = "The region within the country where the site is located.")
 	private String region = null;
+	@Schema(description = "Indicates whether the site is currently active.")
 	private boolean active = true;
+	@Schema(description = "Type of location represented by this site.")
 	private String locationType = null;
+	@Schema(description = "Public name of the site.")
 	private String publicName = null;
-	
+
+	@Schema(description = "Custom properties associated with the site. This field is excluded from Swagger documentation.")
 	private Properties properties = new Properties();
-	
+
+	@Schema(description = "The last modification timestamp for the site.")
 	private Date lastModified = null;
-	
-	
+
+
 	public ApiSite()
 	{	
 	}
