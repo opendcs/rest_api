@@ -17,18 +17,38 @@ package org.opendcs.odcsapi.beans;
 
 import java.util.Properties;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(description = "Represents a platform reference, including its ID, name, agency, and other metadata.")
 public final class ApiPlatformRef
 {
+	@Schema(description = "Unique identifier of the platform.")
 	private Long platformId = null;
+
+	@Schema(description = "Name of the platform.")
 	private String name = null;
-	private Long siteId =null;
+
+	@Schema(description = "Site ID associated with the platform.")
+	private Long siteId = null;
+
+	@Schema(description = "Agency that owns or manages the platform.")
 	private String agency = null;
+
+	@Schema(description = "Properties object containing metadata.")
 	private Properties transportMedia = new Properties();
+
+	@Schema(description = "Configuration name associated with the platform.")
 	private String config = null;
+
+	@Schema(description = "Unique identifier for the platform configuration.")
 	private Long configId = null;
+
+	@Schema(description = "Description of the platform.")
 	private String description = null;
+
+	@Schema(description = "Designator for the platform.")
 	private String designator = null;
-	
+
 	/**
 	 * No args ctor for JSON
 	 */

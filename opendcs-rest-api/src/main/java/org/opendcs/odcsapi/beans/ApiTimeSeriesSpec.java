@@ -17,39 +17,65 @@ package org.opendcs.odcsapi.beans;
 
 import java.util.Date;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(description = "Represents the specification of a time series, including metadata and configuration details.")
 public final class ApiTimeSeriesSpec
 {
+	@Schema(description = "The time series identifier (TSID) containing unique metadata for the time series.")
 	private ApiTimeSeriesIdentifier tsid = null;
-	
+
+	@Schema(description = "The location associated with the time series.")
 	private String location = null;
+	@Schema(description = "The parameter measured by the time series (e.g., temperature, flow rate).")
 	private String param = null;
+	@Schema(description = "Statistical code representing the type of calculation applied to the time series.")
 	private String statCode = null;
+	@Schema(description = "The interval of time between data points in the time series.")
 	private String interval = null;
+	@Schema(description = "The duration of time that each time series value represents.")
 	private String duration = null;
+	@Schema(description = "Version identifier for the time series.")
 	private String version = null;
-	
+
+	@Schema(description = "The unique identifier for the site associated with the time series.")
 	private Long siteId = null;
+	@Schema(description = "The unique identifier for the datatype used in the time series.")
 	private Long datatypeId = null;
+	@Schema(description = "The unique identifier for the interval used in the time series.")
 	private Long intervalId = null;
+	@Schema(description = "The unique identifier for the duration used in the time series.")
 	private Long durationId = null;
-	
+
+	@Schema(description = "The date and time when the time series configuration was last modified.")
 	private Date lastModified = null;
-	
+
+	@Schema(description = "Indicates whether the time series is active.")
 	private boolean active = true;
+	@Schema(description = "Indicates whether Daylight Saving Time (DST) variations are allowed in the time series.")
 	private boolean allowDSTVariation = false;
+	@Schema(description = "The UTC offset (in hours) for the time series.")
 	private int utcOffset = 0;
+	@Schema(description = "The action taken when offset errors occur. Valid values: IGNORE, REJECT, or ROUND.")
 	private String offsetErrorAction = "IGNORE"; // IGNORE, REJECT, or ROUND
+	@Schema(description = "The type of storage for the time series data. Valid values: N (Numeric), S (String).")
 	private char storageType = 'N'; // N=Numeric, S=String
+	@Schema(description = "The index of the storage table where time series data is stored.")
 	private int storageTable = 0;
-	
+
 	// Not really part of the spec, but returned with it:
+	@Schema(description = "The number of values currently stored in the time series.")
 	private int numValues = 0;
+	@Schema(description = "The minimum value across the time series.")
 	private ApiTimeSeriesValue min = null;
+	@Schema(description = "The maximum value across the time series.")
 	private ApiTimeSeriesValue max = null;
+	@Schema(description = "The oldest value in the time series.")
 	private ApiTimeSeriesValue oldest = null;
+	@Schema(description = "The most recent value in the time series.")
 	private ApiTimeSeriesValue newest = null;
-	
-	
+
+
 	public ApiTimeSeriesIdentifier getTsid()
 	{
 		return tsid;

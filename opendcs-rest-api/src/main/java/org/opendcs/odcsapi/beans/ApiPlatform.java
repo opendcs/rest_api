@@ -15,26 +15,52 @@
 
 package org.opendcs.odcsapi.beans;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Properties;
 
+@Schema(description = "Represents a platform, including its site, configuration, sensors, and transport media details.")
 public final class ApiPlatform
 {
+	@Schema(description = "The unique identifier of the platform.")
 	private Long platformId = null;
+
+	@Schema(description = "The name of the platform.")
 	private String name = null;
+
+	@Schema(description = "The unique identifier of the site associated with the platform.")
 	private Long siteId = null;
+
+	@Schema(description = "The agency responsible for the platform.")
 	private String agency = null;
+
+	@Schema(description = "The unique identifier of the platform configuration.")
 	private Long configId = null;
+
+	@Schema(description = "A description of the platform.")
 	private String description = null;
+
+	@Schema(description = "The designator or identifier assigned to the platform.")
 	private String designator = null;
+
+	@Schema(description = "The date and time when the platform was last modified.")
 	private Date lastModified = null;
+
+	@Schema(description = "Indicates if the platform is in production.")
 	private boolean production = false;
+
+	@Schema(description = "Additional properties associated with the platform.")
 	private Properties properties = new Properties();
-	
+
+	@Schema(description = "The list of sensors associated with the platform.")
 	private List<ApiPlatformSensor> platformSensors = new ArrayList<>();
+
+	@Schema(description = "The list of transport media associated with the platform.")
 	private List<ApiTransportMedium> transportMedia = new ArrayList<>();
+
 	public Long getPlatformId()
 	{
 		return platformId;

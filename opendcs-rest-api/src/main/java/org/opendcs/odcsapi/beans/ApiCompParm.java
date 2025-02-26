@@ -15,49 +15,65 @@
 
 package org.opendcs.odcsapi.beans;
 
-import decodes.tsdb.IntervalCodes;
+import io.swagger.v3.oas.annotations.media.Schema;
 
+@Schema(description = "Represents a computation parameter used in algorithms, including details about time series, sites, data types, intervals, and HDB/CWMS specifics.")
 public final class ApiCompParm
 {
+	@Schema(description = "The type of the algorithm parameter.")
 	private String algoParmType;
 
-	/** Algorithm role name. */
+	@Schema(description = "The role name of the algorithm parameter.")
 	private String algoRoleName = null;
-	
+
 	// Non-group comp parms will be completely defined with a time series key.
+	@Schema(description = "The time series key associated with this computation parameter.")
 	private Long tsKey = null;
-	 
+
+	@Schema(description = "The identifier of the data type associated with this computation parameter.")
 	private Long dataTypeId = null;
+
+	@Schema(description = "The name of the data type associated with this computation parameter.")
 	private String dataType = null;
 
-	/**
-	 * String interval code.
-	 * @see IntervalCodes
-	 */
+	@Schema(description = "The string interval code. See IntervalCodes for more information.")
 	private String interval = null;
-	
-	/**
-	 * Signed number of time intervals. Offset for retrieving this parameter
-	 * relative to zero-based time.
-	 */
+
+	@Schema(description = "Signed number of time intervals (seconds, minutes, etc.). Offset for retrieving this parameter relative to zero-based time.")
 	private int deltaT = 0;
+
+	@Schema(description = "The time units for deltaT, default is 'Seconds'.")
 	private String deltaTUnits = "Seconds";
 
+	@Schema(description = "The abbreviation for the units of the parameter.")
 	private String unitsAbbr = null;
 
+	@Schema(description = "The identifier of the site associated with this computation parameter.")
 	private Long siteId = null;
+
+	@Schema(description = "The name of the site associated with this computation parameter.")
 	private String siteName = null;
-	
+
 	// HDB-specific fields:
+	@Schema(description = "HDB-specific: The table selector for this computation parameter.")
 	private String tableSelector = null;
+
+	@Schema(description = "HDB-specific: The model ID associated with this computation parameter.")
 	private Integer modelId = null;
-	
+
 	// CWMS-specific fields:
+	@Schema(description = "CWMS-specific: The type of this parameter.")
 	private String paramType = null;
+
+	@Schema(description = "CWMS-specific: The duration for this computation parameter.")
 	private String duration = null;
+
+	@Schema(description = "CWMS-specific: The version of this computation parameter.")
 	private String version = null;
+
+	@Schema(description = "CWMS-specific: Action to take if the parameter is missing.")
 	private String ifMissing = null;
-	
+
 	public String getAlgoParmType()
 	{
 		return algoParmType;

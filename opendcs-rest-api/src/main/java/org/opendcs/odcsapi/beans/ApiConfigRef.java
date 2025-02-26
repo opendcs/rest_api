@@ -15,44 +15,61 @@
 
 package org.opendcs.odcsapi.beans;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(description = "Represents a configuration reference with its details such as ID, name, number of platforms, and description.")
 public final class ApiConfigRef
 {
+	@Schema(description = "The unique identifier of the configuration.")
 	private Long configId = null;
-	
+
+	@Schema(description = "The name of the configuration.")
 	private String name = null;
+
+	@Schema(description = "The number of platforms associated with the configuration.")
 	private int numPlatforms = 0;
+
+	@Schema(description = "A description of the configuration.")
 	private String description = null;
+
 	public Long getConfigId()
 	{
 		return configId;
 	}
+
 	public void setConfigId(Long configId)
 	{
 		this.configId = configId;
 	}
+
 	public String getName()
 	{
 		return name;
 	}
+
 	public void setName(String name)
 	{
 		this.name = name;
 	}
+
 	public int getNumPlatforms()
 	{
 		return numPlatforms;
 	}
+
 	public void setNumPlatforms(int numPlatforms)
 	{
 		this.numPlatforms = numPlatforms;
 	}
+
 	public String getDescription()
 	{
 		return description;
 	}
+
 	public void setDescription(String description)
 	{
 		this.description = description;
 	}
-	
+
 }

@@ -15,13 +15,23 @@
 
 package org.opendcs.odcsapi.beans;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(description = "Represents an interval entity with its unique ID, name, calendar constant, and multiplier used in calculations.")
 public final class ApiInterval
 {
+	@Schema(description = "The unique identifier for the interval.")
 	private Long intervalId = null;
+
+	@Schema(description = "The name of the interval.")
 	private String name = null;
+
+	@Schema(description = "The calendar constant associated with the interval.")
 	private String calConstant = null;
+
+	@Schema(description = "The multiplier applied to the calendar constant.")
 	private int calMultilier = 1;
-	
+
 	public ApiInterval()
 	{
 	}

@@ -30,6 +30,10 @@ import javax.ws.rs.core.Response;
 import org.opendcs.odcsapi.util.ApiConstants;
 import org.opendcs.odcsapi.util.ApiHttpUtil;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.media.Content;
+
 @Path("/")
 public final class SessionResource
 {
@@ -41,6 +45,15 @@ public final class SessionResource
 	@Path("check")
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
+	@Operation(
+			summary = "Check Session Authorization",
+			description = "Verifies if the current session token is valid and authorized.",
+			responses = {
+					@ApiResponse(responseCode = "200", description = "Token is valid"),
+					@ApiResponse(responseCode = "403", description = "Forbidden - User is not authorized", content = @Content),
+					@ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
+			}
+	)
 	public Response checkSessionAuthorization()
 	{
 		//Security filters will ensure this method is only accessible via an authenticated client
@@ -51,6 +64,13 @@ public final class SessionResource
 	@Path("logout")
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
+	@Operation(
+			summary = "Logout",
+			description = "Logs the user out by invalidating the current session.",
+			responses = {
+					@ApiResponse(responseCode = "204", description = "Logout successful"),
+			}
+	)
 	public Response logout()
 	{
 		HttpSession session = request.getSession(false);

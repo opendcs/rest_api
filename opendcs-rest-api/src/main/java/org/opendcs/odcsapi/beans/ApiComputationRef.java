@@ -15,19 +15,32 @@
 
 package org.opendcs.odcsapi.beans;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(description = "Represents a reference to a computation, including details about its algorithm, process, group, and status.")
 public final class ApiComputationRef
 {
+	@Schema(description = "The unique identifier of the computation.")
 	private Long computationId = null;
+	@Schema(description = "The name of the computation.")
 	private String name = null;
+	@Schema(description = "The unique identifier of the algorithm associated with the computation.")
 	private Long algorithmId = null;
+	@Schema(description = "The name of the algorithm associated with the computation.")
 	private String algorithmName = null;
+	@Schema(description = "The unique identifier (PID) of the process associated with the computation.")
 	private Long processId = null;
+	@Schema(description = "The name of the process associated with the computation.")
 	private String processName = null;
+	@Schema(description = "Specifies whether the computation is enabled.")
 	private boolean enabled = false;
+	@Schema(description = "A detailed description of the computation.")
 	private String description = null;
+	@Schema(description = "The unique identifier of the group associated with the computation.")
 	private Long groupId = null;
+	@Schema(description = "The name of the group associated with the computation.")
 	private String groupName = null;
-	
+
 	public Long getComputationId()
 	{
 		return computationId;

@@ -18,16 +18,32 @@ package org.opendcs.odcsapi.beans;
 import java.util.Date;
 import java.util.Properties;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(description = "Represents a computation application, including ID, name, type, and configuration details.")
 public final class ApiLoadingApp
 {
+	@Schema(description = "The unique identifier of the application.")
 	private Long appId = null;
+
+	@Schema(description = "The name of the application.")
 	private String appName = null;
+
+	@Schema(description = "The type of the application.")
 	private String appType = null;
+
+	@Schema(description = "A descriptive comment about the application.")
 	private String comment = null;
+
+	@Schema(description = "The date and time the application was last modified.")
 	private Date lastModified = null;
+
+	@Schema(description = "Specifies if this is a manual editing application.")
 	private boolean manualEditingApp = false;
+
+	@Schema(description = "Additional properties associated with the application.")
 	private Properties properties = new Properties();
-	
+
 	public Long getAppId()
 	{
 		return appId;

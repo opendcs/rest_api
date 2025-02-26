@@ -15,34 +15,48 @@
 
 package org.opendcs.odcsapi.beans;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(description = "Represents a script format statement with metadata such as sequence number, label, and format.")
 public final class ApiScriptFormatStatement
 {
+	@Schema(description = "The sequence number of this script format statement.")
 	private int sequenceNum = 0;
+
+	@Schema(description = "The label associated with this script format statement.")
 	private String label = null;
+
+	@Schema(description = "The format of this script format statement.")
 	private String format = null;
+
 	public int getSequenceNum()
 	{
 		return sequenceNum;
 	}
+
 	public void setSequenceNum(int sequenceNum)
 	{
 		this.sequenceNum = sequenceNum;
 	}
+
 	public String getLabel()
 	{
 		return label;
 	}
+
 	public void setLabel(String label)
 	{
 		this.label = label;
 	}
+
 	public String getFormat()
 	{
 		return format;
 	}
+
 	public void setFormat(String format)
 	{
 		this.format = format;
 	}
-	
+
 }

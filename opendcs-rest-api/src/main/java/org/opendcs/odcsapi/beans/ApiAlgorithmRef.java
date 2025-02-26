@@ -31,18 +31,29 @@
  */
 package org.opendcs.odcsapi.beans;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 
 /**
  * This class holds the info for an algorithm in the on-screen list.
  */
+@Schema(description = "API Algorithm Reference DTO that holds the summary information of an algorithm.")
 public final class ApiAlgorithmRef
 {
+	@Schema(description = "Unique ID of the algorithm.")
 	private Long algorithmId = null;
+
+	@Schema(description = "The name of the algorithm.")
 	private String algorithmName = "";
+
+	@Schema(description = "Fully qualified Java execution class for the algorithm.")
 	private String execClass = "";
+
+	@Schema(description = "The number of computations using this algorithm.")
 	private int numCompsUsing = 0;
+
+	@Schema(description = "A brief description of the algorithm.", example = "Calculates the average value of all inputs.")
 	private String description = "";
-	
+
 	public Long getAlgorithmId()
 	{
 		return algorithmId;
@@ -83,6 +94,4 @@ public final class ApiAlgorithmRef
 	{
 		this.description = description;
 	}
-	
-	
 }

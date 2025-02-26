@@ -17,32 +17,65 @@ package org.opendcs.odcsapi.beans;
 
 import java.util.Date;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 /** Used to encapsulate a raw message returned by GET message or sent to POST decode */
+@Schema(description = "Encapsulates a raw message, including metadata about the message and transmission details.")
 public final class ApiRawMessage
 {
 	// Attributes - always present:
+	@Schema(description = "Flags representing the status or state of the raw message.")
 	private long flags = 0L;
+
+	@Schema(description = "Identifier for the platform associated with this message.")
 	private String platformId = null;
-	
+
 	// GOES fields:
+	@Schema(description = "Sequence number of the message if applicable.")
 	private Integer sequenceNum = null;
+
+	@Schema(description = "Local time when the message was received.")
 	private Date localRecvTime = null;
+
+	@Schema(description = "Start time of the carrier signal for this message.")
 	private Date carrierStart = null;
+
+	@Schema(description = "Stop time of the carrier signal for this message.")
 	private Date carrierStop = null;
+
+	@Schema(description = "Baud rate of the carrier signal.")
 	private Integer baud = null;
+
+	@Schema(description = "Percentage of good phase signals received.")
 	private Double goodPhasePct = null;
+
+	@Schema(description = "Frequency offset of the signal in Hz.")
 	private Double freqOffset = null;
-	private Double signalStrength= null;
-	private Double phaseNoise = null;	
+
+	@Schema(description = "Strength of the signal received.")
+	private Double signalStrength = null;
+
+	@Schema(description = "Phase noise level of the signal received.")
+	private Double phaseNoise = null;
+
+	@Schema(description = "Timestamp when the message was transmitted.")
 	private Date xmitTime = null;
 
 	// Iridium fields:
+	@Schema(description = "Mobile Originating Message Sequence Number for Iridium messages.")
 	private Integer momsn = null;
+
+	@Schema(description = "Mobile Terminating Message Sequence Number for Iridium messages.")
 	private Integer mtmsn = null;
+
+	@Schema(description = "Call Data Record (CDR) reference number for tracking.")
 	private Long cdrReference = null;
+
+	@Schema(description = "Status of the Iridium session.")
 	private Integer sessionStatus = null;
 
 	// Base64 encoded binary message to preserve original whitespace
+	@Schema(description = "Base64-encoded representation of the raw binary message to preserve formatting and content.")
 	private String base64 = null;
 
 	public String getBase64()

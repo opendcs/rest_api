@@ -20,44 +20,78 @@ import java.util.Date;
 import java.util.List;
 import java.util.Properties;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(description = "Represents the routing configuration for data transmission, including metadata and processing settings.")
 public final class ApiRouting
 {
+	@Schema(description = "Unique identifier for the routing configuration.")
 	private Long routingId = null;
+	@Schema(description = "Name of the routing configuration.")
 	private String name = null;
+	@Schema(description = "Unique identifier of the associated data source.")
 	private Long dataSourceId = null;
+	@Schema(description = "The name of the associated data source.")
 	private String dataSourceName = null;
+	@Schema(description = "Type of the data destination.")
 	private String destinationType = null;
+	@Schema(description = "Argument or configuration for the data destination.")
 	private String destinationArg = null;
+	@Schema(description = "Whether equations are enabled for processing.")
 	private boolean enableEquations = false;
+	@Schema(description = "Format for output data.")
 	private String outputFormat = null;
+	@Schema(description = "Time zone for the output data.")
 	private String outputTZ = null;
+	@Schema(description = "Presentation group name associated with the routing.")
 	private String presGroupName = null;
+	@Schema(description = "Timestamp for when this routing was last modified.")
 	private Date lastModified = null;
+	@Schema(description = "Indicates if this is a production routing configuration.")
 	private boolean isProduction = false;
+	@Schema(description = "Start time for routing applicability in ISO 8601 format.")
 	private String since = null;
+	@Schema(description = "End time for routing applicability in ISO 8601 format.")
 	private String until = null;
+	@Schema(description = "Indicates if settling time delay is used. Default is false.")
 	private boolean settlingTimeDelay = false;
+	@Schema(description = "Specifies the reference time for applying configurations. Default is 'Local Receive Time'.")
 	private String applyTimeTo = "Local Receive Time";
+	@Schema(description = "Specifies if time is in ascending order. Default is false.")
 	private boolean ascendingTime = false;
-	
+
+	@Schema(description = "List of platform IDs associated with the routing.")
 	private List<String> platformIds = new ArrayList<>();
+	@Schema(description = "List of platform names associated with the routing.")
 	private List<String> platformNames = new ArrayList<>();
+	@Schema(description = "List of netlist names.")
 	private List<String> netlistNames = new ArrayList<>();
+	@Schema(description = "List of GOES channels for the routing.")
 	private List<Integer> goesChannels = new ArrayList<>();
-	
+
+	@Schema(description = "Additional configuration properties for the routing.")
 	private Properties properties = new Properties();
-	
+
+	@Schema(description = "Indicates if the GOES DCP is self-timed.")
 	private boolean goesSelfTimed = false;
+	@Schema(description = "Indicates if the GOES DCP is random format.")
 	private boolean goesRandom = false;
+	@Schema(description = "Indicates if the data is sourced from a network DCP.")
 	private boolean networkDCP = false;
+	@Schema(description = "Indicates if the data is sourced via the Iridium satellite network.")
 	private boolean iridium = false;
+	@Schema(description = "Indicates if quality notifications are enabled.")
 	private boolean qualityNotifications = false;
+	@Schema(description = "Indicates if GOES spacecraft health checks are enabled.")
 	private boolean goesSpacecraftCheck = false;
+	@Schema(description = "Selection for the GOES spacecraft (e.g., East or West). Default is 'East'.")
 	private String goesSpacecraftSelection = "East";
+	@Schema(description = "Indicates if parity checks are enabled. Default is false.")
 	private boolean parityCheck = false;
+	@Schema(description = "Selection for parity status (e.g., Good or Bad). Default is 'Good'.")
 	private String paritySelection = "Good";
-	
-	
+
+
 	public Long getRoutingId()
 	{
 		return routingId;

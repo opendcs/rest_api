@@ -18,20 +18,32 @@ package org.opendcs.odcsapi.beans;
 import java.util.ArrayList;
 import java.util.List;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(description = "Represents a configuration script, including name, data order, header type, sensors, and format statements.")
 public final class ApiConfigScript
 {
+	@Schema(description = "The name of the configuration script.")
 	private String name = null;
-	
-	/** U=undefined, A=ascending, D=descending */
+
+	/**
+	 * U=undefined, A=ascending, D=descending
+	 */
+	@Schema(description = "Defines the data order. Valid values are: U (undefined), A (ascending), D (descending).")
 	private char dataOrder = 'U';
-	
+
+	@Schema(description = "Specifies the type of header used in the configuration script.")
 	private String headerType = null;
-	
+
+	@Schema(description = "A list of sensors associated with the configuration script.",
+			implementation = ApiConfigScriptSensor.class)
 	private List<ApiConfigScriptSensor> scriptSensors =
-		new ArrayList<>();
-	
+			new ArrayList<>();
+
+	@Schema(description = "A list of format statements used by the configuration script.",
+			implementation = ApiScriptFormatStatement.class)
 	private List<ApiScriptFormatStatement> formatStatements =
-		new ArrayList<>();
+			new ArrayList<>();
 
 	public String getName()
 	{
@@ -82,5 +94,4 @@ public final class ApiConfigScript
 	{
 		this.formatStatements = formatStatements;
 	}
-	
 }
