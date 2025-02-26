@@ -32,6 +32,11 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.Parameter;
+
 import decodes.db.DataPresentation;
 import decodes.db.DataType;
 import decodes.db.DatabaseException;
@@ -62,7 +67,15 @@ public final class PresentationResources extends OpenDcsResource
 	@Path("presentationrefs")
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
- 	public Response getPresentationRefs() throws DbException
+	@Operation(
+			summary = "Retrieve Presentation References",
+			description = "Fetches all presentation group references available in the database.",
+			responses = {
+					@ApiResponse(responseCode = "200", description = "Successfully retrieved presentation references"),
+					@ApiResponse(responseCode = "500", description = "Database error occurred", content = @Content)
+			}
+	)
+	public Response getPresentationRefs() throws DbException
 	{
 		DatabaseIO dbIo = getLegacyDatabase();
 		try
@@ -123,7 +136,17 @@ public final class PresentationResources extends OpenDcsResource
 	@Path("presentation")
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
-	public Response getPresentation(@QueryParam("groupid") Long groupId)
+	@Operation(
+			summary = "Retrieve Presentation Group",
+			description = "Fetches a single presentation group based on the provided group ID.",
+			responses = {
+					@ApiResponse(responseCode = "200", description = "Successfully retrieved presentation group details"),
+					@ApiResponse(responseCode = "400", description = "Missing or invalid group ID parameter", content = @Content),
+					@ApiResponse(responseCode = "404", description = "Presentation group not found", content = @Content),
+					@ApiResponse(responseCode = "500", description = "Database error occurred", content = @Content)
+			}
+	)
+	public Response getPresentation(@Parameter(description = "ID of the presentation group to retrieve", required = true) @QueryParam("groupid") Long groupId)
 			throws WebAppException, DbException
 	{
 		if (groupId == null)
@@ -202,7 +225,16 @@ public final class PresentationResources extends OpenDcsResource
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
-	public Response postPresentation(ApiPresentationGroup presGrp) throws DbException
+	@Operation(
+			summary = "Create or Update Presentation Group",
+			description = "Creates a new presentation group or updates an existing one based on the provided data.",
+			responses = {
+					@ApiResponse(responseCode = "201", description = "Successfully created or updated presentation group"),
+					@ApiResponse(responseCode = "400", description = "Invalid data provided", content = @Content),
+					@ApiResponse(responseCode = "500", description = "Database error occurred", content = @Content)
+			}
+	)
+	public Response postPresentation(@Parameter(description = "Presentation group data", required = true) ApiPresentationGroup presGrp) throws DbException
 	{
 		DatabaseIO dbIo = getLegacyDatabase();
 		try (DataTypeDAI dai = getLegacyTimeseriesDB().makeDataTypeDAO())
@@ -299,7 +331,18 @@ public final class PresentationResources extends OpenDcsResource
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
-	public Response deletePresentation(@QueryParam("groupid") Long groupId) throws DbException, WebAppException
+	@Operation(
+			summary = "Delete Presentation Group",
+			description = "Deletes a presentation group by ID if it is not being used by a routing specification.",
+			responses = {
+					@ApiResponse(responseCode = "204", description = "Successfully deleted presentation group"),
+					@ApiResponse(responseCode = "400", description = "Missing or invalid group ID parameter", content = @Content),
+					@ApiResponse(responseCode = "405", description = "Cannot delete the group because it is in use", content = @Content),
+					@ApiResponse(responseCode = "500", description = "Database error occurred", content = @Content)
+			}
+	)
+	public Response deletePresentation(@Parameter(description = "ID of the presentation group to delete", required = true) @QueryParam("groupid") Long groupId)
+			throws DbException, WebAppException
 	{
 		if (groupId == null)
 		{

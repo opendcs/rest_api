@@ -32,6 +32,11 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.Parameter;
+
 import decodes.db.DatabaseException;
 import decodes.db.DatabaseIO;
 import decodes.db.DbEnum;
@@ -66,7 +71,18 @@ public final class ReflistResources extends OpenDcsResource
 	@Path("reflists")
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
-	public Response getRefLists(@QueryParam("name") String listNames) throws DbException, WebAppException
+	@Operation(
+			summary = "Fetch Reference Lists",
+			description = "Fetches all available reference lists or searches for specific lists based on the provided query.",
+			responses = {
+					@ApiResponse(responseCode = "200", description = "Successfully fetched reference lists", content = @Content),
+					@ApiResponse(responseCode = "400", description = "Invalid request parameters", content = @Content),
+					@ApiResponse(responseCode = "404", description = "No reference lists found matching search criteria", content = @Content),
+					@ApiResponse(responseCode = "500", description = "Server error occurred", content = @Content)
+			}
+	)
+	public Response getRefLists(@Parameter(description = "Comma-separated list of reference list names to search") @QueryParam("name") String listNames)
+			throws DbException, WebAppException
 	{
 		DatabaseIO dbIo = getLegacyDatabase();
 		try
@@ -142,7 +158,16 @@ public final class ReflistResources extends OpenDcsResource
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
-	public Response postRefList(ApiRefList reflist) throws DbException
+	@Operation(
+			summary = "Create or Update Reference List",
+			description = "Creates a new reference list or updates an existing one.",
+			responses = {
+					@ApiResponse(responseCode = "201", description = "Reference list created successfully", content = @Content),
+					@ApiResponse(responseCode = "400", description = "Invalid input format", content = @Content),
+					@ApiResponse(responseCode = "500", description = "Server error occurred", content = @Content)
+			}
+	)
+	public Response postRefList(@Parameter(description = "The reference list to create or update") ApiRefList reflist) throws DbException
 	{
 		try (EnumDAI dai = getLegacyTimeseriesDB().makeEnumDAO())
 		{
@@ -212,7 +237,17 @@ public final class ReflistResources extends OpenDcsResource
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
-	public Response deleteRefList(@QueryParam("reflistid") Long reflistId) throws DbException, WebAppException
+	@Operation(
+			summary = "Delete Reference List",
+			description = "Deletes a reference list by its ID.",
+			responses = {
+					@ApiResponse(responseCode = "204", description = "Reference list deleted successfully"),
+					@ApiResponse(responseCode = "400", description = "Missing or invalid reference list ID", content = @Content),
+					@ApiResponse(responseCode = "500", description = "Server error occurred", content = @Content)
+			}
+	)
+	public Response deleteRefList(@Parameter(description = "ID of the reference list to delete", required = true) @QueryParam("reflistid") Long reflistId)
+			throws DbException, WebAppException
 	{
 		if (reflistId == null)
 		{
@@ -235,6 +270,15 @@ public final class ReflistResources extends OpenDcsResource
 	@Path("seasons")
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
+	@Operation(
+			summary = "Fetch All Seasons",
+			description = "Fetches all seasons available in the database.",
+			responses = {
+					@ApiResponse(responseCode = "200", description = "Successfully retrieved seasons", content = @Content),
+					@ApiResponse(responseCode = "404", description = "No seasons found", content = @Content),
+					@ApiResponse(responseCode = "500", description = "Server error occurred", content = @Content)
+			}
+	)
 	public Response getSeasons() throws DbException, WebAppException
 	{
 		try (EnumDAI dai = getLegacyTimeseriesDB().makeEnumDAO())
@@ -276,8 +320,17 @@ public final class ReflistResources extends OpenDcsResource
 	@Path("season")
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
-	public Response getSeason(@QueryParam("abbr") String abbr)
-			throws DbException, WebAppException
+	@Operation(
+			summary = "Fetch Specific Season",
+			description = "Fetches details of a season based on its abbreviation.",
+			responses = {
+					@ApiResponse(responseCode = "200", description = "Successfully retrieved season details", content = @Content),
+					@ApiResponse(responseCode = "404", description = "Season not found", content = @Content),
+					@ApiResponse(responseCode = "500", description = "Server error occurred", content = @Content)
+			}
+	)
+	public Response getSeason(@Parameter(description = "Abbreviation of the season to fetch", required = true) @QueryParam("abbr") String abbr)
+	throws DbException, WebAppException
 	{
 		if (abbr == null)
 		{
@@ -324,8 +377,18 @@ public final class ReflistResources extends OpenDcsResource
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
-	public Response postSeason(@QueryParam("fromabbr") String fromAbbr, ApiSeason season)
-			throws DbException
+	@Operation(
+			summary = "Create or Update Season",
+			description = "Creates a new season or updates an existing one based on the abbreviation.",
+			responses = {
+					@ApiResponse(responseCode = "201", description = "Season created or updated successfully", content = @Content),
+					@ApiResponse(responseCode = "400", description = "Invalid or missing parameters", content = @Content),
+					@ApiResponse(responseCode = "500", description = "Server error occurred", content = @Content)
+			}
+	)
+	public Response postSeason(@Parameter(description = "Abbreviation of the season to overwrite, if exists") @QueryParam("fromabbr") String fromAbbr,
+			@Parameter(description = "Details of the new or updated season", required = true) ApiSeason season)
+	throws DbException
 	{
 		try (EnumDAI dai = getLegacyTimeseriesDB().makeEnumDAO())
 		{
@@ -384,8 +447,17 @@ public final class ReflistResources extends OpenDcsResource
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
-	public Response deleteSeason(@QueryParam("abbr") String abbr)
-			throws WebAppException, DbException
+	@Operation(
+			summary = "Delete Season",
+			description = "Deletes a season by its abbreviation.",
+			responses = {
+					@ApiResponse(responseCode = "204", description = "Season deleted successfully"),
+					@ApiResponse(responseCode = "400", description = "Invalid or missing season abbreviation", content = @Content),
+					@ApiResponse(responseCode = "500", description = "Server error occurred", content = @Content)
+			}
+	)
+	public Response deleteSeason(@Parameter(description = "Abbreviation of the season to delete", required = true) @QueryParam("abbr") String abbr)
+	throws WebAppException, DbException
 	{
 		if (abbr == null)
 		{
