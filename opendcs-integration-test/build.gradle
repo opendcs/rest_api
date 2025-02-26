@@ -20,6 +20,8 @@ plugins {
 
 dependencies {
     testRuntimeOnly(libs.byte.buddy)
+    testRuntimeOnly(libs.jackson)             // for swagger compatibility
+    testRuntimeOnly(libs.jackson.annotations) // for swagger compatibility
     testRuntimeOnly(libs.postgresql)
     testImplementation(libs.bundles.tomcat)
     testImplementation(libs.commons.io)
