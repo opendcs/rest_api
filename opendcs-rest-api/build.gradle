@@ -57,7 +57,9 @@ dependencies {
     implementation(libs.jwt)
     implementation(libs.jersey.hk2)
     implementation(libs.slf4j.jdk)
+    implementation(libs.jackson)
     runtimeOnly(libs.jaxb.runtime)
+    runtimeOnly(libs.jackson.annotations) // updated for swagger compatibility
     runtimeOnly(libs.postgresql)
     testImplementation(libs.jersey.test)
     testImplementation(libs.mockito.core)
