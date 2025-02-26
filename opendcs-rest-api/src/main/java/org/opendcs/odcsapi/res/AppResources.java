@@ -31,6 +31,9 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import org.opendcs.odcsapi.beans.ApiAppRef;
 import org.opendcs.odcsapi.beans.ApiLoadingApp;
 import org.opendcs.odcsapi.dao.ApiAppDAO;
@@ -57,6 +60,14 @@ public final class AppResources
 	@Path("apprefs")
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
+	@Operation(
+			summary = "Get Application References",
+			description = "Fetches a list of application references.",
+			responses = {
+					@ApiResponse(responseCode = "200", description = "Successfully retrieved application references"),
+					@ApiResponse(responseCode = "500", description = "Database error occurred", content = @Content)
+			}
+	)
 	public Response getAppRefs() throws DbException
 	{
 		LOGGER.trace("Getting App Refs.");
@@ -73,11 +84,20 @@ public final class AppResources
 	@Path("app")
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
- 	public Response getApp(@QueryParam("appid") Long appId)
-		throws WebAppException, DbException, SQLException
+	@Operation(
+			summary = "Get Application Details",
+			description = "Fetches details of a specific application by ID.",
+			responses = {
+					@ApiResponse(responseCode = "200", description = "Successfully retrieved application details"),
+					@ApiResponse(responseCode = "400", description = "Missing or invalid appid parameter", content = @Content),
+					@ApiResponse(responseCode = "500", description = "Database error occurred", content = @Content)
+			}
+	)
+	public Response getApp(@QueryParam("appid") Long appId)
+			throws WebAppException, DbException, SQLException
 	{
 		if (appId == null)
-			throw new WebAppException(ErrorCodes.MISSING_ID, 
+			throw new WebAppException(ErrorCodes.MISSING_ID,
 				"Missing required appid parameter.");
 		LOGGER.debug("Getting app with id {}", appId);
 		try (DbInterface dbi = new DbInterface();
@@ -92,6 +112,15 @@ public final class AppResources
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
+	@Operation(
+			summary = "Create or Update Application",
+			description = "Creates a new application or updates an existing one.",
+			responses = {
+					@ApiResponse(responseCode = "200", description = "Successfully created or updated the application"),
+					@ApiResponse(responseCode = "400", description = "Invalid application data", content = @Content),
+					@ApiResponse(responseCode = "500", description = "Database error occurred", content = @Content)
+			}
+	)
 	public Response postApp(ApiLoadingApp app)
 		throws WebAppException, DbException, SQLException
 	{
@@ -109,11 +138,20 @@ public final class AppResources
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
+	@Operation(
+			summary = "Delete Application",
+			description = "Deletes an application by its ID.",
+			responses = {
+					@ApiResponse(responseCode = "200", description = "Successfully deleted the application"),
+					@ApiResponse(responseCode = "400", description = "Invalid appid parameter", content = @Content),
+					@ApiResponse(responseCode = "500", description = "Database error occurred", content = @Content)
+			}
+	)
 	public Response deletApp(@QueryParam("appid") Long appId)
 		throws WebAppException, DbException, SQLException
 	{
 		LOGGER.debug("Delete app received request to delete app with id {}", appId);
-		
+
 		// Use username and password to attempt to connect to the database
 		try (DbInterface dbi = new DbInterface();
 			ApiAppDAO dao = new ApiAppDAO(dbi))
@@ -127,7 +165,15 @@ public final class AppResources
 	@Path("appstat")
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
- 	public Response getAppStat() throws DbException
+	@Operation(
+			summary = "Get Application Statistics",
+			description = "Fetches statistics for all applications.",
+			responses = {
+					@ApiResponse(responseCode = "200", description = "Successfully retrieved application statistics"),
+					@ApiResponse(responseCode = "500", description = "Database error occurred", content = @Content)
+			}
+	)
+	public Response getAppStat() throws DbException
 	{
 		LOGGER.debug("Getting app stats");
 		try (DbInterface dbi = new DbInterface();

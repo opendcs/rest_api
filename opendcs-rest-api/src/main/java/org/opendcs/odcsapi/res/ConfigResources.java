@@ -22,6 +22,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Vector;
 import javax.annotation.security.RolesAllowed;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -74,6 +79,14 @@ public final class ConfigResources extends OpenDcsResource
 	@GET
 	@Path("configrefs")
 	@Produces(MediaType.APPLICATION_JSON)
+	@Operation(
+			summary = "Get Configuration References",
+			description = "Fetch a list of configuration references along with their details.",
+			responses = {
+					@ApiResponse(responseCode = "200", description = "Successfully retrieved the configuration references"),
+					@ApiResponse(responseCode = "500", description = "Database error occurred while retrieving the configuration references", content = @Content)
+			}
+	)
 	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
 	public Response getConfigRefs() throws DbException
 	{
@@ -84,7 +97,7 @@ public final class ConfigResources extends OpenDcsResource
 			dbIo.readConfigList(configList);
 			return Response.status(HttpServletResponse.SC_OK).entity(map(configList)).build();
 		}
-		catch (DatabaseException ex)
+		catch(DatabaseException ex)
 		{
 			throw new DbException("Error reading config list", ex);
 		}
@@ -120,6 +133,16 @@ public final class ConfigResources extends OpenDcsResource
 	@Path("config")
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
+	@Operation(
+			summary = "Get Configuration by ID",
+			description = "Fetches the details of a specific configuration by its ID.",
+			responses = {
+					@ApiResponse(responseCode = "200", description = "Successfully retrieved configuration details"),
+					@ApiResponse(responseCode = "400", description = "Missing or invalid configid parameter", content = @Content),
+					@ApiResponse(responseCode = "404", description = "Configuration not found", content = @Content),
+					@ApiResponse(responseCode = "500", description = "Database error occurred", content = @Content)
+			}
+	)
 	public Response getConfig(@QueryParam("configid") Long configId) throws WebAppException, DbException
 	{
 		if (configId == null)
@@ -220,6 +243,15 @@ public final class ConfigResources extends OpenDcsResource
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
+	@Operation(
+			summary = "Create or Update Configuration",
+			description = "Creates a new configuration object or updates an existing one.",
+			responses = {
+					@ApiResponse(responseCode = "201", description = "Successfully created or updated the configuration"),
+					@ApiResponse(responseCode = "400", description = "Invalid configuration data", content = @Content),
+					@ApiResponse(responseCode = "500", description = "Database error occurred", content = @Content)
+			}
+	)
 	public Response postConfig(ApiPlatformConfig config) throws DbException
 	{
 		DatabaseIO dbIo = getLegacyDatabase();
@@ -402,6 +434,16 @@ public final class ConfigResources extends OpenDcsResource
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
+	@Operation(
+			summary = "Delete Configuration",
+			description = "Deletes a configuration object identified by its ID, if it is not being used by any platform.",
+			responses = {
+					@ApiResponse(responseCode = "200", description = "Successfully deleted the configuration"),
+					@ApiResponse(responseCode = "400", description = "Missing or invalid configid parameter", content = @Content),
+					@ApiResponse(responseCode = "405", description = "Configuration is in use and cannot be deleted", content = @Content),
+					@ApiResponse(responseCode = "500", description = "Database error occurred", content = @Content)
+			}
+	)
 	public Response deleteConfig(@QueryParam("configid") Long configId) throws DbException, WebAppException
 	{
 		if (configId == null)

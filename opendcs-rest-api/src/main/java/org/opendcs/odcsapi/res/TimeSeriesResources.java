@@ -32,6 +32,9 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import ilex.util.IDateFormat;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import org.opendcs.odcsapi.beans.ApiInterval;
 import org.opendcs.odcsapi.beans.ApiTsGroup;
 import org.opendcs.odcsapi.dao.ApiRefListDAO;
@@ -57,6 +60,14 @@ public final class TimeSeriesResources
 	@Path("tsrefs")
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
+	@Operation(
+			summary = "Get Time Series References",
+			description = "Retrieves a list of time series references.",
+			responses = {
+					@ApiResponse(responseCode = "200", description = "Successfully retrieved time series references"),
+					@ApiResponse(responseCode = "500", description = "Database error", content = @Content)
+			}
+	)
 	public Response getTimeSeriesRefs(@QueryParam("active") Boolean activeOnly) throws DbException
 	{
 		Logger.getLogger(ApiConstants.loggerName).fine("getTimeSeriesRefs");
@@ -71,6 +82,15 @@ public final class TimeSeriesResources
 	@Path("tsspec")
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
+	@Operation(
+			summary = "Get Time Series Specification",
+			description = "Fetches the specification for a specific time series using its key.",
+			responses = {
+					@ApiResponse(responseCode = "200", description = "Successfully retrieved time series specification"),
+					@ApiResponse(responseCode = "400", description = "Missing or invalid key", content = @Content),
+					@ApiResponse(responseCode = "500", description = "Database error", content = @Content)
+			}
+	)
 	public Response getTimeSeriesSpec(@QueryParam("key") Long tsKey) throws WebAppException, DbException
 	{
 		if (tsKey == null)
@@ -89,6 +109,15 @@ public final class TimeSeriesResources
 	@Path("tsdata")
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
+	@Operation(
+			summary = "Get Time Series Data",
+			description = "Fetches the data points for a specific time series in a defined date range.",
+			responses = {
+					@ApiResponse(responseCode = "200", description = "Successfully retrieved time series data"),
+					@ApiResponse(responseCode = "400", description = "Invalid input parameters", content = @Content),
+					@ApiResponse(responseCode = "500", description = "Database error occurred", content = @Content)
+			}
+	)
 	public Response getTimeSeriesData(@QueryParam("key") Long tsKey, @QueryParam("start") String start,
 		@QueryParam("end") String end)
 		throws WebAppException, DbException
@@ -132,6 +161,14 @@ public final class TimeSeriesResources
 	@Path("intervals")
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
+	@Operation(
+			summary = "Get Intervals",
+			description = "Retrieves a list of known intervals in the system.",
+			responses = {
+					@ApiResponse(responseCode = "200", description = "Successfully retrieved intervals"),
+					@ApiResponse(responseCode = "500", description = "Database error occurred", content = @Content)
+			}
+	)
 	public Response getIntervals()
 		throws DbException
 	{
@@ -148,6 +185,15 @@ public final class TimeSeriesResources
 	@Path("interval")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
+	@Operation(
+			summary = "Get Time Series Data",
+			description = "Fetches the data points for a specific time series in a defined date range.",
+			responses = {
+					@ApiResponse(responseCode = "200", description = "Successfully retrieved time series data"),
+					@ApiResponse(responseCode = "400", description = "Invalid input parameters", content = @Content),
+					@ApiResponse(responseCode = "500", description = "Database error occurred", content = @Content)
+			}
+	)
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
 	public Response postInterval(ApiInterval intv)
 		throws DbException
@@ -167,6 +213,15 @@ public final class TimeSeriesResources
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
+	@Operation(
+			summary = "Delete Interval",
+			description = "Deletes the interval with the specified ID from the system.",
+			responses = {
+					@ApiResponse(responseCode = "200", description = "Successfully deleted the interval"),
+					@ApiResponse(responseCode = "400", description = "Invalid parameters", content = @Content),
+					@ApiResponse(responseCode = "500", description = "Database error occurred", content = @Content)
+			}
+	)
 	public Response deleteInterval(@QueryParam("intvid") Long intvId) throws DbException
 	{
 		Logger.getLogger(ApiConstants.loggerName).fine("deleteInterval id=" + intvId);
@@ -180,13 +235,21 @@ public final class TimeSeriesResources
 		}
 	}
 
-	@GET
-	@Path("tsgrouprefs")
-	@Produces(MediaType.APPLICATION_JSON)
-	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
-	public Response getTsGroupRefs() throws DbException
-	{
-		Logger.getLogger(ApiConstants.loggerName).fine("getTsGroupRefs");
+		@GET
+		@Path("tsgrouprefs")
+		@Produces(MediaType.APPLICATION_JSON)
+		@RolesAllowed({ApiConstants.ODCS_API_GUEST})
+		@Operation(
+				summary = "Get Time Series Group References",
+				description = "Retrieves a list of group references for time series.",
+				responses = {
+						@ApiResponse(responseCode = "200", description = "Successfully retrieved time series group references"),
+						@ApiResponse(responseCode = "500", description = "Database error occurred", content = @Content)
+				}
+		)
+		public Response getTsGroupRefs () throws DbException
+		{
+			Logger.getLogger(ApiConstants.loggerName).fine("getTsGroupRefs");
 		try (DbInterface dbi = new DbInterface();
 			ApiTsDAO dao = new ApiTsDAO(dbi))
 		{
@@ -194,28 +257,45 @@ public final class TimeSeriesResources
 		}
 	}
 
-	@GET
-	@Path("tsgroup")
-	@Produces(MediaType.APPLICATION_JSON)
-	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
-	public Response getTsGroupRefs(@QueryParam("groupid") Long groupId) throws WebAppException, DbException
-	{
-		Logger.getLogger(ApiConstants.loggerName).fine("getTsGroup");
+		@GET
+		@Path("tsgroup")
+		@Produces(MediaType.APPLICATION_JSON)
+		@RolesAllowed({ApiConstants.ODCS_API_GUEST})
+		@Operation(
+				summary = "Get Time Series Group Details",
+				description = "Fetches the details of a time series group using its ID.",
+				responses = {
+						@ApiResponse(responseCode = "200", description = "Successfully retrieved time series group details"),
+						@ApiResponse(responseCode = "400", description = "Invalid or missing group ID", content = @Content),
+						@ApiResponse(responseCode = "500", description = "Database error occurred", content = @Content)
+				}
+		)
+		public Response getTsGroupRefs (@QueryParam("groupid") Long groupId) throws WebAppException, DbException
+		{
+			Logger.getLogger(ApiConstants.loggerName).fine("getTsGroup");
 		try (DbInterface dbi = new DbInterface();
 			ApiTsDAO dao = new ApiTsDAO(dbi))
 		{
 			return ApiHttpUtil.createResponse(dao.getTsGroup(groupId));
 		}
 	}
-	
-	@POST
-	@Path("tsgroup")
-	@Consumes(MediaType.APPLICATION_JSON)
-	@Produces(MediaType.APPLICATION_JSON)
-	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
-	public Response postTsGroup(ApiTsGroup grp) throws WebAppException, DbException
-	{
-		Logger.getLogger(ApiConstants.loggerName).fine("postTsGroup");
+
+		@POST
+		@Path("tsgroup")
+		@Consumes(MediaType.APPLICATION_JSON)
+		@Produces(MediaType.APPLICATION_JSON)
+		@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
+		@Operation(
+				summary = "Add New Time Series Group",
+				description = "Creates a new time series group and stores it in the database.",
+				responses = {
+						@ApiResponse(responseCode = "200", description = "Successfully created the time series group"),
+						@ApiResponse(responseCode = "500", description = "Database error occurred", content = @Content)
+				}
+		)
+		public Response postTsGroup (ApiTsGroup grp) throws WebAppException, DbException
+		{
+			Logger.getLogger(ApiConstants.loggerName).fine("postTsGroup");
 		
 		try (DbInterface dbi = new DbInterface();
 			ApiTsDAO dao = new ApiTsDAO(dbi))
@@ -225,14 +305,23 @@ public final class TimeSeriesResources
 		}
 	}
 
-	@DELETE
-	@Path("tsgroup")
-	@Consumes(MediaType.APPLICATION_JSON)
-	@Produces(MediaType.APPLICATION_JSON)
-	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
-	public Response deleteTsGroup(@QueryParam("groupid") Long groupId) throws WebAppException, DbException
-	{
-		Logger.getLogger(ApiConstants.loggerName).fine("delete tsgroup id=" + groupId);
+		@DELETE
+		@Path("tsgroup")
+		@Consumes(MediaType.APPLICATION_JSON)
+		@Produces(MediaType.APPLICATION_JSON)
+		@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
+		@Operation(
+				summary = "Delete Time Series Group",
+				description = "Deletes a specific time series group from the system by its ID.",
+				responses = {
+						@ApiResponse(responseCode = "200", description = "Successfully deleted time series group"),
+						@ApiResponse(responseCode = "400", description = "Missing or invalid group ID", content = @Content),
+						@ApiResponse(responseCode = "500", description = "Database error occurred", content = @Content)
+				}
+		)
+		public Response deleteTsGroup (@QueryParam("groupid") Long groupId) throws WebAppException, DbException
+		{
+			Logger.getLogger(ApiConstants.loggerName).fine("delete tsgroup id=" + groupId);
 		
 		try (DbInterface dbi = new DbInterface();
 			ApiTsDAO dao = new ApiTsDAO(dbi))
