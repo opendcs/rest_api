@@ -17,108 +17,143 @@ package org.opendcs.odcsapi.beans;
 
 import java.util.Date;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 /**
  * Stores an entry from the DACQ_EVENT table.
  */
+@Schema(description = "Represents a data acquisition entry, which stores event details for a specific time and context.")
 public final class ApiDacqEvent
 {
+	@Schema(description = "The unique identifier of the data acquisition event.")
 	private Long eventId = null;
-	
-	// a.k.a. scheduleEntryStatusID in database
+
+	@Schema(description = "The unique identifier of the routing execution instance.")
 	private Long routingExecId = null;
 
+	@Schema(description = "The unique identifier of the platform associated with the event.")
 	private Long platformId = null;
-	
+
+	@Schema(description = "The time when the event occurred.")
 	private Date eventTime = null;
-	
+
+	@Schema(description = "The priority of the event.")
 	private String priority = null;
-	
+
+	@Schema(description = "The ID of the application that generated the event.")
 	private Long appId = null;
+
+	@Schema(description = "The name of the application that generated the event.")
 	private String appName = null;
+
+	@Schema(description = "The subsystem that generated the event.")
 	private String subsystem = null;
+
+	@Schema(description = "The timestamp when the message was received.")
 	private Date msgRecvTime = null;
+
+	@Schema(description = "The textual description of the event.")
 	private String eventText = null;
-	
-	
+
+
 	public Long getEventId()
 	{
 		return eventId;
 	}
+
 	public void setEventId(Long eventId)
 	{
 		this.eventId = eventId;
 	}
+
 	public Long getRoutingExecId()
 	{
 		return routingExecId;
 	}
+
 	public void setRoutingExecId(Long routingExecId)
 	{
 		this.routingExecId = routingExecId;
 	}
+
 	public Long getPlatformId()
 	{
 		return platformId;
 	}
+
 	public void setPlatformId(Long platformId)
 	{
 		this.platformId = platformId;
 	}
+
 	public Date getEventTime()
 	{
 		return eventTime;
 	}
+
 	public void setEventTime(Date eventTime)
 	{
 		this.eventTime = eventTime;
 	}
+
 	public String getPriority()
 	{
 		return priority;
 	}
+
 	public void setPriority(String priority)
 	{
 		this.priority = priority;
 	}
+
 	public Long getAppId()
 	{
 		return appId;
 	}
+
 	public void setAppId(Long appId)
 	{
 		this.appId = appId;
 	}
+
 	public String getAppName()
 	{
 		return appName;
 	}
+
 	public void setAppName(String appName)
 	{
 		this.appName = appName;
 	}
+
 	public String getSubsystem()
 	{
 		return subsystem;
 	}
+
 	public void setSubsystem(String subsystem)
 	{
 		this.subsystem = subsystem;
 	}
+
 	public Date getMsgRecvTime()
 	{
 		return msgRecvTime;
 	}
+
 	public void setMsgRecvTime(Date msgRecvTime)
 	{
 		this.msgRecvTime = msgRecvTime;
 	}
+
 	public String getEventText()
 	{
 		return eventText;
 	}
+
 	public void setEventText(String eventText)
 	{
 		this.eventText = eventText;
 	}
-	
+
 }

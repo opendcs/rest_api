@@ -18,18 +18,29 @@ package org.opendcs.odcsapi.beans;
 import java.util.HashMap;
 import java.util.Map;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 /**
  * @author mmaloney
- *
  */
+@Schema(description = "Represents an enumeration object containing values. Referred to as a reference list.")
 public final class ApiRefList
 {
+	@Schema(description = "The unique ID for the enumeration.")
 	private Long reflistId = null;
+
+	@Schema(description = "The name of the enumeration.")
 	private String enumName = null;
+
+	@Schema(description = "The map of items in this enumeration, where each key is an item name.")
 	private Map<String, ApiRefListItem> items = new HashMap<>();
+
+	@Schema(description = "The default value of the enumeration.")
 	private String defaultValue = null;
+
+	@Schema(description = "A human-readable explanation of this enumeration.")
 	private String description = null;
-	
+
 	public String getEnumName()
 	{
 		return enumName;

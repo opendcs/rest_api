@@ -19,29 +19,54 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(description = "Represents an algorithm configuration with properties, parameters, and associated scripts.")
 public final class ApiAlgorithm
 {
-	/** Surrogate key for this algorithm in the time series database.  */
+	/**
+	 * Surrogate key for this algorithm in the time series database.
+	 */
+	@Schema(description = "Unique identifier for the algorithm.")
 	private Long algorithmId = null;
 
-	/** Name of this algorithm */
+	/**
+	 * Name of this algorithm
+	 */
+	@Schema(description = "Name of the algorithm.")
 	private String name = null;
 
-	/** Fully qualified Java class name to execut this algorithm. */
+	/**
+	 * Fully qualified Java class name to execute this algorithm.
+	 */
+	@Schema(description = "Fully qualified Java class name used to execute the algorithm.")
 	private String execClass = null;
 
-	/** Free form multi-line comment */
+	/**
+	 * Free form multi-line comment
+	 */
+	@Schema(description = "Description or comments about the algorithm.")
 	private String description = null;
 
-	/** Properties associated with this algorithm. */
+	/**
+	 * Properties associated with this algorithm.
+	 */
+	@Schema(description = "Key-value pairs containing properties associated with the algorithm.")
 	private Properties props = new Properties();
-	
-	/** parameters to this algorithm */
+
+	/**
+	 * parameters to this algorithm
+	 */
+	@Schema(description = "List of parameters used by the algorithm.", implementation = ApiAlgoParm.class)
 	private List<ApiAlgoParm> parms = new ArrayList<>();
 
-	/** For use in the editor -- the number of computations using this algo. */
+	/**
+	 * For use in the editor -- the number of computations using this algo.
+	 */
+	@Schema(description = "Number of computations currently using this algorithm.")
 	private int numCompsUsing = 0;
-	
+
+	@Schema(description = "List of scripts associated with the algorithm.", implementation = ApiAlgorithmScript.class)
 	private List<ApiAlgorithmScript> algoScripts = new ArrayList<>();
 
 	public Long getAlgorithmId()

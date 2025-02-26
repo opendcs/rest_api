@@ -15,13 +15,23 @@
 
 package org.opendcs.odcsapi.beans;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(description = "Represents a unit with its abbreviation, name, family, and associated measures.")
 public final class ApiUnit
 {
+	@Schema(description = "Abbreviation for the unit.")
 	private String abbr = null;
+
+	@Schema(description = "Name of the unit.")
 	private String name = null;
+
+	@Schema(description = "Family or category of the unit.")
 	private String family = null;
+
+	@Schema(description = "Type of measures associated with the unit.")
 	private String measures = null;
-	
+
 	public String getAbbr()
 	{
 		return abbr;
