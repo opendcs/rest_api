@@ -26,6 +26,13 @@
             <param-name>javax.ws.rs.Application</param-name>
             <param-value>org.opendcs.odcsapi.res.RestServices</param-value>
         </init-param>
+        <init-param>
+            <param-name>jersey.config.server.provider.packages</param-name>
+            <param-value>
+                io.swagger.jaxrs.listing,
+                org.opendcs.odcsapi.res
+            </param-value>
+        </init-param>
         <load-on-startup>1</load-on-startup>
     </servlet>
     <session-config>
@@ -53,4 +60,8 @@
         <param-value></param-value>
     </context-param>
     -->
+    <servlet-mapping>
+        <servlet-name>jersey-servlet</servlet-name>
+        <url-pattern>/*</url-pattern>
+    </servlet-mapping>
 </web-app>
