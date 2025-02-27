@@ -24,7 +24,11 @@ import java.util.Vector;
 import javax.annotation.security.RolesAllowed;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 
 import javax.servlet.http.HttpServletResponse;
@@ -80,12 +84,20 @@ public final class ConfigResources extends OpenDcsResource
 	@Path("configrefs")
 	@Produces(MediaType.APPLICATION_JSON)
 	@Operation(
-			summary = "Get Configuration References",
-			description = "Fetch a list of configuration references along with their details.",
+			summary = "This method returns a JSON list of DECODES Config records suitable for displaying in a table or pick-list",
+			description = "Example:\n\n    http://localhost:8080/odcsapi/configrefs\n\n" +
+					"This method returns a structure with an array in the following format:" +
+					"\n\n```\n[\n  {\n    \"configId\": 1,\n    \"description\": \"WSC SHEF - 2 sensors - HG, VB\"," +
+					"\n    \"name\": \"Shef-WSC-Hydro-RCOYCHER\",\n    \"numPlatforms\": 1\n  }\n]```",
 			responses = {
-					@ApiResponse(responseCode = "200", description = "Successfully retrieved the configuration references"),
-					@ApiResponse(responseCode = "500", description = "Database error occurred while retrieving the configuration references", content = @Content)
-			}
+					@ApiResponse(responseCode = "200", description = "Success",
+							content = @Content(mediaType = MediaType.APPLICATION_JSON,
+							array = @ArraySchema(schema = @Schema(implementation = ApiConfigRef.class)))),
+					@ApiResponse(responseCode = "500",
+							description = "Database error occurred while retrieving the configuration references",
+							content = @Content)
+			},
+			tags = {"REST - DECODES Platform Configurations"}
 	)
 	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
 	public Response getConfigRefs() throws DbException
@@ -134,16 +146,20 @@ public final class ConfigResources extends OpenDcsResource
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
 	@Operation(
-			summary = "Get Configuration by ID",
-			description = "Fetches the details of a specific configuration by its ID.",
+			summary = "Get Configuration Details",
+			description = "Fetches the details of a specific configuration using its unique ID.",
 			responses = {
-					@ApiResponse(responseCode = "200", description = "Successfully retrieved configuration details"),
+					@ApiResponse(responseCode = "200", description = "Successfully retrieved configuration details",
+							content = @Content(mediaType = MediaType.APPLICATION_JSON,
+									schema = @Schema(implementation = ApiPlatformConfig.class))),
 					@ApiResponse(responseCode = "400", description = "Missing or invalid configid parameter", content = @Content),
 					@ApiResponse(responseCode = "404", description = "Configuration not found", content = @Content),
-					@ApiResponse(responseCode = "500", description = "Database error occurred", content = @Content)
-			}
+					@ApiResponse(responseCode = "500", description = "Internal Server Error", content = @Content)
+			},
+			tags = {"REST - DECODES Platform Configurations"}
 	)
-	public Response getConfig(@QueryParam("configid") Long configId) throws WebAppException, DbException
+	public Response getConfig(@Parameter(schema = @Schema(implementation = Long.class), required = true)
+		@QueryParam("configid") Long configId) throws WebAppException, DbException
 	{
 		if (configId == null)
 		{
@@ -245,12 +261,23 @@ public final class ConfigResources extends OpenDcsResource
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
 	@Operation(
 			summary = "Create or Update Configuration",
-			description = "Creates a new configuration object or updates an existing one.",
+			description = "Creates a new configuration object or updates an existing one.\n\n" +
+					"For creating a new config, leave configId out of the data structure. " +
+					"For overwriting, include the configId previously returned.",
+			requestBody = @RequestBody(
+					description = "The configuration object to be created or updated",
+					required = true,
+					content = @Content(
+							mediaType = MediaType.APPLICATION_JSON,
+							schema = @Schema(implementation = ApiPlatformConfig.class)
+					)
+			),
 			responses = {
-					@ApiResponse(responseCode = "201", description = "Successfully created or updated the configuration"),
-					@ApiResponse(responseCode = "400", description = "Invalid configuration data", content = @Content),
+					@ApiResponse(responseCode = "201", description = "Successfully created or updated the configuration",
+							content = @Content),
 					@ApiResponse(responseCode = "500", description = "Database error occurred", content = @Content)
-			}
+			},
+			tags = {"REST - DECODES Platform Configurations"}
 	)
 	public Response postConfig(ApiPlatformConfig config) throws DbException
 	{
@@ -436,15 +463,27 @@ public final class ConfigResources extends OpenDcsResource
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
 	@Operation(
 			summary = "Delete Configuration",
-			description = "Deletes a configuration object identified by its ID, if it is not being used by any platform.",
+			description = "Deletes a configuration object identified by its unique ID. " +
+					"The configuration cannot be deleted if it is actively being used by one or more platforms.",
+			parameters = {
+					@Parameter(name = "configid", description = "The unique ID of the configuration to delete",
+							required = true, schema = @Schema(type = "integer"))
+			},
 			responses = {
-					@ApiResponse(responseCode = "200", description = "Successfully deleted the configuration"),
-					@ApiResponse(responseCode = "400", description = "Missing or invalid configid parameter", content = @Content),
-					@ApiResponse(responseCode = "405", description = "Configuration is in use and cannot be deleted", content = @Content),
+					@ApiResponse(responseCode = "200", description = "Successfully deleted the configuration",
+							content = @Content),
+					@ApiResponse(responseCode = "400", description = "Missing or invalid configid parameter",
+							content = @Content),
+					@ApiResponse(responseCode = "405", description = "Configuration is in use and cannot be deleted",
+							content = @Content),
 					@ApiResponse(responseCode = "500", description = "Database error occurred", content = @Content)
-			}
+			},
+			tags = {"REST - DECODES Platform Configurations"}
 	)
-	public Response deleteConfig(@QueryParam("configid") Long configId) throws DbException, WebAppException
+	public Response deleteConfig(@Parameter(description = "The unique ID of the configuration to delete",
+			required = true, schema = @Schema(implementation = Long.class))
+		@QueryParam("configid") Long configId)
+			throws DbException, WebAppException
 	{
 		if (configId == null)
 		{

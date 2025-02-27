@@ -16,6 +16,7 @@
 package org.opendcs.odcsapi.res;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -49,7 +50,6 @@ import decodes.db.NetworkListList;
 import decodes.db.RoutingSpec;
 import decodes.db.RoutingSpecList;
 import decodes.sql.DbKey;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.opendcs.odcsapi.beans.ApiNetList;
 import org.opendcs.odcsapi.beans.ApiNetListItem;
 import org.opendcs.odcsapi.beans.ApiNetlistRef;
@@ -90,7 +90,7 @@ public final class NetlistResources extends OpenDcsResource
 			responses = {
 					@ApiResponse(
 							responseCode = "200",
-							description = "success",
+							description = "Success",
 							content = @Content(mediaType = MediaType.APPLICATION_JSON,
 									schema = @Schema(implementation = ApiNetlistRef.class))
 					),
@@ -101,7 +101,9 @@ public final class NetlistResources extends OpenDcsResource
 			},
 			tags = {"REST - Network Lists"}
 	)
-	public Response getNetlistRefs(@QueryParam("tmtype") String tmtype)
+	public Response getNetlistRefs(@Parameter(description = "The transport medium type to filter by",
+			schema = @Schema(implementation = String.class))
+		@QueryParam("tmtype") String tmtype)
 			throws DbException
 	{
 		DatabaseIO dbIo = getLegacyDatabase();
@@ -163,13 +165,14 @@ public final class NetlistResources extends OpenDcsResource
 			responses = {
 					@ApiResponse(
 							responseCode = "200",
-							description = "success",
-							content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApiNetList.class))
+							description = "Success",
+							content = @Content(mediaType = MediaType.APPLICATION_JSON,
+									schema = @Schema(implementation = ApiNetList.class))
 					),
 					@ApiResponse(
 							responseCode = "404",
 							description = "Not Found",
-							content = @Content(mediaType = "application/json",
+							content = @Content(mediaType = MediaType.APPLICATION_JSON,
 									examples = @ExampleObject(value = "{\"status\": 404," +
 											"\"message\": \"The requested netlistid was not found in the database.\"}")
 							)
@@ -177,7 +180,7 @@ public final class NetlistResources extends OpenDcsResource
 					@ApiResponse(
 							responseCode = "406",
 							description = "Not Acceptable",
-							content = @Content(mediaType = "application/json",
+							content = @Content(mediaType = MediaType.APPLICATION_JSON,
 									examples = @ExampleObject(value = "{\"status\": 406," +
 											"\"message\": \"The required ‘netlistid’ parameter was missing in the URL.\"}")
 							)
@@ -189,7 +192,9 @@ public final class NetlistResources extends OpenDcsResource
 			},
 			tags = {"REST - Network Lists"}
 	)
-	public Response getNetList(@QueryParam("netlistid") Long netlistId)
+	public Response getNetList(@Parameter(description = "Unique identifier for the netlist to retrieve",
+			schema = @Schema(implementation = Long.class))
+		@QueryParam("netlistid") Long netlistId)
 			throws WebAppException, DbException
 	{
 		if (netlistId == null)
@@ -252,9 +257,6 @@ public final class NetlistResources extends OpenDcsResource
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
 	@Operation(
-			security = {
-					@SecurityRequirement(name = "bearerAuth")
-			},
 			summary = "Create or Overwrite Existing Netlist",
 			description = "The ‘netlist’ POST method requires a valid token.\n\n" +
 					"It takes a single network list in JSON format, as described for the GET method:" +
@@ -268,12 +270,16 @@ public final class NetlistResources extends OpenDcsResource
 					"include the netlistId that was previously returned. The network list in the database " +
 					"is replaced with the one sent.",
 			requestBody = @RequestBody(
-					content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApiNetList.class),
-						examples = {
-							@ExampleObject(name = "basic", ref = "#/components/examples/POST_BASIC_NetList"),
-							@ExampleObject(name = "new", ref = "#/components/examples/POST_NEW_NetList"),
-							@ExampleObject(name = "update", ref = "#/components/examples/POST_UPDATE_NetList")
-					})
+					required = true,
+					content = @Content(mediaType = MediaType.APPLICATION_JSON,
+							schema = @Schema(implementation = ApiNetList.class)
+//					TODO: Fix Examples
+//						examples = {
+//							@ExampleObject(name = "basic", ref = "#/components/examples/POST_BASIC_NetList"),
+//							@ExampleObject(name = "new", ref = "#/components/examples/POST_NEW_NetList"),
+//							@ExampleObject(name = "update", ref = "#/components/examples/POST_UPDATE_NetList")
+//					})
+					)
 			),
 			responses = {
 					@ApiResponse(
@@ -343,9 +349,6 @@ public final class NetlistResources extends OpenDcsResource
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
 	@Operation(
-			security = {
-					@SecurityRequirement(name = "bearerAuth")
-			},
 			summary = "Delete Existing netlists",
 			description = "The DELETE netlist method requires a valid token.\n\n" +
 					"Required argument netlistid must be passed.\n\n" +
@@ -368,7 +371,8 @@ public final class NetlistResources extends OpenDcsResource
 			},
 			tags = {"REST - Network Lists"}
 	)
-	public Response deleteNetlist(@QueryParam("netlistid") Long netlistId)
+	public Response deleteNetlist(@Parameter(schema = @Schema(implementation = Long.class))
+		@QueryParam("netlistid") Long netlistId)
 			throws DbException, WebAppException
 	{
 		if (netlistId == null)
@@ -432,11 +436,13 @@ public final class NetlistResources extends OpenDcsResource
 	@Operation(
 			summary = "Convert Network List File",
 			description = "Parses a network list file (in text format) and converts it to an object representation.",
+			requestBody = @RequestBody(required = true, content = @Content(mediaType = MediaType.TEXT_PLAIN)),
 			responses = {
 					@ApiResponse(responseCode = "200", description = "Network list successfully parsed"),
 					@ApiResponse(responseCode = "406", description = "File parsing error or invalid format", content = @Content),
 					@ApiResponse(responseCode = "500", description = "Server error occurred", content = @Content)
-			}
+			},
+			tags = {"REST - Network Lists"}
 	)
 	public Response cnvtANL(String nldata)
 			throws WebAppException
