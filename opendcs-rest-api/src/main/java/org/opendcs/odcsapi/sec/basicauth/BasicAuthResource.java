@@ -22,6 +22,16 @@ import java.sql.SQLException;
 import java.util.Base64;
 import java.util.Set;
 import javax.annotation.security.RolesAllowed;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.StringToClassMapItem;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
@@ -51,6 +61,7 @@ import org.slf4j.LoggerFactory;
 import static org.opendcs.odcsapi.res.DataSourceContextCreator.DATA_SOURCE_ATTRIBUTE_KEY;
 
 @Path("/")
+@Tag(name = "REST - Authentication and Authorization", description = "Endpoints for authentication and authorization.")
 public final class BasicAuthResource extends OpenDcsResource
 {
 
@@ -67,6 +78,34 @@ public final class BasicAuthResource extends OpenDcsResource
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
+	@Operation(
+			summary = "The ‘credentials’ POST method is used to obtain a new token",
+			description = "The user name and password provided must be a valid login for the underlying database. "
+					+ "The user must also be assigned either of the roles OTSDB_ADMIN or OTSDB_MGR. If successful, a JSON-formatted token will be returned. "
+					+ "Tokens are valid for a finite period of time and expire if not used within 3 hours. Subsequent calls must include the token.",
+			requestBody = @RequestBody(
+					description = "Login Credentials",
+					required = true,
+					content = @Content(
+							mediaType = MediaType.APPLICATION_JSON,
+							schema = @Schema(implementation = Credentials.class)
+					)
+			),
+			responses = {
+					@ApiResponse(
+							responseCode = "200",
+							description = "Successful authentication."
+					),
+					@ApiResponse(
+							responseCode = "401",
+							description = "Invalid credentials or insufficient role.",
+							content = @Content(mediaType = MediaType.APPLICATION_JSON,
+									schema = @Schema(type = "object", implementation = StringToClassMapItem.class),
+									examples = @ExampleObject(value = "{\"message\":\"FATAL: password authentication" +
+											" failed for user 'xyz'.\",\"status\":401}"))
+					)
+			}
+	)
 	public Response postCredentials(Credentials credentials) throws WebAppException
 	{
 		TimeSeriesDb db = getLegacyTimeseriesDB();
