@@ -37,7 +37,12 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 
 import decodes.db.DatabaseException;
@@ -67,10 +72,16 @@ public final class SiteResources extends OpenDcsResource
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
 	@Operation(
-			summary = "Retrieve site references",
-			description = "Fetch a list of site references available in the database, including basic metadata.",
+			summary = "This method returns a JSON list of DECODES Site records suitable for displaying in a table or pick-list.",
+			description = "The returned structure contains only the numeric ID (unique), description, and an array of site names." +
+					"\n\nExample:\n\n    http://localhost:8080/odcsapi/siterefs" +
+					"\n\n**Note:** The numeric ID may be used in subsequent calls to the `site` method.",
+			operationId = "getsiterefs",
+			tags = {"REST - DECODES Site Records"},
 			responses = {
-					@ApiResponse(responseCode = "200", description = "Successfully retrieved site references"),
+					@ApiResponse(responseCode = "200", description = "Success",
+							content = @Content(mediaType = MediaType.APPLICATION_JSON,
+									array = @ArraySchema(schema = @Schema(implementation = ApiSiteRef.class)))),
 					@ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
 			}
 	)
@@ -118,17 +129,21 @@ public final class SiteResources extends OpenDcsResource
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
 	@Operation(
-			summary = "Retrieve a site by ID",
-			description = "Fetch a detailed site object using its unique ID, including full metadata and properties.",
+			summary = "This method returns a JSON representation of a single, complete DECODES Site record.",
+			description = "Example:\n\n    http://localhost:8080/odcsapi/site?siteid=3\n\nThe structure is as follows:\n```\n{\n  \"country\": \"USA\",\n  \"description\": \"Barre Falls Dam, Ware River\",\n  \"elevUnits\": \"M\",\n  \"elevation\": 234.7,\n  \"latitude\": \"42.4278\",\n  \"longitude\": \"-72.0261\",\n  \"nearestCity\": \"Barre Falls Dam\",\n  \"properties\": {\n    \"some\": \"thing\",\n    \"something\": \"else\"\n  },\n  \"region\": \"\",\n  \"siteId\": 7,\n  \"sitenames\": {\n    \"CWMS\": \"BFD\",\n    \"NWSHB5\": \"BFD\"\n  },\n  \"state\": \"MA\",\n  \"timezone\": \"America/New_York\"\n}\n```",
+			operationId = "getsite",
+			tags = {"REST - DECODES Site Records"},
 			responses = {
-					@ApiResponse(responseCode = "200", description = "Successfully fetched site details"),
+					@ApiResponse(responseCode = "200", description = "success", content = @Content(mediaType = MediaType.APPLICATION_JSON)),
 					@ApiResponse(responseCode = "400", description = "Missing or invalid site ID parameter", content = @Content),
 					@ApiResponse(responseCode = "404", description = "Site with matching ID not found", content = @Content),
 					@ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
 			}
 	)
-	public Response getSiteFull(@QueryParam("siteid") Long siteId)
-			throws WebAppException, DbException
+	public Response getSiteFull(@Parameter(description = "id to fetch", required = true,
+			example = "3", schema = @Schema(type = "long"))
+		@QueryParam("siteid") Long siteId)
+	throws WebAppException, DbException
 	{
 		if (siteId == null)
 		{
@@ -202,13 +217,31 @@ public final class SiteResources extends OpenDcsResource
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
 	@Operation(
-			summary = "Create or update a site",
-			description = "Store a new site or update an existing site in the database with provided metadata and properties.",
+			summary = "Create or Overwrite Existing Site",
+			description = "The POST `site` method takes a single DECODES site record in JSON format." +
+					"\n\nFor creating a new site, leave `siteId` out of the passed data structure." +
+					"\n\nFor overwriting an existing one, include the `siteId` that was previously returned. " +
+					"The site list in the database is replaced with the one sent.",
+			operationId = "postsite",
+			tags = {"REST - DECODES Site Records"},
 			responses = {
-					@ApiResponse(responseCode = "201", description = "Site created or updated successfully"),
-					@ApiResponse(responseCode = "400", description = "Missing or invalid site object", content = @Content),
-					@ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
-			}
+					@ApiResponse(responseCode = "201", description = "Site created or updated successfully",
+							content = @Content(mediaType = MediaType.APPLICATION_JSON,
+									schema = @Schema(implementation = ApiSite.class))),
+					@ApiResponse(responseCode = "400", description = "Missing or invalid site object"),
+					@ApiResponse(responseCode = "500", description = "Internal server error")
+			},
+			requestBody = @RequestBody(
+					description = "Site Object",
+					required = true,
+					content = @Content(mediaType = MediaType.APPLICATION_JSON,
+						schema = @Schema(implementation = ApiSite.class),
+						examples = {
+							@ExampleObject(name = "basic", value = "{ \"description\": \"Iowa River\", \"siteId\": 1, \"sitenames\": {\"CWMS\": \"ROWI4\"} }"),
+							@ExampleObject(name = "new", value = "{ \"description\": \"New Site\", \"sitenames\": {\"CWMS\": \"NEWSITE\"} }"),
+							@ExampleObject(name = "update", value = "{ \"description\": \"Updated Site\", \"siteId\": 1, \"sitenames\": {\"CWMS\": \"UPDATECWMS\"} }")
+					})
+			)
 	)
 	public Response postSite(ApiSite site)
 			throws DbException, WebAppException
@@ -277,15 +310,21 @@ public final class SiteResources extends OpenDcsResource
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
 	@Operation(
-			summary = "Delete a site by ID",
-			description = "Delete a site from the database using its unique ID.",
+			summary = "Delete Existing Site",
+			description = "The DELETE `site` method requires a valid token." +
+					"\n\nRequired parameter `siteid` must be passed." +
+					"\n\nError 405 will be returned if the site is used by one or more platforms and cannot be deleted.",
+			operationId = "deletesite",
+			tags = {"REST - DECODES Site Records"},
 			responses = {
 					@ApiResponse(responseCode = "204", description = "Site deleted successfully"),
-					@ApiResponse(responseCode = "400", description = "Missing or invalid site ID parameter", content = @Content),
-					@ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
+					@ApiResponse(responseCode = "400", description = "Missing or invalid site ID parameter"),
+					@ApiResponse(responseCode = "500", description = "Internal server error")
 			}
 	)
-	public Response deleteSite(@QueryParam("siteid") Long siteId) throws DbException
+	public Response deleteSite(@Parameter(description = "id to delete", required = true, 
+			example = "3", schema = @Schema(type = "long"))
+		@QueryParam("siteid") Long siteId) throws DbException
 	{
 		try (SiteDAI dai = getLegacyTimeseriesDB().makeSiteDAO())
 		{
