@@ -27,6 +27,9 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import io.swagger.v3.oas.annotations.StringToClassMapItem;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.media.Schema;
 import org.opendcs.odcsapi.util.ApiConstants;
 import org.opendcs.odcsapi.util.ApiHttpUtil;
 
@@ -46,13 +49,22 @@ public final class SessionResource
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
 	@Operation(
-			summary = "Check Session Authorization",
-			description = "Verifies if the current session token is valid and authorized.",
+			summary = "Check if token is valid for authentication",
+			description = "The ‘check’ GET method can be called with a token argument." +
+					"  \nExample:  \n\n    http://localhost:8080/odcsapi/check?token=6d34fa0e3bb72fcd",
 			responses = {
-					@ApiResponse(responseCode = "200", description = "Token is valid"),
-					@ApiResponse(responseCode = "403", description = "Forbidden - User is not authorized", content = @Content),
-					@ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
-			}
+					@ApiResponse(responseCode = "200", description = "If the token is valid," +
+							" the token JSON object will be returned in the same format" +
+							" as the /credentials request for authentication."),
+					@ApiResponse(
+							responseCode = "410",
+							description = "If the token is not valid, HTTP 410 is returned.",
+							content = @Content(mediaType = MediaType.APPLICATION_JSON,
+									schema = @Schema(type = "object", implementation = StringToClassMapItem.class),
+								examples = @ExampleObject(value = "{\"errMessage\":\"Token '6d34fa0e3bb72fcd' does not exist.\",\"status\":410}"))
+					)
+			},
+			tags = {"REST - Authentication and Authorization"}
 	)
 	public Response checkSessionAuthorization()
 	{
@@ -65,11 +77,12 @@ public final class SessionResource
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
 	@Operation(
-			summary = "Logout",
-			description = "Logs the user out by invalidating the current session.",
+			summary = "Remove access tokens and clear the client's session.",
+			description = "Session variables for the client will be cleared. The auth token will be invalidated.",
 			responses = {
-					@ApiResponse(responseCode = "204", description = "Logout successful"),
-			}
+					@ApiResponse(responseCode = "200", description = "Session was cleared.")
+			},
+			tags = {"REST - Authentication and Authorization"}
 	)
 	public Response logout()
 	{

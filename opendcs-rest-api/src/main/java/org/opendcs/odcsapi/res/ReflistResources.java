@@ -33,7 +33,12 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.StringToClassMapItem;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.Parameter;
 
@@ -45,6 +50,7 @@ import decodes.db.EnumValue;
 import decodes.db.ValueNotFoundException;
 import decodes.sql.DbKey;
 import decodes.tsdb.DbIoException;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import opendcs.dai.EnumDAI;
 import org.opendcs.odcsapi.beans.ApiRefList;
 import org.opendcs.odcsapi.beans.ApiRefListItem;
@@ -72,16 +78,27 @@ public final class ReflistResources extends OpenDcsResource
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
 	@Operation(
-			summary = "Fetch Reference Lists",
-			description = "Fetches all available reference lists or searches for specific lists based on the provided query.",
+			summary = "The ‘reflists’ GET method will return all reference lists or a specific reference list.",
+			description = "Authentication is not required for this method, but if a token argument is provided the lastUser timer in the token will be updated. "
+					+ "The 'name' argument may have multiple values. Example: http://localhost:8080/odcsapi/reflists?name=scripttype,dataorder\n\n"
+					+ "If no 'name' argument is provided, then all reference lists in the database are returned. The JSON returned is an array of reference lists.",
 			responses = {
-					@ApiResponse(responseCode = "200", description = "Successfully fetched reference lists", content = @Content),
-					@ApiResponse(responseCode = "400", description = "Invalid request parameters", content = @Content),
-					@ApiResponse(responseCode = "404", description = "No reference lists found matching search criteria", content = @Content),
-					@ApiResponse(responseCode = "500", description = "Server error occurred", content = @Content)
-			}
+					@ApiResponse(
+							responseCode = "200",
+							description = "If no 'name' parameter is provided, all reference lists are returned.",
+							content = @Content(
+									mediaType = MediaType.APPLICATION_JSON,
+									schema = @Schema(type = "object", additionalProperties = Schema.AdditionalPropertiesValue.TRUE, properties = {
+											@StringToClassMapItem(key = "string", value = ApiRefList.class)
+									})
+							)
+					),
+					@ApiResponse(responseCode = "404", description = "Matching reference lists not found"),
+					@ApiResponse(responseCode = "500", description = "Internal Server Error")
+			},
+			tags = {"REST - Reference Lists"}
 	)
-	public Response getRefLists(@Parameter(description = "Comma-separated list of reference list names to search") @QueryParam("name") String listNames)
+	public Response getRefLists(@Parameter(description = "Comma-separated list of requested reference lists") @QueryParam("name") String listNames)
 			throws DbException, WebAppException
 	{
 		DatabaseIO dbIo = getLegacyDatabase();
@@ -159,15 +176,89 @@ public final class ReflistResources extends OpenDcsResource
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
 	@Operation(
-			summary = "Create or Update Reference List",
-			description = "Creates a new reference list or updates an existing one.",
+			summary = "Create New Reference List, or Overwrite Existing Reference List",
+			description = "The ‘reflist’ POST method requires a valid token. Use this to create or overwrite reference lists. Provide JSON as follows:\n\n"
+					+ "For new reference lists, exclude `reflistId`. To update, include the `reflistId`.",
+			requestBody = @RequestBody(
+					description = "Reference list object to post",
+					required = true,
+					content = @Content(
+							mediaType = MediaType.APPLICATION_JSON,
+							schema = @Schema(implementation = ApiRefList.class),
+							examples = {
+									@ExampleObject(value = "\"value\": {\n" +
+											"          \"reflistId\": 3,\n" +
+											"          \"enumName\": \"\",\n" +
+											"          \"items\": {\n" +
+											"            \"standard\": {\n" +
+											"              \"value\": \"\",\n" +
+											"              \"description\": \"\",\n" +
+											"              \"execClassName\": \"\",\n" +
+											"              \"editClassName\": null,\n" +
+											"              \"sortNumber\": 3\n" +
+											"            }\n" +
+											"          },\n" +
+											"          \"defaultValue\": null,\n" +
+											"          \"description\": null\n" +
+											"        }"),
+									@ExampleObject(value = "\"value\": {\n" +
+											"          \"enumName\": \"ScriptType\",\n" +
+											"          \"items\": {\n" +
+											"            \"standard\": {\n" +
+											"              \"value\": \"standard\",\n" +
+											"              \"description\": \"DECODES Format Statements and Unit Conversions\",\n" +
+											"              \"execClassName\": \"DecodesScript\",\n" +
+											"              \"editClassName\": null,\n" +
+											"              \"sortNumber\": 3\n" +
+											"            }\n" +
+											"          },\n" +
+											"          \"defaultValue\": null,\n" +
+											"          \"description\": null\n" +
+											"        }"),
+									@ExampleObject(value = "\"value\": {\n" +
+											"          \"reflistId\": 3,\n" +
+											"          \"enumName\": \"ScriptType\",\n" +
+											"          \"items\": {\n" +
+											"            \"standard\": {\n" +
+											"              \"value\": \"standard\",\n" +
+											"              \"description\": \"DECODES Format Statements and Unit Conversions\",\n" +
+											"              \"execClassName\": \"DecodesScript\",\n" +
+											"              \"editClassName\": null,\n" +
+											"              \"sortNumber\": 3\n" +
+											"            },\n" +
+											"            \"nos\": {\n" +
+											"              \"value\": \"nos\",\n" +
+											"              \"description\": \"Hard-coded NOS data parser\",\n" +
+											"              \"execClassName\": \"NOSMessageParser\",\n" +
+											"              \"editClassName\": null,\n" +
+											"              \"sortNumber\": 2\n" +
+											"            },\n" +
+											"            \"ndbc\": {\n" +
+											"              \"value\": \"ndbc\",\n" +
+											"              \"description\": \"National Data Buoy Center Context-Sensitive Parser\",\n" +
+											"              \"execClassName\": \"NDBCMessageParser\",\n" +
+											"              \"editClassName\": null,\n" +
+											"              \"sortNumber\": 1\n" +
+											"            }\n" +
+											"          },\n" +
+											"          \"defaultValue\": null,\n" +
+											"          \"description\": null\n" +
+											"        }")
+							}
+					)
+			),
 			responses = {
-					@ApiResponse(responseCode = "201", description = "Reference list created successfully", content = @Content),
-					@ApiResponse(responseCode = "400", description = "Invalid input format", content = @Content),
-					@ApiResponse(responseCode = "500", description = "Server error occurred", content = @Content)
-			}
+					@ApiResponse(description = "Reference list created successfully", responseCode = "201",
+							content = @Content(
+									mediaType = MediaType.APPLICATION_JSON,
+									schema = @Schema(implementation = ApiRefList.class)
+							)
+					),
+					@ApiResponse(description = "Server error occurred", responseCode = "500")
+			},
+			tags = {"REST - Reference Lists"}
 	)
-	public Response postRefList(@Parameter(description = "The reference list to create or update") ApiRefList reflist) throws DbException
+	public Response postRefList(@Parameter(description = "JSON definition of new or updated reflist") ApiRefList reflist) throws DbException
 	{
 		try (EnumDAI dai = getLegacyTimeseriesDB().makeEnumDAO())
 		{
@@ -238,15 +329,26 @@ public final class ReflistResources extends OpenDcsResource
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
 	@Operation(
-			summary = "Delete Reference List",
-			description = "Deletes a reference list by its ID.",
+			summary = "Delete Existing Reference List",
+			description = "The DELETE reflist method requires a valid token. Required parameter `reflistId` must be provided.\n\n"
+					+ "Handle with care, as some modules in OpenDCS require specific reference lists.",
 			responses = {
-					@ApiResponse(responseCode = "204", description = "Reference list deleted successfully"),
-					@ApiResponse(responseCode = "400", description = "Missing or invalid reference list ID", content = @Content),
-					@ApiResponse(responseCode = "500", description = "Server error occurred", content = @Content)
-			}
+					@ApiResponse(
+							responseCode = "204",
+							description = "Reference list deleted successfully"
+					),
+					@ApiResponse(
+							responseCode = "400",
+							description = "Missing Parameter"
+					),
+					@ApiResponse(
+							responseCode = "500",
+							description = "Internal Server Error"
+					)
+			},
+			tags = {"REST - Reference Lists"}
 	)
-	public Response deleteRefList(@Parameter(description = "ID of the reference list to delete", required = true) @QueryParam("reflistid") Long reflistId)
+	public Response deleteRefList(@Parameter(description = "Specific reflistId to delete") @QueryParam("reflistid") Long reflistId)
 			throws DbException, WebAppException
 	{
 		if (reflistId == null)
@@ -271,13 +373,26 @@ public final class ReflistResources extends OpenDcsResource
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
 	@Operation(
-			summary = "Fetch All Seasons",
-			description = "Fetches all seasons available in the database.",
+			summary = "Seasons are used in various places in OpenDCS, usually to specify some type of conditional processing",
+			description = "Seasons are denoted by an abbreviation, a full name, start date/time, end date/time, and an optional time zone." +
+					" Seasons are used in various places in OpenDCS, usually to specify some type of conditional processing." +
+					" For example, a platform water-level sensor may be disabled during a winter period because the river is likely to be covered in ice.\n"
+					+ "* The abbreviation should be a single alpha-numeric word with no embedded spaces.\n"
+					+ "* The name may contain spaces.\n"
+					+ "* Start and End date/time are strings in the format MM/dd-HH:mm. They specify a date and time within a year.\n"
+					+ "* If time zone is omitted, local time on the server is assumed.\n"
+					+ "The GET seasons method is called with a URL like the following:",
 			responses = {
-					@ApiResponse(responseCode = "200", description = "Successfully retrieved seasons", content = @Content),
-					@ApiResponse(responseCode = "404", description = "No seasons found", content = @Content),
-					@ApiResponse(responseCode = "500", description = "Server error occurred", content = @Content)
-			}
+					@ApiResponse(responseCode = "200", description = "A list of seasons defined on the server is returned",
+						content = @Content(
+							mediaType = MediaType.APPLICATION_JSON,
+							array = @ArraySchema(schema = @Schema(implementation = ApiSeason.class))
+						)
+					),
+					@ApiResponse(responseCode = "404", description = "Season enum not found"),
+					@ApiResponse(responseCode = "500", description = "Internal Server Error")
+			},
+			tags = {"REST - Reference Lists"}
 	)
 	public Response getSeasons() throws DbException, WebAppException
 	{
@@ -321,13 +436,19 @@ public final class ReflistResources extends OpenDcsResource
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
 	@Operation(
-			summary = "Fetch Specific Season",
-			description = "Fetches details of a season based on its abbreviation.",
+			summary = "return a single season data structure ",
+			description = "Instead of a list of seasons, the returned data is a single season data structure:  ",
+			operationId = "getseason",
 			responses = {
-					@ApiResponse(responseCode = "200", description = "Successfully retrieved season details", content = @Content),
-					@ApiResponse(responseCode = "404", description = "Season not found", content = @Content),
-					@ApiResponse(responseCode = "500", description = "Server error occurred", content = @Content)
-			}
+					@ApiResponse(responseCode = "200", description = "Success", content = @Content(
+							mediaType = MediaType.APPLICATION_JSON,
+							schema = @Schema(implementation = ApiSeason.class))
+					),
+					@ApiResponse(responseCode = "404", description = "Season not found"),
+					@ApiResponse(responseCode = "400", description = "Missing Parameter"),
+					@ApiResponse(responseCode = "500", description = "Internal Server Error")
+			},
+			tags = {"REST - Reference Lists"}
 	)
 	public Response getSeason(@Parameter(description = "Abbreviation of the season to fetch", required = true) @QueryParam("abbr") String abbr)
 	throws DbException, WebAppException
@@ -378,13 +499,22 @@ public final class ReflistResources extends OpenDcsResource
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
 	@Operation(
-			summary = "Create or Update Season",
-			description = "Creates a new season or updates an existing one based on the abbreviation.",
+			security = {@SecurityRequirement(name = "bearerAuth")},
+			summary = "creates or overwrites a single season record",
+			description = "The POST season operation requires a valid token. It takes a data structure like the one described above for GET season.",
+			requestBody = @RequestBody(
+					description = "Season Object",
+					content = @Content(
+							mediaType = MediaType.APPLICATION_JSON,
+							schema = @Schema(implementation = ApiSeason.class)
+					)
+			),
 			responses = {
-					@ApiResponse(responseCode = "201", description = "Season created or updated successfully", content = @Content),
-					@ApiResponse(responseCode = "400", description = "Invalid or missing parameters", content = @Content),
-					@ApiResponse(responseCode = "500", description = "Server error occurred", content = @Content)
-			}
+					@ApiResponse(responseCode = "204", description = "Season successfully created or updated"),
+					@ApiResponse(responseCode = "400", description = "Missing Parameter"),
+					@ApiResponse(responseCode = "500", description = "Internal Server Error")
+			},
+			tags = {"REST - Reference Lists"}
 	)
 	public Response postSeason(@Parameter(description = "Abbreviation of the season to overwrite, if exists") @QueryParam("fromabbr") String fromAbbr,
 			@Parameter(description = "Details of the new or updated season", required = true) ApiSeason season)
@@ -448,13 +578,18 @@ public final class ReflistResources extends OpenDcsResource
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
 	@Operation(
-			summary = "Delete Season",
-			description = "Deletes a season by its abbreviation.",
+			security = {@SecurityRequirement(name = "bearerAuth")},
+			summary = "Delete Existing Season",
+			description = "The DELETE season operation requires a valid token. It also requires an argument" +
+					" 'abbr' corresponding to the season abbreviation.  \n\n"
+					+ "For example, to DELETE the 'autumn' season, use the following URL:\n  \n"
+					+ "    http://localhost:8080/odcsapi/season?abbr=autumn",
 			responses = {
-					@ApiResponse(responseCode = "204", description = "Season deleted successfully"),
-					@ApiResponse(responseCode = "400", description = "Invalid or missing season abbreviation", content = @Content),
-					@ApiResponse(responseCode = "500", description = "Server error occurred", content = @Content)
-			}
+					@ApiResponse(responseCode = "204", description = "Season was deleted successfully"),
+					@ApiResponse(responseCode = "400", description = "Missing Parameter"),
+					@ApiResponse(responseCode = "500", description = "Internal Server Error")
+			},
+			tags = {"REST - Reference Lists"}
 	)
 	public Response deleteSeason(@Parameter(description = "Abbreviation of the season to delete", required = true) @QueryParam("abbr") String abbr)
 	throws WebAppException, DbException

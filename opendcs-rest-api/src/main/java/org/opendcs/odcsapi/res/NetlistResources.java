@@ -17,6 +17,9 @@ package org.opendcs.odcsapi.res;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 
 import java.io.LineNumberReader;
@@ -46,6 +49,7 @@ import decodes.db.NetworkListList;
 import decodes.db.RoutingSpec;
 import decodes.db.RoutingSpecList;
 import decodes.sql.DbKey;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.opendcs.odcsapi.beans.ApiNetList;
 import org.opendcs.odcsapi.beans.ApiNetListItem;
 import org.opendcs.odcsapi.beans.ApiNetlistRef;
@@ -67,13 +71,35 @@ public final class NetlistResources extends OpenDcsResource
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
 	@Operation(
-			summary = "Get Network List References",
-			description = "Fetch a list of network list references, optionally filtered by transport medium type.",
+			summary = "The GET netlistrefs method returns references to network lists",
+			description = "It is intended to populate a pick list of network lists and does not contain" +
+					" all of the list elements.\n\nAuthentication is not required for this method," +
+					" but if a token argument is provided the\n\nExamples:\n\n" +
+					"    http://localhost:8080/odcsapi/netlistrefs\n\n" +
+					"    http://localhost:8080/odcsapi/netlistrefs?tmtype=goes\n\nWith no arguments," +
+					" a list of network lists in the database is returned. The format is as follows:" +
+					"\n```\n[\n  {\n    \"lastModifyTime\": \"2020-08-22T14:36:55.705Z[UTC]\",\n" +
+					"    \"name\": \"BFD-BMD\",\n    \"netlistId\": 1,\n    \"numPlatforms\": 3,\n" +
+					"    \"siteNameTypePref\": \"nwshb5\",\n    \"transportMediumType\": \"goes\"\n  }," +
+					"\n  {\n    \"lastModifyTime\": \"2020-12-15T17:51:04.194Z[UTC]\",\n" +
+					"    \"name\": \"goes2\",\n    \"netlistId\": 6,\n    \"numPlatforms\": 3,\n" +
+					"    \"siteNameTypePref\": \"nwshb5\",\n    \"transportMediumType\": \"goes\"\n  }\n]" +
+					"\n```\n\n**Note** that the list contents (i.e., the references to the platforms in the list)" +
+					" is not included. Rather a count of platforms in the list is given." +
+					" The 'netlistId' element is a unique key to be used for retrieving entire lists.",
 			responses = {
-					@ApiResponse(responseCode = "200", description = "Successfully retrieved network list references"),
-					@ApiResponse(responseCode = "400", description = "Invalid input parameter", content = @Content),
-					@ApiResponse(responseCode = "500", description = "Database error occurred", content = @Content)
-			}
+					@ApiResponse(
+							responseCode = "200",
+							description = "success",
+							content = @Content(mediaType = MediaType.APPLICATION_JSON,
+									schema = @Schema(implementation = ApiNetlistRef.class))
+					),
+					@ApiResponse(
+							responseCode = "500",
+							description = "Internal Server Error"
+					)
+			},
+			tags = {"REST - Network Lists"}
 	)
 	public Response getNetlistRefs(@QueryParam("tmtype") String tmtype)
 			throws DbException
@@ -130,14 +156,38 @@ public final class NetlistResources extends OpenDcsResource
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
 	@Operation(
-			summary = "Get Network List Details",
-			description = "Retrieve the detailed information of a network list by providing the netlist ID.",
+			summary = "The ‘netlists’ GET method will return a specific network list in its entirety.",
+			description = "Example:\n\n    http://localhost:8080/odcsapi/netlist?netlistid=1" +
+					"\n\nAuthentication is not required for this method, but if a token argument is" +
+					" provided the lastUser timer in the token will be updated.",
 			responses = {
-					@ApiResponse(responseCode = "200", description = "Successfully retrieved network list details"),
-					@ApiResponse(responseCode = "400", description = "Missing or invalid netlist ID parameter", content = @Content),
-					@ApiResponse(responseCode = "404", description = "Network list not found", content = @Content),
-					@ApiResponse(responseCode = "500", description = "Database error occurred", content = @Content)
-			}
+					@ApiResponse(
+							responseCode = "200",
+							description = "success",
+							content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApiNetList.class))
+					),
+					@ApiResponse(
+							responseCode = "404",
+							description = "Not Found",
+							content = @Content(mediaType = "application/json",
+									examples = @ExampleObject(value = "{\"status\": 404," +
+											"\"message\": \"The requested netlistid was not found in the database.\"}")
+							)
+					),
+					@ApiResponse(
+							responseCode = "406",
+							description = "Not Acceptable",
+							content = @Content(mediaType = "application/json",
+									examples = @ExampleObject(value = "{\"status\": 406," +
+											"\"message\": \"The required ‘netlistid’ parameter was missing in the URL.\"}")
+							)
+					),
+					@ApiResponse(
+							responseCode = "500",
+							description = "Internal Server Error"
+					)
+			},
+			tags = {"REST - Network Lists"}
 	)
 	public Response getNetList(@QueryParam("netlistid") Long netlistId)
 			throws WebAppException, DbException
@@ -202,13 +252,44 @@ public final class NetlistResources extends OpenDcsResource
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
 	@Operation(
-			summary = "Create or Update a Network List",
-			description = "Store a network list with the provided details. If the netlist ID exists, updates the list; otherwise, creates a new one.",
+			security = {
+					@SecurityRequirement(name = "bearerAuth")
+			},
+			summary = "Create or Overwrite Existing Netlist",
+			description = "The ‘netlist’ POST method requires a valid token.\n\n" +
+					"It takes a single network list in JSON format, as described for the GET method:" +
+					"\n```\n{\n  \"items\": {\n    \"14159500\": {\n      \"description\": \"\",\n      " +
+					"\"platformName\": \"CGRO\",\n      \"transportId\": \"14159500\"\n    },\n    " +
+					"\"14372300\": {\n      \"description\": \"\",\n      \"platformName\": \"AGNO\",\n      " +
+					"\"transportId\": \"14372300\"\n    }\n  },\n  \"lastModifyTime\": \"2020-10-19T18:14:14.788Z[UTC]\"," +
+					"\n  \"name\": \"USGS-Sites\",\n  \"netlistId\": 4,\n  \"siteNameTypePref\": \"nwshb5\",\n  " +
+					"\"transportMediumType\": \"other\"\n}\n```\n\nFor creating a new network list, " +
+					"leave netlistId out of the passed data structure.\n\nFor overwriting an existing one, " +
+					"include the netlistId that was previously returned. The network list in the database " +
+					"is replaced with the one sent.",
+			requestBody = @RequestBody(
+					content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApiNetList.class),
+						examples = {
+							@ExampleObject(name = "basic", ref = "#/components/examples/POST_BASIC_NetList"),
+							@ExampleObject(name = "new", ref = "#/components/examples/POST_NEW_NetList"),
+							@ExampleObject(name = "update", ref = "#/components/examples/POST_UPDATE_NetList")
+					})
+			),
 			responses = {
-					@ApiResponse(responseCode = "201", description = "Network list successfully created or updated"),
-					@ApiResponse(responseCode = "400", description = "Missing or invalid request body", content = @Content),
-					@ApiResponse(responseCode = "500", description = "Database error occurred", content = @Content)
-			}
+					@ApiResponse(
+							responseCode = "201",
+							description = "Successfully created or updated network list"
+					),
+					@ApiResponse(
+							responseCode = "400",
+							description = "Bad Request - Missing required request body"
+					),
+					@ApiResponse(
+							responseCode = "500",
+							description = "Internal Server Error"
+					),
+			},
+			tags = {"REST - Network Lists"}
 	)
 	public Response postNetlist(ApiNetList netList)
 			throws DbException
@@ -262,14 +343,30 @@ public final class NetlistResources extends OpenDcsResource
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
 	@Operation(
-			summary = "Delete a Network List",
-			description = "Delete a network list specified by the given netlist ID.",
+			security = {
+					@SecurityRequirement(name = "bearerAuth")
+			},
+			summary = "Delete Existing netlists",
+			description = "The DELETE netlist method requires a valid token.\n\n" +
+					"Required argument netlistid must be passed.\n\n" +
+					"Error 405 will be returned if network list is used by one or more " +
+					"routing specs and cannot be deleted. The body of the error will be " +
+					"a message containing the name of the routing specs using the referenced netlist.",
 			responses = {
-					@ApiResponse(responseCode = "204", description = "Network list successfully deleted"),
-					@ApiResponse(responseCode = "400", description = "Missing or invalid netlist ID parameter", content = @Content),
-					@ApiResponse(responseCode = "409", description = "Cannot delete the network list because it is currently in use", content = @Content),
-					@ApiResponse(responseCode = "500", description = "Database error occurred", content = @Content)
-			}
+					@ApiResponse(
+							responseCode = "204",
+							description = "Successfully deleted network list"
+					),
+					@ApiResponse(
+							responseCode = "409",
+							description = "Conflict - Network list is used by one or more routing specs"
+					),
+					@ApiResponse(
+							responseCode = "400",
+							description = "Missing required netlistid parameter"
+					),
+			},
+			tags = {"REST - Network Lists"}
 	)
 	public Response deleteNetlist(@QueryParam("netlistid") Long netlistId)
 			throws DbException, WebAppException
