@@ -33,8 +33,11 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.Parameter;
 
 import decodes.db.DataPresentation;
@@ -68,11 +71,19 @@ public final class PresentationResources extends OpenDcsResource
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
 	@Operation(
-			summary = "Retrieve Presentation References",
-			description = "Fetches all presentation group references available in the database.",
+			summary = "Returns a list of references to presentation groups suitable for displaying a list",
+			tags = {"REST - DECODES Presentation Group Records"},
+			operationId = "getpresentationrefs",
 			responses = {
-					@ApiResponse(responseCode = "200", description = "Successfully retrieved presentation references"),
-					@ApiResponse(responseCode = "500", description = "Database error occurred", content = @Content)
+					@ApiResponse(
+							responseCode = "200",
+							description = "Success",
+							content = @Content(
+									mediaType = MediaType.APPLICATION_JSON,
+									array = @ArraySchema(schema = @Schema(implementation = ApiPresentationRef.class))
+							)
+					),
+					@ApiResponse(responseCode = "500", description = "Internal Server Error", content = @Content)
 			}
 	)
 	public Response getPresentationRefs() throws DbException
@@ -137,16 +148,29 @@ public final class PresentationResources extends OpenDcsResource
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
 	@Operation(
-			summary = "Retrieve Presentation Group",
-			description = "Fetches a single presentation group based on the provided group ID.",
+			summary = "This method returns a JSON representation of a single, complete DECODES Presentation Group record",
+			description = "Example: \n \n http://localhost:8080/odcsapi/presentation?groupid=4 \n \n " +
+					"This method returns a JSON representation of a single, complete DECODES Presentation Group record. " +
+					"The following structure is returned.\n\n" +
+					"**Note**: the optional min and max elements are not always present.",
+			tags = {"REST - DECODES Presentation Group Records"},
 			responses = {
-					@ApiResponse(responseCode = "200", description = "Successfully retrieved presentation group details"),
+					@ApiResponse(
+							responseCode = "200",
+							description = "Success",
+							content = @Content(
+									mediaType = MediaType.APPLICATION_JSON,
+									schema = @Schema(implementation = ApiPresentationGroup.class)
+							)
+					),
 					@ApiResponse(responseCode = "400", description = "Missing or invalid group ID parameter", content = @Content),
 					@ApiResponse(responseCode = "404", description = "Presentation group not found", content = @Content),
-					@ApiResponse(responseCode = "500", description = "Database error occurred", content = @Content)
+					@ApiResponse(responseCode = "500", description = "Default error sample response", content = @Content)
 			}
 	)
-	public Response getPresentation(@Parameter(description = "ID of the presentation group to retrieve", required = true) @QueryParam("groupid") Long groupId)
+	public Response getPresentation(@Parameter(description = "presentation group id", required = true, example = "4",
+			schema = @Schema(implementation = Long.class))
+		@QueryParam("groupid") Long groupId)
 			throws WebAppException, DbException
 	{
 		if (groupId == null)
@@ -226,15 +250,25 @@ public final class PresentationResources extends OpenDcsResource
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
 	@Operation(
-			summary = "Create or Update Presentation Group",
-			description = "Creates a new presentation group or updates an existing one based on the provided data.",
+			summary = "Create or Overwrite Existing Decodes Presentation Group",
+			description = "The POST presentation method requires a valid token. It takes a single DECODES " +
+					"Presentation Group in JSON format, as described above for GET.\n\n" +
+					"For creating a new record, leave groupId out of the passed data structure.\n\n" +
+					"For overwriting an existing one, include the groupId that was previously returned. " +
+					"The presentation group in the database is replaced with the one sent.",
+			tags = {"REST - DECODES Presentation Group Records"},
+			requestBody = @RequestBody(content = @Content(schema = @Schema(implementation = ApiPresentationGroup.class),
+					mediaType = MediaType.APPLICATION_JSON), required = true),
 			responses = {
-					@ApiResponse(responseCode = "201", description = "Successfully created or updated presentation group"),
+					@ApiResponse(responseCode = "201", description = "Successfully stored presentation group",
+							content = @Content(schema = @Schema(implementation = ApiPresentationGroup.class))),
 					@ApiResponse(responseCode = "400", description = "Invalid data provided", content = @Content),
-					@ApiResponse(responseCode = "500", description = "Database error occurred", content = @Content)
+					@ApiResponse(responseCode = "500", description = "Internal Server Error", content = @Content)
 			}
 	)
-	public Response postPresentation(@Parameter(description = "Presentation group data", required = true) ApiPresentationGroup presGrp) throws DbException
+	public Response postPresentation(@Parameter(description = "Presentation group data", required = true)
+		ApiPresentationGroup presGrp)
+			throws DbException
 	{
 		DatabaseIO dbIo = getLegacyDatabase();
 		try (DataTypeDAI dai = getLegacyTimeseriesDB().makeDataTypeDAO())
@@ -332,16 +366,20 @@ public final class PresentationResources extends OpenDcsResource
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
 	@Operation(
-			summary = "Delete Presentation Group",
-			description = "Deletes a presentation group by ID if it is not being used by a routing specification.",
+			summary = "Delete Existing Presentation Group",
+			description = "The DELETE platform method requires a valid token.\n\n" +
+					"Required argument groupid must be passed in the URL.",
+			tags = {"REST - DECODES Presentation Group Records"},
 			responses = {
-					@ApiResponse(responseCode = "204", description = "Successfully deleted presentation group"),
+					@ApiResponse(responseCode = "204", description = "Successfully deleted presentation group", content = @Content),
 					@ApiResponse(responseCode = "400", description = "Missing or invalid group ID parameter", content = @Content),
 					@ApiResponse(responseCode = "405", description = "Cannot delete the group because it is in use", content = @Content),
-					@ApiResponse(responseCode = "500", description = "Database error occurred", content = @Content)
+					@ApiResponse(responseCode = "500", description = "Internal Server Error", content = @Content)
 			}
 	)
-	public Response deletePresentation(@Parameter(description = "ID of the presentation group to delete", required = true) @QueryParam("groupid") Long groupId)
+	public Response deletePresentation(@Parameter(description = "presentation group id", required = true, example = "4",
+			schema = @Schema(implementation = Long.class))
+		@QueryParam("groupid") Long groupId)
 			throws DbException, WebAppException
 	{
 		if (groupId == null)
