@@ -62,7 +62,7 @@ final class RoutingResourcesIT extends BaseIT
 	private static String appName;
 	private static Long platformId;
 	private static Long scheduleEntryStatusId;
-	private static int OFFSET_IN_MILLI;
+	private static int offsetInMilli;
 
 	@BeforeEach
 	void setUp() throws Exception
@@ -73,7 +73,7 @@ final class RoutingResourcesIT extends BaseIT
 		{
 			timeZone = TimeZone.getDefault().getID();
 		}
-		OFFSET_IN_MILLI = TimeZone.getTimeZone(timeZone).getRawOffset();
+		offsetInMilli = TimeZone.getTimeZone(timeZone).getRawOffset();
 
 		setUpCreds();
 		sessionFilter = new SessionFilter();
@@ -727,9 +727,9 @@ final class RoutingResourcesIT extends BaseIT
 		assertEquals(expected.getString("enabled"), actual.getString("enabled"));
 		assertThat(ZonedDateTime.ofInstant(Instant.ofEpochMilli(expected.getLong("startTime")),
 						ZoneId.of("UTC")).toString(),
-				anyOf(is(ZonedDateTime.parse(actual.getString("startTime")).plus(OFFSET_IN_MILLI, ChronoUnit.MILLIS).toString()),
+				anyOf(is(ZonedDateTime.parse(actual.getString("startTime")).plus(offsetInMilli, ChronoUnit.MILLIS).toString()),
 						is(ZonedDateTime.parse(actual.getString("startTime")).toString()),
-						is(ZonedDateTime.parse(actual.getString("startTime")).minus(OFFSET_IN_MILLI, ChronoUnit.MILLIS).toString())));
+						is(ZonedDateTime.parse(actual.getString("startTime")).minus(offsetInMilli, ChronoUnit.MILLIS).toString())));
 		assertEquals(expected.getString("timeZone"), actual.getString("timeZone"));
 		assertEquals(expected.getString("runInterval"), actual.getString("runInterval"));
 
@@ -843,18 +843,18 @@ final class RoutingResourcesIT extends BaseIT
 				assertThat(ZonedDateTime.parse(actualItem.get("runStart").toString()).toInstant().toString(),
 					anyOf(is(expected.get("runStart").toString()),
 							is(ZonedDateTime.parse(expected.get("runStart")).toInstant().toString()),
-						is(ZonedDateTime.parse(expected.get("runStart")).toInstant().plusMillis(OFFSET_IN_MILLI).toString())));
+						is(ZonedDateTime.parse(expected.get("runStart")).toInstant().plusMillis(offsetInMilli).toString())));
 				assertThat(ZonedDateTime.parse(actualItem.get("runStop").toString()).toInstant().toString(),
 					anyOf(is(expected.get("runStop").toString()),
 						is(ZonedDateTime.parse(expected.get("runStop")).toInstant().toString()),
-						is(ZonedDateTime.parse(expected.get("runStop")).toInstant().plusMillis(OFFSET_IN_MILLI).toString())));
+						is(ZonedDateTime.parse(expected.get("runStop")).toInstant().plusMillis(offsetInMilli).toString())));
 				assertEquals(expected.getInt("numMessages"), actualItem.get("numMessages"));
 				assertEquals(expected.getInt("numErrors"), actualItem.get("numErrors"));
 				assertEquals(expected.getInt("numPlatforms"), actualItem.get("numPlatforms"));
 				assertThat(ZonedDateTime.parse(actualItem.get("lastMsgTime").toString()).toInstant().toString(),
 					anyOf(is(expected.get("lastMsgTime").toString()),
 						is(ZonedDateTime.parse(expected.get("lastMsgTime")).toInstant().toString()),
-						is(ZonedDateTime.parse(expected.get("lastMsgTime")).toInstant().plusMillis(OFFSET_IN_MILLI).toString())));
+						is(ZonedDateTime.parse(expected.get("lastMsgTime")).toInstant().plusMillis(offsetInMilli).toString())));
 				assertEquals(expected.getString("runStatus"), actualItem.get("runStatus"));
 				assertEquals(expected.getString("hostname"), actualItem.get("hostname"));
 				assertEquals(expected.getString("lastInput"), actualItem.get("lastInput"));
@@ -900,7 +900,6 @@ final class RoutingResourcesIT extends BaseIT
 		assertFalse(actualList.isEmpty());
 
 		boolean found = false;
-		Long lastEventId = null;
 		for (Map<String, Object> actualItem : actualList)
 		{
 			if (((Integer) actualItem.get("platformId")).longValue() == platformId
@@ -914,11 +913,10 @@ final class RoutingResourcesIT extends BaseIT
 				Instant messageRcvTime = ZonedDateTime.parse(actualItem.get("msgRecvTime").toString()).toInstant();
 				// substring date text to remove timezone and milliseconds
 				assertThat(Instant.ofEpochMilli(expected.get("msgRecvTime")).toString(),
-						anyOf(is(messageRcvTime.minusMillis(OFFSET_IN_MILLI).toString()),
+						anyOf(is(messageRcvTime.minusMillis(offsetInMilli).toString()),
 								is(messageRcvTime.toString()),
-								is(messageRcvTime.plusMillis(OFFSET_IN_MILLI).toString())));
+								is(messageRcvTime.plusMillis(offsetInMilli).toString())));
 				assertEquals(expected.get("eventText").toString(), actualItem.get("eventText").toString());
-				lastEventId = ((Integer) actualItem.get("eventId")).longValue();
 				found = true;
 			}
 		}
@@ -934,7 +932,8 @@ final class RoutingResourcesIT extends BaseIT
 			.queryParam("appid", appId)
 			.queryParam("platformid", platformId)
 			.queryParam("backlog", "last")
-			// TODO: Set the session variable to use the last event id set above
+			// Ideally, we would set the session variable to use the last event id for testing,
+			// but we don't have a way add an attribute to the session without a dedicated endpoint to do so
 		.when()
 			.redirects().follow(true)
 			.redirects().max(3)
@@ -964,9 +963,9 @@ final class RoutingResourcesIT extends BaseIT
 				Instant messageRcvTime = ZonedDateTime.parse(actualItem.get("msgRecvTime").toString()).toInstant();
 				// substring date text to remove timezone and milliseconds
 				assertThat(Instant.ofEpochMilli(expected.get("msgRecvTime")).toString(),
-						anyOf(is(messageRcvTime.minusMillis(OFFSET_IN_MILLI).toString()),
+						anyOf(is(messageRcvTime.minusMillis(offsetInMilli).toString()),
 								is(messageRcvTime.toString()),
-								is(messageRcvTime.plusMillis(OFFSET_IN_MILLI).toString())));
+								is(messageRcvTime.plusMillis(offsetInMilli).toString())));
 				assertEquals(expected.get("eventText").toString(), actualItem.get("eventText").toString());
 				found = true;
 			}
@@ -1012,9 +1011,9 @@ final class RoutingResourcesIT extends BaseIT
 				Instant messageRcvTime = ZonedDateTime.parse(actualItem.get("msgRecvTime").toString()).toInstant();
 				// substring date text to remove timezone and milliseconds
 				assertThat(Instant.ofEpochMilli(expected.get("msgRecvTime")).toString(),
-						anyOf(is(messageRcvTime.minusMillis(OFFSET_IN_MILLI).toString()),
+						anyOf(is(messageRcvTime.minusMillis(offsetInMilli).toString()),
 								is(messageRcvTime.toString()),
-								is(messageRcvTime.plusMillis(OFFSET_IN_MILLI).toString())));
+								is(messageRcvTime.plusMillis(offsetInMilli).toString())));
 				assertEquals(expected.get("eventText").toString(), actualItem.get("eventText").toString());
 				found = true;
 			}
@@ -1060,9 +1059,9 @@ final class RoutingResourcesIT extends BaseIT
 				Instant messageRcvTime = ZonedDateTime.parse(actualItem.get("msgRecvTime").toString()).toInstant();
 				// substring date text to remove timezone and milliseconds
 				assertThat(Instant.ofEpochMilli(expected.get("msgRecvTime")).toString(),
-						anyOf(is(messageRcvTime.minusMillis(OFFSET_IN_MILLI).toString()),
+						anyOf(is(messageRcvTime.minusMillis(offsetInMilli).toString()),
 								is(messageRcvTime.toString()),
-								is(messageRcvTime.plusMillis(OFFSET_IN_MILLI).toString())));
+								is(messageRcvTime.plusMillis(offsetInMilli).toString())));
 				assertEquals(expected.get("eventText").toString(), actualItem.get("eventText").toString());
 				found = true;
 			}
@@ -1089,7 +1088,7 @@ final class RoutingResourcesIT extends BaseIT
 		.then()
 			.log().ifValidationFails(LogDetail.ALL, true)
 		.assertThat()
-			.statusCode(is(HttpServletResponse.SC_OK))
+			.statusCode(is(HttpServletResponse.SC_CREATED))
 			.extract()
 		;
 
@@ -1111,7 +1110,7 @@ final class RoutingResourcesIT extends BaseIT
 		.then()
 			.log().ifValidationFails(LogDetail.ALL, true)
 		.assertThat()
-			.statusCode(is(HttpServletResponse.SC_OK))
+			.statusCode(is(HttpServletResponse.SC_NO_CONTENT))
 		;
 
 		given()
@@ -1191,9 +1190,7 @@ final class RoutingResourcesIT extends BaseIT
 		.then()
 			.log().ifValidationFails(LogDetail.ALL, true)
 		.assertThat()
-			// TODO: This is here to support older implementations of the PlatformResources controller and should be removed
-			.statusCode(anyOf(is(HttpServletResponse.SC_NOT_FOUND),
-					is(HttpServletResponse.SC_GONE)))
+			.statusCode(is(HttpServletResponse.SC_NOT_FOUND))
 		;
 	}
 
