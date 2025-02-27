@@ -50,7 +50,6 @@ import decodes.db.EnumValue;
 import decodes.db.ValueNotFoundException;
 import decodes.sql.DbKey;
 import decodes.tsdb.DbIoException;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import opendcs.dai.EnumDAI;
 import org.opendcs.odcsapi.beans.ApiRefList;
 import org.opendcs.odcsapi.beans.ApiRefListItem;
@@ -348,7 +347,9 @@ public final class ReflistResources extends OpenDcsResource
 			},
 			tags = {"REST - Reference Lists"}
 	)
-	public Response deleteRefList(@Parameter(description = "Specific reflistId to delete") @QueryParam("reflistid") Long reflistId)
+	public Response deleteRefList(@Parameter(description = "Specific reflistId to delete",
+			required = true, schema = @Schema(implementation = Long.class))
+		@QueryParam("reflistid") Long reflistId)
 			throws DbException, WebAppException
 	{
 		if (reflistId == null)
@@ -450,8 +451,10 @@ public final class ReflistResources extends OpenDcsResource
 			},
 			tags = {"REST - Reference Lists"}
 	)
-	public Response getSeason(@Parameter(description = "Abbreviation of the season to fetch", required = true) @QueryParam("abbr") String abbr)
-	throws DbException, WebAppException
+	public Response getSeason(@Parameter(description = "Abbreviation of the season to fetch",
+			required = true, schema = @Schema(implementation = String.class))
+		@QueryParam("abbr") String abbr)
+			throws DbException, WebAppException
 	{
 		if (abbr == null)
 		{
@@ -499,11 +502,11 @@ public final class ReflistResources extends OpenDcsResource
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
 	@Operation(
-			security = {@SecurityRequirement(name = "bearerAuth")},
 			summary = "creates or overwrites a single season record",
 			description = "The POST season operation requires a valid token. It takes a data structure like the one described above for GET season.",
 			requestBody = @RequestBody(
 					description = "Season Object",
+					required = true,
 					content = @Content(
 							mediaType = MediaType.APPLICATION_JSON,
 							schema = @Schema(implementation = ApiSeason.class)
@@ -578,7 +581,6 @@ public final class ReflistResources extends OpenDcsResource
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
 	@Operation(
-			security = {@SecurityRequirement(name = "bearerAuth")},
 			summary = "Delete Existing Season",
 			description = "The DELETE season operation requires a valid token. It also requires an argument" +
 					" 'abbr' corresponding to the season abbreviation.  \n\n"
@@ -591,8 +593,10 @@ public final class ReflistResources extends OpenDcsResource
 			},
 			tags = {"REST - Reference Lists"}
 	)
-	public Response deleteSeason(@Parameter(description = "Abbreviation of the season to delete", required = true) @QueryParam("abbr") String abbr)
-	throws WebAppException, DbException
+	public Response deleteSeason(@Parameter(description = "Abbreviation of the season to delete", required = true,
+			schema = @Schema(implementation = String.class))
+		@QueryParam("abbr") String abbr)
+			throws WebAppException, DbException
 	{
 		if (abbr == null)
 		{

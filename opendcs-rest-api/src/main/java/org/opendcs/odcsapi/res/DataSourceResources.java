@@ -34,7 +34,10 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 
 import decodes.db.DataSource;
@@ -66,12 +69,20 @@ public class DataSourceResources extends OpenDcsResource
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
 	@Operation(
-			summary = "Get Data Source References",
-			description = "Fetches a list of references to existing data sources.",
+			summary = "This method returns a JSON list of DECODES Data Source records suitable for displaying in a table or pick-list",
+			description = "Example: \nhttp://localhost:8080/odcsapi/datasourcerefs\n\n" +
+					"The returned structure contains only the high-level descriptive information about each data source.\n" +
+					"The arguments (properties) are represented by a string with a comma delimiter. " +
+					"Passwords within the string are replaced with four asterisks.",
 			responses = {
-					@ApiResponse(responseCode = "200", description = "Successfully retrieved data source references"),
-					@ApiResponse(responseCode = "500", description = "Database error occurred", content = @Content)
-			}
+					@ApiResponse(responseCode = "200", description = "Successfully retrieved data source references",
+						content = @Content(
+							mediaType = MediaType.APPLICATION_JSON,
+							schema = @Schema(implementation = ApiDataSourceRef.class)
+					)),
+					@ApiResponse(responseCode = "500", description = "Internal Server Error")
+			},
+			tags = {"REST - DECODES Data Source Records"}
 	)
 	public Response getDataSourceRefs() throws DbException
 	{
@@ -127,16 +138,21 @@ public class DataSourceResources extends OpenDcsResource
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
 	@Operation(
-			summary = "Get Data Source Details",
-			description = "Fetches detailed information about a specific data source using its ID.",
+			summary = "The GET datasource method returns a single DECODES data source with all of its detail.",
+			description = "The integer argument datasourceid is required.\n Example: " +
+					"\n\nhttp://localhost:8080/odcsapi/datasource?datasourceid=10",
 			responses = {
-					@ApiResponse(responseCode = "200", description = "Successfully retrieved data source details"),
-					@ApiResponse(responseCode = "400", description = "Missing or invalid datasourceid parameter", content = @Content),
-					@ApiResponse(responseCode = "404", description = "Data source not found", content = @Content),
-					@ApiResponse(responseCode = "500", description = "Database error occurred", content = @Content)
-			}
+					@ApiResponse(responseCode = "200", description = "success", content = @Content(
+							mediaType = MediaType.APPLICATION_JSON,
+							schema = @Schema(implementation = ApiDataSource.class)
+					)),
+					@ApiResponse(responseCode = "400", description = "Bad Request - Missing required datasourceid parameter"),
+					@ApiResponse(responseCode = "500", description = "Internal Server Error")
+			},
+			tags = {"REST - DECODES Data Source Records"}
 	)
-	public Response getDataSource(@QueryParam("datasourceid") Long dataSourceId)
+	public Response getDataSource(@Parameter(required = true, schema = @Schema(type = "long"))
+				@QueryParam("datasourceid") Long dataSourceId)
 		throws WebAppException, DbException
 	{
 		String notFound = "No such DECODES data source with id=";
@@ -236,13 +252,35 @@ public class DataSourceResources extends OpenDcsResource
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
 	@Operation(
-			summary = "Create or Update Data Source",
-			description = "Creates a new data source or updates an existing one with the provided details.",
+			summary = "Create or Overwrite Existing Data Source",
+			description = "The 'datasource' POST method requires a valid token." +
+					" It takes a single datasource in JSON format, as described for the GET method." +
+					"\n\nFor creating a new data source, leave datasourceId out of the passed data structure." +
+					"\n\nFor overwriting an existing one, include the datasourceId that was previously returned by GET." +
+					" The data source in the database is replaced with the one sent.",
+			requestBody = @RequestBody(
+					description = "Data Source",
+					required = true,
+					content = @Content(
+							mediaType = MediaType.APPLICATION_JSON,
+							schema = @Schema(implementation = ApiDataSource.class)
+//							examples = {
+//									// TODO : FIX EXAMPLES
+//									@ExampleObject(name = "basic", ref = "#/components/examples/POST_BASIC_DataSource"),
+//									@ExampleObject(name = "new", ref = "#/components/examples/POST_NEW_DataSource"),
+//									@ExampleObject(name = "update", ref = "#/components/examples/POST_UPDATE_DataSource")
+//							}
+					)
+			),
 			responses = {
-					@ApiResponse(responseCode = "201", description = "Successfully created or updated the data source"),
-					@ApiResponse(responseCode = "400", description = "Invalid data source information", content = @Content),
-					@ApiResponse(responseCode = "500", description = "Database error occurred", content = @Content)
-			}
+					@ApiResponse(responseCode = "201", description = "Successfully created data source", content = @Content(
+							mediaType = MediaType.APPLICATION_JSON,
+							schema = @Schema(implementation = ApiDataSource.class)
+					)),
+					@ApiResponse(responseCode = "400", description = "Bad Request - Missing required data source object"),
+					@ApiResponse(responseCode = "500", description = "Internal Server Error")
+			},
+			tags = {"REST - DECODES Data Source Records"}
 	)
 	public Response postDatasource(ApiDataSource datasource) throws DbException, MissingParameterException
 	{
@@ -310,17 +348,20 @@ public class DataSourceResources extends OpenDcsResource
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
 	@Operation(
-			summary = "Delete Data Source",
-			description = "Deletes the specified data source by its ID.",
+			summary = "Delete Existing Data Source",
+			description = "The DELETE datasource method requires a valid token. \nRequired argument datasourceid must be passed. " +
+					"\n\nError 405 will be returned if datasource is used by one or more routing specs and cannot" +
+					" be deleted. The body of the error will be a message containing the name of the" +
+					" routing specs using the referenced datasource.",
 			responses = {
-					@ApiResponse(responseCode = "204", description = "Successfully deleted the data source"),
-					@ApiResponse(responseCode = "400", description = "Invalid or missing datasourceid parameter", content = @Content),
-					@ApiResponse(responseCode = "404", description = "Data source not found", content = @Content),
-					@ApiResponse(responseCode = "405", description = "Data source cannot be deleted as it is in use", content = @Content),
-					@ApiResponse(responseCode = "500", description = "Database error occurred", content = @Content)
-			}
+					@ApiResponse(responseCode = "204", description = "Successfully deleted data source"),
+					@ApiResponse(responseCode = "405", description = "Method Not Allowed - Currently in use by routing specs"),
+					@ApiResponse(responseCode = "500", description = "Internal Server Error")
+			},
+			tags = {"REST - DECODES Data Source Records"}
 	)
-	public Response deleteDatasource(@QueryParam("datasourceid") Long datasourceId)
+	public Response deleteDatasource(@Parameter(required = true, schema = @Schema(type = "long"))
+				@QueryParam("datasourceid") Long datasourceId)
 			throws DbException, WebAppException
 	{
 		if (datasourceId == null)
