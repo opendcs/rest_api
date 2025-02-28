@@ -46,6 +46,7 @@ import decodes.db.PlatformSensor;
 import decodes.db.PlatformStatus;
 import decodes.db.RoutingSpec;
 import decodes.db.ScheduleEntry;
+import decodes.db.ScheduleEntryStatus;
 import decodes.db.Site;
 import decodes.db.TransportMedium;
 import decodes.db.ValueNotFoundException;
@@ -421,17 +422,20 @@ public final class PlatformResources extends OpenDcsResource
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
 	public Response getPlatformStats(@QueryParam("netlistid") Long netlistId)
-			throws DbException, WebAppException
+			throws DbException
 	{
-		if (netlistId == null)
-		{
-			throw new MissingParameterException("Missing required netlistid parameter.");
-		}
-
 		DatabaseIO dbIo = getLegacyDatabase();
 		try (PlatformStatusDAI dao = dbIo.makePlatformStatusDAO())
 		{
-			List<PlatformStatus> statuses = dao.readPlatformStatusList(DbKey.createDbKey(netlistId));
+			List<PlatformStatus> statuses = new ArrayList<>();
+			if (netlistId != null)
+			{
+				statuses = dao.readPlatformStatusList(DbKey.createDbKey(netlistId));
+			}
+			else
+			{
+				statuses = dao.readPlatformStatusList(null);
+			}
 			return Response.status(HttpServletResponse.SC_OK).entity(statusListMap(dbIo, statuses)).build();
 		}
 		catch (DbIoException | DatabaseException ex)
@@ -471,12 +475,19 @@ public final class PlatformResources extends OpenDcsResource
 			{
 				try (ScheduleEntryDAI dai = dbIo.makeScheduleEntryDAO())
 				{
-					ScheduleEntry scheduleEntry = dai.readScheduleEntry(status.getLastScheduleEntryStatusId());
-					long routingId = scheduleEntry.getRoutingSpecId().getValue();
-					RoutingSpec rs = new RoutingSpec();
-					rs.setId(DbKey.createDbKey(routingId));
-					dbIo.readRoutingSpec(rs);
-					ps.setRoutingSpecName(rs.getName());
+					ScheduleEntryStatus schedStatus = dai.readScheduleStatusById(status.getLastScheduleEntryStatusId());
+					if (schedStatus != null && schedStatus.getScheduleEntryId() != null)
+					{
+						ScheduleEntry scheduleEntry = dai.readScheduleEntry(schedStatus.getScheduleEntryId());
+						if(scheduleEntry != null && scheduleEntry.getRoutingSpecId() != null)
+						{
+							long routingId = scheduleEntry.getRoutingSpecId().getValue();
+							RoutingSpec rs = new RoutingSpec();
+							rs.setId(DbKey.createDbKey(routingId));
+							dbIo.readRoutingSpec(rs);
+							ps.setRoutingSpecName(rs.getName());
+						}
+					}
 				}
 				catch (DbIoException ex)
 				{
