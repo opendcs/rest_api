@@ -29,7 +29,6 @@ import decodes.db.DatabaseException;
 import decodes.db.PlatformStatus;
 import decodes.db.ScheduleEntry;
 import decodes.db.ScheduleEntryStatus;
-import decodes.polling.DacqEvent;
 import decodes.sql.DbKey;
 import decodes.tsdb.CTimeSeries;
 import decodes.tsdb.TimeSeriesIdentifier;
@@ -155,7 +154,7 @@ class BaseIT
 		;
 	}
 
-	void logout(SessionFilter sessionFilter)
+	static void logout(SessionFilter sessionFilter)
 	{
 		if (DatabaseSetupExtension.getCurrentDbType() == DbType.OPEN_TSDB)
 		{

@@ -16,13 +16,13 @@ import io.restassured.filter.session.SessionFilter;
 import io.restassured.path.json.JsonPath;
 import io.restassured.response.ExtractableResponse;
 import io.restassured.response.Response;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.TestTemplate;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.opendcs.odcsapi.fixtures.DatabaseContextProvider;
-import org.opendcs.odcsapi.fixtures.DatabaseSetupExtension;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.equalTo;
@@ -41,8 +41,10 @@ final class PlatformResourcesIT extends BaseIT
 	private static Long siteId;
 	private static Long netListId;
 	private static Long scheduleId;
+	private static Long scheduleStatusId;
+	private static Long dataSourceId;
+	private static Long routingSpecId;
 	private static Long platformStatusId;
-	private static Boolean dataLoaded;
 	private static Long configId;
 
 	@BeforeEach
@@ -51,21 +53,6 @@ final class PlatformResourcesIT extends BaseIT
 		setUpCreds();
 		sessionFilter = new SessionFilter();
 		authenticate(sessionFilter);
-
-		scheduleId = DbKey.NullKey.getValue();
-
-		if (dataLoaded == null || !dataLoaded)
-		{
-			String[] files = new String[]{
-					"DEFAULT/platform_netlist_insert.xml",
-					"DEFAULT/platform_datasource_insert.xml",
-					"DEFAULT/platform_routingspec_insert.xml",
-					"DEFAULT/platform_schedule_entry_insert.xml",
-			};
-			DatabaseSetupExtension.loadXMLDataIntoDb(files);
-
-			dataLoaded = true;
-		}
 
 		// Insert platform config
 		String configJson = getJsonFromResource("platform_config_insert_data.json");
@@ -119,19 +106,185 @@ final class PlatformResourcesIT extends BaseIT
 		;
 
 		platformId = response.body().jsonPath().getLong("platformId");
+
+		// Insert netlist
+		String netlistJson = getJsonFromResource("platform_netlist_insert_data.json");
+		assertNotNull(netlistJson);
+
+		response = given()
+			.log().ifValidationFails(LogDetail.ALL, true)
+			.accept(MediaType.APPLICATION_JSON)
+			.header("Authorization", authHeader)
+			.contentType(MediaType.APPLICATION_JSON)
+			.filter(sessionFilter)
+			.body(netlistJson)
+		.when()
+			.redirects().follow(true)
+			.redirects().max(3)
+			.post("netlist")
+		.then()
+			.log().ifValidationFails(LogDetail.ALL, true)
+		.assertThat()
+			.statusCode(is(HttpServletResponse.SC_CREATED))
+			.extract()
+		;
+
+		netListId = response.body().jsonPath().getLong("netlistId");
+
+		// Insert data source
+		String dataSourceJson = getJsonFromResource("platform_datasource_insert_data.json");
+		assertNotNull(dataSourceJson);
+
+		response = given()
+			.log().ifValidationFails(LogDetail.ALL, true)
+			.accept(MediaType.APPLICATION_JSON)
+			.header("Authorization", authHeader)
+			.contentType(MediaType.APPLICATION_JSON)
+			.filter(sessionFilter)
+			.body(dataSourceJson)
+		.when()
+			.redirects().follow(true)
+			.redirects().max(3)
+			.post("datasource")
+		.then()
+			.log().ifValidationFails(LogDetail.ALL, true)
+		.assertThat()
+			.statusCode(is(HttpServletResponse.SC_CREATED))
+			.extract()
+		;
+
+		dataSourceId = response.body().jsonPath().getLong("dataSourceId");
+
+		// Insert routing spec
+		String routingSpecJson = getJsonFromResource("platform_routingspec_insert_data.json");
+		assertNotNull(routingSpecJson);
+
+		routingSpecJson = routingSpecJson.replace("\"[DATA_SOURCE_ID]\"", dataSourceId.toString());
+		routingSpecJson = routingSpecJson.replace("[NETLIST_NAME]", "PlatformTest");
+		routingSpecJson = routingSpecJson.replace("\"[PLATFORM_ID]\"", platformId.toString());
+
+		response = given()
+			.log().ifValidationFails(LogDetail.ALL, true)
+			.accept(MediaType.APPLICATION_JSON)
+			.header("Authorization", authHeader)
+			.contentType(MediaType.APPLICATION_JSON)
+			.filter(sessionFilter)
+			.body(routingSpecJson)
+		.when()
+			.redirects().follow(true)
+			.redirects().max(3)
+			.post("routing")
+		.then()
+			.log().ifValidationFails(LogDetail.ALL, true)
+		.assertThat()
+			.statusCode(is(HttpServletResponse.SC_CREATED))
+			.extract()
+		;
+
+		routingSpecId = response.body().jsonPath().getLong("routingId");
+
+		// Insert schedule entry
+		String scheduleEntryJson = getJsonFromResource("platform_schedule_entry_insert_data.json");
+		assertNotNull(scheduleEntryJson);
+
+		scheduleEntryJson = scheduleEntryJson.replace("\"[ROUTING_SPEC_ID]\"", routingSpecId.toString());
+
+		response = given()
+			.log().ifValidationFails(LogDetail.ALL, true)
+			.accept(MediaType.APPLICATION_JSON)
+			.header("Authorization", authHeader)
+			.contentType(MediaType.APPLICATION_JSON)
+			.filter(sessionFilter)
+			.body(scheduleEntryJson)
+		.when()
+			.redirects().follow(true)
+			.redirects().max(3)
+			.post("schedule")
+		.then()
+			.log().ifValidationFails(LogDetail.ALL, true)
+		.assertThat()
+			.statusCode(is(HttpServletResponse.SC_CREATED))
+			.extract()
+		;
+
+		scheduleId = response.body().jsonPath().getLong("schedEntryId");
 	}
 
 	@AfterEach
 	void tearDown() throws DatabaseException
 	{
-		if (scheduleId != null)
+		if (scheduleStatusId != null)
 		{
-			deleteScheduleEntryStatus(DbKey.createDbKey(scheduleId));
+			deleteScheduleEntryStatus(DbKey.createDbKey(scheduleStatusId));
 		}
 		if (platformStatusId != null)
 		{
 			deletePlatformStatus(DbKey.createDbKey(platformStatusId));
 		}
+
+		given()
+			.log().ifValidationFails(LogDetail.ALL, true)
+			.accept(MediaType.APPLICATION_JSON)
+			.header("Authorization", authHeader)
+			.queryParam("scheduleid", scheduleId)
+			.filter(sessionFilter)
+		.when()
+			.redirects().follow(true)
+			.redirects().max(3)
+			.delete("schedule")
+		.then()
+			.log().ifValidationFails(LogDetail.ALL, true)
+		.assertThat()
+			.statusCode(is(HttpServletResponse.SC_NO_CONTENT))
+		;
+
+		given()
+			.log().ifValidationFails(LogDetail.ALL, true)
+			.accept(MediaType.APPLICATION_JSON)
+			.header("Authorization", authHeader)
+			.queryParam("routingid", routingSpecId)
+			.filter(sessionFilter)
+		.when()
+			.redirects().follow(true)
+			.redirects().max(3)
+			.delete("routing")
+		.then()
+			.log().ifValidationFails(LogDetail.ALL, true)
+		.assertThat()
+			.statusCode(is(HttpServletResponse.SC_NO_CONTENT))
+		;
+
+		given()
+			.log().ifValidationFails(LogDetail.ALL, true)
+			.accept(MediaType.APPLICATION_JSON)
+			.header("Authorization", authHeader)
+			.queryParam("datasourceid", dataSourceId)
+			.filter(sessionFilter)
+		.when()
+			.redirects().follow(true)
+			.redirects().max(3)
+			.delete("datasource")
+		.then()
+			.log().ifValidationFails(LogDetail.ALL, true)
+		.assertThat()
+			.statusCode(is(HttpServletResponse.SC_NO_CONTENT))
+		;
+
+		given()
+			.log().ifValidationFails(LogDetail.ALL, true)
+			.accept(MediaType.APPLICATION_JSON)
+			.header("Authorization", authHeader)
+			.queryParam("netlistid", netListId)
+			.filter(sessionFilter)
+		.when()
+			.redirects().follow(true)
+			.redirects().max(3)
+			.delete("netlist")
+		.then()
+			.log().ifValidationFails(LogDetail.ALL, true)
+		.assertThat()
+			.statusCode(is(HttpServletResponse.SC_NO_CONTENT))
+		;
 
 		given()
 			.log().ifValidationFails(LogDetail.ALL, true)
@@ -149,25 +302,26 @@ final class PlatformResourcesIT extends BaseIT
 			.statusCode(is(HttpServletResponse.SC_NO_CONTENT))
 		;
 
-		if (configId != null)
-		{
-			given()
-				.log().ifValidationFails(LogDetail.ALL, true)
-				.accept(MediaType.APPLICATION_JSON)
-				.header("Authorization", authHeader)
-				.queryParam("configid", configId)
-				.filter(sessionFilter)
-			.when()
-				.redirects().follow(true)
-				.redirects().max(3)
-				.delete("config")
-			.then()
-				.log().ifValidationFails(LogDetail.ALL, true)
-			.assertThat()
-				.statusCode(is(HttpServletResponse.SC_NO_CONTENT))
-			;
-		}
+		given()
+			.log().ifValidationFails(LogDetail.ALL, true)
+			.accept(MediaType.APPLICATION_JSON)
+			.header("Authorization", authHeader)
+			.queryParam("configid", configId)
+			.filter(sessionFilter)
+		.when()
+			.redirects().follow(true)
+			.redirects().max(3)
+			.delete("config")
+		.then()
+			.log().ifValidationFails(LogDetail.ALL, true)
+		.assertThat()
+			.statusCode(is(HttpServletResponse.SC_NO_CONTENT))
+		;
+	}
 
+	@AfterAll
+	static void tearDownAll()
+	{
 		tearDownSite(siteId);
 
 		logout(sessionFilter);
@@ -199,6 +353,7 @@ final class PlatformResourcesIT extends BaseIT
 		assertNotNull(actual);
 		Map<String, Object> actualMap = actual.getMap("");
 		actualMap = (Map<String, Object>) actualMap.get(expected.getString("name")); // Name of platform is not stored in Platform object, could cause issues with collision
+		assertNotNull(actualMap);
 		assertEquals(expected.get("description"), actualMap.get("description"));
 		assertEquals(expected.get("agency"), actualMap.get("agency"));
 		assertEquals(expected.get("designator"), actualMap.get("designator"));
@@ -226,6 +381,7 @@ final class PlatformResourcesIT extends BaseIT
 		actual = response.body().jsonPath();
 		actualMap = actual.getMap("");
 		actualMap = (Map<String, Object>) actualMap.get(expected.getString("name")); // Name of platform is not stored in Platform object, could cause issues with collision
+		assertNotNull(actualMap);
 		assertEquals(expected.get("description"), actualMap.get("description"));
 		assertEquals(expected.get("agency"), actualMap.get("agency"));
 		assertEquals(expected.get("designator"), actualMap.get("designator"));
@@ -427,61 +583,6 @@ final class PlatformResourcesIT extends BaseIT
 	@TestTemplate
 	void testGetPlatformStats() throws Exception
 	{
-		// get netlistId
-		ExtractableResponse<Response> resp = given()
-			.log().ifValidationFails(LogDetail.ALL, true)
-			.accept(MediaType.APPLICATION_JSON)
-			.header("Authorization", authHeader)
-			.filter(sessionFilter)
-		.when()
-			.redirects().follow(true)
-			.redirects().max(3)
-			.get("netlistrefs")
-		.then()
-			.log().ifValidationFails(LogDetail.ALL, true)
-		.assertThat()
-			.statusCode(is(HttpServletResponse.SC_OK))
-			.extract();
-
-		JsonPath jsonPath = resp.body().jsonPath();
-
-		List<Map<String, Object>> netLists = jsonPath.getList("");
-		assertFalse(netLists.isEmpty());
-		boolean found = false;
-		for(Map<String, Object> entry : netLists)
-		{
-			if(entry.get("name").equals("PlatformTest"))
-			{
-				netListId = Long.parseLong(entry.get("netlistId").toString());
-				found = true;
-				break;
-			}
-		}
-		assertTrue(found);
-
-		// get schedule entry id
-		resp = given()
-			.log().ifValidationFails(LogDetail.ALL, true)
-			.accept(MediaType.APPLICATION_JSON)
-			.header("Authorization", authHeader)
-			.filter(sessionFilter)
-		.when()
-			.redirects().follow(true)
-			.redirects().max(3)
-			.get("schedulerefs")
-		.then()
-			.log().ifValidationFails(LogDetail.ALL, true)
-		.assertThat()
-			.statusCode(is(HttpServletResponse.SC_OK))
-			.extract()
-		;
-
-		jsonPath = resp.body().jsonPath();
-		assertNotNull(jsonPath);
-		List<Map<String, Object>> scheduleEntries = jsonPath.getList("");
-		assertNotNull(scheduleEntries);
-		scheduleId = DbKey.NullKey.getValue();
-
 		ScheduleEntryStatus scheduleEntryStatus = new ScheduleEntryStatus(DbKey.NullKey);
 		scheduleEntryStatus.setHostname("localhost");
 		scheduleEntryStatus.setLastMessageTime(Date.from(Instant.parse("2021-01-02T00:00:00Z")));
@@ -491,17 +592,6 @@ final class PlatformResourcesIT extends BaseIT
 		scheduleEntryStatus.setRunStop(Date.from(Instant.parse("2021-01-02T00:00:00Z")));
 		scheduleEntryStatus.setRunStatus("Test Status");
 		scheduleEntryStatus.setLastModified(Date.from(Instant.parse("2021-01-03T00:00:00Z")));
-
-		for(Map<String, Object> entry : scheduleEntries)
-		{
-			if(entry.get("name").equals(scheduleEntryStatus.getScheduleEntryName()))
-			{
-				scheduleId = Long.parseLong(entry.get("schedEntryId").toString());
-				break;
-			}
-		}
-		assertNotNull(scheduleId);
-
 		scheduleEntryStatus.setScheduleEntryId(DbKey.createDbKey(scheduleId));
 
 		// Store schedule entry status via extension, since no endpoint for this exists
@@ -527,14 +617,14 @@ final class PlatformResourcesIT extends BaseIT
 
 		List<Map<String, Object>> responseList = response.body().jsonPath().getList("");
 		assertFalse(responseList.isEmpty());
-		long scheduleEntryStatusId = Long.parseLong(responseList.get(0).get("routingExecId").toString());
+		scheduleStatusId = Long.parseLong(responseList.get(0).get("routingExecId").toString());
 
 		PlatformStatus status = new PlatformStatus(DbKey.createDbKey(platformId));
 		status.setSiteName("Platform 10");
 		status.forceSetId(DbKey.NullKey);
 		status.setPlatformId(DbKey.createDbKey(platformId));
 		status.setLastRoutingSpecName("TestRoutingSpec");
-		status.setLastScheduleEntryStatusId(DbKey.createDbKey(scheduleEntryStatusId));
+		status.setLastScheduleEntryStatusId(DbKey.createDbKey(scheduleStatusId));
 		status.setLastErrorTime(Date.from(Instant.parse("2021-01-03T00:00:00Z")));
 		status.setLastMessageTime(Date.from(Instant.parse("2021-01-02T00:00:00Z")));
 		status.setAnnotation("Test Annotation");
@@ -569,7 +659,7 @@ final class PlatformResourcesIT extends BaseIT
 		List<Map<String, Object>> expectedList = expected.getList("");
 		Map<String, Object> expectedItem = expectedList.get(0);
 		assertNotNull(actualList);
-		found = false;
+		boolean found = false;
 		for (Map<String, Object> entry : actualList)
 		{
 			if (entry.get("platformName").equals(expectedItem.get("platformName")))
@@ -612,7 +702,7 @@ final class PlatformResourcesIT extends BaseIT
 		return response.body().jsonPath().getLong("siteId");
 	}
 
-	private void tearDownSite(Long siteId)
+	private static void tearDownSite(Long siteId)
 	{
 		given()
 			.log().ifValidationFails(LogDetail.ALL, true)
