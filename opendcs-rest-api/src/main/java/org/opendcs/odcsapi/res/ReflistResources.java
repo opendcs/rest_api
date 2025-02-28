@@ -78,8 +78,7 @@ public final class ReflistResources extends OpenDcsResource
 	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
 	@Operation(
 			summary = "The ‘reflists’ GET method will return all reference lists or a specific reference list.",
-			description = "Authentication is not required for this method, but if a token argument is provided the lastUser timer in the token will be updated. "
-					+ "The 'name' argument may have multiple values. Example: http://localhost:8080/odcsapi/reflists?name=scripttype,dataorder\n\n"
+			description = "The 'name' argument may have multiple values. Example: http://localhost:8080/odcsapi/reflists?name=scripttype,dataorder\n\n"
 					+ "If no 'name' argument is provided, then all reference lists in the database are returned. The JSON returned is an array of reference lists.",
 			responses = {
 					@ApiResponse(
@@ -176,7 +175,7 @@ public final class ReflistResources extends OpenDcsResource
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
 	@Operation(
 			summary = "Create New Reference List, or Overwrite Existing Reference List",
-			description = "The ‘reflist’ POST method requires a valid token. Use this to create or overwrite reference lists. Provide JSON as follows:\n\n"
+			description = "Use this to create or overwrite reference lists. Provide JSON as follows:\n\n"
 					+ "For new reference lists, exclude `reflistId`. To update, include the `reflistId`.",
 			requestBody = @RequestBody(
 					description = "Reference list object to post",
@@ -329,7 +328,7 @@ public final class ReflistResources extends OpenDcsResource
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
 	@Operation(
 			summary = "Delete Existing Reference List",
-			description = "The DELETE reflist method requires a valid token. Required parameter `reflistId` must be provided.\n\n"
+			description = "Required parameter `reflistId` must be provided.\n\n"
 					+ "Handle with care, as some modules in OpenDCS require specific reference lists.",
 			responses = {
 					@ApiResponse(
@@ -503,7 +502,7 @@ public final class ReflistResources extends OpenDcsResource
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
 	@Operation(
 			summary = "creates or overwrites a single season record",
-			description = "The POST season operation requires a valid token. It takes a data structure like the one described above for GET season.",
+			description = "It takes a data structure like the one described above for GET season.",
 			requestBody = @RequestBody(
 					description = "Season Object",
 					required = true,
@@ -582,7 +581,7 @@ public final class ReflistResources extends OpenDcsResource
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
 	@Operation(
 			summary = "Delete Existing Season",
-			description = "The DELETE season operation requires a valid token. It also requires an argument" +
+			description = "It requires an argument" +
 					" 'abbr' corresponding to the season abbreviation.  \n\n"
 					+ "For example, to DELETE the 'autumn' season, use the following URL:\n  \n"
 					+ "    http://localhost:8080/odcsapi/season?abbr=autumn",

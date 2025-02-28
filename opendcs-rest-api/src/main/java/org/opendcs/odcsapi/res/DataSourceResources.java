@@ -253,8 +253,7 @@ public class DataSourceResources extends OpenDcsResource
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
 	@Operation(
 			summary = "Create or Overwrite Existing Data Source",
-			description = "The 'datasource' POST method requires a valid token." +
-					" It takes a single datasource in JSON format, as described for the GET method." +
+			description = "It takes a single datasource in JSON format, as described for the GET method." +
 					"\n\nFor creating a new data source, leave datasourceId out of the passed data structure." +
 					"\n\nFor overwriting an existing one, include the datasourceId that was previously returned by GET." +
 					" The data source in the database is replaced with the one sent.",
@@ -264,12 +263,6 @@ public class DataSourceResources extends OpenDcsResource
 					content = @Content(
 							mediaType = MediaType.APPLICATION_JSON,
 							schema = @Schema(implementation = ApiDataSource.class)
-//							examples = {
-//									// TODO : FIX EXAMPLES
-//									@ExampleObject(name = "basic", ref = "#/components/examples/POST_BASIC_DataSource"),
-//									@ExampleObject(name = "new", ref = "#/components/examples/POST_NEW_DataSource"),
-//									@ExampleObject(name = "update", ref = "#/components/examples/POST_UPDATE_DataSource")
-//							}
 					)
 			),
 			responses = {
@@ -349,7 +342,7 @@ public class DataSourceResources extends OpenDcsResource
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
 	@Operation(
 			summary = "Delete Existing Data Source",
-			description = "The DELETE datasource method requires a valid token. \nRequired argument datasourceid must be passed. " +
+			description = "Required argument datasourceid must be passed. " +
 					"\n\nError 405 will be returned if datasource is used by one or more routing specs and cannot" +
 					" be deleted. The body of the error will be a message containing the name of the" +
 					" routing specs using the referenced datasource.",

@@ -311,8 +311,7 @@ public final class SiteResources extends OpenDcsResource
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
 	@Operation(
 			summary = "Delete Existing Site",
-			description = "The DELETE `site` method requires a valid token." +
-					"\n\nRequired parameter `siteid` must be passed." +
+			description = "Required parameter `siteid` must be passed." +
 					"\n\nError 405 will be returned if the site is used by one or more platforms and cannot be deleted.",
 			operationId = "deletesite",
 			tags = {"REST - DECODES Site Records"},

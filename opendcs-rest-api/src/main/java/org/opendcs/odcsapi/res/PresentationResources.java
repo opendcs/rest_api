@@ -251,7 +251,7 @@ public final class PresentationResources extends OpenDcsResource
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
 	@Operation(
 			summary = "Create or Overwrite Existing Decodes Presentation Group",
-			description = "The POST presentation method requires a valid token. It takes a single DECODES " +
+			description = "It takes a single DECODES " +
 					"Presentation Group in JSON format, as described above for GET.\n\n" +
 					"For creating a new record, leave groupId out of the passed data structure.\n\n" +
 					"For overwriting an existing one, include the groupId that was previously returned. " +
@@ -367,8 +367,7 @@ public final class PresentationResources extends OpenDcsResource
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
 	@Operation(
 			summary = "Delete Existing Presentation Group",
-			description = "The DELETE platform method requires a valid token.\n\n" +
-					"Required argument groupid must be passed in the URL.",
+			description = "Required argument groupid must be passed in the URL.",
 			tags = {"REST - DECODES Presentation Group Records"},
 			responses = {
 					@ApiResponse(responseCode = "204", description = "Successfully deleted presentation group", content = @Content),

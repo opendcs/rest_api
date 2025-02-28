@@ -274,7 +274,7 @@ public final class ConfigResources extends OpenDcsResource
 			),
 			responses = {
 					@ApiResponse(responseCode = "201", description = "Successfully created or updated the configuration",
-							content = @Content),
+							content = @Content(schema = @Schema(implementation = ApiPlatformConfig.class))),
 					@ApiResponse(responseCode = "500", description = "Database error occurred", content = @Content)
 			},
 			tags = {"REST - DECODES Platform Configurations"}
