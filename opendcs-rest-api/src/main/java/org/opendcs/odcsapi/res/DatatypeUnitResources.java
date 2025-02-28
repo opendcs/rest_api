@@ -19,10 +19,17 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import javax.annotation.security.RolesAllowed;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -76,14 +83,31 @@ public final class DatatypeUnitResources extends OpenDcsResource
 	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
 	@Operation(
 			summary = "Retrieve Data Type List",
-			description = "Fetches a list of data types based on the provided standard.",
+			description = "Examples:  \n\n    http://localhost:8080/odcsapi/datatypelist  \n\n    " 
+					+ "http://localhost:8080/odcsapi/datatypelist?standard=cwms  \n\n\n" 
+					+ "The returned data structure is an array of JSON data type objects:\n" 
+					+ "```\n[\n  {\n    \"code\": \"72114\",\n    \"displayName\": \"CWMS:72114\",\n    "
+					+ "\"id\": 367,\n    \"standard\": \"CWMS\"\n  },\n  {\n    \"code\": \"Address\",\n    " 
+					+ "\"displayName\": \"CWMS:Address\",\n    \"id\": 368,\n    \"standard\": \"CWMS\"\n  }," 
+					+ "\n  {\n    \"code\": \"Code-Channel\",\n    \"displayName\": \"CWMS:Code-Channel\",\n    "
+					+ "\"id\": 382,\n    \"standard\": \"CWMS\"\n  },\n  {\n    \"code\": \"Code-DCPAddress\",\n    " 
+					+ "\"displayName\": \"CWMS:Code-DCPAddress\",\n    \"id\": 372,\n    \"standard\": \"CWMS\"\n  }," 
+					+ "\n  {\n    \"code\": \"Depth-Snow\",\n    \"id\": 72,\n    \"standard\": \"CWMS\"\n  }," 
+					+ "\n…\n]\n```\n\nIf the optional ‘standard’ argument is supplied, then only data types with " 
+					+ "the matching standard are returned. Otherwise all data types in the database are " 
+					+ "returned sorted by (standard, code).",
 			responses = {
-					@ApiResponse(responseCode = "200", description = "Successfully retrieved data type list."),
+					@ApiResponse(responseCode = "200", description = "Successfully retrieved data type list.",
+							content = @Content(mediaType = MediaType.APPLICATION_JSON,
+									schema = @Schema(type = "array", implementation = ApiDataType.class))),
 					@ApiResponse(responseCode = "400", description = "Invalid standard parameter.", content = @Content),
 					@ApiResponse(responseCode = "500", description = "Failed to retrieve data type list.", content = @Content)
-			}
+			},
+			tags = {"REST - Data Type Methods"}
 	)
-	public Response getDataTypeList(@QueryParam("standard") String std) throws DbException
+	public Response getDataTypeList(@Parameter(schema = @Schema(implementation = String.class), example = "cwms") 
+		@QueryParam("standard") String std) 
+			throws DbException
 	{
 		try (DataTypeDAI dai = getLegacyTimeseriesDB().makeDataTypeDAO())
 		{
@@ -126,13 +150,29 @@ public final class DatatypeUnitResources extends OpenDcsResource
 	@Path("unitlist")
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
+	@Tag(name = "REST - Engineering Unit Methods")
 	@Operation(
-			summary = "Retrieve Engineering Units",
-			description = "Fetches a complete list of defined engineering units.",
+			summary = "Returns an array of data structures representing all known Engineering Units",
+			description = "Example: \n\n    http://localhost:8080/odcsapi/unitlist  \n  \n  "
+					+ "* The token argument is optional. If supplied it will reset the timer on the token.  \n  \n  "
+					+ "An array of data structures representing all known Engineering Units will be returnd as shown below.  "
+					+ "\n  \n  ```\n    [\n      {\n        \"abbr\": \"$\",\n        \"family\": \"univ\",\n        "
+					+ "\"measures\": \"Currency\",\n        \"name\": \"Dollars\"\n      },\n      {\n        "
+					+ "\"abbr\": \"%\",\n        \"family\": \"univ\",\n        \"measures\": \"ratio\",\n        "
+					+ "\"name\": \"percent\"\n      },\n      {\n        \"abbr\": \"1000 m2\",\n        "
+					+ "\"family\": \"Metric\",\n        \"measures\": \"Area\",\n        "
+					+ "\"name\": \"Thousands of square meters\"\n      },\n      {\n        "
+					+ "\"abbr\": \"1000 m3\",\n        \"family\": \"Metric\",\n        "
+					+ "\"measures\": \"Volume\",\n        \"name\": \"Thousands of cubic meters\"\n      },\n      "
+					+ "{\n        \"abbr\": \"C\",\n        \"family\": \"Metric\",\n        "
+					+ "\"measures\": \"Temperature\",\n        \"name\": \"Centigrade\"\n      },\n    …\n    ]\n\n  ```",
 			responses = {
-					@ApiResponse(responseCode = "200", description = "Successfully retrieved engineering unit list."),
-					@ApiResponse(responseCode = "500", description = "Internal server error occurred while fetching the engineering unit list.", content = @Content)
-			}
+					@ApiResponse(responseCode = "200", description = "Success",
+							content = @Content(mediaType = MediaType.APPLICATION_JSON,
+									array = @ArraySchema(schema = @Schema(implementation = ApiUnit.class)))),
+					@ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
+			},
+			tags = {"REST - Engineering Unit Methods"}
 	)
 	public Response getUnitList() throws DbException
 	{
@@ -176,18 +216,30 @@ public final class DatatypeUnitResources extends OpenDcsResource
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
+	@Tag(name = "REST - Engineering Unit Methods")
+	@SecurityRequirement(name = "bearerAuth")
 	@Operation(
-			summary = "Add Engineering Unit",
-			description = "Adds a new engineering unit to the database.",
+			summary = "Create a new, or update an existing Engineering Unit",
+			description = "The POST data should contain a single engineering unit as described in the specification." +
+					"\n\nFor example, to create a new unit with abbreviation `blob`, the data could be:\n" +
+					"{ \n\"abbr\": \"blob\", \"family\": \"Metric\", \"measures\": \"stuff\", \"name\": \"A Blob of Stuff\" \n}\n",
+			requestBody = @RequestBody(description = "Engineering unit",
+					required = true,
+					content = @Content(mediaType = MediaType.APPLICATION_JSON,
+							schema = @Schema(implementation = ApiUnit.class))),
 			responses = {
-					@ApiResponse(responseCode = "201", description = "Successfully added the engineering unit."),
+					@ApiResponse(responseCode = "201", description = "Successfully stored the engineering unit.",
+							content = @Content(mediaType = MediaType.APPLICATION_JSON,
+									schema = @Schema(implementation = ApiUnit.class))),
+					@ApiResponse(responseCode = "400", description = "Invalid input parameters.", content = @Content),
 					@ApiResponse(responseCode = "500", description = "Failed to store the engineering unit.", content = @Content)
-			}
+			},
+			tags = {"REST - Engineering Unit Methods"}
 	)
-	public Response postEU(
-			@Parameter(description = "The abbreviation of the engineering unit being added.") @QueryParam("fromabbr") String fromabbr,
-			@Parameter(description = "Engineering unit details.") ApiUnit eu
-	) throws DbException
+	public Response postEU(@Parameter(description = "The abbreviation of the engineering unit being added.")
+		@QueryParam("fromabbr") String fromabbr,
+			@Parameter(description = "Engineering unit details.") ApiUnit eu)
+		throws DbException
 	{
 		DatabaseIO dbIo = getLegacyDatabase();
 		try
@@ -215,16 +267,23 @@ public final class DatatypeUnitResources extends OpenDcsResource
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
+	@Tag(name = "REST - Engineering Unit Methods")
+	@SecurityRequirement(name = "bearerAuth")
 	@Operation(
-			summary = "Delete Engineering Unit",
-			description = "Deletes an engineering unit based on the provided abbreviation.",
+			summary = "Delete an existing Engineering Unit",
+			description = "Deletes an engineering unit record.\n\nExample URL:\n\n" +
+					"http://localhost:8080/odcsapi/eu?abbr=blob\n",
 			responses = {
-					@ApiResponse(responseCode = "204", description = "Successfully deleted the engineering unit."),
-					@ApiResponse(responseCode = "400", description = "Missing required abbreviation parameter.", content = @Content),
-					@ApiResponse(responseCode = "500", description = "Failed to delete the engineering unit.", content = @Content)
+					@ApiResponse(responseCode = "204", description = "Successfully deleted the engineering unit.",
+							content = @Content),
+					@ApiResponse(responseCode = "400", description = "Missing required abbreviation parameter.",
+							content = @Content),
+					@ApiResponse(responseCode = "500", description = "Internal Server Error", content = @Content)
 			}
 	)
-	public Response deleteEU(@Parameter(description = "The abbreviation of the engineering unit to delete.") @QueryParam("abbr") String abbr)
+	public Response deleteEU(@Parameter(description = "Engineering unit abbreviation", required = true,
+			example = "blob", schema = @Schema(implementation = String.class))
+		@QueryParam("abbr") String abbr)
 			throws DbException, WebAppException
 	{
 		if(abbr == null)
@@ -253,13 +312,27 @@ public final class DatatypeUnitResources extends OpenDcsResource
 	@Path("euconvlist")
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
+	@Tag(name = "REST - Engineering Unit Methods")
 	@Operation(
-			summary = "Retrieve Unit Converter List",
-			description = "Fetches a list of all unit converters available in the database.",
+			summary = "Returns a list of Engineering Unit Conversions defined in the database",
+			description = "Returns a list of Engineering Unit Conversions defined in the database.  \n"
+					+ "Example:  \n\n    http://localhost:8080/odcsapi/unitlist  \n\n"
+					+ "* The token argument is optional. If supplied it will reset the timer on the token.  \n\n"
+					+ "An array of data structures representing all known conversions will be returned as shown below.  "
+					+ "\n\n```\n  [\n    {\n      \"ucId\": 3689,\n      \"fromAbbr\": \"m^3/s\",\n      "
+					+ "\"toAbbr\": \"cms\",\n      \"algorithm\": \"none\",\n      \"a\": 0,\n      \"b\": 0,\n      "
+					+ "\"c\": 0,\n      \"d\": 0,\n      \"e\": 0,\n      \"f\": 0\n    },\n    {\n      "
+					+ "\"ucId\": 3690,\n      \"fromAbbr\": \"ft\",\n      \"toAbbr\": \"in\",\n      "
+					+ "\"algorithm\": \"linear\",\n      \"a\": 12,\n      \"b\": 0,\n      \"c\": 0,\n      "
+					+ "\"d\": 0,\n      \"e\": 0,\n      \"f\": 0\n    },\n  . . .\n  ]\n```",
 			responses = {
-					@ApiResponse(responseCode = "200", description = "Successfully retrieved the unit converter list."),
-					@ApiResponse(responseCode = "500", description = "Failed to retrieve unit converter list.", content = @Content)
-			}
+					@ApiResponse(responseCode = "200", description = "Success",
+							content = @Content(mediaType = MediaType.APPLICATION_JSON,
+									array = @ArraySchema(schema = @Schema(implementation = ApiUnitConverter.class)))),
+					@ApiResponse(responseCode = "500", description = "Internal server error",
+							content = @Content)
+			},
+			tags = {"REST - Engineering Unit Methods"}
 	)
 	public Response getUnitConvList() throws DbException
 	{
@@ -299,13 +372,35 @@ public final class DatatypeUnitResources extends OpenDcsResource
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
 	@Operation(
-			summary = "Add Unit Converter",
-			description = "Adds a new unit converter to the database.",
+			summary = "Create a new, or update an existing Engineering Unit Conversion",
+			description = "Example URL for POST:  \n\n    "
+					+ "http://localhost:8080/odcsapi/euconv?token=6b994be905e1fddf  \n\n\n"
+					+ "The POST data should contain a single engineering unit conversion as described"
+					+ " above for euconvlist.  \n\nFor example, to create a new conversion that declares "
+					+ "'cms' to be a synonym of 'blob', the data could be:\n```\n  {\n    "
+					+ "\"fromAbbr\": \"cms\",\n    \"toAbbr\": \"blob\",\n    \"algorithm\": \"none\",\n    "
+					+ "\"a\": 0,\n    \"b\": 0,\n    \"c\": 0,\n    \"d\": 0,\n    \"e\": 0,\n    \"f\": 0\n  }\n  "
+					+ "```\n\n**Note**: the 'none' algorithm means that no conversion is required and the "
+					+ "coefficients A-F are ignored. It essentially means that the two units are synonyms.  \n\n"
+					+ "**Note**: that we left off the 'ucId' member since we were creating a new conversion. "
+					+ "To update an existing one, include 'ucId'.  \n\nThe returned data structure will be "
+					+ "the same as the data passed, except that if this is a new conversion the "
+					+ "ucId member will be added.",
+			requestBody = @RequestBody(description = "Engineering unit conversion",
+					required = true,
+					content = @Content(mediaType = MediaType.APPLICATION_JSON,
+							schema = @Schema(implementation = ApiUnitConverter.class))),
 			responses = {
-					@ApiResponse(responseCode = "201", description = "Successfully added the unit converter."),
+					@ApiResponse(responseCode = "201", description = "Successfully added the unit converter.",
+							content = @Content(mediaType = MediaType.APPLICATION_JSON,
+									schema = @Schema(implementation = ApiUnitConverter.class,
+											description = "The returned data structure will be the same "
+													+ "as the data passed, except that if this is a new conversion "
+													+ "the ucId member will be added."))),
 					@ApiResponse(responseCode = "400", description = "Invalid input parameters.", content = @Content),
-					@ApiResponse(responseCode = "500", description = "Internal server error occurred while storing the unit converter.", content = @Content)
-			}
+					@ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
+			},
+			tags = {"REST - Engineering Unit Methods"}
 	)
 	public Response postEUConv(ApiUnitConverter euc) throws DbException
 	{
@@ -413,16 +508,25 @@ public final class DatatypeUnitResources extends OpenDcsResource
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
+	@Tag(name = "REST - Engineering Unit Methods")
+	@SecurityRequirement(name = "bearerAuth")
 	@Operation(
-			summary = "Delete Unit Converter",
-			description = "Deletes a unit converter based on the provided ID.",
+			summary = "Delete an existing Engineering Unit conversion record",
+			description = "Deletes a unit conversion by the provided ID.\n\nExample URL:\n\n" +
+					"http://localhost:8080/odcsapi/euconv?euconvid=1459",
 			responses = {
-					@ApiResponse(responseCode = "204", description = "Successfully deleted the unit converter."),
-					@ApiResponse(responseCode = "400", description = "Missing required ID parameter.", content = @Content),
-					@ApiResponse(responseCode = "500", description = "Failed to delete the unit converter due to a database error.", content = @Content)
-			}
+					@ApiResponse(responseCode = "204", description = "Successfully deleted the unit converter.",
+							content = @Content),
+					@ApiResponse(responseCode = "400", description = "Missing required ID parameter.",
+							content = @Content),
+					@ApiResponse(responseCode = "500", description = "Internal Server Error", content = @Content)
+			},
+			tags = {"REST - Engineering Unit Methods"}
 	)
-	public Response deleteEUConv(@QueryParam("euconvid") Long id) throws DbException, WebAppException
+	public Response deleteEUConv(@Parameter(description = "EU Conversion Id", required = true,
+			example = "1459", schema = @Schema(implementation = Long.class))
+		@QueryParam("euconvid") Long id)
+			throws DbException, WebAppException
 	{
 		if (id == null)
 		{

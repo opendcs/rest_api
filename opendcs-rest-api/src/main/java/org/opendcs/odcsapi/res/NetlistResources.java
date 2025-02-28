@@ -73,8 +73,7 @@ public final class NetlistResources extends OpenDcsResource
 	@Operation(
 			summary = "The GET netlistrefs method returns references to network lists",
 			description = "It is intended to populate a pick list of network lists and does not contain" +
-					" all of the list elements.\n\nAuthentication is not required for this method," +
-					" but if a token argument is provided the\n\nExamples:\n\n" +
+					" all of the list elements.\n\nExamples:\n\n" +
 					"    http://localhost:8080/odcsapi/netlistrefs\n\n" +
 					"    http://localhost:8080/odcsapi/netlistrefs?tmtype=goes\n\nWith no arguments," +
 					" a list of network lists in the database is returned. The format is as follows:" +
@@ -159,9 +158,7 @@ public final class NetlistResources extends OpenDcsResource
 	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
 	@Operation(
 			summary = "The ‘netlists’ GET method will return a specific network list in its entirety.",
-			description = "Example:\n\n    http://localhost:8080/odcsapi/netlist?netlistid=1" +
-					"\n\nAuthentication is not required for this method, but if a token argument is" +
-					" provided the lastUser timer in the token will be updated.",
+			description = "Example:\n\n    http://localhost:8080/odcsapi/netlist?netlistid=1",
 			responses = {
 					@ApiResponse(
 							responseCode = "200",
@@ -258,27 +255,21 @@ public final class NetlistResources extends OpenDcsResource
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
 	@Operation(
 			summary = "Create or Overwrite Existing Netlist",
-			description = "The ‘netlist’ POST method requires a valid token.\n\n" +
-					"It takes a single network list in JSON format, as described for the GET method:" +
-					"\n```\n{\n  \"items\": {\n    \"14159500\": {\n      \"description\": \"\",\n      " +
-					"\"platformName\": \"CGRO\",\n      \"transportId\": \"14159500\"\n    },\n    " +
-					"\"14372300\": {\n      \"description\": \"\",\n      \"platformName\": \"AGNO\",\n      " +
-					"\"transportId\": \"14372300\"\n    }\n  },\n  \"lastModifyTime\": \"2020-10-19T18:14:14.788Z[UTC]\"," +
-					"\n  \"name\": \"USGS-Sites\",\n  \"netlistId\": 4,\n  \"siteNameTypePref\": \"nwshb5\",\n  " +
-					"\"transportMediumType\": \"other\"\n}\n```\n\nFor creating a new network list, " +
-					"leave netlistId out of the passed data structure.\n\nFor overwriting an existing one, " +
-					"include the netlistId that was previously returned. The network list in the database " +
-					"is replaced with the one sent.",
+			description = "The ‘netlist’ POST method takes a single network list in JSON format,"
+					+ " as described for the GET method:"
+					+ "\n```\n{\n  \"items\": {\n    \"14159500\": {\n      \"description\": \"\",\n      "
+					+ "\"platformName\": \"CGRO\",\n      \"transportId\": \"14159500\"\n    },\n    "
+					+ "\"14372300\": {\n      \"description\": \"\",\n      \"platformName\": \"AGNO\",\n      "
+					+ "\"transportId\": \"14372300\"\n    }\n  },\n  \"lastModifyTime\": \"2020-10-19T18:14:14.788Z[UTC]\","
+					+ "\n  \"name\": \"USGS-Sites\",\n  \"netlistId\": 4,\n  \"siteNameTypePref\": \"nwshb5\",\n  "
+					+ "\"transportMediumType\": \"other\"\n}\n```\n\nFor creating a new network list, "
+					+ "leave netlistId out of the passed data structure.\n\nFor overwriting an existing one, "
+					+ "include the netlistId that was previously returned. The network list in the database "
+					+ "is replaced with the one sent.",
 			requestBody = @RequestBody(
 					required = true,
 					content = @Content(mediaType = MediaType.APPLICATION_JSON,
 							schema = @Schema(implementation = ApiNetList.class)
-//					TODO: Fix Examples
-//						examples = {
-//							@ExampleObject(name = "basic", ref = "#/components/examples/POST_BASIC_NetList"),
-//							@ExampleObject(name = "new", ref = "#/components/examples/POST_NEW_NetList"),
-//							@ExampleObject(name = "update", ref = "#/components/examples/POST_UPDATE_NetList")
-//					})
 					)
 			),
 			responses = {
