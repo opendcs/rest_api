@@ -324,8 +324,7 @@ public final class ComputationResources extends OpenDcsResource
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
 	@Operation(
 			summary = "Create or Overwrite Existing OpenDCS Computation",
-			description = "The POST computation method requires a valid token. "
-					+ "It takes a single OpenDCS Computation Record in JSON format, as described above for GET.  \n\n"
+			description = "It takes a single OpenDCS Computation Record in JSON format, as described above for GET.  \n\n"
 					+ "For creating a new record, leave computationId out of the passed data structure.  \n\n"
 					+ "For overwriting an existing one, include the computationId that was previously returned. "
 					+ "The computation in the database is replaced with the one sent.",
@@ -335,12 +334,6 @@ public final class ComputationResources extends OpenDcsResource
 					required = true,
 					content = @Content(mediaType = MediaType.APPLICATION_JSON,
 							schema = @Schema(implementation = ApiComputation.class)
-							// TODO: Add/fix examples
-//							examples = {
-//									@ExampleObject(name = "basic", ref = "#/components/examples/POST_BASIC_OpenDCSComputation"),
-//									@ExampleObject(name = "new", ref = "#/components/examples/POST_NEW_OpenDCSComputation"),
-//									@ExampleObject(name = "update", ref = "#/components/examples/POST_UPDATE_OpenDCSComputation")
-//							}
 					)
 			),
 			responses = {
@@ -466,8 +459,7 @@ public final class ComputationResources extends OpenDcsResource
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
 	@Operation(
 			summary = "Delete Existing OpenDCS Computation",
-			description = "The DELETE computation method requires a valid token.  \n\n"
-					+ "Required argument computationid must be passed in the URL.",
+			description = "Required argument computationid must be passed in the URL.",
 			tags = {"REST - Computation Methods"},
 			responses = {
 					@ApiResponse(responseCode = "204", description = "Successfully deleted computation",

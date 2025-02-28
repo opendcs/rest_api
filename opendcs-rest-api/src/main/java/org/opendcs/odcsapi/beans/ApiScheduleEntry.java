@@ -26,7 +26,7 @@ public final class ApiScheduleEntry
 	private Long schedEntryId = null;
 	@Schema(description = "Name of the schedule entry.")
 	private String name = null;
-	@Schema(description = "ID of the associated application.")
+	@Schema(description = "ID of the associated application.", example = "1234")
 	private Long appId = null;
 	@Schema(description = "Name of the associated application.")
 	private String appName = null;

@@ -161,8 +161,7 @@ public final class AppResources extends OpenDcsResource
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
 	@Operation(
 			summary = "Create or Overwrite Existing App",
-			description = "The POST app method requires a valid token. " +
-					"It takes a single DECODES Loading Application in JSON format, as described above for GET.  \n\n" +
+			description = "It takes a single DECODES Loading Application in JSON format, as described above for GET.  \n\n" +
 					"For creating a new record, leave appId out of the passed data structure.  \n\n" +
 					"For overwriting an existing one, include the appId that was previously returned. " +
 					"The app in the database is replaced with the one sent.",
@@ -171,12 +170,6 @@ public final class AppResources extends OpenDcsResource
 					required = true,
 					content = @Content(mediaType = MediaType.APPLICATION_JSON,
 							schema = @Schema(implementation = ApiLoadingApp.class))
-					// TODO - Add/fix examples
-//					content = @Content(mediaType = MediaType.APPLICATION_JSON, examples = {
-//							@ExampleObject(name = "basic", ref = "#/components/examples/POST_BASIC_LoadingApp"),
-//							@ExampleObject(name = "new", ref = "#/components/examples/POST_NEW_LoadingApp"),
-//							@ExampleObject(name = "update", ref = "#/components/examples/POST_UPDATE_LoadingApp")
-//					})
 			),
 			responses = {
 					@ApiResponse(responseCode = "201", description = "Successfully stored application",
@@ -234,8 +227,7 @@ public final class AppResources extends OpenDcsResource
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
 	@Operation(
 			summary = "Delete Existing Loading App",
-			description = "The DELETE schedule method requires a valid token.  \n\n" +
-					"Required argument appid must be passed in the URL.  \n\n" +
+			description = "Required argument appid must be passed in the URL.  \n\n" +
 					"This operation will fail if the loading application is currently being used by any " +
 					"computations or schedule entries, or if it is currently running and has " +
 					"an active CP_COMP_PROC_LOCK record.",

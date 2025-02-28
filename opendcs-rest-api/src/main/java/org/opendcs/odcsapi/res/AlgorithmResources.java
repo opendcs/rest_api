@@ -190,8 +190,7 @@ public final class AlgorithmResources extends OpenDcsResource
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
 	@Operation(
 			summary = "Create or Overwrite Existing OpenDCS Algorithm",
-			description = "The POST algorithm method requires a valid token. "
-					+ "It takes a single OpenDCS Algorithm Record in JSON format, as described above for GET.   \n\n"
+			description = "It takes a single OpenDCS Algorithm Record in JSON format, as described above for GET.   \n\n"
 					+ "For creating a new record, leave algorithmId out of the passed data structure.  \n\n"
 					+ "For overwriting an existing one, include the algorithmId that was previously returned. "
 					+ "The algorithm in the database is replaced with the one sent.",
@@ -253,8 +252,7 @@ public final class AlgorithmResources extends OpenDcsResource
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
 	@Operation(
 			summary = "Delete Existing OpenDCS Algorithm",
-			description = "The DELETE algorithm method requires a valid token.  \n\n"
-					+ "Required argument algorithmid must be passed in the URL.  \n\n"
+			description = "Required argument algorithmid must be passed in the URL.  \n\n"
 					+ "This operation will fail if the algorithm is currently being used by any computation records.",
 			operationId = "deleteAlgorithm",
 			tags = {"REST - Algorithm Methods"},
@@ -264,10 +262,10 @@ public final class AlgorithmResources extends OpenDcsResource
 					@ApiResponse(responseCode = "500", description = "Internal Server Error", content = @Content)
 			}
 	)
-	public Response deleteAlgorithm(
-			@Parameter(description = "ID of the algorithm to delete", required = true,
-					schema = @Schema(implementation = Long.class, example = "4"))
-			@QueryParam("algorithmid") Long algorithmId) throws TsdbException, MissingParameterException
+	public Response deleteAlgorithm(@Parameter(description = "ID of the algorithm to delete", required = true,
+			schema = @Schema(implementation = Long.class, example = "4"))
+		@QueryParam("algorithmid") Long algorithmId)
+			throws TsdbException, MissingParameterException
 	{
 		if (algorithmId == null)
 		{

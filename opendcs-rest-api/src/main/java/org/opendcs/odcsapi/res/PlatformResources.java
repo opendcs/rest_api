@@ -92,8 +92,7 @@ public final class PlatformResources extends OpenDcsResource
 					"transport medium with the given type. The returned data structure will still contain all " +
 					"of the transport media in the platform, but the list of platforms will be filtered to only " +
 					"include platforms with a TM of the given type:\n  * **NOTE**: medium type 'goes' will match " +
-					"either goes-self-timed or goes-random.\n* **token:** Not required, but if included, the token " +
-					"lastUsed time will be updated.  \n\nData Structure TBD but will include  " +
+					"either goes-self-timed or goes-random.\n\nData Structure TBD but will include  " +
 					"\n* **name** – an index into the hashed set. Combination of site name and designator  " +
 					"\n* **agency** – The agency that owns and/or maintains this platform  " +
 					"\n* **configId** – Numeric surrogate key to the configuration record  \n* **description**  " +
@@ -307,8 +306,7 @@ public final class PlatformResources extends OpenDcsResource
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
 	@Operation(
 			summary = "Create or Overwrite Existing Decodes Platform",
-			description = "The POST platform method requires a valid token. " +
-					"It takes a single DECODES Platform record in JSON format, as described above for GET.  \n\n" +
+			description = "It takes a single DECODES Platform record in JSON format, as described above for GET.  \n\n" +
 					"For creating a new platform, leave platformId out of the passed data structure.  \n\n" +
 					"For overwriting an existing one, include the platformId that was previously returned. " +
 					"The platform in the database is replaced with the one sent.",
@@ -460,8 +458,7 @@ public final class PlatformResources extends OpenDcsResource
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
 	@Operation(
 			summary = "Delete Existing Decodes Platform",
-			description = "The DELETE platform method requires a valid token. \n\n" +
-					"Required argument platformid must be passed.",
+			description = "Required argument platformid must be passed.",
 			responses = {
 					@ApiResponse(responseCode = "204", description = "Platform deleted successfully"),
 					@ApiResponse(responseCode = "400",
@@ -508,7 +505,6 @@ public final class PlatformResources extends OpenDcsResource
 	@Operation(
 			summary = "Returned structure contains information about recent activity on each platform",
 			description = "Sample URL:\n  \n    http://localhost:8080/odcsapi/platformstat  \n  \n  \n" +
-					"Token is not required for this method but if passed in the header or URL, it will be updated.\n  \n" +
 					"Optional argument 'netlistid' can be passed to only return platforms that have a " +
 					"transport medium in the referenced network list.\n  \nThe returned data structure contains " +
 					"information about recent activity on each platform:\n  \n```\n  [\n    {\n      " +
@@ -543,9 +539,8 @@ public final class PlatformResources extends OpenDcsResource
 			},
 			tags = {"OpenDCS Process Monitor and Control (Routing)"}
 	)
-	public Response getPlatformStats(@Parameter(description = "Only return platforms that have a transport medium " +
-			"in the referenced network list.",
-			schema = @Schema(implementation = Long.class, example = "1001"))
+	public Response getPlatformStats(@Parameter(description = "Only return platforms that have a transport medium "
+			+ "in the referenced network list.", schema = @Schema(implementation = Long.class, example = "1001"))
 		@QueryParam("netlistid") Long netlistId)
 			throws DbException
 	{
