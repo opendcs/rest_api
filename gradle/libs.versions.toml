@@ -13,6 +13,7 @@ cwms-ratings = "1.1.0"
 monolith = { strictly = "2.0.2" }
 
 swagger = "2.2.28"
+swagger-ui = "5.18.3"
 jackson = "2.18.2"
 glassfish-jaxb = "2.3.3"
 websocket = "1.1"
@@ -96,6 +97,9 @@ org-jdbi3-postgres = { module = "org.jdbi:jdbi3-postgres", version.ref = "jdbi" 
 org-flywaydb-flyway-core = { module = "org.flywaydb:flyway-core", version.ref = "flywaydb" }
 commons-lang = { module = "commons-lang:commons-lang", version.ref = "commons-lang" }
 jul-to-slf4j = { module = "org.slf4j:jul-to-slf4j", version = "2.0.16"}
+
+# webjars
+swagger-ui = { module ="org.webjars:swagger-ui", version.ref = "swagger-ui" }
 
 [bundles]
 tomcat = ["tomcat-embedded-core", "tomcat-embedded-jasper", "tomcat-jdbc"]

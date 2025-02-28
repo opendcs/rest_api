@@ -33,6 +33,7 @@ import javax.ws.rs.core.Response;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -63,15 +64,20 @@ public final class OdcsapiResource extends OpenDcsResource
 	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
 	@Operation(
 			summary = "Get TSDB Properties",
-			description = "Example:  \n\n    http://localhost:8080/odcsapi/tsdb_properties?token=1241234  \n    \n    \n" 
-					+ "* The token argument is optional. If supplied it will reset the timer on the token.\n"
-					+ "The tsdb_properties table in the database will be returned in a structure as follows:  \n  \n" 
-					+ "```\n  {\n    \"offsetErrorAction\": \"ROUND\",\n    \"storagePresentationGroup\": \"hydrodcs\"," 
+			description = "Example:  \n\n    http://localhost:8080/odcsapi/tsdb_properties  \n    \n    \n"
+					+ "The tsdb_properties table in the database will be returned in a structure as follows:  \n  \n"
+					+ "```\n  {\n    \"offsetErrorAction\": \"ROUND\",\n    \"storagePresentationGroup\": \"hydrodcs\","
 					+ "\n    \"api.datasource\": \"Cove-LRGS\",\n    \"allowDstOffsetVariation\": \"true\"\n  }\n\n```",
 			responses = {
 					@ApiResponse(responseCode = "200", description = "Success",
 							content = @Content(mediaType = MediaType.APPLICATION_JSON,
-									schema = @Schema(implementation = Properties.class))),
+									schema = @Schema(implementation = Properties.class),
+									examples = {@ExampleObject(name = "Properties",
+										value = "{\n  \"offsetErrorAction\": \"ROUND\",\n  "
+											+ "\"storagePresentationGroup\": \"hydrodcs\",\n  "
+											+ "\"api.datasource\": \"Cove-LRGS\",\n  "
+											+ "\"allowDstOffsetVariation\": \"true\"\n}"),
+							})),
 					@ApiResponse(responseCode = "500", description = "Internal Server Error")
 			},
 			tags = {"REST - TSDB Properties Methods"}
@@ -104,8 +110,7 @@ public final class OdcsapiResource extends OpenDcsResource
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
 	@Operation(
 			summary = "Create or Update TSDB Properties",
-			description = "The POST tsdb_properties method requires a valid token. "
-					+ "It takes one ore more properties in a structure as defined above for the GET method.  \n\n"
+			description = "It takes one ore more properties in a structure as defined above for the GET method.  \n\n"
 					+ "*\tAny property with the same name as one supplied will be overwritten by the passed value.\n"
 					+ "*\tIf there is no property in the database with a matching name, a new property is added.\n"
 					+ "*\tTo delete a property from the database, pass an empty string as the value.",
@@ -113,11 +118,23 @@ public final class OdcsapiResource extends OpenDcsResource
 					required = true,
 					description = "Properties to be stored in the database.",
 					content = @Content(mediaType = MediaType.APPLICATION_JSON,
-							schema = @Schema(implementation = Properties.class))),
+							schema = @Schema(implementation = Properties.class),
+							examples = {@ExampleObject(name = "Properties",
+									value = "{\n  \"offsetErrorAction\": \"ROUND\",\n  "
+											+ "\"storagePresentationGroup\": \"hydrodcs\",\n  "
+											+ "\"api.datasource\": \"Cove-LRGS\",\n  "
+											+ "\"allowDstOffsetVariation\": \"true\"\n}"),
+							})),
 			responses = {
 					@ApiResponse(responseCode = "200", description = "Successfully stored properties",
 							content = @Content(mediaType = MediaType.APPLICATION_JSON,
-							schema = @Schema(implementation = Properties.class))),
+							schema = @Schema(implementation = Properties.class),
+									examples = {@ExampleObject(name = "Properties",
+											value = "{\n  \"offsetErrorAction\": \"ROUND\",\n  "
+													+ "\"storagePresentationGroup\": \"hydrodcs\",\n  "
+													+ "\"api.datasource\": \"Cove-LRGS\",\n  "
+													+ "\"allowDstOffsetVariation\": \"true\"\n}"),
+									})),
 					@ApiResponse(responseCode = "500", description = "Internal Server Error", content = @Content)
 			},
 			tags = {"REST - TSDB Properties Methods"}
@@ -264,8 +281,8 @@ public final class OdcsapiResource extends OpenDcsResource
 	@Operation(
 			summary = "Decode a Message",
 			description = "Example URL for HTTP POST method:  \n"
-					+ "```http://localhost:8080/odcsapi/decode?token=73168ed6c9c49870&script=ST```\n\n"
-					+ "Arguments required:\n* A valid security token\n* The script name to use in decoding the message "
+					+ "```http://localhost:8080/odcsapi/decode?script=ST```\n\n"
+					+ "Arguments required:\n* The script name to use in decoding the message "
 					+ "(if omitted, the first script in the config will be used).\n\n"
 					+ "The POST body must be in the following structure:\n```\n{\n\t\"config\": "
 					+ "{ config as returned by GET config described above },\n"
@@ -277,11 +294,6 @@ public final class OdcsapiResource extends OpenDcsResource
 					description = "Decodes Request",
 					content = @Content(mediaType = MediaType.APPLICATION_JSON,
 							schema = @Schema(implementation = DecodeRequest.class)
-							// TODO: Add examples
-//							examples = {
-//									@ExampleObject(name = "basic", ref = "#/components/examples/POST_BASIC_TestDecodesRequest"),
-//									@ExampleObject(name = "verbose", ref = "#/components/examples/POST_VERBOSE_TestDecodesRequest")
-//							})
 					)
 			),
 			responses = {
