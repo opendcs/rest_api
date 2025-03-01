@@ -134,7 +134,9 @@ public final class SiteResources extends OpenDcsResource
 			operationId = "getsite",
 			tags = {"REST - DECODES Site Records"},
 			responses = {
-					@ApiResponse(responseCode = "200", description = "success", content = @Content(mediaType = MediaType.APPLICATION_JSON)),
+					@ApiResponse(responseCode = "200", description = "success",
+							content = @Content(mediaType = MediaType.APPLICATION_JSON,
+							schema = @Schema(implementation = ApiSite.class))),
 					@ApiResponse(responseCode = "400", description = "Missing or invalid site ID parameter", content = @Content),
 					@ApiResponse(responseCode = "404", description = "Site with matching ID not found", content = @Content),
 					@ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
