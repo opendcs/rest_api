@@ -35,6 +35,7 @@ import javax.ws.rs.core.Response;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
@@ -70,15 +71,15 @@ public class DataSourceResources extends OpenDcsResource
 	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
 	@Operation(
 			summary = "This method returns a JSON list of DECODES Data Source records suitable for displaying in a table or pick-list",
-			description = "Example: \nhttp://localhost:8080/odcsapi/datasourcerefs\n\n" +
-					"The returned structure contains only the high-level descriptive information about each data source.\n" +
+			description = "Example: \n\nhttp://localhost:8080/odcsapi/datasourcerefs\n\n" +
+					"The returned structure contains only the high-level descriptive information about each data source.\n\n" +
 					"The arguments (properties) are represented by a string with a comma delimiter. " +
 					"Passwords within the string are replaced with four asterisks.",
 			responses = {
 					@ApiResponse(responseCode = "200", description = "Successfully retrieved data source references",
 						content = @Content(
 							mediaType = MediaType.APPLICATION_JSON,
-							schema = @Schema(implementation = ApiDataSourceRef.class)
+							array = @ArraySchema(schema = @Schema(implementation = ApiDataSourceRef.class))
 					)),
 					@ApiResponse(responseCode = "500", description = "Internal Server Error")
 			},
