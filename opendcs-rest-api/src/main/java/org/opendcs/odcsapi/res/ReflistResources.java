@@ -36,7 +36,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.StringToClassMapItem;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -50,6 +49,7 @@ import decodes.db.EnumValue;
 import decodes.db.ValueNotFoundException;
 import decodes.sql.DbKey;
 import decodes.tsdb.DbIoException;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import opendcs.dai.EnumDAI;
 import org.opendcs.odcsapi.beans.ApiRefList;
 import org.opendcs.odcsapi.beans.ApiRefListItem;
@@ -76,27 +76,63 @@ public final class ReflistResources extends OpenDcsResource
 	@Path("reflists")
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
+	@Tag(name = "REST - Reference Lists", description = "Reference lists are used in OpenDCS to populate pulldown lists "
+			+ "and extend the functionality of the software.")
 	@Operation(
 			summary = "The ‘reflists’ GET method will return all reference lists or a specific reference list.",
-			description = "The 'name' argument may have multiple values. Example: http://localhost:8080/odcsapi/reflists?name=scripttype,dataorder\n\n"
-					+ "If no 'name' argument is provided, then all reference lists in the database are returned. The JSON returned is an array of reference lists.",
+			description = "The 'name' argument may have multiple values.   For example:    \n\n"
+					+ "            http://localhost:8080/odcsapi/reflists?name=scripttype,dataorder  \n"
+					+ "            \n" + "        If no 'name' argument is provided, then all reference lists in the database are returned.   "
+					+ "The JSON returned is an array of reference lists.  \n          \n"
+					+ "        The following reference lists are currently available:  \n"
+					+ "        * **DataSourceType** – Used in Database Editor to link a data source name to a Java class  \n"
+					+ "        * **PortType** – Used in the polling interface \n" + "        "
+					+ "* **ScriptType** – A list of DECODES Platform Configuration Script types (reserved for future use  \n"
+					+ "        * **StatisticsCode** – Valid statistics codes that can be used in a time series identifier  \n"
+					+ "        * **SiteNameType** – Known site name types, e.g. NWSHB5 (National Weather Service Handbook 5), "
+					+ "USGS (Site Number), CODWR (Colorada Dept of Water Resources).  \n"
+					+ "        * **DataConsumer** – Links a data consumer type name to Java Code (e.g. File, Directory, Socket)  \n"
+					+ "        * **Measures** – A list of physical attributes measured by an "
+					+ "engineering unit (e.g. force, temperature, mass)  \n"
+					+ "        * **UnitConversionAlgorithm** – A list of algorithms for unit conversion  \n"
+					+ "        * **DataOrder** – Ascending (oldest first) or Descending (newest first) time order  \n"
+					+ "        * **GroupType** – Used for annotation in time series groups  \n"
+					+ "        * **LoggerType** – Used in the polling interface  \n"
+					+ "        * **LookupAlgorithm**  \n"
+					+ "        * **EquationScope**  \n"
+					+ "        * **UnitFamily** – Metric, English, or Universal  \n"
+					+ "        * **OutputFormat** – Links a name to Java code for formatting output data (e.g. SHEF, CSV)  \n"
+					+ "        * **DataTypeStandard** – Known standards for specifying data type (e.g. SHEF-PE, CWMS, HDB)  \n"
+					+ "        * **TransportMediumType** – A Transport Medium uniquely identifies a platform. There are several "
+					+ "types: GOES ID, Iridium IMEI, Polled Identifier, etc.  \n"
+					+ "        * **Season** – User can create any number of seasons that start/end at specified time of year  \n"
+					+ "        * **EquipmentType**  \n"
+					+ "        * **ApplicationType** – Computation Process, Comp Depends Daemon, DECODES Routing Scheduler, etc.  \n"
+					+ "        * **RecordingMode**",
 			responses = {
 					@ApiResponse(
 							responseCode = "200",
-							description = "If no 'name' parameter is provided, all reference lists are returned.",
+							description = "If no 'name' argument is provided, "
+									+ "then all reference lists in the database are returned.\n"
+									+ "            The JSON returned is an array of reference lists. "
+									+ "The data below contains the ScriptType and DataOrder reference lists:",
 							content = @Content(
 									mediaType = MediaType.APPLICATION_JSON,
-									schema = @Schema(type = "object", additionalProperties = Schema.AdditionalPropertiesValue.TRUE, properties = {
+									schema = @Schema(type = "object",
+										additionalProperties = Schema.AdditionalPropertiesValue.TRUE,
+										properties = {
 											@StringToClassMapItem(key = "string", value = ApiRefList.class)
 									})
 							)
 					),
-					@ApiResponse(responseCode = "404", description = "Matching reference lists not found"),
-					@ApiResponse(responseCode = "500", description = "Internal Server Error")
+					@ApiResponse(responseCode = "404", description = "Matching reference lists not found", content = @Content),
+					@ApiResponse(responseCode = "500", description = "Internal Server Error", content = @Content)
 			},
 			tags = {"REST - Reference Lists"}
 	)
-	public Response getRefLists(@Parameter(description = "Comma-separated list of requested reference lists") @QueryParam("name") String listNames)
+	public Response getRefLists(@Parameter(description = "List of requested Ref Lists. Comma Seperated",
+			schema = @Schema(implementation = String.class, example = "scripttype,dataorder"))
+		@QueryParam("name") String listNames)
 			throws DbException, WebAppException
 	{
 		DatabaseIO dbIo = getLegacyDatabase();
@@ -175,74 +211,19 @@ public final class ReflistResources extends OpenDcsResource
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
 	@Operation(
 			summary = "Create New Reference List, or Overwrite Existing Reference List",
-			description = "Use this to create or overwrite reference lists. Provide JSON as follows:\n\n"
-					+ "For new reference lists, exclude `reflistId`. To update, include the `reflistId`.",
+			description = "The ‘reflist’ POST method takes a single network "
+					+ "list in JSON format. Note that the above GET method has a plural ‘reflists’ and returns "
+					+ "an array of named reference lists. This POST method has singular ‘reflist’. "
+					+ "The POST body should be a single reference list, not an array of lists.  \n\n"
+					+ "        For creating a new reference list, leave reflistId out of the passed data structure.  \n\n"
+					+ "        For overwriting an existing one, include the reflistId that was previously returned. "
+					+ "The network list in the database is replaced with the one sent.",
 			requestBody = @RequestBody(
 					description = "Reference list object to post",
 					required = true,
 					content = @Content(
 							mediaType = MediaType.APPLICATION_JSON,
-							schema = @Schema(implementation = ApiRefList.class),
-							examples = {
-									@ExampleObject(value = "\"value\": {\n" +
-											"          \"reflistId\": 3,\n" +
-											"          \"enumName\": \"\",\n" +
-											"          \"items\": {\n" +
-											"            \"standard\": {\n" +
-											"              \"value\": \"\",\n" +
-											"              \"description\": \"\",\n" +
-											"              \"execClassName\": \"\",\n" +
-											"              \"editClassName\": null,\n" +
-											"              \"sortNumber\": 3\n" +
-											"            }\n" +
-											"          },\n" +
-											"          \"defaultValue\": null,\n" +
-											"          \"description\": null\n" +
-											"        }"),
-									@ExampleObject(value = "\"value\": {\n" +
-											"          \"enumName\": \"ScriptType\",\n" +
-											"          \"items\": {\n" +
-											"            \"standard\": {\n" +
-											"              \"value\": \"standard\",\n" +
-											"              \"description\": \"DECODES Format Statements and Unit Conversions\",\n" +
-											"              \"execClassName\": \"DecodesScript\",\n" +
-											"              \"editClassName\": null,\n" +
-											"              \"sortNumber\": 3\n" +
-											"            }\n" +
-											"          },\n" +
-											"          \"defaultValue\": null,\n" +
-											"          \"description\": null\n" +
-											"        }"),
-									@ExampleObject(value = "\"value\": {\n" +
-											"          \"reflistId\": 3,\n" +
-											"          \"enumName\": \"ScriptType\",\n" +
-											"          \"items\": {\n" +
-											"            \"standard\": {\n" +
-											"              \"value\": \"standard\",\n" +
-											"              \"description\": \"DECODES Format Statements and Unit Conversions\",\n" +
-											"              \"execClassName\": \"DecodesScript\",\n" +
-											"              \"editClassName\": null,\n" +
-											"              \"sortNumber\": 3\n" +
-											"            },\n" +
-											"            \"nos\": {\n" +
-											"              \"value\": \"nos\",\n" +
-											"              \"description\": \"Hard-coded NOS data parser\",\n" +
-											"              \"execClassName\": \"NOSMessageParser\",\n" +
-											"              \"editClassName\": null,\n" +
-											"              \"sortNumber\": 2\n" +
-											"            },\n" +
-											"            \"ndbc\": {\n" +
-											"              \"value\": \"ndbc\",\n" +
-											"              \"description\": \"National Data Buoy Center Context-Sensitive Parser\",\n" +
-											"              \"execClassName\": \"NDBCMessageParser\",\n" +
-											"              \"editClassName\": null,\n" +
-											"              \"sortNumber\": 1\n" +
-											"            }\n" +
-											"          },\n" +
-											"          \"defaultValue\": null,\n" +
-											"          \"description\": null\n" +
-											"        }")
-							}
+							schema = @Schema(implementation = ApiRefList.class)
 					)
 			),
 			responses = {
@@ -252,11 +233,12 @@ public final class ReflistResources extends OpenDcsResource
 									schema = @Schema(implementation = ApiRefList.class)
 							)
 					),
-					@ApiResponse(description = "Server error occurred", responseCode = "500")
+					@ApiResponse(description = "Internal Server Error", responseCode = "500")
 			},
 			tags = {"REST - Reference Lists"}
 	)
-	public Response postRefList(@Parameter(description = "JSON definition of new or updated reflist") ApiRefList reflist) throws DbException
+	public Response postRefList(@Parameter(description = "JSON definition of new or updated reflist") ApiRefList reflist)
+			throws DbException
 	{
 		try (EnumDAI dai = getLegacyTimeseriesDB().makeEnumDAO())
 		{
@@ -328,8 +310,9 @@ public final class ReflistResources extends OpenDcsResource
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
 	@Operation(
 			summary = "Delete Existing Reference List",
-			description = "Required parameter `reflistId` must be provided.\n\n"
-					+ "Handle with care, as some modules in OpenDCS require specific reference lists.",
+			description = "Required argument reflistid must be passed.  \n\n"
+					+ "        Take care in deleting reference lists. "
+					+ "Several modules within OpenDCS require the existence of certain lists.",
 			responses = {
 					@ApiResponse(
 							responseCode = "204",
@@ -346,7 +329,7 @@ public final class ReflistResources extends OpenDcsResource
 			},
 			tags = {"REST - Reference Lists"}
 	)
-	public Response deleteRefList(@Parameter(description = "Specific reflistId to delete",
+	public Response deleteRefList(@Parameter(description = "Requested Reference List to Delete",
 			required = true, schema = @Schema(implementation = Long.class))
 		@QueryParam("reflistid") Long reflistId)
 			throws DbException, WebAppException
@@ -450,7 +433,7 @@ public final class ReflistResources extends OpenDcsResource
 			},
 			tags = {"REST - Reference Lists"}
 	)
-	public Response getSeason(@Parameter(description = "Abbreviation of the season to fetch",
+	public Response getSeason(@Parameter(description = "Abbreviation of existing season to modify",
 			required = true, schema = @Schema(implementation = String.class))
 		@QueryParam("abbr") String abbr)
 			throws DbException, WebAppException
@@ -512,15 +495,21 @@ public final class ReflistResources extends OpenDcsResource
 					)
 			),
 			responses = {
-					@ApiResponse(responseCode = "204", description = "Season successfully created or updated"),
+					@ApiResponse(responseCode = "204", description = "Season successfully created or updated",
+							content = @Content(
+									mediaType = MediaType.APPLICATION_JSON,
+									schema = @Schema(implementation = ApiSeason.class)
+							)
+					),
 					@ApiResponse(responseCode = "400", description = "Missing Parameter"),
 					@ApiResponse(responseCode = "500", description = "Internal Server Error")
 			},
 			tags = {"REST - Reference Lists"}
 	)
-	public Response postSeason(@Parameter(description = "Abbreviation of the season to overwrite, if exists") @QueryParam("fromabbr") String fromAbbr,
+	public Response postSeason(@Parameter(description = "Abbreviation of the existing season to modify")
+		@QueryParam("fromabbr") String fromAbbr,
 			@Parameter(description = "Details of the new or updated season", required = true) ApiSeason season)
-	throws DbException
+		throws DbException
 	{
 		try (EnumDAI dai = getLegacyTimeseriesDB().makeEnumDAO())
 		{
@@ -593,7 +582,7 @@ public final class ReflistResources extends OpenDcsResource
 			tags = {"REST - Reference Lists"}
 	)
 	public Response deleteSeason(@Parameter(description = "Abbreviation of the season to delete", required = true,
-			schema = @Schema(implementation = String.class))
+			schema = @Schema(implementation = String.class), example = "autumn")
 		@QueryParam("abbr") String abbr)
 			throws WebAppException, DbException
 	{

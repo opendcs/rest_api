@@ -41,6 +41,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 
 import decodes.tsdb.DbIoException;
 import decodes.tsdb.TimeSeriesDb;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.opendcs.database.api.OpenDcsDatabase;
 import org.opendcs.odcsapi.beans.ApiDecodedMessage;
 import org.opendcs.odcsapi.beans.ApiPropSpec;
@@ -157,6 +158,9 @@ public final class OdcsapiResource extends OpenDcsResource
 	@Path("propspecs")
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
+	@Tag(name = "REST - Retrieving Property Specs", description = "Many of the Java classes within OpenDCS maintain a "
+			+ "set of properties that can alter the object’s behavior. "
+			+ "This method allows the caller to get a list of acceptable properties for a given class.")
 	@Operation(
 			summary = "Retrieve Property Specifications",
 			description = "Many of the Java classes within OpenDCS maintain a set of properties that "
