@@ -214,6 +214,8 @@ public final class TimeSeriesResources
 	@Path("intervals")
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
+	@Tag(name = "Time Series Methods - Interval Methods", description = "Time Intervals are stored in the database "
+			+ "for OpenTSDB. They are hardcoded for CWMS and HDB.")
 	@Operation(
 			summary = "Returns a list of time intervals defined in the database.",
 			description = "Example: \n\n    http://localhost:8080/odcsapi/intervals\n\n" +
@@ -328,6 +330,8 @@ public final class TimeSeriesResources
 		@Path("tsgrouprefs")
 		@Produces(MediaType.APPLICATION_JSON)
 		@RolesAllowed({ApiConstants.ODCS_API_GUEST})
+		@Tag(name = "Time Series Methods - Groups", description = "Time Series Groups are used to define a "
+				+ "set of time series identifiers")
 		@Operation(
 				summary = "Provide a list of all groups defined in the database.",
 				description = "Time Series Groups are used to define a set of time series identifiers. "
