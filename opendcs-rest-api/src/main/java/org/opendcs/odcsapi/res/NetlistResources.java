@@ -50,6 +50,7 @@ import decodes.db.NetworkListList;
 import decodes.db.RoutingSpec;
 import decodes.db.RoutingSpecList;
 import decodes.sql.DbKey;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.opendcs.odcsapi.beans.ApiNetList;
 import org.opendcs.odcsapi.beans.ApiNetListItem;
 import org.opendcs.odcsapi.beans.ApiNetlistRef;
@@ -253,6 +254,7 @@ public final class NetlistResources extends OpenDcsResource
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
+	@Tag(name = "REST - Network Lists", description = "A Network List is simply a list of Platforms.")
 	@Operation(
 			summary = "Create or Overwrite Existing Netlist",
 			description = "The ‘netlist’ POST method takes a single network list in JSON format,"
@@ -275,7 +277,10 @@ public final class NetlistResources extends OpenDcsResource
 			responses = {
 					@ApiResponse(
 							responseCode = "201",
-							description = "Successfully created or updated network list"
+							description = "Successfully created or updated network list",
+							content = @Content(mediaType = MediaType.APPLICATION_JSON,
+									schema = @Schema(implementation = ApiNetList.class)
+							)
 					),
 					@ApiResponse(
 							responseCode = "400",
@@ -341,8 +346,7 @@ public final class NetlistResources extends OpenDcsResource
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
 	@Operation(
 			summary = "Delete Existing netlists",
-			description = "The DELETE netlist method requires a valid token.\n\n" +
-					"Required argument netlistid must be passed.\n\n" +
+			description = "Required argument netlistid must be passed.\n\n" +
 					"Error 405 will be returned if network list is used by one or more " +
 					"routing specs and cannot be deleted. The body of the error will be " +
 					"a message containing the name of the routing specs using the referenced netlist.",

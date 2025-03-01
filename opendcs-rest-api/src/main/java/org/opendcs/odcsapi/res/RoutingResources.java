@@ -67,6 +67,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.media.Schema;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.opendcs.odcsapi.beans.ApiDacqEvent;
 import org.opendcs.odcsapi.beans.ApiRouting;
 import org.opendcs.odcsapi.beans.ApiRoutingExecStatus;
@@ -644,6 +645,8 @@ public final class RoutingResources extends OpenDcsResource
 	@Path("routingstatus")
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
+	@Tag(name = "OpenDCS Process Monitor and Control (Routing)", description = "The following methods allow a user to "
+			+ "view the status of all routing specs and to start/stop them.")
 	@Operation(
 			summary =  "This method allows a developer to implement a web version of the OpenDCS Routing Monitor screen.",
 			description = "Sample URL:\n  \n    http://localhost:8080/odcsapi/routingstatus\n  \n" +
