@@ -26,10 +26,10 @@ import io.swagger.v3.oas.annotations.media.Schema;
 @Schema(description = "Represents an enumeration object containing values. Referred to as a reference list.")
 public final class ApiRefList
 {
-	@Schema(description = "The unique ID for the enumeration.")
+	@Schema(description = "The unique ID for the enumeration.", example = "3")
 	private Long reflistId = null;
 
-	@Schema(description = "The name of the enumeration.")
+	@Schema(description = "The name of the enumeration.", example = "ScriptType")
 	private String enumName = null;
 
 	@Schema(description = "The map of items in this enumeration, where each key is an item name.")

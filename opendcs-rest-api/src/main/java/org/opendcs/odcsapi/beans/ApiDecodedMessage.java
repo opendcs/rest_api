@@ -24,7 +24,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 @Schema(description = "Represents a decoded message, which includes information about the log messages and time series data.")
 public final class ApiDecodedMessage
 {
-	@Schema(description = "The time when the message was received or created.")
+	@Schema(description = "The time when the message was received or created.", example = "2025-01-01T00:00:00.000[UTC]")
 	private Date messageTime = null;
 
 	@Schema(description = "A list of log messages associated with the decoded message.")

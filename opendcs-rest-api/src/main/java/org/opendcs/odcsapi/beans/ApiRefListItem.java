@@ -25,19 +25,21 @@ import io.swagger.v3.oas.annotations.media.Schema;
 @Schema(description = "Represents a single item in an enumeration with associated metadata such as value, description, class names, and a sort order.")
 public final class ApiRefListItem
 {
-	@Schema(description = "The value of the enumeration item.")
+	@Schema(description = "The value of the enumeration item.", example = "standard")
 	private String value;
 
-	@Schema(description = "A brief description of the enumeration item.")
+	@Schema(description = "A brief description of the enumeration item.",
+			example = "DECODES Format Statements and Unit Conversions")
 	private String description;
 
-	@Schema(description = "The name of the executable class associated with this enumeration item.")
+	@Schema(description = "The name of the executable class associated with this enumeration item.",
+			example = "DecodesScript")
 	private String execClassName;
 
 	@Schema(description = "The name of the editable class associated with this enumeration item.")
 	private String editClassName;
 
-	@Schema(description = "The sort order for this enumeration item.")
+	@Schema(description = "The sort order for this enumeration item.", example = "1")
 	private Integer sortNumber;
 
 	public String getValue()

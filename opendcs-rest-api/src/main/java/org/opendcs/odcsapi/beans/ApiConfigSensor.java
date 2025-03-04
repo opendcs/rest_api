@@ -24,31 +24,32 @@ import io.swagger.v3.oas.annotations.media.Schema;
 @Schema(description = "Represents the configuration details of a sensor including its recording mode, interval, and other properties.")
 public final class ApiConfigSensor
 {
-	@Schema(description = "The unique number identifying the sensor.")
+	@Schema(description = "The unique number identifying the sensor.", example = "13")
 	private int sensorNumber = 0;
 
-	@Schema(description = "The name assigned to the sensor.")
+	@Schema(description = "The name assigned to the sensor.", example = "WL")
 	private String sensorName = null;
 
 	/**
 	 * V=Variable, F=Fixed, U=undefined
 	 */
-	@Schema(description = "The sensor's recording mode. Possible values are V (Variable), F (Fixed), or U (Undefined).")
+	@Schema(description = "The sensor's recording mode. Possible values are V (Variable), F (Fixed), or U (Undefined).",
+			example = "F")
 	private char recordingMode = 'U'; // undefined
 
-	@Schema(description = "The duration between successive samples in seconds.")
+	@Schema(description = "The duration between successive samples in seconds. Default is 3600.", example = "3600")
 	private int recordingInterval = 3600;
 
 	/**
 	 * The time-of-day of the first sample, in seconds since midnight.
 	 */
-	@Schema(description = "The time in seconds past midnight of the sensor's first sample.")
+	@Schema(description = "The time in seconds past midnight of the sensor's first sample.", example = "0")
 	private int timeOfFirstSample = 0;
 
-	@Schema(description = "The absolute minimum value for a data sample from this sensor.")
+	@Schema(description = "The absolute minimum value for a data sample from this sensor.", example = "0.0")
 	private Double absoluteMin = null;
 
-	@Schema(description = "The absolute maximum value for a data sample from this sensor.")
+	@Schema(description = "The absolute maximum value for a data sample from this sensor.", example = "100.0")
 	private Double absoluteMax = null;
 
 	@Schema(description = "A collection of sensor-specific properties defined as key-value pairs.")

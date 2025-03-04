@@ -23,22 +23,23 @@ import io.swagger.v3.oas.annotations.media.Schema;
 @Schema(description = "Represents a computation application, including ID, name, type, and configuration details.")
 public final class ApiLoadingApp
 {
-	@Schema(description = "The unique identifier of the application.")
+	@Schema(description = "The unique identifier of the application.", example = "56")
 	private Long appId = null;
 
-	@Schema(description = "The name of the application.")
+	@Schema(description = "The name of the application.", example = "compproc")
 	private String appName = null;
 
-	@Schema(description = "The type of the application.")
+	@Schema(description = "The type of the application.", example = "computationprocess")
 	private String appType = null;
 
-	@Schema(description = "A descriptive comment about the application.")
+	@Schema(description = "A descriptive comment about the application.", example = "Main Computation Process")
 	private String comment = null;
 
-	@Schema(description = "The date and time the application was last modified.")
+	@Schema(description = "The date and time the application was last modified.",
+			example = "2025-01-01T00:00:00.000[UTC]")
 	private Date lastModified = null;
 
-	@Schema(description = "Specifies if this is a manual editing application.")
+	@Schema(description = "Specifies if this is a manual editing application.", example = "false")
 	private boolean manualEditingApp = false;
 
 	@Schema(description = "Additional properties associated with the application.")

@@ -25,7 +25,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 @Schema(description = "Represents a site with geographic, descriptive, and operational attributes.")
 public final class ApiSite
 {
-	@Schema(description = "Unique ID of the site.")
+	@Schema(description = "Unique ID of the site.", example = "45")
 	private Long siteId = null;
 
 	/**
@@ -34,33 +34,33 @@ public final class ApiSite
 	@Schema(description = "Map of site names where the key is the name type and the value is the name value.")
 	private Map<String, String> sitenames = new HashMap<>();
 
-	@Schema(description = "A brief description of the site.")
+	@Schema(description = "A brief description of the site.", example = "Barre Falls Dam. Ware River")
 	private String description = null;
 
-	@Schema(description = "Latitude of the site's location.", example = "34.052235")
+	@Schema(description = "Latitude of the site's location.", example = "42.4278")
 	private String latitude = null;
 
-	@Schema(description = "Longitude of the site's location.", example = "-118.243683")
+	@Schema(description = "Longitude of the site's location.", example = "-72.06261")
 	private String longitude = null;
-	@Schema(description = "Elevation of the site in specified units.")
+	@Schema(description = "Elevation of the site in specified units.", example = "234.7")
 	private double elevation = 0.0;
 
-	@Schema(description = "Units for the site's elevation.", example = "meters")
+	@Schema(description = "Units for the site's elevation.", example = "M")
 	private String elevUnits = null;
-	@Schema(description = "The nearest city to the site.")
+	@Schema(description = "The nearest city to the site.", example = "Barre Falls Dam")
 	private String nearestCity = null;
 
-	@Schema(description = "The timezone of the site's location.", example = "UTC")
+	@Schema(description = "The timezone of the site's location.", example = "America/New_York")
 	private String timezone = null;
-	@Schema(description = "The state or province where the site is located.")
+	@Schema(description = "The state or province where the site is located.", example = "MA")
 	private String state = null;
 
-	@Schema(description = "The country where the site is located.")
+	@Schema(description = "The country where the site is located.", example = "USA")
 	private String country = null;
 
 	@Schema(description = "The region within the country where the site is located.")
 	private String region = null;
-	@Schema(description = "Indicates whether the site is currently active.")
+	@Schema(description = "Indicates whether the site is currently active.", example = "true")
 	private boolean active = true;
 	@Schema(description = "Type of location represented by this site.")
 	private String locationType = null;

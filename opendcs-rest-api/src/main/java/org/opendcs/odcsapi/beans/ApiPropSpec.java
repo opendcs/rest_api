@@ -23,7 +23,7 @@ public final class ApiPropSpec
 	/**
 	 * The name of the property in a Properties object
 	 */
-	@Schema(description = "The name of the property in a Properties object.")
+	@Schema(description = "The name of the property in a Properties object.", example = "debugLevel")
 	private String name = null;
 
 	/**
@@ -31,13 +31,14 @@ public final class ApiPropSpec
 	 */
 	@Schema(description = "A coded string describing the type of the property. Valid values are i (int), n (number)," +
 			" b (boolean), f (filename), d (directory), s (string), t (timezone), e:<enumName> (decodes enum)," +
-			" h (hostname), E:<fullEnumClassPath> (java enum), l (longstring), or c (color).")
+			" h (hostname), E:<fullEnumClassPath> (java enum), l (longstring), or c (color).", example = "i")
 	private String type = null;
 
 	/**
 	 * A description of this property
 	 */
-	@Schema(description = "A detailed description of the property.")
+	@Schema(description = "A detailed description of the property.",
+			example = "(default=0) Set to 1, 2, 3 for increasing levels of debug information when this platform is decoded.")
 	private String description = null;
 
 	public ApiPropSpec(String name, String type, String description)

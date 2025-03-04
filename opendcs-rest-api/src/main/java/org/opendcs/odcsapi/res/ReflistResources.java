@@ -81,41 +81,40 @@ public final class ReflistResources extends OpenDcsResource
 	@Operation(
 			summary = "The ‘reflists’ GET method will return all reference lists or a specific reference list.",
 			description = "The 'name' argument may have multiple values.   For example:    \n\n"
-					+ "            http://localhost:8080/odcsapi/reflists?name=scripttype,dataorder  \n"
-					+ "            \n" + "        If no 'name' argument is provided, then all reference lists in the database are returned.   "
+					+ "`http://localhost:8080/odcsapi/reflists?name=scripttype,dataorder`  \n\n"
+					+ "If no 'name' argument is provided, then all reference lists in the database are returned.   "
 					+ "The JSON returned is an array of reference lists.  \n          \n"
-					+ "        The following reference lists are currently available:  \n"
-					+ "        * **DataSourceType** – Used in Database Editor to link a data source name to a Java class  \n"
-					+ "        * **PortType** – Used in the polling interface \n" + "        "
+					+ "The following reference lists are currently available:  \n"
+					+ "* **DataSourceType** – Used in Database Editor to link a data source name to a Java class  \n"
+					+ "* **PortType** – Used in the polling interface \n" + "        "
 					+ "* **ScriptType** – A list of DECODES Platform Configuration Script types (reserved for future use  \n"
-					+ "        * **StatisticsCode** – Valid statistics codes that can be used in a time series identifier  \n"
-					+ "        * **SiteNameType** – Known site name types, e.g. NWSHB5 (National Weather Service Handbook 5), "
+					+ "* **StatisticsCode** – Valid statistics codes that can be used in a time series identifier  \n"
+					+ "* **SiteNameType** – Known site name types, e.g. NWSHB5 (National Weather Service Handbook 5), "
 					+ "USGS (Site Number), CODWR (Colorada Dept of Water Resources).  \n"
-					+ "        * **DataConsumer** – Links a data consumer type name to Java Code (e.g. File, Directory, Socket)  \n"
-					+ "        * **Measures** – A list of physical attributes measured by an "
+					+ "* **DataConsumer** – Links a data consumer type name to Java Code (e.g. File, Directory, Socket)  \n"
+					+ "* **Measures** – A list of physical attributes measured by an "
 					+ "engineering unit (e.g. force, temperature, mass)  \n"
-					+ "        * **UnitConversionAlgorithm** – A list of algorithms for unit conversion  \n"
-					+ "        * **DataOrder** – Ascending (oldest first) or Descending (newest first) time order  \n"
-					+ "        * **GroupType** – Used for annotation in time series groups  \n"
-					+ "        * **LoggerType** – Used in the polling interface  \n"
-					+ "        * **LookupAlgorithm**  \n"
-					+ "        * **EquationScope**  \n"
-					+ "        * **UnitFamily** – Metric, English, or Universal  \n"
-					+ "        * **OutputFormat** – Links a name to Java code for formatting output data (e.g. SHEF, CSV)  \n"
-					+ "        * **DataTypeStandard** – Known standards for specifying data type (e.g. SHEF-PE, CWMS, HDB)  \n"
-					+ "        * **TransportMediumType** – A Transport Medium uniquely identifies a platform. There are several "
+					+ "* **UnitConversionAlgorithm** – A list of algorithms for unit conversion  \n"
+					+ "* **DataOrder** – Ascending (oldest first) or Descending (newest first) time order  \n"
+					+ "* **GroupType** – Used for annotation in time series groups  \n"
+					+ "* **LoggerType** – Used in the polling interface  \n"
+					+ "* **LookupAlgorithm**  \n"
+					+ "* **EquationScope**  \n"
+					+ "* **UnitFamily** – Metric, English, or Universal  \n"
+					+ "* **OutputFormat** – Links a name to Java code for formatting output data (e.g. SHEF, CSV)  \n"
+					+ "* **DataTypeStandard** – Known standards for specifying data type (e.g. SHEF-PE, CWMS, HDB)  \n"
+					+ "* **TransportMediumType** – A Transport Medium uniquely identifies a platform. There are several "
 					+ "types: GOES ID, Iridium IMEI, Polled Identifier, etc.  \n"
-					+ "        * **Season** – User can create any number of seasons that start/end at specified time of year  \n"
-					+ "        * **EquipmentType**  \n"
-					+ "        * **ApplicationType** – Computation Process, Comp Depends Daemon, DECODES Routing Scheduler, etc.  \n"
-					+ "        * **RecordingMode**",
+					+ "* **Season** – User can create any number of seasons that start/end at specified time of year  \n"
+					+ "* **EquipmentType**  \n"
+					+ "* **ApplicationType** – Computation Process, Comp Depends Daemon, DECODES Routing Scheduler, etc.  \n"
+					+ "* **RecordingMode**",
 			responses = {
 					@ApiResponse(
 							responseCode = "200",
 							description = "If no 'name' argument is provided, "
 									+ "then all reference lists in the database are returned.\n"
-									+ "            The JSON returned is an array of reference lists. "
-									+ "The data below contains the ScriptType and DataOrder reference lists:",
+									+ "            The JSON returned is an map of reference names to reference objects.",
 							content = @Content(
 									mediaType = MediaType.APPLICATION_JSON,
 									schema = @Schema(type = "object",
@@ -125,8 +124,8 @@ public final class ReflistResources extends OpenDcsResource
 									})
 							)
 					),
-					@ApiResponse(responseCode = "404", description = "Matching reference lists not found", content = @Content),
-					@ApiResponse(responseCode = "500", description = "Internal Server Error", content = @Content)
+					@ApiResponse(responseCode = "404", description = "Matching reference lists not found"),
+					@ApiResponse(responseCode = "500", description = "Internal Server Error")
 			},
 			tags = {"REST - Reference Lists"}
 	)
@@ -215,24 +214,16 @@ public final class ReflistResources extends OpenDcsResource
 					+ "list in JSON format. Note that the above GET method has a plural ‘reflists’ and returns "
 					+ "an array of named reference lists. This POST method has singular ‘reflist’. "
 					+ "The POST body should be a single reference list, not an array of lists.  \n\n"
-					+ "        For creating a new reference list, leave reflistId out of the passed data structure.  \n\n"
-					+ "        For overwriting an existing one, include the reflistId that was previously returned. "
+					+ "For creating a new reference list, leave reflistId out of the passed data structure.  \n\n"
+					+ "For overwriting an existing one, include the reflistId that was previously returned. "
 					+ "The network list in the database is replaced with the one sent.",
-			requestBody = @RequestBody(
-					description = "Reference list object to post",
-					required = true,
-					content = @Content(
-							mediaType = MediaType.APPLICATION_JSON,
-							schema = @Schema(implementation = ApiRefList.class)
-					)
-			),
+			requestBody = @RequestBody(description = "Reference list object to post", required = true,
+				content = @Content(mediaType = MediaType.APPLICATION_JSON,
+					schema = @Schema(implementation = ApiRefList.class))),
 			responses = {
 					@ApiResponse(description = "Reference list created successfully", responseCode = "201",
-							content = @Content(
-									mediaType = MediaType.APPLICATION_JSON,
-									schema = @Schema(implementation = ApiRefList.class)
-							)
-					),
+						content = @Content(mediaType = MediaType.APPLICATION_JSON,
+							schema = @Schema(implementation = ApiRefList.class))),
 					@ApiResponse(description = "Internal Server Error", responseCode = "500")
 			},
 			tags = {"REST - Reference Lists"}
@@ -311,21 +302,12 @@ public final class ReflistResources extends OpenDcsResource
 	@Operation(
 			summary = "Delete Existing Reference List",
 			description = "Required argument reflistid must be passed.  \n\n"
-					+ "        Take care in deleting reference lists. "
+					+ "Take care in deleting reference lists. "
 					+ "Several modules within OpenDCS require the existence of certain lists.",
 			responses = {
-					@ApiResponse(
-							responseCode = "204",
-							description = "Reference list deleted successfully"
-					),
-					@ApiResponse(
-							responseCode = "400",
-							description = "Missing Parameter"
-					),
-					@ApiResponse(
-							responseCode = "500",
-							description = "Internal Server Error"
-					)
+					@ApiResponse(responseCode = "204", description = "Reference list deleted successfully"),
+					@ApiResponse(responseCode = "400", description = "Missing Parameter"),
+					@ApiResponse(responseCode = "500", description = "Internal Server Error")
 			},
 			tags = {"REST - Reference Lists"}
 	)
@@ -372,7 +354,7 @@ public final class ReflistResources extends OpenDcsResource
 							array = @ArraySchema(schema = @Schema(implementation = ApiSeason.class))
 						)
 					),
-					@ApiResponse(responseCode = "404", description = "Season enum not found"),
+					@ApiResponse(responseCode = "404", description = "Season reference list not found"),
 					@ApiResponse(responseCode = "500", description = "Internal Server Error")
 			},
 			tags = {"REST - Reference Lists"}
@@ -433,7 +415,7 @@ public final class ReflistResources extends OpenDcsResource
 			},
 			tags = {"REST - Reference Lists"}
 	)
-	public Response getSeason(@Parameter(description = "Abbreviation of existing season to modify",
+	public Response getSeason(@Parameter(description = "Abbreviation of existing season to retrieve",
 			required = true, schema = @Schema(implementation = String.class))
 		@QueryParam("abbr") String abbr)
 			throws DbException, WebAppException
@@ -495,12 +477,9 @@ public final class ReflistResources extends OpenDcsResource
 					)
 			),
 			responses = {
-					@ApiResponse(responseCode = "204", description = "Season successfully created or updated",
-							content = @Content(
-									mediaType = MediaType.APPLICATION_JSON,
-									schema = @Schema(implementation = ApiSeason.class)
-							)
-					),
+					@ApiResponse(responseCode = "201", description = "Season successfully created or updated",
+						content = @Content(mediaType = MediaType.APPLICATION_JSON,
+							schema = @Schema(implementation = ApiSeason.class))),
 					@ApiResponse(responseCode = "400", description = "Missing Parameter"),
 					@ApiResponse(responseCode = "500", description = "Internal Server Error")
 			},

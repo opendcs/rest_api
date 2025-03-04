@@ -23,7 +23,7 @@ public final class ApiSeason
 	/**
 	 * one-word abbreviation for season
 	 */
-	@Schema(description = "One-word abbreviation for the season.")
+	@Schema(description = "One-word abbreviation for the season.", example = "autumn")
 	private String abbr = null;
 	/**
 	 * one-word abbreviation for season.  If this is set, it updates a previously saved season.  If this is not set, it creates a new one.
@@ -33,27 +33,27 @@ public final class ApiSeason
 	/**
 	 * multi-word more descriptive name
 	 */
-	@Schema(description = "Multi-word descriptive name of the season.")
+	@Schema(description = "Multi-word descriptive name of the season.", example = "Autumn")
 	private String name = null;
 	/**
 	 * String representation of season start
 	 */
-	@Schema(description = "String representation of the season's start date.")
+	@Schema(description = "String representation of the season's start date.", example = "09/22-12:00")
 	private String start = null;
 	/**
 	 * String representation of season end
 	 */
-	@Schema(description = "String representation of the season's end date.")
+	@Schema(description = "String representation of the season's end date.", example = "12/21-12:00")
 	private String end = null;
 	/**
 	 * Time Zone ID
 	 */
-	@Schema(description = "ID of the time zone associated with the season.")
+	@Schema(description = "ID of the time zone associated with the season.", example = "EST5EDT")
 	private String tz = null;
 	/**
 	 * Allows user to specify sort order of seasons for GUI display
 	 */
-	@Schema(description = "Specifies the sort order of seasons for GUI display.")
+	@Schema(description = "Specifies the sort order of seasons for GUI display.", example = "1")
 	private Integer sortNumber = null;
 
 	public ApiSeason()

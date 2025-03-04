@@ -20,16 +20,16 @@ import io.swagger.v3.oas.annotations.media.Schema;
 @Schema(description = "Represents a unit with its abbreviation, name, family, and associated measures.")
 public final class ApiUnit
 {
-	@Schema(description = "Abbreviation for the unit.")
+	@Schema(description = "Abbreviation for the unit.", example = "$")
 	private String abbr = null;
 
-	@Schema(description = "Name of the unit.")
+	@Schema(description = "Name of the unit.", example = "Dollars")
 	private String name = null;
 
-	@Schema(description = "Family or category of the unit.")
+	@Schema(description = "Family or category of the unit.", example = "univ")
 	private String family = null;
 
-	@Schema(description = "Type of measures associated with the unit.")
+	@Schema(description = "Type of measures associated with the unit.", example = "Currency")
 	private String measures = null;
 
 	public String getAbbr()

@@ -85,17 +85,28 @@ public final class ConfigResources extends OpenDcsResource
 	@Produces(MediaType.APPLICATION_JSON)
 	@Operation(
 			summary = "This method returns a JSON list of DECODES Config records suitable for displaying in a table or pick-list",
-			description = "Example:\n\n    http://localhost:8080/odcsapi/configrefs\n\n" +
-					"This method returns a structure with an array in the following format:" +
-					"\n\n```\n[\n  {\n    \"configId\": 1,\n    \"description\": \"WSC SHEF - 2 sensors - HG, VB\"," +
-					"\n    \"name\": \"Shef-WSC-Hydro-RCOYCHER\",\n    \"numPlatforms\": 1\n  }\n]```",
+			description = "Example:\n\n    http://localhost:8080/odcsapi/configrefs\n\n\n"
+					+ "This method returns a JSON list of DECODES Config records suitable for displaying "
+					+ "in a table or pick-list. The returned structure contains an array in the following format:\n\n  "
+					+ "**Note**:The numeric ID may be used in subsequent calls to the 'config' method.\n\n```\n[\n  "
+					+ "{\n    \"configId\": 1,\n    \"description\": \"WSC SHEF - 2 sensors - HG, VB\",\n    "
+					+ "\"name\": \"Shef-WSC-Hydro-RCOYCHER\",\n    \"numPlatforms\": 1\n  },\n  {\n    "
+					+ "\"configId\": 2,\n    \"description\": \"WSC SHEF - 2 sensors - QR=QF, HG\",\n    "
+					+ "\"name\": \"Shef-WSC-Hydro-RBRDDDVH\",\n    \"numPlatforms\": 1\n  },\n  {\n    "
+					+ "\"configId\": 3,\n    \"description\": \"WSC SHEF - 2 sensors - HG, VB\",\n    "
+					+ "\"name\": \"Shef-WSC-Hydro-RBLOCLEE\",\n    \"numPlatforms\": 1\n  },\n  {\n    "
+					+ "\"configId\": 4,\n    \"description\": \"AE SHEF - 4 sensors - PC, TA, SW, YB=VB\",\n    "
+					+ "\"name\": \"Shef-AE-Met-SESK\",\n    \"numPlatforms\": 1\n  },\n  {\n    \"configId\": 5,\n    "
+					+ "\"description\": \"WSC SHEF - 2 sensors - HG, VB\",\n    "
+					+ "\"name\": \"Shef-WSC-Hydro-RBULLRES\",\n    \"numPlatforms\": 1\n  },\n  {\n    "
+					+ "\"configId\": 6,\n    \"description\": \"WSC SHEF - 2 sensors - HG, VB\",\n    "
+					+ "\"name\": \"Shef-WSC-Hydro-RREDBIN\",\n    \"numPlatforms\": 1\n  }\n]\n```",
 			responses = {
 					@ApiResponse(responseCode = "200", description = "Success",
 							content = @Content(mediaType = MediaType.APPLICATION_JSON,
 							array = @ArraySchema(schema = @Schema(implementation = ApiConfigRef.class)))),
 					@ApiResponse(responseCode = "500",
-							description = "Database error occurred while retrieving the configuration references",
-							content = @Content)
+							description = "Database error occurred while retrieving the configuration references")
 			},
 			tags = {"REST - DECODES Platform Configurations"}
 	)
@@ -146,19 +157,20 @@ public final class ConfigResources extends OpenDcsResource
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
 	@Operation(
-			summary = "Get Configuration Details",
-			description = "Fetches the details of a specific configuration using its unique ID.",
+			summary = "This method returns a JSON representation of a single, complete DECODES Config record",
+			description = "Example:  \n\n    http://localhost:8080/odcsapi/config?configid=12\n\n\n"
+					+ "This method returns a JSON representation of a single, complete DECODES Config record. ",
 			responses = {
 					@ApiResponse(responseCode = "200", description = "Successfully retrieved configuration details",
 							content = @Content(mediaType = MediaType.APPLICATION_JSON,
 									schema = @Schema(implementation = ApiPlatformConfig.class))),
-					@ApiResponse(responseCode = "400", description = "Missing or invalid configid parameter", content = @Content),
-					@ApiResponse(responseCode = "404", description = "Configuration not found", content = @Content),
-					@ApiResponse(responseCode = "500", description = "Internal Server Error", content = @Content)
+					@ApiResponse(responseCode = "400", description = "Missing or invalid configid parameter"),
+					@ApiResponse(responseCode = "404", description = "Configuration not found"),
+					@ApiResponse(responseCode = "500", description = "Internal Server Error")
 			},
 			tags = {"REST - DECODES Platform Configurations"}
 	)
-	public Response getConfig(@Parameter(schema = @Schema(implementation = Long.class), required = true)
+	public Response getConfig(@Parameter(schema = @Schema(implementation = Long.class, example = "12"), required = true)
 		@QueryParam("configid") Long configId) throws WebAppException, DbException
 	{
 		if (configId == null)
@@ -260,10 +272,12 @@ public final class ConfigResources extends OpenDcsResource
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
 	@Operation(
-			summary = "Create or Update Configuration",
-			description = "Creates a new configuration object or updates an existing one.\n\n" +
-					"For creating a new config, leave configId out of the data structure. " +
-					"For overwriting, include the configId previously returned.",
+			summary = "Create or Overwrite Existing Config",
+			description = "The POST config method takes a single DECODES Platform Configuration record in JSON format, "
+					+ "as described above for GET config.   \n\n"
+					+ "For creating a new config, leave configId out of the passed data structure.  \n\n"
+					+ "For overwriting an existing one, include the configId that was previously returned. "
+					+ "The configuration in the database is replaced with the one sent.",
 			requestBody = @RequestBody(
 					description = "The configuration object to be created or updated",
 					required = true,
@@ -275,7 +289,7 @@ public final class ConfigResources extends OpenDcsResource
 			responses = {
 					@ApiResponse(responseCode = "201", description = "Successfully created or updated the configuration",
 							content = @Content(schema = @Schema(implementation = ApiPlatformConfig.class))),
-					@ApiResponse(responseCode = "500", description = "Database error occurred", content = @Content)
+					@ApiResponse(responseCode = "500", description = "Database error occurred")
 			},
 			tags = {"REST - DECODES Platform Configurations"}
 	)
@@ -462,21 +476,19 @@ public final class ConfigResources extends OpenDcsResource
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
 	@Operation(
-			summary = "Delete Configuration",
-			description = "Deletes a configuration object identified by its unique ID. " +
-					"The configuration cannot be deleted if it is actively being used by one or more platforms.",
+			summary = "Delete Existing Config",
+			description = "Required argument configid must be passed.  \n\n"
+					+ "Error 405 will be returned if the referenced configuration is used by one "
+					+ "or more platforms and cannot be deleted.",
 			parameters = {
 					@Parameter(name = "configid", description = "The unique ID of the configuration to delete",
 							required = true, schema = @Schema(type = "integer"))
 			},
 			responses = {
-					@ApiResponse(responseCode = "200", description = "Successfully deleted the configuration",
-							content = @Content),
-					@ApiResponse(responseCode = "400", description = "Missing or invalid configid parameter",
-							content = @Content),
-					@ApiResponse(responseCode = "405", description = "Configuration is in use and cannot be deleted",
-							content = @Content),
-					@ApiResponse(responseCode = "500", description = "Database error occurred", content = @Content)
+					@ApiResponse(responseCode = "204", description = "Successfully deleted the configuration"),
+					@ApiResponse(responseCode = "400", description = "Missing or invalid configid parameter"),
+					@ApiResponse(responseCode = "405", description = "Configuration is in use and cannot be deleted"),
+					@ApiResponse(responseCode = "500", description = "Database error occurred")
 			},
 			tags = {"REST - DECODES Platform Configurations"}
 	)

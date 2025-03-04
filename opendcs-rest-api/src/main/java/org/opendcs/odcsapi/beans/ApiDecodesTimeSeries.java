@@ -23,13 +23,13 @@ import java.util.List;
 @Schema(description = "Represents a decoded time series, including sensor details, units, and associated time series values.")
 public final class ApiDecodesTimeSeries
 {
-	@Schema(description = "The unique sensor number associated with this time series.")
+	@Schema(description = "The unique sensor number associated with this time series.", example = "20")
 	private int sensorNum = 0;
 
-	@Schema(description = "The name of the sensor associated with this time series.")
+	@Schema(description = "The name of the sensor associated with this time series.", example = "Stage")
 	private String sensorName = null;
 
-	@Schema(description = "The unit of measurement for this time series.")
+	@Schema(description = "The unit of measurement for this time series.", example = "m")
 	private String units = null;
 
 	@Schema(description = "List of time series values associated with this sensor.")

@@ -31,19 +31,22 @@ public final class ApiPlatformStatus
 	@Schema(description = "The unique identifier of the site where the platform is located.", example = "5678")
 	private Long siteId = null;
 
-	@Schema(description = "The date and time of the platform's last successful contact.", example = "2025-01-01T12:00:00Z")
+	@Schema(description = "The date and time of the platform's last successful contact.",
+			example = "2025-01-01T12:00:00.000[UTC]")
 	private Date lastContact = null;
 
-	@Schema(description = "The date and time of the platform's last received message.", example = "2025-01-01T15:30:00Z")
+	@Schema(description = "The date and time of the platform's last received message.",
+			example = "2025-01-01T15:30:00.000[UTC]")
 	private Date lastMessage = null;
 
-	@Schema(description = "The date and time of the platform's last error.", example = "2025-01-01T14:00:00Z")
+	@Schema(description = "The date and time of the platform's last error.", example = "2025-01-01T14:00:00.000[UTC]")
 	private Date lastError = null;
 
 	@Schema(description = "The quality of the last received message.", example = "GOOD")
 	private String lastMsgQuality = null;
 
-	@Schema(description = "Additional annotations or notes about the platform.", example = "This platform requires maintenance.")
+	@Schema(description = "Additional annotations or notes about the platform.",
+			example = "This platform requires maintenance.")
 	private String annotation = null;
 
 	@Schema(description = "The unique identifier of the last routing execution.", example = "8910")

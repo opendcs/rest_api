@@ -28,17 +28,18 @@ public final class ApiDataType
 	 * This must match one of the DataTypeStandard enum values.
 	 * Currently the allowable values are SHEF-PE, NOS-CODE, or EPA-CODE.
 	 */
-	@Schema(description = "The data type standard. Allowable values are SHEF-PE, NOS-CODE, or EPA-CODE.")
+	@Schema(description = "The data type standard. Allowable values are SHEF-PE, NOS-CODE, or EPA-CODE.",
+			example = "SHEF-PE")
 	private String standard = null;
 
 	/**
 	 * This identifies the data type.  The form of this string depends on
 	 * the standard.
 	 */
-	@Schema(description = "The identification of the data type, formatted according to the standard.")
+	@Schema(description = "The identification of the data type, formatted according to the standard.", example = "Depth-Snow")
 	private String code = null;
 
-	@Schema(description = "The display name of the data type.")
+	@Schema(description = "The display name of the data type.", example = "SHEF-PE:Depth-Snow")
 	private String displayName = null;
 
 	public Long getId()

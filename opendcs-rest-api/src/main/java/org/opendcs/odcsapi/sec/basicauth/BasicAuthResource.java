@@ -80,17 +80,14 @@ public final class BasicAuthResource extends OpenDcsResource
 	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
 	@Operation(
 			summary = "The ‘credentials’ POST method is used to obtain a new token",
-			description = "The user name and password provided must be a valid login for the underlying database.   \n" +
-					"        Also, that user must be assigned either of the roles OTSDB_ADMIN or OTSDB_MGR. " +
-					"          \n" +
-					"        --- \n" +
-					"          \n" +
-					"          \n" +
-					"        Starting in **API Version 0.0.3**, authentication credentials (username and password) " +
-					"may be passed as shown above in the POST body.   \n" +
-					"        They may also be passed in a GET call to the 'credentials' method, " +
-					"(e.g. '*http://localhost:8080/odcsapi/credentials*') containing an HTTP Authentication Basic " +
-					"header in the form 'username:password'.  \n\nThe returned data to the GET call will be empty.",
+			description = "The user name and password provided must be a valid login for the underlying database.   \n"
+					+ "Also, that user must be assigned either of the roles OTSDB_ADMIN or OTSDB_MGR.\n"
+					+ "--- \n\n\n"
+					+ "Starting in **API Version 0.0.3**, authentication credentials (username and password) "
+					+ "may be passed as shown above in the POST body.   \n"
+					+ "They may also be passed in a GET call to the 'credentials' method, "
+					+ "(e.g. '*http://localhost:8080/odcsapi/credentials*') containing an HTTP Authentication Basic "
+					+ "header in the form 'username:password'.  \n\nThe returned data to the GET call will be empty.",
 			requestBody = @RequestBody(
 					description = "Login Credentials",
 					required = true,

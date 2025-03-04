@@ -27,25 +27,29 @@ public final class ApiAlgorithm
 	/**
 	 * Surrogate key for this algorithm in the time series database.
 	 */
-	@Schema(description = "Unique identifier for the algorithm.")
+	@Schema(description = "Unique identifier for the algorithm.", example = "4")
 	private Long algorithmId = null;
 
 	/**
 	 * Name of this algorithm
 	 */
-	@Schema(description = "Name of the algorithm.")
+	@Schema(description = "Name of the algorithm.", example = "ChooseOne")
 	private String name = null;
 
 	/**
 	 * Fully qualified Java class name to execute this algorithm.
 	 */
-	@Schema(description = "Fully qualified Java class name used to execute the algorithm.")
+	@Schema(description = "Fully qualified Java class name used to execute the algorithm.",
+			example = "decodes.tsdb.algo.ChooseOne")
 	private String execClass = null;
 
 	/**
 	 * Free form multi-line comment
 	 */
-	@Schema(description = "Description or comments about the algorithm.")
+	@Schema(description = "Description or comments about the algorithm.", example = "Given two inputs, "
+			+ "output the best one: If only one is present at the time-slice, output it. "
+			+ "If one is outside the specified upper or lower limit (see properties) output the other. "
+			+ "If both are acceptable, output the first one. Useful in situations where you have redundant sensors.")
 	private String description = null;
 
 	/**
@@ -63,7 +67,7 @@ public final class ApiAlgorithm
 	/**
 	 * For use in the editor -- the number of computations using this algo.
 	 */
-	@Schema(description = "Number of computations currently using this algorithm.")
+	@Schema(description = "Number of computations currently using this algorithm.", example = "1")
 	private int numCompsUsing = 0;
 
 	@Schema(description = "List of scripts associated with the algorithm.", implementation = ApiAlgorithmScript.class)
