@@ -159,14 +159,9 @@ public final class NetlistResources extends OpenDcsResource
 					@ApiResponse(responseCode = "200", description = "Success",
 							content = @Content(mediaType = MediaType.APPLICATION_JSON,
 									schema = @Schema(implementation = ApiNetList.class))),
-					@ApiResponse(responseCode = "404", description = "Not Found",
-							content = @Content(mediaType = MediaType.APPLICATION_JSON,
-									examples = @ExampleObject(value = "{\"status\": 404," +
-											"\"message\": \"The requested netlistid was not found in the database.\"}"))),
-					@ApiResponse(responseCode = "406", description = "Not Acceptable",
-							content = @Content(mediaType = MediaType.APPLICATION_JSON,
-									examples = @ExampleObject(value = "{\"status\": 406," +
-											"\"message\": \"The required ‘netlistid’ parameter was missing in the URL.\"}"))),
+					@ApiResponse(responseCode = "400",
+							description = "The required ‘netlistid’ parameter was missing in the URL."),
+					@ApiResponse(responseCode = "404", description = "Not Found"),
 					@ApiResponse(responseCode = "500", description = "Internal Server Error")
 			},
 			tags = {"REST - Network Lists"}
@@ -250,7 +245,12 @@ public final class NetlistResources extends OpenDcsResource
 					+ "include the netlistId that was previously returned. The network list in the database "
 					+ "is replaced with the one sent.",
 			requestBody = @RequestBody(required = true, content = @Content(mediaType = MediaType.APPLICATION_JSON,
-							schema = @Schema(implementation = ApiNetList.class))),
+							schema = @Schema(implementation = ApiNetList.class),
+						examples = {
+								@ExampleObject(name = "Basic", value = ResourceExamples.NetlistExamples.BASIC),
+								@ExampleObject(name = "New", value = ResourceExamples.NetlistExamples.NEW),
+								@ExampleObject(name = "Update", value = ResourceExamples.NetlistExamples.UPDATE)
+						})),
 			responses = {
 					@ApiResponse(responseCode = "201", description = "Successfully created or updated network list",
 							content = @Content(mediaType = MediaType.APPLICATION_JSON,

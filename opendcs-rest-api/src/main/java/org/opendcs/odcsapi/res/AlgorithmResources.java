@@ -43,6 +43,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -199,7 +200,12 @@ public final class AlgorithmResources extends OpenDcsResource
 			requestBody = @RequestBody(description = "OpenDcs Algorithm",
 					required = true,
 					content = @Content(mediaType = MediaType.APPLICATION_JSON,
-							schema = @Schema(implementation = ApiAlgorithm.class))),
+							schema = @Schema(implementation = ApiAlgorithm.class),
+					examples = {
+							@ExampleObject(name = "Basic", value = ResourceExamples.AlgorithmExamples.BASIC),
+							@ExampleObject(name = "New", value = ResourceExamples.AlgorithmExamples.NEW),
+							@ExampleObject(name = "Update", value = ResourceExamples.AlgorithmExamples.UPDATE)
+					})),
 			responses = {
 					@ApiResponse(responseCode = "201", description = "Successfully Created",
 							content = @Content(mediaType = MediaType.APPLICATION_JSON,

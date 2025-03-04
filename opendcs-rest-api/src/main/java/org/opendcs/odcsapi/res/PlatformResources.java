@@ -35,6 +35,7 @@ import javax.ws.rs.QueryParam;
 
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import javax.ws.rs.core.Context;
@@ -313,7 +314,12 @@ public final class PlatformResources extends OpenDcsResource
 					"For overwriting an existing one, include the platformId that was previously returned. " +
 					"The platform in the database is replaced with the one sent.",
 			requestBody = @RequestBody(content = @Content(schema = @Schema(implementation = ApiPlatform.class),
-					mediaType = MediaType.APPLICATION_JSON), required = true, description = "Decodes Platform Object"),
+					mediaType = MediaType.APPLICATION_JSON,
+					examples = {
+							@ExampleObject(name = "Basic", value = ResourceExamples.PlatformExamples.BASIC),
+							@ExampleObject(name = "New", value = ResourceExamples.PlatformExamples.NEW),
+							@ExampleObject(name = "Update", value = ResourceExamples.PlatformExamples.UPDATE)
+					}), required = true, description = "Decodes Platform Object"),
 			responses = {
 					@ApiResponse(responseCode = "201", description = "Platform created successfully"),
 					@ApiResponse(responseCode = "500",

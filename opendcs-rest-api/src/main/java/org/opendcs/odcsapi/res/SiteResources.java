@@ -246,12 +246,9 @@ public final class SiteResources extends OpenDcsResource
 					content = @Content(mediaType = MediaType.APPLICATION_JSON,
 						schema = @Schema(implementation = ApiSite.class),
 						examples = {
-							@ExampleObject(name = "Basic", value = "{ \"description\": \"Iowa River\", "
-									+ "\"siteId\": 1, \"sitenames\": {\"CWMS\": \"ROWI4\"} }"),
-							@ExampleObject(name = "New", value = "{ \"description\": \"New Site\", "
-									+ "\"sitenames\": {\"CWMS\": \"NEWSITE\"} }"),
-							@ExampleObject(name = "Update", value = "{ \"description\": \"Updated Site\", "
-									+ "\"siteId\": 1, \"sitenames\": {\"CWMS\": \"UPDATECWMS\"} }")
+							@ExampleObject(name = "Basic", value = ResourceExamples.SiteExamples.BASIC),
+							@ExampleObject(name = "New", value = ResourceExamples.SiteExamples.NEW),
+							@ExampleObject(name = "Update", value = ResourceExamples.SiteExamples.UPDATE)
 					})
 			)
 	)
