@@ -47,6 +47,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -330,7 +331,12 @@ public final class ComputationResources extends OpenDcsResource
 					description = "Computation",
 					required = true,
 					content = @Content(mediaType = MediaType.APPLICATION_JSON,
-							schema = @Schema(implementation = ApiComputation.class)
+							schema = @Schema(implementation = ApiComputation.class),
+						examples = {
+								@ExampleObject(name = "Basic", value = ResourceExamples.ComputationExamples.BASIC),
+								@ExampleObject(name = "New", value = ResourceExamples.ComputationExamples.NEW),
+								@ExampleObject(name = "Update", value = ResourceExamples.ComputationExamples.UPDATE)
+						}
 					)
 			),
 			responses = {

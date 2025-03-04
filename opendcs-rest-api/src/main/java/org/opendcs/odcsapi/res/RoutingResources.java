@@ -17,6 +17,7 @@ package org.opendcs.odcsapi.res;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.media.Content;
 import java.util.logging.Logger;
@@ -253,7 +254,12 @@ public final class RoutingResources extends OpenDcsResource
 					description = "Decodes Routing Spec Object",
 					required = true,
 					content = @Content(mediaType = MediaType.APPLICATION_JSON,
-							schema = @Schema(implementation = ApiRouting.class))
+							schema = @Schema(implementation = ApiRouting.class),
+						examples = {
+							@ExampleObject(name = "Basic", value = ResourceExamples.RoutingExamples.BASIC),
+							@ExampleObject(name = "New", value = ResourceExamples.RoutingExamples.NEW),
+							@ExampleObject(name = "Update", value = ResourceExamples.RoutingExamples.UPDATE)
+					})
 			),
 			responses = {
 					@ApiResponse(responseCode = "201", description = "Successfully created or updated the routing",
@@ -473,7 +479,12 @@ public final class RoutingResources extends OpenDcsResource
 							responseCode = "200",
 							description = "Success",
 							content = @Content(mediaType = MediaType.APPLICATION_JSON,
-									schema = @Schema(implementation = ApiScheduleEntry.class))
+									schema = @Schema(implementation = ApiScheduleEntry.class),
+							examples = {
+									@ExampleObject(name = "Basic", value = ResourceExamples.ScheduleExamples.BASIC),
+									@ExampleObject(name = "New", value = ResourceExamples.ScheduleExamples.NEW),
+									@ExampleObject(name = "Update", value = ResourceExamples.ScheduleExamples.UPDATE)
+							})
 					),
 					@ApiResponse(responseCode = "400", description = "Missing or invalid schedule ID parameter"),
 					@ApiResponse(responseCode = "404", description = "Requested schedule entry not found"),
@@ -524,7 +535,12 @@ public final class RoutingResources extends OpenDcsResource
 					description = "Schedule Object",
 					required = true,
 					content = @Content(mediaType = MediaType.APPLICATION_JSON,
-							schema = @Schema(implementation = ApiScheduleEntry.class))
+							schema = @Schema(implementation = ApiScheduleEntry.class),
+					examples = {
+						@ExampleObject(name = "Basic", value = ResourceExamples.ScheduleExamples.BASIC),
+						@ExampleObject(name = "New", value = ResourceExamples.ScheduleExamples.NEW),
+						@ExampleObject(name = "Update", value = ResourceExamples.ScheduleExamples.UPDATE)
+					})
 			),
 			responses = {
 					@ApiResponse(responseCode = "201", description = "Successfully created or updated the schedule",
