@@ -22,7 +22,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 @Schema(description = "Represents a log message with a timestamp, priority level, and text content.")
 public final class ApiLogMessage
 {
-	@Schema(description = "The timestamp when the log message was created.", example = "2025-01-01T12:00:00Z")
+	@Schema(description = "The timestamp when the log message was created.", example = "2025-01-01T12:00:00.605[UTC]")
 	private Date timeStamp = new Date();
 
 	@Schema(description = "The priority level of the log message, e.g., INFO, WARN, or ERROR.", example = "INFO")

@@ -28,22 +28,24 @@ import io.swagger.v3.oas.annotations.media.Schema;
 @Schema(description = "Represents a network list, including its ID, name, type of transport medium, and other related metadata.")
 public final class ApiNetList
 {
-	@Schema(description = "Unique surrogate key ID of this network list.")
+	@Schema(description = "Unique surrogate key ID of this network list.", example = "34")
 	private Long netlistId = null;
 
-	@Schema(description = "Unique name of this network list.")
+	@Schema(description = "Unique name of this network list.", example = "USGS-Sites")
 	private String name;
 
-	@Schema(description = "Type of transport medium stored in this network list.")
+	@Schema(description = "Type of transport medium stored in this network list.", example = "other")
 	private String transportMediumType;
 
-	@Schema(description = "Preferred name type for this network list.")
+	@Schema(description = "Preferred name type for this network list.", example = "nwshb5")
 	private String siteNameTypePref;
 
-	@Schema(description = "Time that this network list was last modified in the database.")
+	@Schema(description = "Time that this network list was last modified in the database.",
+			example = "2020-10-19T18:14:14.788Z[UTC]")
 	private Date lastModifyTime;
 
-	@Schema(description = "Stores the NetworkListItem objects, indexed by their transportId's, converted to uppercase before being used as a key. Never null.")
+	@Schema(description = "Stores the NetworkListItem objects, indexed by their transportId's, "
+			+ "converted to uppercase before being used as a key. Never null.")
 	private Map<String, ApiNetListItem> items = new HashMap<>();
 
 	/**

@@ -23,13 +23,13 @@ import io.swagger.v3.oas.annotations.media.Schema;
 @Schema(description = "Represents the platform configuration containing details about sensors, scripts, and other platform attributes.")
 public final class ApiPlatformConfig
 {
-	@Schema(description = "The unique identifier of the platform configuration.")
+	@Schema(description = "The unique identifier of the platform configuration.", example = "1")
 	private Long configId = null;
 
-	@Schema(description = "The name of the platform configuration.")
+	@Schema(description = "The name of the platform configuration.", example = "Platform Configuration 1")
 	private String name = null;
 
-	@Schema(description = "The number of platforms associated with this configuration.")
+	@Schema(description = "The number of platforms associated with this configuration.", example = "122")
 	private int numPlatforms = 0;
 
 	@Schema(description = "Detailed description of the platform configuration.")

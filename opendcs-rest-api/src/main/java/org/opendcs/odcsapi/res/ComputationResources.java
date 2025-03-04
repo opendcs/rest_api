@@ -78,9 +78,8 @@ public final class ComputationResources extends OpenDcsResource
 					@ApiResponse(responseCode = "200", description = "Success",
 							content = @Content(mediaType = MediaType.APPLICATION_JSON,
 									array = @ArraySchema(schema = @Schema(implementation = ApiComputationRef.class)))),
-					@ApiResponse(responseCode = "404", description = "No computations found matching the filter criteria",
-							content = @Content),
-					@ApiResponse(responseCode = "500", description = "Internal Server Error", content = @Content)
+					@ApiResponse(responseCode = "404", description = "No computations found matching the filter criteria"),
+					@ApiResponse(responseCode = "500", description = "Internal Server Error")
 			}
 	)
 	public Response getComputationRefs(@Parameter(schema = @Schema(implementation = String.class))
@@ -191,11 +190,9 @@ public final class ComputationResources extends OpenDcsResource
 					@ApiResponse(responseCode = "200", description = "Success",
 							content = @Content(mediaType = MediaType.APPLICATION_JSON,
 									schema = @Schema(implementation = ApiComputation.class))),
-					@ApiResponse(responseCode = "400", description = "Missing required computationid parameter",
-							content = @Content),
-					@ApiResponse(responseCode = "404", description = "Computation with the specified ID not found",
-							content = @Content),
-					@ApiResponse(responseCode = "500", description = "Internal Server Error", content = @Content)
+					@ApiResponse(responseCode = "400", description = "Missing required computationid parameter"),
+					@ApiResponse(responseCode = "404", description = "Computation with the specified ID not found"),
+					@ApiResponse(responseCode = "500", description = "Internal Server Error")
 			}
 	)
 	public Response getComputation(@Parameter(required = true, description = "Unique Computation ID",
@@ -340,7 +337,7 @@ public final class ComputationResources extends OpenDcsResource
 					@ApiResponse(responseCode = "201", description = "Successfully stored computation",
 							content = @Content(mediaType = MediaType.APPLICATION_JSON,
 									schema = @Schema(implementation = ApiComputation.class))),
-					@ApiResponse(responseCode = "500", description = "Internal Server Error", content = @Content)
+					@ApiResponse(responseCode = "500", description = "Internal Server Error")
 			}
 	)
 	public Response postComputation(ApiComputation comp)
@@ -462,11 +459,9 @@ public final class ComputationResources extends OpenDcsResource
 			description = "Required argument computationid must be passed in the URL.",
 			tags = {"REST - Computation Methods"},
 			responses = {
-					@ApiResponse(responseCode = "204", description = "Successfully deleted computation",
-							content = @Content),
-					@ApiResponse(responseCode = "400", description = "Missing required computationid parameter",
-							content = @Content),
-					@ApiResponse(responseCode = "500", description = "Internal Server Error", content = @Content)
+					@ApiResponse(responseCode = "204", description = "Successfully deleted computation"),
+					@ApiResponse(responseCode = "400", description = "Missing required computationid parameter"),
+					@ApiResponse(responseCode = "500", description = "Internal Server Error")
 			}
 	)
 	public Response deleteComputation(@Parameter(required = true, description = "Unique Computation ID",

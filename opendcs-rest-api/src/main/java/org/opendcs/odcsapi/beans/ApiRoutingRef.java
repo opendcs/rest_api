@@ -19,22 +19,24 @@ import java.util.Date;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
-@Schema(description = "Represents a reference to a routing configuration, including metadata such as name, data source, and modification time.")
+@Schema(description = "Represents a reference to a routing configuration, including metadata such as name, "
+		+ "data source, and modification time.")
 public final class ApiRoutingRef
 {
-	@Schema(description = "Unique ID of the routing configuration.")
+	@Schema(description = "Unique ID of the routing configuration.", example = "3")
 	private Long routingId = null;
 
-	@Schema(description = "Name of the routing configuration.")
+	@Schema(description = "Name of the routing configuration.", example = "OKVI4-input")
 	private String name = null;
 
-	@Schema(description = "The name of the data source associated with the routing configuration.")
+	@Schema(description = "The name of the data source associated with the routing configuration.", example = "OKVI4")
 	private String dataSourceName = null;
 
-	@Schema(description = "The destination of the routing configuration.")
+	@Schema(description = "The destination of the routing configuration.", example = "pipe()")
 	private String destination = null;
 
-	@Schema(description = "Timestamp when the routing configuration was last modified.")
+	@Schema(description = "Timestamp when the routing configuration was last modified.",
+			example = "2020-05-11T20:24:53.052Z[UTC]")
 	private Date lastModified = null;
 
 	public Long getRoutingId()

@@ -20,16 +20,16 @@ import io.swagger.v3.oas.annotations.media.Schema;
 @Schema(description = "Represents a configuration reference with its details such as ID, name, number of platforms, and description.")
 public final class ApiConfigRef
 {
-	@Schema(description = "The unique identifier of the configuration.")
+	@Schema(description = "The unique identifier of the configuration.", example = "1")
 	private Long configId = null;
 
-	@Schema(description = "The name of the configuration.")
+	@Schema(description = "The name of the configuration.", example = "Shef-WSC-Hydro-RCOYCHER")
 	private String name = null;
 
-	@Schema(description = "The number of platforms associated with the configuration.")
+	@Schema(description = "The number of platforms associated with the configuration.", example = "3")
 	private int numPlatforms = 0;
 
-	@Schema(description = "A description of the configuration.")
+	@Schema(description = "A description of the configuration.", example = "WSC SHEF - 2 sensors - HG, VB")
 	private String description = null;
 
 	public Long getConfigId()

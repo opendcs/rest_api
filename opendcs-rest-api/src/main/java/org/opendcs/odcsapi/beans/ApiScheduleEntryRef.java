@@ -22,22 +22,22 @@ import io.swagger.v3.oas.annotations.media.Schema;
 @Schema(description = "Represents a schedule entry reference, including metadata such as name, application, routing specification, and enabled status.")
 public final class ApiScheduleEntryRef
 {
-	@Schema(description = "The unique identifier for the schedule entry.", example = "12345")
+	@Schema(description = "The unique identifier for the schedule entry.", example = "86")
 	private Long schedEntryId = null;
 
-	@Schema(description = "The name of the schedule entry.", example = "Daily Job")
+	@Schema(description = "The name of the schedule entry.", example = "goes2")
 	private String name = null;
 
-	@Schema(description = "The name of the application associated with this schedule entry.", example = "Data Processor")
+	@Schema(description = "The name of the application associated with this schedule entry.", example = "RoutingScheduler")
 	private String appName = null;
 
-	@Schema(description = "The routing specification name for this schedule entry.", example = "Spec_A")
+	@Schema(description = "The routing specification name for this schedule entry.", example = "goes2")
 	private String routingSpecName = null;
 
 	@Schema(description = "Indicates whether the schedule entry is enabled.", example = "true")
 	private boolean enabled = false;
 
-	@Schema(description = "The last modification date of the schedule entry.", example = "2023-10-05T12:00:00Z")
+	@Schema(description = "The last modification date of the schedule entry.", example = "2023-10-05T12:00:00.000[UTC]")
 	private Date lastModified = null;
 
 	public Long getSchedEntryId()

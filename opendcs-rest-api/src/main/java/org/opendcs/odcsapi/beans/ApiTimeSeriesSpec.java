@@ -25,46 +25,50 @@ public final class ApiTimeSeriesSpec
 	@Schema(description = "The time series identifier (TSID) containing unique metadata for the time series.")
 	private ApiTimeSeriesIdentifier tsid = null;
 
-	@Schema(description = "The location associated with the time series.")
+	@Schema(description = "The location associated with the time series.", example = "MROI4")
 	private String location = null;
-	@Schema(description = "The parameter measured by the time series (e.g., temperature, flow rate).")
+	@Schema(description = "The parameter measured by the time series (e.g., temperature, flow rate).", example = "Stage")
 	private String param = null;
-	@Schema(description = "Statistical code representing the type of calculation applied to the time series.")
+	@Schema(description = "Statistical code representing the type of calculation applied to the time series.", example = "Inst")
 	private String statCode = null;
-	@Schema(description = "The interval of time between data points in the time series.")
+	@Schema(description = "The interval of time between data points in the time series.", example = "30Minutes")
 	private String interval = null;
-	@Schema(description = "The duration of time that each time series value represents.")
+	@Schema(description = "The duration of time that each time series value represents.", example = "0")
 	private String duration = null;
-	@Schema(description = "Version identifier for the time series.")
+	@Schema(description = "Version identifier for the time series.", example = "raw")
 	private String version = null;
 
-	@Schema(description = "The unique identifier for the site associated with the time series.")
+	@Schema(description = "The unique identifier for the site associated with the time series.", example = "6")
 	private Long siteId = null;
-	@Schema(description = "The unique identifier for the datatype used in the time series.")
+	@Schema(description = "The unique identifier for the datatype used in the time series.", example = "48")
 	private Long datatypeId = null;
-	@Schema(description = "The unique identifier for the interval used in the time series.")
+	@Schema(description = "The unique identifier for the interval used in the time series.", example = "12")
 	private Long intervalId = null;
-	@Schema(description = "The unique identifier for the duration used in the time series.")
+	@Schema(description = "The unique identifier for the duration used in the time series.", example = "36")
 	private Long durationId = null;
 
-	@Schema(description = "The date and time when the time series configuration was last modified.")
+	@Schema(description = "The date and time when the time series configuration was last modified.",
+			example = "2020-05-11T20:50:55.795Z[UTC]")
 	private Date lastModified = null;
 
-	@Schema(description = "Indicates whether the time series is active.")
+	@Schema(description = "Indicates whether the time series is active.", example = "true")
 	private boolean active = true;
-	@Schema(description = "Indicates whether Daylight Saving Time (DST) variations are allowed in the time series.")
+	@Schema(description = "Indicates whether Daylight Saving Time (DST) variations are allowed in the time series.",
+			example = "false")
 	private boolean allowDSTVariation = false;
-	@Schema(description = "The UTC offset (in hours) for the time series.")
+	@Schema(description = "The UTC offset (in hours) for the time series.", example = "0")
 	private int utcOffset = 0;
-	@Schema(description = "The action taken when offset errors occur. Valid values: IGNORE, REJECT, or ROUND.")
+	@Schema(description = "The action taken when offset errors occur. Valid values: IGNORE, REJECT, or ROUND.",
+			example = "IGNORE")
 	private String offsetErrorAction = "IGNORE"; // IGNORE, REJECT, or ROUND
-	@Schema(description = "The type of storage for the time series data. Valid values: N (Numeric), S (String).")
+	@Schema(description = "The type of storage for the time series data. Valid values: N (Numeric), S (String).",
+			example = "N")
 	private char storageType = 'N'; // N=Numeric, S=String
-	@Schema(description = "The index of the storage table where time series data is stored.")
+	@Schema(description = "The index of the storage table where time series data is stored.", example = "2")
 	private int storageTable = 0;
 
 	// Not really part of the spec, but returned with it:
-	@Schema(description = "The number of values currently stored in the time series.")
+	@Schema(description = "The number of values currently stored in the time series.", example = "144")
 	private int numValues = 0;
 	@Schema(description = "The minimum value across the time series.")
 	private ApiTimeSeriesValue min = null;

@@ -100,8 +100,10 @@ public final class PlatformResources extends OpenDcsResource
 					"\n* **siteId** - Numeric surrogate key to the site record  " +
 					"\n* **transportMedia** – a list of tmtype/tm id pairs.",
 			responses = {
-					@ApiResponse(responseCode = "200", description = "Successfully retrieved platform references"),
-					@ApiResponse(responseCode = "500", description = "Internal Server Error", content = @Content)
+					@ApiResponse(responseCode = "200", description = "Successfully retrieved platform references",
+							content = @Content(array = @ArraySchema(schema = @Schema(implementation = ApiPlatformRef.class)),
+									mediaType = MediaType.APPLICATION_JSON)),
+					@ApiResponse(responseCode = "500", description = "Internal Server Error")
 			},
 			tags = {"REST - DECODES Platform Records"}
 	)
@@ -189,10 +191,10 @@ public final class PlatformResources extends OpenDcsResource
 			operationId = "getPlatform",
 			responses = {
 					@ApiResponse(responseCode = "200", description = "Platform details retrieved successfully",
-							content = @Content(array = @ArraySchema(schema = @Schema(implementation = ApiPlatform.class)))),
-					@ApiResponse(responseCode = "400", description = "Missing or invalid platform ID", content = @Content),
-					@ApiResponse(responseCode = "404", description = "Platform not found", content = @Content),
-					@ApiResponse(responseCode = "500", description = "Database error occurred", content = @Content)
+							content = @Content(schema = @Schema(implementation = ApiPlatform.class))),
+					@ApiResponse(responseCode = "400", description = "Missing or invalid platform ID"),
+					@ApiResponse(responseCode = "404", description = "Platform not found"),
+					@ApiResponse(responseCode = "500", description = "Database error occurred")
 			},
 			tags = {"REST - DECODES Platform Records"}
 	)
@@ -315,7 +317,7 @@ public final class PlatformResources extends OpenDcsResource
 			responses = {
 					@ApiResponse(responseCode = "201", description = "Platform created successfully"),
 					@ApiResponse(responseCode = "500",
-							description = "Internal server error occurred while storing the platform", content = @Content)
+							description = "Internal server error occurred while storing the platform")
 			},
 			tags = {"REST - DECODES Platform Records"}
 	)
@@ -462,9 +464,9 @@ public final class PlatformResources extends OpenDcsResource
 			responses = {
 					@ApiResponse(responseCode = "204", description = "Platform deleted successfully"),
 					@ApiResponse(responseCode = "400",
-							description = "Missing or invalid platform ID", content = @Content),
+							description = "Missing or invalid platform ID"),
 					@ApiResponse(responseCode = "500",
-							description = "Database error occurred while deleting the platform", content = @Content)
+							description = "Database error occurred while deleting the platform")
 			},
 			tags = {"REST - DECODES Platform Records"}
 	)
@@ -535,7 +537,7 @@ public final class PlatformResources extends OpenDcsResource
 			responses = {
 					@ApiResponse(responseCode = "200", description = "Successfully retrieved platform status",
 						content = @Content(array = @ArraySchema(schema = @Schema(implementation = ApiPlatformStatus.class)))),
-					@ApiResponse(responseCode = "500", description = "Database error occurred", content = @Content)
+					@ApiResponse(responseCode = "500", description = "Database error occurred")
 			},
 			tags = {"OpenDCS Process Monitor and Control (Routing)"}
 	)

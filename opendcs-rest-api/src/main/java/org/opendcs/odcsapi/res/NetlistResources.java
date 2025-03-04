@@ -17,6 +17,7 @@ package org.opendcs.odcsapi.res;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -88,16 +89,10 @@ public final class NetlistResources extends OpenDcsResource
 					" is not included. Rather a count of platforms in the list is given." +
 					" The 'netlistId' element is a unique key to be used for retrieving entire lists.",
 			responses = {
-					@ApiResponse(
-							responseCode = "200",
-							description = "Success",
+					@ApiResponse(responseCode = "200", description = "Success",
 							content = @Content(mediaType = MediaType.APPLICATION_JSON,
-									schema = @Schema(implementation = ApiNetlistRef.class))
-					),
-					@ApiResponse(
-							responseCode = "500",
-							description = "Internal Server Error"
-					)
+									array = @ArraySchema(schema = @Schema(implementation = ApiNetlistRef.class)))),
+					@ApiResponse(responseCode = "500", description = "Internal Server Error")
 			},
 			tags = {"REST - Network Lists"}
 	)
@@ -161,32 +156,18 @@ public final class NetlistResources extends OpenDcsResource
 			summary = "The ‘netlists’ GET method will return a specific network list in its entirety.",
 			description = "Example:\n\n    http://localhost:8080/odcsapi/netlist?netlistid=1",
 			responses = {
-					@ApiResponse(
-							responseCode = "200",
-							description = "Success",
+					@ApiResponse(responseCode = "200", description = "Success",
 							content = @Content(mediaType = MediaType.APPLICATION_JSON,
-									schema = @Schema(implementation = ApiNetList.class))
-					),
-					@ApiResponse(
-							responseCode = "404",
-							description = "Not Found",
+									schema = @Schema(implementation = ApiNetList.class))),
+					@ApiResponse(responseCode = "404", description = "Not Found",
 							content = @Content(mediaType = MediaType.APPLICATION_JSON,
 									examples = @ExampleObject(value = "{\"status\": 404," +
-											"\"message\": \"The requested netlistid was not found in the database.\"}")
-							)
-					),
-					@ApiResponse(
-							responseCode = "406",
-							description = "Not Acceptable",
+											"\"message\": \"The requested netlistid was not found in the database.\"}"))),
+					@ApiResponse(responseCode = "406", description = "Not Acceptable",
 							content = @Content(mediaType = MediaType.APPLICATION_JSON,
 									examples = @ExampleObject(value = "{\"status\": 406," +
-											"\"message\": \"The required ‘netlistid’ parameter was missing in the URL.\"}")
-							)
-					),
-					@ApiResponse(
-							responseCode = "500",
-							description = "Internal Server Error"
-					)
+											"\"message\": \"The required ‘netlistid’ parameter was missing in the URL.\"}"))),
+					@ApiResponse(responseCode = "500", description = "Internal Server Error")
 			},
 			tags = {"REST - Network Lists"}
 	)
@@ -268,28 +249,14 @@ public final class NetlistResources extends OpenDcsResource
 					+ "leave netlistId out of the passed data structure.\n\nFor overwriting an existing one, "
 					+ "include the netlistId that was previously returned. The network list in the database "
 					+ "is replaced with the one sent.",
-			requestBody = @RequestBody(
-					required = true,
-					content = @Content(mediaType = MediaType.APPLICATION_JSON,
-							schema = @Schema(implementation = ApiNetList.class)
-					)
-			),
+			requestBody = @RequestBody(required = true, content = @Content(mediaType = MediaType.APPLICATION_JSON,
+							schema = @Schema(implementation = ApiNetList.class))),
 			responses = {
-					@ApiResponse(
-							responseCode = "201",
-							description = "Successfully created or updated network list",
+					@ApiResponse(responseCode = "201", description = "Successfully created or updated network list",
 							content = @Content(mediaType = MediaType.APPLICATION_JSON,
-									schema = @Schema(implementation = ApiNetList.class)
-							)
-					),
-					@ApiResponse(
-							responseCode = "400",
-							description = "Bad Request - Missing required request body"
-					),
-					@ApiResponse(
-							responseCode = "500",
-							description = "Internal Server Error"
-					),
+									schema = @Schema(implementation = ApiNetList.class))),
+					@ApiResponse(responseCode = "400", description = "Bad Request - Missing required request body"),
+					@ApiResponse(responseCode = "500", description = "Internal Server Error"),
 			},
 			tags = {"REST - Network Lists"}
 	)
@@ -351,18 +318,10 @@ public final class NetlistResources extends OpenDcsResource
 					"routing specs and cannot be deleted. The body of the error will be " +
 					"a message containing the name of the routing specs using the referenced netlist.",
 			responses = {
-					@ApiResponse(
-							responseCode = "204",
-							description = "Successfully deleted network list"
-					),
-					@ApiResponse(
-							responseCode = "409",
-							description = "Conflict - Network list is used by one or more routing specs"
-					),
-					@ApiResponse(
-							responseCode = "400",
-							description = "Missing required netlistid parameter"
-					),
+					@ApiResponse(responseCode = "204", description = "Successfully deleted network list"),
+					@ApiResponse(responseCode = "409",
+							description = "Conflict - Network list is used by one or more routing specs"),
+					@ApiResponse(responseCode = "400", description = "Missing required netlistid parameter"),
 			},
 			tags = {"REST - Network Lists"}
 	)
@@ -431,11 +390,17 @@ public final class NetlistResources extends OpenDcsResource
 	@Operation(
 			summary = "Convert Network List File",
 			description = "Parses a network list file (in text format) and converts it to an object representation.",
-			requestBody = @RequestBody(required = true, content = @Content(mediaType = MediaType.TEXT_PLAIN)),
+			requestBody = @RequestBody(required = true, content = @Content(mediaType = MediaType.TEXT_PLAIN,
+					examples = {
+						@ExampleObject(value = "14159500 CGRO\n14372300 AGNO\n"),
+						@ExampleObject(value = "6698948: Stream_test_site platform associated with stream")
+					})),
 			responses = {
-					@ApiResponse(responseCode = "200", description = "Network list successfully parsed"),
-					@ApiResponse(responseCode = "406", description = "File parsing error or invalid format", content = @Content),
-					@ApiResponse(responseCode = "500", description = "Server error occurred", content = @Content)
+					@ApiResponse(responseCode = "200", description = "Network list successfully parsed",
+							content = @Content(mediaType = MediaType.APPLICATION_JSON,
+									schema = @Schema(implementation = ApiNetList.class))),
+					@ApiResponse(responseCode = "406", description = "File parsing error or invalid format"),
+					@ApiResponse(responseCode = "500", description = "Server error occurred")
 			},
 			tags = {"REST - Network Lists"}
 	)

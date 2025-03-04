@@ -103,7 +103,7 @@ public final class RoutingResources extends OpenDcsResource
 					@ApiResponse(responseCode = "200", description = "Success",
 							content = @Content(mediaType = MediaType.APPLICATION_JSON,
 									array = @ArraySchema(schema = @Schema(implementation = ApiRoutingRef.class)))),
-					@ApiResponse(responseCode = "500", description = "Internal Server Error", content = @Content)
+					@ApiResponse(responseCode = "500", description = "Internal Server Error")
 			}
 	)
 	public Response getRoutingRefs() throws DbException
@@ -157,15 +157,14 @@ public final class RoutingResources extends OpenDcsResource
 	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
 	@Operation(
 			summary = "This method returns a JSON representation of a single routing spec",
-			description = "This method returns a JSON representation of a single routing spec. " +
-					"Example: \n\n    http://localhost:8080/odcsapi/routing?routingid=20",
+			description = "Example: \n\n    http://localhost:8080/odcsapi/routing?routingid=20",
 			tags = {"REST - DECODES Routing Spec Records"},
 			responses = {
 					@ApiResponse(responseCode = "200", description = "Successfully retrieved routing spec",
 							content = @Content(mediaType = MediaType.APPLICATION_JSON,
 									schema = @Schema(implementation = ApiRouting.class))),
-					@ApiResponse(responseCode = "400", description = "Missing or invalid routing ID parameter", content = @Content),
-					@ApiResponse(responseCode = "500", description = "Internal Server Error", content = @Content)
+					@ApiResponse(responseCode = "400", description = "Missing or invalid routing ID parameter"),
+					@ApiResponse(responseCode = "500", description = "Internal Server Error")
 			}
 	)
 	public Response getRouting(@Parameter(description = "routing spec id", required = true, example = "20",
@@ -243,9 +242,12 @@ public final class RoutingResources extends OpenDcsResource
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
 	@Operation(
 			summary = "Create or Overwrite Existing Routing Spec",
-			description = "It takes a single DECODES Routing Spec in JSON format. " +
-					"For creating a new record, leave routingId out of the passed structure. " +
-					"For overwriting, include the routingId.",
+			description = "The POST routing method takes a single DECODES Routing Spec in JSON format, "
+					+ "as described above for GET.  \n\nFor creating a new record, "
+					+ "leave routingId out of the passed data structure.  \n\n"
+					+ "For overwriting an existing one, include the routingId that was previously returned. "
+					+ "The routing spec in the database is replaced with the one sent.",
+
 			tags = {"REST - DECODES Routing Spec Records"},
 			requestBody = @RequestBody(
 					description = "Decodes Routing Spec Object",
@@ -254,11 +256,11 @@ public final class RoutingResources extends OpenDcsResource
 							schema = @Schema(implementation = ApiRouting.class))
 			),
 			responses = {
-					@ApiResponse(responseCode = "200", description = "Successfully created or updated the routing",
+					@ApiResponse(responseCode = "201", description = "Successfully created or updated the routing",
 							content = @Content(mediaType = MediaType.APPLICATION_JSON,
 									schema = @Schema(implementation = ApiRouting.class))),
-					@ApiResponse(responseCode = "400", description = "Invalid routing data provided", content = @Content),
-					@ApiResponse(responseCode = "500", description = "Internal Server Error", content = @Content)
+					@ApiResponse(responseCode = "400", description = "Invalid routing data provided"),
+					@ApiResponse(responseCode = "500", description = "Internal Server Error")
 			}
 	)
 	public Response postRouting(ApiRouting routing)
@@ -352,9 +354,9 @@ public final class RoutingResources extends OpenDcsResource
 			description = "Required argument routingid must be passed in the URL.",
 			tags = {"REST - DECODES Routing Spec Records"},
 			responses = {
-					@ApiResponse(responseCode = "200", description = "Successfully deleted routing"),
-					@ApiResponse(responseCode = "400", description = "Invalid routing ID provided", content = @Content),
-					@ApiResponse(responseCode = "500", description = "Internal Server Error", content = @Content)
+					@ApiResponse(responseCode = "204", description = "Successfully deleted routing"),
+					@ApiResponse(responseCode = "400", description = "Invalid routing ID provided"),
+					@ApiResponse(responseCode = "500", description = "Internal Server Error")
 			}
 	)
 	public Response deleteRouting(@Parameter(description = "routing spec id", required = true, example = "20",
@@ -392,11 +394,22 @@ public final class RoutingResources extends OpenDcsResource
 	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
 	@Operation(
 			summary = "Retrieve all schedule references",
-			description = "Example:\n\n    http://localhost:8080/odcsapi/schedulerefs\n\n" +
-					"The returned structure is:\n```\n[\n  {\n    \"appName\": \"RoutingScheduler\",\n    " +
-					"\"enabled\": false,\n    \"lastModified\": \"2020-12-15T17:52:13.934Z[UTC]\",\n    " +
-					"\"name\": \"goes1\",\n    \"routingSpecName\": \"goes1\",\n    " +
-					"\"schedEntryId\": 9\n  },\n  ...\n]\n```",
+			description = "Example:  \n\n    http://localhost:8080/odcsapi/schedulerefs\n\n"
+					+ "The returned structure is:\n  \n**Note**: in the third entry below that appName may be omitted. "
+					+ "In the database, a schedule entry may not (yet) be assigned to an application.\n```\n[\n  {\n    "
+					+ "\"appName\": \"RoutingScheduler\",\n    \"enabled\": false,\n    "
+					+ "\"lastModified\": \"2020-12-15T17:52:13.934Z[UTC]\",\n    \"name\": \"goes1\",\n    "
+					+ "\"routingSpecName\": \"goes1\",\n    \"schedEntryId\": 9\n  },\n  {\n    "
+					+ "\"appName\": \"RoutingScheduler\",\n    \"enabled\": false,\n    "
+					+ "\"lastModified\": \"2020-12-15T17:53:06.043Z[UTC]\",\n    \"name\": \"goes2\",\n    "
+					+ "\"routingSpecName\": \"goes2\",\n    \"schedEntryId\": 10\n  },\n  {\n    "
+					+ "\"enabled\": false,\n    \"lastModified\": \"2022-03-23T13:54:09.188Z[UTC]\",\n    "
+					+ "\"name\": \"no_app_assigned\",\n    \"routingSpecName\": \"polltest\",\n    "
+					+ "\"schedEntryId\": 17\n  },\n  {\n    \"appName\": \"RoutingScheduler\",\n    "
+					+ "\"enabled\": false,\n    \"lastModified\": \"2022-01-14T14:45:01.336Z[UTC]\",\n    "
+					+ "\"name\": \"junk\",\n    \"routingSpecName\": \"polltest\",\n    "
+					+ "\"schedEntryId\": 14\n  }\n]\n```",
+
 			tags = {"REST - Schedule Entry Methods"},
 			responses = {
 					@ApiResponse(
@@ -405,7 +418,7 @@ public final class RoutingResources extends OpenDcsResource
 							content = @Content(mediaType = MediaType.APPLICATION_JSON,
 									array = @ArraySchema(schema = @Schema(implementation = ApiScheduleEntryRef.class)))
 					),
-					@ApiResponse(responseCode = "500", description = "Internal Server Error", content = @Content)
+					@ApiResponse(responseCode = "500", description = "Internal Server Error")
 			}
 	)
 	public Response getScheduleRefs()
@@ -462,9 +475,9 @@ public final class RoutingResources extends OpenDcsResource
 							content = @Content(mediaType = MediaType.APPLICATION_JSON,
 									schema = @Schema(implementation = ApiScheduleEntry.class))
 					),
-					@ApiResponse(responseCode = "400", description = "Missing or invalid schedule ID parameter", content = @Content),
-					@ApiResponse(responseCode = "404", description = "Requested schedule entry not found", content = @Content),
-					@ApiResponse(responseCode = "500", description = "Default error sample response", content = @Content)
+					@ApiResponse(responseCode = "400", description = "Missing or invalid schedule ID parameter"),
+					@ApiResponse(responseCode = "404", description = "Requested schedule entry not found"),
+					@ApiResponse(responseCode = "500", description = "Default error sample response")
 			}
 	)
 	public Response getSchedule(@Parameter(description = "Schedule ID", required = true,
@@ -501,24 +514,24 @@ public final class RoutingResources extends OpenDcsResource
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
 	@Operation(
 			summary = "Create or Overwrite Existing Schedule",
-			description = "It takes a single DECODES Schedule Entry " +
-					"in JSON format, as described above for GET.\n\n" +
-					"For creating a new record, leave schedEntryId out of the passed data structure.\n\n" +
-					"For overwriting an existing one, provide the schedEntryId that was previously returned.",
+			description = "It takes a single DECODES Schedule Entry "
+					+ "in JSON format, as described above for GET.\n\n"
+					+ "For creating a new record, leave schedEntryId out of the passed data structure.\n\n"
+					+ "For overwriting an existing one, provide the schedEntryId that was previously returned. "
+					+ "The routing spec in the database is replaced with the one sent.",
 			tags = {"REST - Schedule Entry Methods"},
 			requestBody = @RequestBody(
 					description = "Schedule Object",
 					required = true,
 					content = @Content(mediaType = MediaType.APPLICATION_JSON,
-							schema = @Schema(implementation = ApiScheduleEntry.class)
-					)
+							schema = @Schema(implementation = ApiScheduleEntry.class))
 			),
 			responses = {
-					@ApiResponse(responseCode = "200", description = "Successfully created or updated the schedule",
+					@ApiResponse(responseCode = "201", description = "Successfully created or updated the schedule",
 							content = @Content(mediaType = MediaType.APPLICATION_JSON,
 									schema = @Schema(implementation = ApiScheduleEntry.class))),
-					@ApiResponse(responseCode = "400", description = "Invalid schedule data provided", content = @Content),
-					@ApiResponse(responseCode = "500", description = "Internal Server Error", content = @Content)
+					@ApiResponse(responseCode = "400", description = "Invalid schedule data provided"),
+					@ApiResponse(responseCode = "500", description = "Internal Server Error")
 			}
 	)
 	public Response postSchedule(ApiScheduleEntry schedule)
@@ -613,9 +626,9 @@ public final class RoutingResources extends OpenDcsResource
 			description = "Required argument scheduleid must be passed in the URL.",
 			tags = {"REST - Schedule Entry Methods"},
 			responses = {
-					@ApiResponse(responseCode = "200", description = "Successfully deleted schedule"),
-					@ApiResponse(responseCode = "400", description = "Invalid schedule ID provided", content = @Content),
-					@ApiResponse(responseCode = "500", description = "Default error sample response", content = @Content)
+					@ApiResponse(responseCode = "204", description = "Successfully deleted schedule"),
+					@ApiResponse(responseCode = "400", description = "Invalid schedule ID provided"),
+					@ApiResponse(responseCode = "500", description = "Default error sample response")
 			}
 	)
 	public Response deleteSchedule(@Parameter(description = "Schedule ID", required = true,
@@ -700,9 +713,8 @@ public final class RoutingResources extends OpenDcsResource
 			responses = {
 					@ApiResponse(responseCode = "200", description = "Successfully retrieved routing statistics",
 							content = @Content(mediaType = MediaType.APPLICATION_JSON,
-									array = @ArraySchema(schema = @Schema(implementation = ApiRoutingStatus.class)))
-					),
-					@ApiResponse(responseCode = "500", description = "Database error occurred", content = @Content)
+									array = @ArraySchema(schema = @Schema(implementation = ApiRoutingStatus.class)))),
+					@ApiResponse(responseCode = "500", description = "Database error occurred")
 			},
 			tags = {"OpenDCS Process Monitor and Control (Routing)"}
 	)
@@ -806,10 +818,9 @@ public final class RoutingResources extends OpenDcsResource
 			responses = {
 					@ApiResponse(responseCode = "200", description = "Successfully retrieved routing execution status",
 							content = @Content(mediaType = MediaType.APPLICATION_JSON,
-									array = @ArraySchema(schema = @Schema(implementation = ApiRoutingExecStatus.class)))
-					),
-					@ApiResponse(responseCode = "400", description = "Missing or invalid schedule entry ID parameter", content = @Content),
-					@ApiResponse(responseCode = "500", description = "Internal Server Error", content = @Content)
+									array = @ArraySchema(schema = @Schema(implementation = ApiRoutingExecStatus.class)))),
+					@ApiResponse(responseCode = "400", description = "Missing or invalid schedule entry ID parameter"),
+					@ApiResponse(responseCode = "500", description = "Internal Server Error")
 			},
 			tags = {"OpenDCS Process Monitor and Control (Routing)"}
 	)
@@ -918,8 +929,8 @@ public final class RoutingResources extends OpenDcsResource
 					@ApiResponse(responseCode = "200", description = "Successfully retrieved data acquisition events",
 							content = @Content(mediaType = MediaType.APPLICATION_JSON,
 									array = @ArraySchema(schema = @Schema(implementation = ApiDacqEvent.class)))),
-					@ApiResponse(responseCode = "400", description = "Invalid input parameters", content = @Content),
-					@ApiResponse(responseCode = "500", description = "Database error occurred", content = @Content)
+					@ApiResponse(responseCode = "400", description = "Invalid input parameters"),
+					@ApiResponse(responseCode = "500", description = "Database error occurred")
 			},
 			tags = {"OpenDCS Process Monitor and Control (Routing)"}
 	)
@@ -937,7 +948,7 @@ public final class RoutingResources extends OpenDcsResource
 					"GET intervals (see section 3.4.1). Only events generated since the specified interval " +
 					"are returned. The word 'last' means only return events generated since the last " +
 					"'GET dacqevents' call within this session. It can be used to approximate a real-time stream.",
-					example = "9fe6390676c7dca9", schema = @Schema(implementation = String.class))
+					example = "15Minutes", schema = @Schema(implementation = String.class))
 		@QueryParam("backlog") String backlog)
 			throws DbException, MissingParameterException
 	{

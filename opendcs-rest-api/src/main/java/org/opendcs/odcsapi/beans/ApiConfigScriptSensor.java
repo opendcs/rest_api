@@ -20,7 +20,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 @Schema(description = "Represents the configuration for a script sensor, including its sensor number and unit conversion details.")
 public final class ApiConfigScriptSensor
 {
-	@Schema(description = "The unique identifier of the sensor.")
+	@Schema(description = "The unique identifier of the sensor.", example = "1")
 	private int sensorNumber = 0;
 
 	@Schema(description = "The unit conversion details for the sensor.")

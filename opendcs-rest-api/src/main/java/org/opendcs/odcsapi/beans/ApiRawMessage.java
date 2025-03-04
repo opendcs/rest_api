@@ -24,41 +24,42 @@ import io.swagger.v3.oas.annotations.media.Schema;
 public final class ApiRawMessage
 {
 	// Attributes - always present:
-	@Schema(description = "Flags representing the status or state of the raw message.")
+	@Schema(description = "Flags representing the status or state of the raw message.", example = "71765")
 	private long flags = 0L;
 
-	@Schema(description = "Identifier for the platform associated with this message.")
+	@Schema(description = "Identifier for the platform associated with this message.", example = "221")
 	private String platformId = null;
 
 	// GOES fields:
-	@Schema(description = "Sequence number of the message if applicable.")
+	@Schema(description = "Sequence number of the message if applicable.", example = "25693")
 	private Integer sequenceNum = null;
 
-	@Schema(description = "Local time when the message was received.")
+	@Schema(description = "Local time when the message was received.", example = "2025-01-01T12:34:59.000[UTC]")
 	private Date localRecvTime = null;
 
-	@Schema(description = "Start time of the carrier signal for this message.")
+	@Schema(description = "Start time of the carrier signal for this message.", example = "2025-01-01T12:34:56.000[UTC]")
 	private Date carrierStart = null;
 
-	@Schema(description = "Stop time of the carrier signal for this message.")
+	@Schema(description = "Stop time of the carrier signal for this message.", example = "2025-01-01T12:35:56.000[UTC]")
 	private Date carrierStop = null;
 
-	@Schema(description = "Baud rate of the carrier signal.")
+	@Schema(description = "Baud rate of the carrier signal.", example = "300")
 	private Integer baud = null;
 
-	@Schema(description = "Percentage of good phase signals received.")
+	@Schema(description = "Percentage of good phase signals received.", example = "100")
 	private Double goodPhasePct = null;
 
-	@Schema(description = "Frequency offset of the signal in Hz.")
+	@Schema(description = "Frequency offset of the signal in Hz.", example = "0.5")
 	private Double freqOffset = null;
 
-	@Schema(description = "Strength of the signal received.")
+	@Schema(description = "Strength of the signal received.", example = "44.8")
 	private Double signalStrength = null;
 
-	@Schema(description = "Phase noise level of the signal received.")
+	@Schema(description = "Phase noise level of the signal received.", example = "1.97")
 	private Double phaseNoise = null;
 
-	@Schema(description = "Timestamp when the message was transmitted.")
+	@Schema(description = "Timestamp when the message was transmitted.",
+			example = "2025-01-01T12:34:56.000[UTC]")
 	private Date xmitTime = null;
 
 	// Iridium fields:
@@ -75,7 +76,8 @@ public final class ApiRawMessage
 	private Integer sessionStatus = null;
 
 	// Base64 encoded binary message to preserve original whitespace
-	@Schema(description = "Base64-encoded representation of the raw binary message to preserve formatting and content.")
+	@Schema(description = "Base64-encoded representation of the raw binary message to preserve formatting and content.",
+			example = "Q0UzMUQwMzAyMzEyOTEyMzQ1NUc0NSswTk4xNjFFTjIwMDAyN2JCMURBTXRBTXRBTXRBTXM6WUIgMTMuNTkgIA==")
 	private String base64 = null;
 
 	public String getBase64()

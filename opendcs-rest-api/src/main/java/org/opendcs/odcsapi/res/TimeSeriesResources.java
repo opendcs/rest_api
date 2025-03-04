@@ -94,11 +94,19 @@ public final class TimeSeriesResources extends OpenDcsResource
 	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
 	@Operation(
 			summary = "The tsrefs method returns a list of time series defined in the database.",
-			description = "You have the option to filter out inactive time series by passing the 'active=true' query parameter.\n\n"
-					+ "Examples: \n - http://localhost:8080/odcsapi/tsrefs\n - http://localhost:8080/odcsapi/tsrefs?active=true \n\n"
-					+ "This returns an array of Time Series Identifiers. The Key of a time series identifier may be used "
-					+ "in subsequent calls to get the complete specification for the time series (GET tsspec) or to retrieve "
-					+ "time series data (GET tsdata).",
+			description = "You have the option to filter out inactive time series by passing 'active=true' argument.  \n"
+					+ "Examples:  \n\n    http://localhost:8080/odcsapi/tsrefs\n    "
+					+ "http://localhost:8080/odcsapi/tsrefs?active=true\n\n\n"
+					+ "This returns an array of Time Series Identifiers. The numeric Key of a time series identifier "
+					+ "may be used in subsequent calls to get the complete specification for the time series "
+					+ "(GET tsspec) or to retrieve time series data (GET tsdata). The format of the returned "
+					+ "data is as follows:  \n```\n[\n  {\n    \"uniqueString\": \"OKVI4.Stage.Inst.15Minutes.0.raw\","
+					+ "\n    \"key\": 1,\n    \"description\": null,\n    \"storageUnits\": \"ft\",\n    "
+					+ "\"active\": true\n  },\n  {\n    \"uniqueString\": \"OKVI4.Stage.Ave.1Day.1Day.CO\",\n    "
+					+ "\"key\": 2,\n    \"description\": null,\n    \"storageUnits\": \"ft\",\n    "
+					+ "\"active\": true\n  },\n  {\n    \"uniqueString\": \"OKVI4.Stage.Ave.1Day.1Day.CC\",\n    "
+					+ "\"key\": 4,\n    \"description\": null,\n    \"storageUnits\": \"ft\",\n    "
+					+ "\"active\": true\n  },\n. . .\n]\n```",
 			responses = {
 					@ApiResponse(responseCode = "200", description = "Success",
 							content = @Content(mediaType = MediaType.APPLICATION_JSON,
@@ -190,8 +198,9 @@ public final class TimeSeriesResources extends OpenDcsResource
 					@ApiResponse(responseCode = "200", description = "Successfully retrieved time series specification",
 							content = @Content(mediaType = MediaType.APPLICATION_JSON,
 								schema = @Schema(implementation = ApiTimeSeriesSpec.class))),
-					@ApiResponse(responseCode = "400", description = "Missing or invalid key", content = @Content),
-					@ApiResponse(responseCode = "500", description = "Internal Server Error", content = @Content)
+					@ApiResponse(responseCode = "400", description = "Missing or invalid key"),
+					@ApiResponse(responseCode = "404", description = "Time series not found"),
+					@ApiResponse(responseCode = "500", description = "Internal Server Error")
 			},
 			tags = {"Time Series Methods"}
 	)
@@ -314,8 +323,9 @@ public final class TimeSeriesResources extends OpenDcsResource
 					@ApiResponse(responseCode = "200", description = "Successfully retrieved time series data",
 							content = @Content(mediaType = MediaType.APPLICATION_JSON,
 									schema = @Schema(implementation = ApiTimeSeriesData.class))),
-					@ApiResponse(responseCode = "400", description = "Invalid input parameters", content = @Content),
-					@ApiResponse(responseCode = "500", description = "Database error occurred", content = @Content)
+					@ApiResponse(responseCode = "400", description = "Invalid input parameters"),
+					@ApiResponse(responseCode = "404", description = "Time series not found"),
+					@ApiResponse(responseCode = "500", description = "Database error occurred")
 			},
 			tags = {"Time Series Methods"}
 	)
@@ -473,7 +483,6 @@ public final class TimeSeriesResources extends OpenDcsResource
 	@Operation(
 			summary = "Returns a list of time intervals defined in the database.",
 			description = "Example: \n\n    http://localhost:8080/odcsapi/intervals\n\n" +
-					"* The token argument is optional. If supplied it will reset the timer on the token.  \n\n" +
 					"An array of data structures representing all known time intervals will be returned as shown below.\n" +
 					"```\n[\n  {\n    \"intervalId\": 1,\n    \"name\": \"irregular\",\n    \"calConstant\": \"minute\"," +
 					"\n    \"calMultilier\": 0\n  },\n  {\n    \"intervalId\": 2,\n    \"name\": \"2Minutes\"," +
@@ -484,7 +493,7 @@ public final class TimeSeriesResources extends OpenDcsResource
 					@ApiResponse(responseCode = "200", description = "Successfully retrieved intervals",
 							content = @Content(mediaType = MediaType.APPLICATION_JSON,
 									array = @ArraySchema(schema = @Schema(implementation = ApiInterval.class)))),
-					@ApiResponse(responseCode = "500", description = "Internal Server Error", content = @Content)
+					@ApiResponse(responseCode = "500", description = "Internal Server Error")
 			},
 			tags = {"Time Series Methods - Interval Methods"}
 	)
@@ -532,11 +541,11 @@ public final class TimeSeriesResources extends OpenDcsResource
 					content = @Content(mediaType = MediaType.APPLICATION_JSON,
 							schema = @Schema(implementation = ApiInterval.class))),
 			responses = {
-					@ApiResponse(responseCode = "200", description = "Successfully retrieved time series data",
+					@ApiResponse(responseCode = "201", description = "Successfully stored interval",
 							content = @Content(mediaType = MediaType.APPLICATION_JSON,
 									schema = @Schema(implementation = ApiInterval.class))),
-					@ApiResponse(responseCode = "400", description = "Invalid input parameters", content = @Content),
-					@ApiResponse(responseCode = "500", description = "Internal Server Error", content = @Content)
+					@ApiResponse(responseCode = "400", description = "Invalid input parameters"),
+					@ApiResponse(responseCode = "500", description = "Internal Server Error")
 			},
 			tags = {"Time Series Methods - Interval Methods"}
 	)
@@ -624,9 +633,9 @@ public final class TimeSeriesResources extends OpenDcsResource
 					+ "**Use care with this method**. The system needs to know about all of the 'interval' "
 					+ "and 'duration' specifiers used for time series IDs.",
 			responses = {
-					@ApiResponse(responseCode = "200", description = "Successfully deleted the interval"),
-					@ApiResponse(responseCode = "400", description = "Invalid parameters", content = @Content),
-					@ApiResponse(responseCode = "500", description = "Internal Server Error", content = @Content)
+					@ApiResponse(responseCode = "204", description = "Successfully deleted the interval"),
+					@ApiResponse(responseCode = "400", description = "Invalid parameters"),
+					@ApiResponse(responseCode = "500", description = "Internal Server Error")
 			},
 			tags = {"Time Series Methods - Interval Methods"}
 	)
@@ -649,32 +658,31 @@ public final class TimeSeriesResources extends OpenDcsResource
 	@Tag(name = "Time Series Methods - Groups", description = "Time Series Groups are used to define a "
 			+ "set of time series identifiers")
 	@Operation(
-		summary = "Provide a list of all groups defined in the database.",
-		description = "Time Series Groups are used to define a set of time series identifiers. "
-				+ "Groups can contain:\n  \n*  Explicit list of time series identifiers  \n"
-				+ "*  A list of attributes to flexibly define a set of time series identifiers, "
-				+ "E.g. All time series at a particular with interval '30minutes'.  \n"
-				+ "*  A list of sub-groups that can be included, excluded, "
-				+ "or intersected with the group being defined.\n  \n"
-				+ "***\n  \nExample URL:  \n\n    http://localhost:8080/odcsapi-0-7/tsgrouprefs\n\n"
-				+ "A security token may be supplied in the header or in the URL, but it is not required. "
-				+ "The returned list has the following structure:\n  \n```\n  [\n    {\n      "
-				+ "\"groupId\": 8,\n      \"groupName\": \"topgroup\",\n      \"groupType\": \"basin\",\n      "
-				+ "\"description\": \"\"\n    },\n    {\n      \"groupId\": 7,\n      "
-				+ "\"groupName\": \"subgroup-x\",\n      \"groupType\": \"data type\",\n      "
-				+ "\"description\": \"testing for OPENDCS-15 issue\"\n    },\n    {\n      "
-				+ "\"groupId\": 2,\n      \"groupName\": \"regtest_017\",\n      "
-				+ "\"groupType\": \"data-type\",\n      \"description\": \"Group for regression test 017\"\n    },"
-				+ "\n    {\n      \"groupId\": 3,\n      \"groupName\": \"stageRate1Var\",\n      "
-				+ "\"groupType\": \"basin\",\n      \"description\": \"Collection of TS IDs with stage "
-				+ "to flow ratings\"\n    }\n  ]\n\n```\n\n  ",
-		responses = {
-				@ApiResponse(responseCode = "200", description = "Successfully retrieved time series group references",
-						content = @Content(mediaType = MediaType.APPLICATION_JSON,
-								array = @ArraySchema(schema = @Schema(implementation = ApiTsGroupRef.class)))),
-				@ApiResponse(responseCode = "500", description = "Internal Server Error", content = @Content)
-		},
-		tags = {"Time Series Methods - Groups"}
+			summary = "Provide a list of all groups defined in the database.",
+			description = "Time Series Groups are used to define a set of time series identifiers. "
+					+ "Groups can contain:\n  \n*  Explicit list of time series identifiers  \n"
+					+ "*  A list of attributes to flexibly define a set of time series identifiers, "
+					+ "E.g. All time series at a particular with interval '30minutes'.  \n"
+					+ "*  A list of sub-groups that can be included, excluded, "
+					+ "or intersected with the group being defined.\n  \n"
+					+ "***\n  \nExample URL:  \n\n    http://localhost:8080/odcsapi-0-7/tsgrouprefs\n\n"
+					+ "The returned list has the following structure:\n  \n```\n  [\n    {\n      "
+					+ "\"groupId\": 8,\n      \"groupName\": \"topgroup\",\n      \"groupType\": \"basin\",\n      "
+					+ "\"description\": \"\"\n    },\n    {\n      \"groupId\": 7,\n      "
+					+ "\"groupName\": \"subgroup-x\",\n      \"groupType\": \"data type\",\n      "
+					+ "\"description\": \"testing for OPENDCS-15 issue\"\n    },\n    {\n      "
+					+ "\"groupId\": 2,\n      \"groupName\": \"regtest_017\",\n      "
+					+ "\"groupType\": \"data-type\",\n      \"description\": \"Group for regression test 017\"\n    },"
+					+ "\n    {\n      \"groupId\": 3,\n      \"groupName\": \"stageRate1Var\",\n      "
+					+ "\"groupType\": \"basin\",\n      \"description\": \"Collection of TS IDs with stage "
+					+ "to flow ratings\"\n    }\n  ]\n\n```\n\n  ",
+			responses = {
+					@ApiResponse(responseCode = "200", description = "Successfully retrieved time series group references",
+							content = @Content(mediaType = MediaType.APPLICATION_JSON,
+									array = @ArraySchema(schema = @Schema(implementation = ApiTsGroupRef.class)))),
+					@ApiResponse(responseCode = "500", description = "Internal Server Error")
+			},
+			tags = {"Time Series Methods - Groups"}
 	)
 	public Response getTsGroupRefs () throws DbException
 	{
@@ -779,16 +787,18 @@ public final class TimeSeriesResources extends OpenDcsResource
 					"type (Param) after first hyphen\n    *  **ParamType**  \n    *  **Interval**\n    " +
 					"*  **Duration**  \n    *  **Version**  \n    *  **BaseVersion**\n    *  **SubVersion**",
 			responses = {
-					@ApiResponse(responseCode = "200", description = "Successfully retrieved time series group details"),
-					@ApiResponse(responseCode = "400", description = "Invalid or missing group ID", content = @Content),
-					@ApiResponse(responseCode = "500", description = "Database error occurred", content = @Content)
+						@ApiResponse(responseCode = "200", description = "Successfully retrieved time series group details",
+								content = @Content(mediaType = MediaType.APPLICATION_JSON,
+										schema = @Schema(implementation = ApiTsGroup.class))),
+						@ApiResponse(responseCode = "400", description = "Invalid or missing group ID"),
+						@ApiResponse(responseCode = "500", description = "Database error occurred")
 			},
 			tags = {"Time Series Methods - Groups"}
 	)
 	public Response getTsGroupRefs (@Parameter(description = "Requested group id", required = true,
 			schema = @Schema(implementation = Long.class), example = "9")
 		@QueryParam("groupid") Long groupId)
-			throws DbException, WebAppException
+			throws WebAppException, DbException
 	{
 		if (groupId == null)
 		{
@@ -864,8 +874,9 @@ public final class TimeSeriesResources extends OpenDcsResource
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
 	@Operation(
 			summary = "Create a new, or update an existing time series group",
-			description = "Example URL for POST:  \n\n    http://localhost:8080/odcsapi/tsgroup?token=6b994be905e1fddf\n\n" +
-					"This method requires a valid session token. The POST data is as described above for GET tsgroup",
+			description = "Example URL for POST:  \n\n    "
+					+ "http://localhost:8080/odcsapi/tsgroup\n\n"
+					+ "The POST data is as described above for GET tsgroup",
 			requestBody = @RequestBody(
 					description = "Time Series Group",
 					required = true,
@@ -873,10 +884,10 @@ public final class TimeSeriesResources extends OpenDcsResource
 							schema = @Schema(implementation = ApiTsGroup.class))
 			),
 			responses = {
-					@ApiResponse(responseCode = "200", description = "Successfully created the time series group",
+					@ApiResponse(responseCode = "201", description = "Successfully created the time series group",
 							content = @Content(mediaType = MediaType.APPLICATION_JSON,
 									schema = @Schema(implementation = ApiTsGroup.class))),
-					@ApiResponse(responseCode = "500", description = "Internal Server Error", content = @Content)
+					@ApiResponse(responseCode = "500", description = "Internal Server Error")
 			},
 			tags = {"Time Series Methods - Groups"}
 	)
@@ -997,10 +1008,9 @@ public final class TimeSeriesResources extends OpenDcsResource
 					+ "This example deletes the Time series group with ID 9.  \n  \n"
 					+ "This method requires a valid session token.",
 			responses = {
-					@ApiResponse(responseCode = "200", description = "Successfully deleted time series group",
-						content = @Content),
-					@ApiResponse(responseCode = "400", description = "Missing or invalid group ID", content = @Content),
-					@ApiResponse(responseCode = "500", description = "Database error occurred", content = @Content)
+					@ApiResponse(responseCode = "204", description = "Successfully deleted time series group"),
+					@ApiResponse(responseCode = "400", description = "Missing or invalid group ID"),
+					@ApiResponse(responseCode = "500", description = "Database error occurred")
 			},
 			tags = {"Time Series Methods - Groups"}
 	)

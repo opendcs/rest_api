@@ -28,19 +28,23 @@ public final class ApiPlatformSensor
 	/**
 	 * Null means this sensor is at same site as Platform
 	 */
-	@Schema(description = "The ID of the site where this sensor is located. Null indicates it's at the same site as the platform.", example = "12345")
+	@Schema(description = "The ID of the site where this sensor is located. Null indicates it's at the same "
+			+ "site as the platform.", example = "12345")
 	private Long actualSiteId = null;
 
 	/**
 	 * Null means no limit is set
 	 */
-	@Schema(description = "The minimum allowed value for this sensor. Null means no minimum limit is set.", example = "0.0")
+	@Schema(description = "The minimum allowed value for this sensor. Null means no minimum limit is set.",
+			example = "0.0")
 	private Double min = null;
 
-	@Schema(description = "The maximum allowed value for this sensor. Null means no maximum limit is set.", example = "100.0")
+	@Schema(description = "The maximum allowed value for this sensor. Null means no maximum limit is set.",
+			example = "100.0")
 	private Double max = null;
 
-	@Schema(description = "The USGS Data Descriptor number associated with this sensor. Null or 0 indicates it's not defined.", example = "10")
+	@Schema(description = "The USGS Data Descriptor number associated with this sensor. "
+			+ "Null or 0 indicates it's not defined.", example = "10")
 	private Integer usgsDdno = null;
 
 	@Schema(description = "Any additional properties associated with this sensor, stored as key-value pairs.")

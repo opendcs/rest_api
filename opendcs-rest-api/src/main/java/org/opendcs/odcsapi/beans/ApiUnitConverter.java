@@ -42,19 +42,19 @@ public final class ApiUnitConverter
 	@Schema(description = "Coefficient 'a' for the conversion algorithm.", example = "1.0")
 	private Double a = null;
 
-	@Schema(description = "Coefficient 'b' for the conversion algorithm.", example = "0.0")
+	@Schema(description = "Coefficient 'b' for the conversion algorithm.", example = "2.0")
 	private Double b = null;
 
-	@Schema(description = "Coefficient 'c' for the conversion algorithm.", example = "0.0")
+	@Schema(description = "Coefficient 'c' for the conversion algorithm.", example = "3.0")
 	private Double c = null;
 
-	@Schema(description = "Coefficient 'd' for the conversion algorithm.", example = "0.0")
+	@Schema(description = "Coefficient 'd' for the conversion algorithm.", example = "4.0")
 	private Double d = null;
 
-	@Schema(description = "Coefficient 'e' for the conversion algorithm.", example = "0.0")
+	@Schema(description = "Coefficient 'e' for the conversion algorithm.", example = "5.0")
 	private Double e = null;
 
-	@Schema(description = "Coefficient 'f' for the conversion algorithm.", example = "0.0")
+	@Schema(description = "Coefficient 'f' for the conversion algorithm.", example = "6.0")
 	private Double f = null;
 
 	public String getFromAbbr()

@@ -75,15 +75,10 @@ public final class PresentationResources extends OpenDcsResource
 			tags = {"REST - DECODES Presentation Group Records"},
 			operationId = "getpresentationrefs",
 			responses = {
-					@ApiResponse(
-							responseCode = "200",
-							description = "Success",
-							content = @Content(
-									mediaType = MediaType.APPLICATION_JSON,
-									array = @ArraySchema(schema = @Schema(implementation = ApiPresentationRef.class))
-							)
-					),
-					@ApiResponse(responseCode = "500", description = "Internal Server Error", content = @Content)
+					@ApiResponse(responseCode = "200", description = "Success",
+						content = @Content(mediaType = MediaType.APPLICATION_JSON,
+							array = @ArraySchema(schema = @Schema(implementation = ApiPresentationRef.class)))),
+					@ApiResponse(responseCode = "500", description = "Internal Server Error")
 			}
 	)
 	public Response getPresentationRefs() throws DbException
@@ -149,23 +144,18 @@ public final class PresentationResources extends OpenDcsResource
 	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
 	@Operation(
 			summary = "This method returns a JSON representation of a single, complete DECODES Presentation Group record",
-			description = "Example: \n \n http://localhost:8080/odcsapi/presentation?groupid=4 \n \n " +
+			description = "Example: \n \n `http://localhost:8080/odcsapi/presentation?groupid=4` \n \n " +
 					"This method returns a JSON representation of a single, complete DECODES Presentation Group record. " +
 					"The following structure is returned.\n\n" +
 					"**Note**: the optional min and max elements are not always present.",
 			tags = {"REST - DECODES Presentation Group Records"},
 			responses = {
-					@ApiResponse(
-							responseCode = "200",
-							description = "Success",
-							content = @Content(
-									mediaType = MediaType.APPLICATION_JSON,
-									schema = @Schema(implementation = ApiPresentationGroup.class)
-							)
-					),
-					@ApiResponse(responseCode = "400", description = "Missing or invalid group ID parameter", content = @Content),
-					@ApiResponse(responseCode = "404", description = "Presentation group not found", content = @Content),
-					@ApiResponse(responseCode = "500", description = "Default error sample response", content = @Content)
+					@ApiResponse(responseCode = "200", description = "Success",
+							content = @Content(mediaType = MediaType.APPLICATION_JSON,
+									schema = @Schema(implementation = ApiPresentationGroup.class))),
+					@ApiResponse(responseCode = "400", description = "Missing or invalid group ID parameter"),
+					@ApiResponse(responseCode = "404", description = "Presentation group not found"),
+					@ApiResponse(responseCode = "500", description = "Default error sample response")
 			}
 	)
 	public Response getPresentation(@Parameter(description = "presentation group id", required = true, example = "4",
@@ -262,8 +252,8 @@ public final class PresentationResources extends OpenDcsResource
 			responses = {
 					@ApiResponse(responseCode = "201", description = "Successfully stored presentation group",
 							content = @Content(schema = @Schema(implementation = ApiPresentationGroup.class))),
-					@ApiResponse(responseCode = "400", description = "Invalid data provided", content = @Content),
-					@ApiResponse(responseCode = "500", description = "Internal Server Error", content = @Content)
+					@ApiResponse(responseCode = "400", description = "Invalid data provided"),
+					@ApiResponse(responseCode = "500", description = "Internal Server Error")
 			}
 	)
 	public Response postPresentation(@Parameter(description = "Presentation group data", required = true)
@@ -370,10 +360,10 @@ public final class PresentationResources extends OpenDcsResource
 			description = "Required argument groupid must be passed in the URL.",
 			tags = {"REST - DECODES Presentation Group Records"},
 			responses = {
-					@ApiResponse(responseCode = "204", description = "Successfully deleted presentation group", content = @Content),
-					@ApiResponse(responseCode = "400", description = "Missing or invalid group ID parameter", content = @Content),
-					@ApiResponse(responseCode = "405", description = "Cannot delete the group because it is in use", content = @Content),
-					@ApiResponse(responseCode = "500", description = "Internal Server Error", content = @Content)
+					@ApiResponse(responseCode = "204", description = "Successfully deleted presentation group"),
+					@ApiResponse(responseCode = "400", description = "Missing or invalid group ID parameter"),
+					@ApiResponse(responseCode = "405", description = "Cannot delete the group because it is in use"),
+					@ApiResponse(responseCode = "500", description = "Internal Server Error")
 			}
 	)
 	public Response deletePresentation(@Parameter(description = "presentation group id", required = true, example = "4",

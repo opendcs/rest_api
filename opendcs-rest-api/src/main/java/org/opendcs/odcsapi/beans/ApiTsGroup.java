@@ -29,7 +29,7 @@ public final class ApiTsGroup
 	@Schema(description = "The name of the time series group.", example = "Flow Data Group")
 	private String groupName = null;
 
-	@Schema(description = "The type of the group")
+	@Schema(description = "The type of the group", example = "basin")
 	private String groupType = null;
 
 	@Schema(description = "A brief description of the group.", example = "This group contains flow data for river sites.")

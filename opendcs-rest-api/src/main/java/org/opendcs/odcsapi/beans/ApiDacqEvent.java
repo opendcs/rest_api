@@ -25,34 +25,35 @@ import io.swagger.v3.oas.annotations.media.Schema;
 @Schema(description = "Represents a data acquisition entry, which stores event details for a specific time and context.")
 public final class ApiDacqEvent
 {
-	@Schema(description = "The unique identifier of the data acquisition event.")
+	@Schema(description = "The unique identifier of the data acquisition event.", example = "181646")
 	private Long eventId = null;
 
-	@Schema(description = "The unique identifier of the routing execution instance.")
+	@Schema(description = "The unique identifier of the routing execution instance.", example = "607")
 	private Long routingExecId = null;
 
-	@Schema(description = "The unique identifier of the platform associated with the event.")
+	@Schema(description = "The unique identifier of the platform associated with the event.", example = "12")
 	private Long platformId = null;
 
-	@Schema(description = "The time when the event occurred.")
+	@Schema(description = "The time when the event occurred.", example = "2023-06-08T19:21:15.281Z[UTC]")
 	private Date eventTime = null;
 
-	@Schema(description = "The priority of the event.")
+	@Schema(description = "The priority of the event.", example = "INFO")
 	private String priority = null;
 
-	@Schema(description = "The ID of the application that generated the event.")
+	@Schema(description = "The ID of the application that generated the event.", example = "26")
 	private Long appId = null;
 
-	@Schema(description = "The name of the application that generated the event.")
+	@Schema(description = "The name of the application that generated the event.", example = "RoutingScheduler")
 	private String appName = null;
 
 	@Schema(description = "The subsystem that generated the event.")
 	private String subsystem = null;
 
-	@Schema(description = "The timestamp when the message was received.")
+	@Schema(description = "The timestamp when the message was received.", example = "2023-06-08T19:21:15.281Z[UTC]")
 	private Date msgRecvTime = null;
 
-	@Schema(description = "The textual description of the event.")
+	@Schema(description = "The textual description of the event.",
+			example = "RoutingSpec(periodic-10-minute) Connected to DDS server at www.covesw.com:-1, username='covetest'")
 	private String eventText = null;
 
 

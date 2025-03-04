@@ -25,33 +25,37 @@ import io.swagger.v3.oas.annotations.media.Schema;
 @Schema(description = "Represents a computation entity with details about its configuration and properties.")
 public final class ApiComputation
 {
-	@Schema(description = "The unique identifier of the computation.", example = "12345")
+	@Schema(description = "The unique identifier of the computation.", example = "45")
 	private Long computationId = null;
 
-	@Schema(description = "The name of the computation.", example = "WaterFlowComputation")
+	@Schema(description = "The name of the computation.", example = "Daily Ave ( ... )")
 	private String name = null;
 
-	@Schema(description = "A comment or description for the computation.", example = "Used for calculating water flow.")
+	@Schema(description = "A comment or description for the computation.",
+			example = "Used for calculating daily average.")
 	private String comment = null;
 
-	@Schema(description = "The ID of the associated application.", example = "56789")
+	@Schema(description = "The ID of the associated application.", example = "35")
 	private Long appId = null;
 
-	@Schema(description = "The name of the associated application.", example = "FlowAnalyzerApp")
+	@Schema(description = "The name of the associated application.", example = "compproc")
 	private String applicationName = null;
 
-	@Schema(description = "The last modification timestamp of the computation.")
+	@Schema(description = "The last modification timestamp of the computation.",
+			example = "2022-05-17T17:17:04.693Z[UTC]")
 	private Date lastModified = null;
 
-	@Schema(description = "Flag indicating whether the computation is enabled.")
+	@Schema(description = "Flag indicating whether the computation is enabled.", example = "false")
 	private boolean enabled;
 
 	/** "No Limit", "Calendar" or "Now -" */
-	@Schema(description = "The type defining the computation effective start time. Possible values: 'No Limit', 'Calendar', 'Now -'. Default is 'No Limit'.")
+	@Schema(description = "The type defining the computation effective start time. "
+			+ "Possible values: 'No Limit', 'Calendar', 'Now -'. Default is 'No Limit'.", example = "Calendar")
 	private String effectiveStartType = "No Limit";
 
 	/** Use if effectiveStartType = "Calendar" */
-	@Schema(description = "The effective start date if effectiveStartType is set to 'Calendar'.")
+	@Schema(description = "The effective start date if effectiveStartType is set to 'Calendar'.",
+			example = "2022-05-17T17:17:04.693Z[UTC]")
 	private Date effectiveStartDate = null;
 
 	/** Use if effectiveStartType = "Now -" */
@@ -59,11 +63,13 @@ public final class ApiComputation
 	private String effectiveStartInterval = null;
 
 	/** "No Limit", "Calendar" or "Now -", "Now +", or "Now" */
-	@Schema(description = "The type defining the computation effective end time. Possible values: 'No Limit', 'Calendar', 'Now -', 'Now', or 'Now +'. Default is 'No Limit'.")
+	@Schema(description = "The type defining the computation effective end time. "
+			+ "Possible values: 'No Limit', 'Calendar', 'Now -', 'Now', or 'Now +'. Default is 'No Limit'.", example = "No Limit")
 	private String effectiveEndType = "No Limit";
 
 	/** Use if effectiveStartType = "Calendar" */
-	@Schema(description = "The effective end date if effectiveEndType is set to 'Calendar'.")
+	@Schema(description = "The effective end date if effectiveEndType is set to 'Calendar'.",
+			example = "2022-05-17T17:17:04.693Z[UTC]")
 	private Date effectiveEndDate = null;
 
 	/** Use if effectiveStartType = "Now -" */
@@ -88,7 +94,7 @@ public final class ApiComputation
 
 	@Schema(description = "The unique identifier of the computation group.", example = "2468")
 	private Long groupId = null;
-	@Schema(description = "The name of the computation group.", example = "WaterFlowGroup")
+	@Schema(description = "The name of the computation group.", example = "AverageGroup")
 	private String groupName = null;
 
 	public ApiCompParm findParm(String role)

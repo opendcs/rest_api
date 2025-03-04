@@ -24,16 +24,16 @@ public final class ApiSiteName
 	/**
 	 * The name type -- should match an enum value.
 	 */
-	@Schema(description = "The type of the name, which should correspond to a valid enumeration value.")
+	@Schema(description = "The type of the name, which should correspond to a valid enumeration value.", example = "CWMS")
 	private String nameType = null;
 
 	/**
 	 * The name value.  Case is significant.
 	 */
-	@Schema(description = "The value of the name. Case sensitivity is significant.")
+	@Schema(description = "The value of the name. Case sensitivity is significant.", example = "BFD")
 	private String nameValue = null;
 
-	@Schema(description = "The unique identifier for the site.")
+	@Schema(description = "The unique identifier for the site.", example = "867")
 	private Long siteId = null;
 
 	public ApiSiteName()
