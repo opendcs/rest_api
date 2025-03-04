@@ -27,7 +27,6 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import javax.servlet.http.HttpServletResponse;
@@ -216,7 +215,6 @@ public final class DatatypeUnitResources extends OpenDcsResource
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
 	@Tag(name = "REST - Engineering Unit Methods")
-	@SecurityRequirement(name = "bearerAuth")
 	@Operation(
 			summary = "Create a new, or update an existing Engineering Unit",
 			description = "Example URL for POST:  \n\n    http://localhost:8080/odcsapi/eu?token=6b994be905e1fddf\n\n\n"
@@ -271,7 +269,6 @@ public final class DatatypeUnitResources extends OpenDcsResource
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
 	@Tag(name = "REST - Engineering Unit Methods")
-	@SecurityRequirement(name = "bearerAuth")
 	@Operation(
 			summary = "Delete an existing Engineering Unit",
 			description = "Deletes an engineering unit record.\n\nExample URL:\n\n"
@@ -508,7 +505,6 @@ public final class DatatypeUnitResources extends OpenDcsResource
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
 	@Tag(name = "REST - Engineering Unit Methods")
-	@SecurityRequirement(name = "bearerAuth")
 	@Operation(
 			summary = "Delete an existing Engineering Unit conversion record",
 			description = "Example URL for DELETE:\n\n    "
