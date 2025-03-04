@@ -18,6 +18,7 @@ plugins {
     id "opendcs-rest-api.deps-conventions"
     id "opendcs-rest-api.publishing-conventions"
     id "war"
+    id "io.swagger.core.v3.swagger-gradle-plugin" version "2.2.28"
 }
 
 configurations {
@@ -117,5 +118,29 @@ if (JavaVersion.current() != JavaVersion.VERSION_1_8) {
             property 'sonar.exclusions', 'src/main/resources/swaggerui/**'
             property 'sonar.coverage.jacoco.xmlReportPaths', "${layout.buildDirectory.get().asFile.toString()}/reports/jacoco/test/jacocoTestReport.xml"
         }
+    }
+}
+
+// task to generate OpenAPI JSON file
+resolve {
+    classpath = sourceSets.main.runtimeClasspath
+    outputFileName = 'OpenDCS-REST-API'
+    outputFormat = 'JSON'
+    prettyPrint = 'TRUE'
+    resourcePackages = ['org.opendcs.odcsapi.res', 'org.opendcs.odcsapi.beans']
+    outputDir = file('build/swagger/')
+}
+
+tasks.register('generateOpenAPI') {
+    group = "documentation"
+    description = "Generates the Swagger OpenAPI JSON file without running the application"
+    dependsOn('resolve')
+}
+
+tasks.register('cleanOpenAPI') {
+    group = "documentation"
+    description = "Deletes the generated Swagger OpenAPI JSON file"
+    doLast {
+        project.delete file('build/swagger/OpenDCS-REST-API.json')
     }
 }
