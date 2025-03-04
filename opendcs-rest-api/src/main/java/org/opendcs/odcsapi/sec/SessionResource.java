@@ -61,7 +61,8 @@ public final class SessionResource
 							description = "If the token is not valid, HTTP 410 is returned.",
 							content = @Content(mediaType = MediaType.APPLICATION_JSON,
 									schema = @Schema(type = "object", implementation = StringToClassMapItem.class),
-								examples = @ExampleObject(value = "{\"errMessage\":\"Token '6d34fa0e3bb72fcd' does not exist.\",\"status\":410}"))
+								examples = @ExampleObject(value = "{\"errMessage\":\"Token '6d34fa0e3bb72fcd' "
+										+ "does not exist.\",\"status\":410}"))
 					)
 			},
 			tags = {"REST - Authentication and Authorization"}

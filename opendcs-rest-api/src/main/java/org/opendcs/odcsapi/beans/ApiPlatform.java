@@ -25,31 +25,32 @@ import java.util.Properties;
 @Schema(description = "Represents a platform, including its site, configuration, sensors, and transport media details.")
 public final class ApiPlatform
 {
-	@Schema(description = "The unique identifier of the platform.")
+	@Schema(description = "The unique identifier of the platform.", example = "24")
 	private Long platformId = null;
 
-	@Schema(description = "The name of the platform.")
+	@Schema(description = "The name of the platform.", example = "BFD")
 	private String name = null;
 
-	@Schema(description = "The unique identifier of the site associated with the platform.")
+	@Schema(description = "The unique identifier of the site associated with the platform.", example = "9954")
 	private Long siteId = null;
 
-	@Schema(description = "The agency responsible for the platform.")
+	@Schema(description = "The agency responsible for the platform.", example = "USGS")
 	private String agency = null;
 
-	@Schema(description = "The unique identifier of the platform configuration.")
+	@Schema(description = "The unique identifier of the platform configuration.", example = "123")
 	private Long configId = null;
 
-	@Schema(description = "A description of the platform.")
+	@Schema(description = "A description of the platform.", example = "Barre Falls Dam, Ware River, MA")
 	private String description = null;
 
 	@Schema(description = "The designator or identifier assigned to the platform.")
 	private String designator = null;
 
-	@Schema(description = "The date and time when the platform was last modified.")
+	@Schema(description = "The date and time when the platform was last modified.",
+			example = "2021-07-15T14:30:00.000[UTC]")
 	private Date lastModified = null;
 
-	@Schema(description = "Indicates if the platform is in production.")
+	@Schema(description = "Indicates if the platform is in production.", example = "true")
 	private boolean production = false;
 
 	@Schema(description = "Additional properties associated with the platform.")

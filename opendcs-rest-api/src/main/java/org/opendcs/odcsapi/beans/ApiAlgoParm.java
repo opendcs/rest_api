@@ -23,13 +23,13 @@ public final class ApiAlgoParm
 	/**
 	 * The role name -- must be unique within an algorithm.
 	 */
-	@Schema(description = "The role name of the parameter, must be unique within an algorithm.")
+	@Schema(description = "The role name of the parameter, must be unique within an algorithm.", example = "input")
 	private String roleName;
 
 	/**
 	 * The parameter type.
 	 */
-	@Schema(description = "The type of the parameter.")
+	@Schema(description = "The type of the parameter.", example = "i")
 	private String parmType;
 
 	public String getRoleName()

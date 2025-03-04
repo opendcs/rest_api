@@ -23,13 +23,14 @@ public final class ApiTsGroupRef
 	@Schema(description = "Unique identifier for the time series group.", example = "101")
 	private Long groupId = null;
 
-	@Schema(description = "Name of the time series group.", example = "Weather Data Group")
+	@Schema(description = "Name of the time series group.", example = "topgroup")
 	private String groupName = null;
 
-	@Schema(description = "Type of the time series group")
+	@Schema(description = "Type of the time series group", example = "basin")
 	private String groupType = null;
 
-	@Schema(description = "Description of the time series group.", example = "Group that contains weather-related time series data.")
+	@Schema(description = "Description of the time series group.",
+			example = "Group that contains weather-related time series data.")
 	private String description = null;
 
 	public Long getGroupId()

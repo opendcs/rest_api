@@ -33,6 +33,7 @@ import javax.ws.rs.core.Response;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
@@ -127,7 +128,7 @@ public final class OdcsapiResource extends OpenDcsResource
 											+ "\"allowDstOffsetVariation\": \"true\"\n}"),
 							})),
 			responses = {
-					@ApiResponse(responseCode = "200", description = "Successfully stored properties",
+					@ApiResponse(responseCode = "201", description = "Successfully stored properties",
 							content = @Content(mediaType = MediaType.APPLICATION_JSON,
 							schema = @Schema(implementation = Properties.class),
 									examples = {@ExampleObject(name = "Properties",
@@ -136,7 +137,7 @@ public final class OdcsapiResource extends OpenDcsResource
 													+ "\"api.datasource\": \"Cove-LRGS\",\n  "
 													+ "\"allowDstOffsetVariation\": \"true\"\n}"),
 									})),
-					@ApiResponse(responseCode = "500", description = "Internal Server Error", content = @Content)
+					@ApiResponse(responseCode = "500", description = "Internal Server Error")
 			},
 			tags = {"REST - TSDB Properties Methods"}
 	)
@@ -258,10 +259,10 @@ public final class OdcsapiResource extends OpenDcsResource
 			responses = {
 					@ApiResponse(responseCode = "200", description = "Success. Property specifications retrieved.",
 						content = @Content(mediaType = MediaType.APPLICATION_JSON,
-							schema = @Schema(implementation = ApiPropSpec.class))),
-					@ApiResponse(responseCode = "400", description = "Missing or invalid parameter.", content = @Content),
-					@ApiResponse(responseCode = "500", description = "Internal Server Error",
-							content = @Content)
+							array = @ArraySchema(schema = @Schema(implementation = ApiPropSpec.class)))),
+					@ApiResponse(responseCode = "400", description = "Missing or invalid parameter."),
+					@ApiResponse(responseCode = "404", description = "Class not found."),
+					@ApiResponse(responseCode = "500", description = "Internal Server Error")
 			},
 			tags = {"REST - Retrieving Property Specs"}
 	)
@@ -291,29 +292,24 @@ public final class OdcsapiResource extends OpenDcsResource
 					+ "The POST body must be in the following structure:\n```\n{\n\t\"config\": "
 					+ "{ config as returned by GET config described above },\n"
 					+ "\t\"rawmsg\": { Raw Message as returned by GET message described above }\n}\n```\n"
-					+ "The raw data will be decoded and the output will include log messages "
-					+ "and decoded data with positional references in the raw message.",
-			requestBody = @RequestBody(
-					required = true,
-					description = "Decodes Request",
+					+ "The raw data will be decoded according to the instructions in the passed config.\n"
+					+ "The returned data will include log messages generated to trace the script execution, "
+					+ "and the decoded data from the message.\n"
+					+ "Note that for each decoded value, the position within the raw message is given.",
+			requestBody = @RequestBody(required = true, description = "Decodes Request",
 					content = @Content(mediaType = MediaType.APPLICATION_JSON,
-							schema = @Schema(implementation = DecodeRequest.class)
-					)
-			),
+							schema = @Schema(implementation = DecodeRequest.class))),
 			responses = {
-					@ApiResponse(
-							responseCode = "200",
-							description = "Success",
+					@ApiResponse(responseCode = "200", description = "Success",
 							content = @Content(mediaType = MediaType.APPLICATION_JSON,
-									schema = @Schema(implementation = ApiDecodedMessage.class))
-					),
-					@ApiResponse(responseCode = "400", description = "Missing or invalid script name.", content = @Content),
-					@ApiResponse(responseCode = "500", description = "Error executing decoding script.", content = @Content)
+									schema = @Schema(implementation = ApiDecodedMessage.class))),
+					@ApiResponse(responseCode = "400", description = "Missing or invalid script name."),
+					@ApiResponse(responseCode = "500", description = "Error executing decoding script.")
 			},
 			tags = {"REST - Test Decoding"}
 	)
 	public Response postDecode(@Parameter(name = "script", description = "The script name to use in decoding.",
-			required = true, example = "ST", schema = @Schema(type = "string"))
+			example = "ST", schema = @Schema(type = "string"))
 		@QueryParam("script") String scriptName,
 			DecodeRequest request) throws WebAppException, DbException
 	{

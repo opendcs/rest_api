@@ -24,22 +24,23 @@ import io.swagger.v3.oas.annotations.media.Schema;
 @Schema(description = "Represents a presentation group that can inherit properties from a parent group.")
 public final class ApiPresentationGroup
 {
-	@Schema(description = "Unique ID of the presentation group.")
+	@Schema(description = "Unique ID of the presentation group.", example = "8153")
 	private Long groupId = null;
 
-	@Schema(description = "Name of the presentation group.")
+	@Schema(description = "Name of the presentation group.", example = "SHEF-English")
 	private String name = null;
 
-	@Schema(description = "Name of the group this presentation group inherits from.")
+	@Schema(description = "Name of the group this presentation group inherits from.", example = "CWMS-English")
 	private String inheritsFrom = null;
 
-	@Schema(description = "ID of the parent group this presentation group inherits from.")
+	@Schema(description = "ID of the parent group this presentation group inherits from.", example = "152")
 	private Long inheritsFromId = null;
 
-	@Schema(description = "Date when the presentation group was last modified.")
+	@Schema(description = "Date when the presentation group was last modified.",
+			example = "2025-01-01T00:00:00.000[UTC]")
 	private Date lastModified = null;
 
-	@Schema(description = "Flag to indicate if this group is a production group.")
+	@Schema(description = "Flag to indicate if this group is a production group.", example = "false")
 	private boolean isProduction = false;
 
 	@Schema(description = "List of presentation elements that belong to this group.")

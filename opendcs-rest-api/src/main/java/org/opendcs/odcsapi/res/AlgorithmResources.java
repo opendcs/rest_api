@@ -76,7 +76,7 @@ public final class AlgorithmResources extends OpenDcsResource
 					@ApiResponse(responseCode = "200", description = "Success",
 							content = @Content(mediaType = MediaType.APPLICATION_JSON,
 									array = @ArraySchema(schema = @Schema(implementation = ApiAlgorithmRef.class)))),
-					@ApiResponse(responseCode = "500", description = "Internal Server Error", content = @Content)
+					@ApiResponse(responseCode = "500", description = "Internal Server Error")
 			}
 	)
 	public Response getAlgorithmRefs() throws DbIoException
@@ -117,9 +117,9 @@ public final class AlgorithmResources extends OpenDcsResource
 					@ApiResponse(responseCode = "200", description = "Success",
 							content = @Content(mediaType = MediaType.APPLICATION_JSON,
 									schema = @Schema(implementation = ApiAlgorithm.class))),
-					@ApiResponse(responseCode = "400", description = "Bad Request - Missing required parameter", content = @Content),
-					@ApiResponse(responseCode = "404", description = "Not Found", content = @Content),
-					@ApiResponse(responseCode = "500", description = "Internal Server Error", content = @Content)
+					@ApiResponse(responseCode = "400", description = "Bad Request - Missing required parameter"),
+					@ApiResponse(responseCode = "404", description = "Not Found"),
+					@ApiResponse(responseCode = "500", description = "Internal Server Error")
 			}
 	)
 	public Response getAlgorithm(@Parameter(description = "Unique Algorithm ID", required = true,
@@ -204,7 +204,7 @@ public final class AlgorithmResources extends OpenDcsResource
 					@ApiResponse(responseCode = "201", description = "Successfully Created",
 							content = @Content(mediaType = MediaType.APPLICATION_JSON,
 									schema = @Schema(implementation = ApiAlgorithm.class))),
-					@ApiResponse(responseCode = "500", description = "Internal Server Error", content = @Content)
+					@ApiResponse(responseCode = "500", description = "Internal Server Error")
 			}
 	)
 	public Response postAlgorithm(ApiAlgorithm algo) throws DbIoException
@@ -257,9 +257,9 @@ public final class AlgorithmResources extends OpenDcsResource
 			operationId = "deleteAlgorithm",
 			tags = {"REST - Algorithm Methods"},
 			responses = {
-					@ApiResponse(responseCode = "204", description = "Successfully deleted algorithm", content = @Content),
-					@ApiResponse(responseCode = "400", description = "Bad Request - Missing required parameter", content = @Content),
-					@ApiResponse(responseCode = "500", description = "Internal Server Error", content = @Content)
+					@ApiResponse(responseCode = "204", description = "Successfully deleted algorithm"),
+					@ApiResponse(responseCode = "400", description = "Bad Request - Missing required parameter"),
+					@ApiResponse(responseCode = "500", description = "Internal Server Error")
 			}
 	)
 	public Response deleteAlgorithm(@Parameter(description = "ID of the algorithm to delete", required = true,

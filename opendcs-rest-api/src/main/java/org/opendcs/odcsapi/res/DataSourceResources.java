@@ -71,7 +71,7 @@ public class DataSourceResources extends OpenDcsResource
 	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
 	@Operation(
 			summary = "This method returns a JSON list of DECODES Data Source records suitable for displaying in a table or pick-list",
-			description = "Example: \n\nhttp://localhost:8080/odcsapi/datasourcerefs\n\n" +
+			description = "Example: \n\n`http://localhost:8080/odcsapi/datasourcerefs`\n\n" +
 					"The returned structure contains only the high-level descriptive information about each data source.\n\n" +
 					"The arguments (properties) are represented by a string with a comma delimiter. " +
 					"Passwords within the string are replaced with four asterisks.",

@@ -27,10 +27,13 @@ public final class ApiAlgorithmScript
 	public static final char TYPE_TOOLTIP = 'P';
 	public static final char TYPE_UNDEFINED = 'U';
 
-	@Schema(description = "The script's source code in text form.")
+	@Schema(description = "The script's source code in text form.",
+			example = "#Tue May 03 11:42:01 PDT 2022\nAlgorithmType=TIME_SLICE\n")
 	private String text = "";
 
-	@Schema(description = "The type of the script, represented by a character code. Valid types are: I (init), B (before), T (timeslice), A (after), P (tooltip), U (undefined).")
+	@Schema(description = "The type of the script, represented by a character code. "
+				+ "Valid types are: I (init), B (before), T (timeslice), A (after), P (tooltip), U (undefined).",
+			example = "T")
 	private char scriptType = TYPE_UNDEFINED;
 
 

@@ -25,19 +25,20 @@ import io.swagger.v3.oas.annotations.media.Schema;
 @Schema(description = "Represents a data source reference including its identifier, name, and additional configuration details.")
 public final class ApiDataSourceRef
 {
-	@Schema(description = "The unique identifier for the data source.")
+	@Schema(description = "The unique identifier for the data source.", example = "15")
 	private Long dataSourceId = null;
 
-	@Schema(description = "The name of the data source.")
+	@Schema(description = "The name of the data source.", example = "CDADATA-As-MBHydro")
 	private String name = null;
 
-	@Schema(description = "The type of the data source.")
+	@Schema(description = "The type of the data source.", example = "lrgs")
 	private String type = null;
 
-	@Schema(description = "Serialized arguments associated with the data source.")
+	@Schema(description = "Serialized arguments associated with the data source.",
+			example = "host=cdadata.wcda.noaa.gov, password=****, username=mbhydr")
 	private String arguments = null;
 
-	@Schema(description = "Specifies the number of references that use this data source.")
+	@Schema(description = "Specifies the number of references that use this data source.", example = "1")
 	private int usedBy = 0;
 
 	public Long getDataSourceId()

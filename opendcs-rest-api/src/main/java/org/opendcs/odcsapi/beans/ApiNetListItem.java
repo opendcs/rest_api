@@ -26,13 +26,13 @@ public final class ApiNetListItem
 	/**
 	 * The Transport Medium ID.
 	 */
-	@Schema(description = "The Transport Medium ID.")
+	@Schema(description = "The Transport Medium ID.", example = "55785")
 	public String transportId;
 
 	/**
 	 * The name of the platform (site name).
 	 */
-	@Schema(description = "The name of the platform (site name).")
+	@Schema(description = "The name of the platform (site name).", example = "AGNO")
 	private String platformName = null;
 
 	/**

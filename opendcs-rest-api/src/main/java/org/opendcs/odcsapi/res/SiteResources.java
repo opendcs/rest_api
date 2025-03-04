@@ -82,7 +82,7 @@ public final class SiteResources extends OpenDcsResource
 					@ApiResponse(responseCode = "200", description = "Success",
 							content = @Content(mediaType = MediaType.APPLICATION_JSON,
 									array = @ArraySchema(schema = @Schema(implementation = ApiSiteRef.class)))),
-					@ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
+					@ApiResponse(responseCode = "500", description = "Internal server error")
 			}
 	)
 	public Response getSiteRefs()
@@ -130,16 +130,23 @@ public final class SiteResources extends OpenDcsResource
 	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
 	@Operation(
 			summary = "This method returns a JSON representation of a single, complete DECODES Site record.",
-			description = "Example:\n\n    http://localhost:8080/odcsapi/site?siteid=3\n\nThe structure is as follows:\n```\n{\n  \"country\": \"USA\",\n  \"description\": \"Barre Falls Dam, Ware River\",\n  \"elevUnits\": \"M\",\n  \"elevation\": 234.7,\n  \"latitude\": \"42.4278\",\n  \"longitude\": \"-72.0261\",\n  \"nearestCity\": \"Barre Falls Dam\",\n  \"properties\": {\n    \"some\": \"thing\",\n    \"something\": \"else\"\n  },\n  \"region\": \"\",\n  \"siteId\": 7,\n  \"sitenames\": {\n    \"CWMS\": \"BFD\",\n    \"NWSHB5\": \"BFD\"\n  },\n  \"state\": \"MA\",\n  \"timezone\": \"America/New_York\"\n}\n```",
+			description = "Example:\n\n    http://localhost:8080/odcsapi/site?siteid=3\n\n"
+					+ "The structure is as follows:\n```\n{\n  \"country\": \"USA\",\n  \"description\": "
+					+ "\"Barre Falls Dam, Ware River\",\n  \"elevUnits\": \"M\",\n  \"elevation\": 234.7,\n  "
+					+ "\"latitude\": \"42.4278\",\n  \"longitude\": \"-72.0261\",\n  \"nearestCity\": "
+					+ "\"Barre Falls Dam\",\n  \"properties\": {\n    \"some\": \"thing\",\n    "
+					+ "\"something\": \"else\"\n  },\n  \"region\": \"\",\n  \"siteId\": 7,\n  "
+					+ "\"sitenames\": {\n    \"CWMS\": \"BFD\",\n    \"NWSHB5\": \"BFD\"\n  },\n  "
+					+ "\"state\": \"MA\",\n  \"timezone\": \"America/New_York\"\n}\n```",
 			operationId = "getsite",
 			tags = {"REST - DECODES Site Records"},
 			responses = {
 					@ApiResponse(responseCode = "200", description = "success",
 							content = @Content(mediaType = MediaType.APPLICATION_JSON,
 							schema = @Schema(implementation = ApiSite.class))),
-					@ApiResponse(responseCode = "400", description = "Missing or invalid site ID parameter", content = @Content),
-					@ApiResponse(responseCode = "404", description = "Site with matching ID not found", content = @Content),
-					@ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
+					@ApiResponse(responseCode = "400", description = "Missing or invalid site ID parameter"),
+					@ApiResponse(responseCode = "404", description = "Site with matching ID not found"),
+					@ApiResponse(responseCode = "500", description = "Internal server error")
 			}
 	)
 	public Response getSiteFull(@Parameter(description = "id to fetch", required = true,
@@ -239,9 +246,12 @@ public final class SiteResources extends OpenDcsResource
 					content = @Content(mediaType = MediaType.APPLICATION_JSON,
 						schema = @Schema(implementation = ApiSite.class),
 						examples = {
-							@ExampleObject(name = "basic", value = "{ \"description\": \"Iowa River\", \"siteId\": 1, \"sitenames\": {\"CWMS\": \"ROWI4\"} }"),
-							@ExampleObject(name = "new", value = "{ \"description\": \"New Site\", \"sitenames\": {\"CWMS\": \"NEWSITE\"} }"),
-							@ExampleObject(name = "update", value = "{ \"description\": \"Updated Site\", \"siteId\": 1, \"sitenames\": {\"CWMS\": \"UPDATECWMS\"} }")
+							@ExampleObject(name = "Basic", value = "{ \"description\": \"Iowa River\", "
+									+ "\"siteId\": 1, \"sitenames\": {\"CWMS\": \"ROWI4\"} }"),
+							@ExampleObject(name = "New", value = "{ \"description\": \"New Site\", "
+									+ "\"sitenames\": {\"CWMS\": \"NEWSITE\"} }"),
+							@ExampleObject(name = "Update", value = "{ \"description\": \"Updated Site\", "
+									+ "\"siteId\": 1, \"sitenames\": {\"CWMS\": \"UPDATECWMS\"} }")
 					})
 			)
 	)

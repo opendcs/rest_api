@@ -25,39 +25,41 @@ import io.swagger.v3.oas.annotations.media.Schema;
 @Schema(description = "Represents the routing configuration for data transmission, including metadata and processing settings.")
 public final class ApiRouting
 {
-	@Schema(description = "Unique identifier for the routing configuration.")
+	@Schema(description = "Unique identifier for the routing configuration.", example = "20")
 	private Long routingId = null;
-	@Schema(description = "Name of the routing configuration.")
+	@Schema(description = "Name of the routing configuration.", example = "Test Routing")
 	private String name = null;
-	@Schema(description = "Unique identifier of the associated data source.")
+	@Schema(description = "Unique identifier of the associated data source.", example = "10")
 	private Long dataSourceId = null;
-	@Schema(description = "The name of the associated data source.")
+	@Schema(description = "The name of the associated data source.", example = "USGS-LRGS")
 	private String dataSourceName = null;
-	@Schema(description = "Type of the data destination.")
+	@Schema(description = "Type of the data destination.", example = "directory")
 	private String destinationType = null;
-	@Schema(description = "Argument or configuration for the data destination.")
+	@Schema(description = "Argument or configuration for the data destination.", example = "some-directory-path")
 	private String destinationArg = null;
-	@Schema(description = "Whether equations are enabled for processing.")
+	@Schema(description = "Whether equations are enabled for processing.", example = "true")
 	private boolean enableEquations = false;
-	@Schema(description = "Format for output data.")
+	@Schema(description = "Format for output data.", example = "emit-ascii")
 	private String outputFormat = null;
-	@Schema(description = "Time zone for the output data.")
+	@Schema(description = "Time zone for the output data.", example = "EST5EDT")
 	private String outputTZ = null;
-	@Schema(description = "Presentation group name associated with the routing.")
+	@Schema(description = "Presentation group name associated with the routing.", example = "CWMS-English")
 	private String presGroupName = null;
-	@Schema(description = "Timestamp for when this routing was last modified.")
+	@Schema(description = "Timestamp for when this routing was last modified.",
+			example = "2022-03-22T17:44:15.941Z[UTC]")
 	private Date lastModified = null;
-	@Schema(description = "Indicates if this is a production routing configuration.")
+	@Schema(description = "Indicates if this is a production routing configuration.", example = "false")
 	private boolean isProduction = false;
-	@Schema(description = "Start time for routing applicability in ISO 8601 format.")
+	@Schema(description = "Start time for routing applicability in ISO 8601 format.", example = "2022-06-05 00:00:00.000")
 	private String since = null;
-	@Schema(description = "End time for routing applicability in ISO 8601 format.")
+	@Schema(description = "End time for routing applicability in ISO 8601 format.", example = "2022-06-06 00:00:00.000")
 	private String until = null;
-	@Schema(description = "Indicates if settling time delay is used. Default is false.")
+	@Schema(description = "Indicates if settling time delay is used. Default is false.", example = "true")
 	private boolean settlingTimeDelay = false;
-	@Schema(description = "Specifies the reference time for applying configurations. Default is 'Local Receive Time'.")
+	@Schema(description = "Specifies the reference time for applying configurations. Default is 'Local Receive Time'.",
+			example = "Both")
 	private String applyTimeTo = "Local Receive Time";
-	@Schema(description = "Specifies if time is in ascending order. Default is false.")
+	@Schema(description = "Specifies if time is in ascending order. Default is false.", example = "true")
 	private boolean ascendingTime = false;
 
 	@Schema(description = "List of platform IDs associated with the routing.")
@@ -72,23 +74,23 @@ public final class ApiRouting
 	@Schema(description = "Additional configuration properties for the routing.")
 	private Properties properties = new Properties();
 
-	@Schema(description = "Indicates if the GOES DCP is self-timed.")
+	@Schema(description = "Indicates if the GOES DCP is self-timed.", example = "true")
 	private boolean goesSelfTimed = false;
-	@Schema(description = "Indicates if the GOES DCP is random format.")
+	@Schema(description = "Indicates if the GOES DCP is random format.", example = "false")
 	private boolean goesRandom = false;
-	@Schema(description = "Indicates if the data is sourced from a network DCP.")
+	@Schema(description = "Indicates if the data is sourced from a network DCP.", example = "false")
 	private boolean networkDCP = false;
-	@Schema(description = "Indicates if the data is sourced via the Iridium satellite network.")
+	@Schema(description = "Indicates if the data is sourced via the Iridium satellite network.", example = "true")
 	private boolean iridium = false;
-	@Schema(description = "Indicates if quality notifications are enabled.")
+	@Schema(description = "Indicates if quality notifications are enabled.", example = "false")
 	private boolean qualityNotifications = false;
-	@Schema(description = "Indicates if GOES spacecraft health checks are enabled.")
+	@Schema(description = "Indicates if GOES spacecraft health checks are enabled.", example = "true")
 	private boolean goesSpacecraftCheck = false;
-	@Schema(description = "Selection for the GOES spacecraft (e.g., East or West). Default is 'East'.")
+	@Schema(description = "Selection for the GOES spacecraft (e.g., East or West). Default is 'East'.", example = "East")
 	private String goesSpacecraftSelection = "East";
-	@Schema(description = "Indicates if parity checks are enabled. Default is false.")
+	@Schema(description = "Indicates if parity checks are enabled. Default is false.", example = "true")
 	private boolean parityCheck = false;
-	@Schema(description = "Selection for parity status (e.g., Good or Bad). Default is 'Good'.")
+	@Schema(description = "Selection for parity status (e.g., Good or Bad). Default is 'Good'.", example = "Good")
 	private String paritySelection = "Good";
 
 

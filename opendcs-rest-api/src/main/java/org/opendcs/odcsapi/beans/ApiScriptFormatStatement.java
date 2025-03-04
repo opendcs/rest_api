@@ -20,13 +20,14 @@ import io.swagger.v3.oas.annotations.media.Schema;
 @Schema(description = "Represents a script format statement with metadata such as sequence number, label, and format.")
 public final class ApiScriptFormatStatement
 {
-	@Schema(description = "The sequence number of this script format statement.")
+	@Schema(description = "The sequence number of this script format statement.", example = "0")
 	private int sequenceNum = 0;
 
-	@Schema(description = "The label associated with this script format statement.")
+	@Schema(description = "The label associated with this script format statement.", example = "hg")
 	private String label = null;
 
-	@Schema(description = "The format of this script format statement.")
+	@Schema(description = "The format of this script format statement.",
+			example = "s(12,'#',getlabel),x,f(mint,a,3d' +-',1),32(w,c(N,skiphg),F(S,A,12d' +-:',1)), >GETLABEL")
 	private String format = null;
 
 	public int getSequenceNum()
