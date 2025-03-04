@@ -298,7 +298,11 @@ public final class OdcsapiResource extends OpenDcsResource
 					+ "Note that for each decoded value, the position within the raw message is given.",
 			requestBody = @RequestBody(required = true, description = "Decodes Request",
 					content = @Content(mediaType = MediaType.APPLICATION_JSON,
-							schema = @Schema(implementation = DecodeRequest.class))),
+							schema = @Schema(implementation = DecodeRequest.class),
+					examples = {
+							@ExampleObject(name = "Basic", value = ResourceExamples.DecodeExamples.BASIC),
+							@ExampleObject(name = "New", value = ResourceExamples.DecodeExamples.VERBOSE)
+					})),
 			responses = {
 					@ApiResponse(responseCode = "200", description = "Success",
 							content = @Content(mediaType = MediaType.APPLICATION_JSON,

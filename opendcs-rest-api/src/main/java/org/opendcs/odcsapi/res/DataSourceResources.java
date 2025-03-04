@@ -37,6 +37,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -263,7 +264,12 @@ public class DataSourceResources extends OpenDcsResource
 					required = true,
 					content = @Content(
 							mediaType = MediaType.APPLICATION_JSON,
-							schema = @Schema(implementation = ApiDataSource.class)
+							schema = @Schema(implementation = ApiDataSource.class),
+							examples = {
+									@ExampleObject(name = "Basic", value = ResourceExamples.DataSourceExamples.BASIC),
+									@ExampleObject(name = "New", value = ResourceExamples.DataSourceExamples.NEW),
+									@ExampleObject(name = "Update", value = ResourceExamples.DataSourceExamples.UPDATE)
+							}
 					)
 			),
 			responses = {

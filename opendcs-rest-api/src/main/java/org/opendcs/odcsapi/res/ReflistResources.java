@@ -36,6 +36,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.StringToClassMapItem;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -219,7 +220,12 @@ public final class ReflistResources extends OpenDcsResource
 					+ "The network list in the database is replaced with the one sent.",
 			requestBody = @RequestBody(description = "Reference list object to post", required = true,
 				content = @Content(mediaType = MediaType.APPLICATION_JSON,
-					schema = @Schema(implementation = ApiRefList.class))),
+					schema = @Schema(implementation = ApiRefList.class),
+					examples = {
+						@ExampleObject(name = "Basic", value = ResourceExamples.ReflistExamples.BASIC),
+						@ExampleObject(name = "New", value = ResourceExamples.ReflistExamples.NEW),
+						@ExampleObject(name = "Update", value = ResourceExamples.ReflistExamples.UPDATE)
+					})),
 			responses = {
 					@ApiResponse(description = "Reference list created successfully", responseCode = "201",
 						content = @Content(mediaType = MediaType.APPLICATION_JSON,

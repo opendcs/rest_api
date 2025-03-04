@@ -32,6 +32,7 @@ import javax.ws.rs.core.Context;
 
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -787,11 +788,11 @@ public final class TimeSeriesResources extends OpenDcsResource
 					"type (Param) after first hyphen\n    *  **ParamType**  \n    *  **Interval**\n    " +
 					"*  **Duration**  \n    *  **Version**  \n    *  **BaseVersion**\n    *  **SubVersion**",
 			responses = {
-						@ApiResponse(responseCode = "200", description = "Successfully retrieved time series group details",
-								content = @Content(mediaType = MediaType.APPLICATION_JSON,
-										schema = @Schema(implementation = ApiTsGroup.class))),
-						@ApiResponse(responseCode = "400", description = "Invalid or missing group ID"),
-						@ApiResponse(responseCode = "500", description = "Database error occurred")
+					@ApiResponse(responseCode = "200", description = "Successfully retrieved time series group details",
+							content = @Content(mediaType = MediaType.APPLICATION_JSON,
+									schema = @Schema(implementation = ApiTsGroup.class))),
+					@ApiResponse(responseCode = "400", description = "Invalid or missing group ID"),
+					@ApiResponse(responseCode = "500", description = "Database error occurred")
 			},
 			tags = {"Time Series Methods - Groups"}
 	)
@@ -881,7 +882,11 @@ public final class TimeSeriesResources extends OpenDcsResource
 					description = "Time Series Group",
 					required = true,
 					content = @Content(mediaType = MediaType.APPLICATION_JSON,
-							schema = @Schema(implementation = ApiTsGroup.class))
+							schema = @Schema(implementation = ApiTsGroup.class),
+					examples = {
+							@ExampleObject(name = "Basic", value = ResourceExamples.TsGroupExamples.BASIC),
+							@ExampleObject(name = "Verbose", value = ResourceExamples.TsGroupExamples.VERBOSE)
+					})
 			),
 			responses = {
 					@ApiResponse(responseCode = "201", description = "Successfully created the time series group",
@@ -893,17 +898,17 @@ public final class TimeSeriesResources extends OpenDcsResource
 	)
 	public Response postTsGroup (ApiTsGroup grp) throws WebAppException, DbException
 	{
-		try (TsGroupDAI dai = getLegacyTimeseriesDB().makeTsGroupDAO())
-		{
-			TsGroup group = map(grp);
-			dai.writeTsGroup(group);
-			return Response.status(HttpServletResponse.SC_OK)
-					.entity(map(group)).build();
-		}
-		catch (DbIoException | BadTimeSeriesException ex)
-		{
-			throw new DbException("Unable to store time series group", ex);
-		}
+			try (TsGroupDAI dai = getLegacyTimeseriesDB().makeTsGroupDAO())
+			{
+				TsGroup group = map(grp);
+				dai.writeTsGroup(group);
+				return Response.status(HttpServletResponse.SC_OK)
+						.entity(map(group)).build();
+			}
+			catch (DbIoException | BadTimeSeriesException ex)
+			{
+				throw new DbException("Unable to store time series group", ex);
+			}
 	}
 
 	static TsGroup map(ApiTsGroup grp) throws BadTimeSeriesException

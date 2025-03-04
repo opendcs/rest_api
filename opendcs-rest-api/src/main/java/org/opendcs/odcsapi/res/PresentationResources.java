@@ -34,6 +34,7 @@ import javax.ws.rs.core.Response;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -248,7 +249,12 @@ public final class PresentationResources extends OpenDcsResource
 					"The presentation group in the database is replaced with the one sent.",
 			tags = {"REST - DECODES Presentation Group Records"},
 			requestBody = @RequestBody(content = @Content(schema = @Schema(implementation = ApiPresentationGroup.class),
-					mediaType = MediaType.APPLICATION_JSON), required = true),
+					mediaType = MediaType.APPLICATION_JSON,
+					examples = {
+							@ExampleObject(name = "Basic", value = ResourceExamples.PresentationExamples.BASIC),
+							@ExampleObject(name = "New", value = ResourceExamples.PresentationExamples.NEW),
+							@ExampleObject(name = "Update", value = ResourceExamples.PresentationExamples.UPDATE)
+					}), required = true),
 			responses = {
 					@ApiResponse(responseCode = "201", description = "Successfully stored presentation group",
 							content = @Content(schema = @Schema(implementation = ApiPresentationGroup.class))),
