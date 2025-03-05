@@ -13,7 +13,7 @@ To view the API specification, navigate to the Swagger UI located at:
 
 On development machines running the REST API locally, this will be located at `http://localhost:7000/odcsapi/swagger-ui.html`.
 
-> [!IMPORTANT]
+> [!NOTE]
 > The Swagger UI is only available when the REST API is running.
 
 ## OpenAPI Specification Generation
@@ -69,7 +69,7 @@ located in the `org.opendcs.odcsapi.res` and `org.opendcs.odcsapi.beans` package
 
 > [!TIP] 
 > The available annotations and their usage can be found 
-> [here](`https://github.com/swagger-api/swagger-core/wiki/Swagger-2.X---Annotations`).
+> [here](https://github.com/swagger-api/swagger-core/wiki/Swagger-2.X---Annotations).
 
 ### Examples
 
