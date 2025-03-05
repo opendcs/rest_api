@@ -13,7 +13,7 @@ To view the API specification, navigate to the Swagger UI located at:
 
 On development machines running the REST API locally, this will be located at `http://localhost:7000/odcsapi/swagger-ui.html`.
 
-> [!NOTE]
+> [!IMPORTANT]
 > The Swagger UI is only available when the REST API is running.
 
 ## OpenAPI Specification Generation
@@ -43,7 +43,7 @@ wish to quickly generate the OpenAPI specification to view changes.
 
 > [!TIP]
 > Generated JSON and YAML OpenAPI specifications can be viewed by copying the content of the file and pasting it into the
-[Swagger Editor](`https://editor.swagger.io/`).
+> [Swagger Editor](`https://editor.swagger.io/`).
 
 To manually generate the OpenAPI specification, run the `generateOpenAPI` Gradle task found within
 the `documentation` group. The default output format is JSON.
@@ -69,7 +69,7 @@ located in the `org.opendcs.odcsapi.res` and `org.opendcs.odcsapi.beans` package
 
 > [!TIP] 
 > The available annotations and their usage can be found 
-[here](`https://github.com/swagger-api/swagger-core/wiki/Swagger-2.X---Annotations`).
+> [here](`https://github.com/swagger-api/swagger-core/wiki/Swagger-2.X---Annotations`).
 
 ### Examples
 
