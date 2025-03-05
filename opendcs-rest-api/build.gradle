@@ -142,5 +142,6 @@ tasks.register('cleanOpenAPI') {
     description = "Deletes the generated Swagger OpenAPI JSON file"
     doLast {
         project.delete file('build/swagger/OpenDCS-REST-API.json')
+        project.delete file('build/swagger/OpenDCS-REST-API.yaml')
     }
 }
