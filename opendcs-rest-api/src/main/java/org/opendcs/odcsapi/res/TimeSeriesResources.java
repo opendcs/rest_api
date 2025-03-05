@@ -76,8 +76,6 @@ import org.opendcs.odcsapi.errorhandling.MissingParameterException;
 import org.opendcs.odcsapi.errorhandling.WebAppException;
 import org.opendcs.odcsapi.util.ApiConstants;
 
-import ilex.util.IDateFormat;
-
 /**
  * HTTP resources relating to Time Series data and descriptors
  * @author mmaloney
@@ -896,7 +894,7 @@ public final class TimeSeriesResources extends OpenDcsResource
 			},
 			tags = {"Time Series Methods - Groups"}
 	)
-	public Response postTsGroup (ApiTsGroup grp) throws WebAppException, DbException
+	public Response postTsGroup (ApiTsGroup grp) throws DbException
 	{
 			try (TsGroupDAI dai = getLegacyTimeseriesDB().makeTsGroupDAO())
 			{
