@@ -104,6 +104,7 @@ public class DatabaseSetupExtension implements BeforeEachCallback
 			}
 		}
 		environment.getVariables().forEach(System::setProperty);
+		config.getEnvironment().entrySet().forEach(e -> System.setProperty(e.getKey().toString(), e.getValue().toString()));
 		if(dbType == DbType.CWMS)
 		{
 			DbInterface.isCwms = true;
