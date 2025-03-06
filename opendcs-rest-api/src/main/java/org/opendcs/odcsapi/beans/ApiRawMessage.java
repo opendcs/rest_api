@@ -27,7 +27,7 @@ public final class ApiRawMessage
 	@Schema(description = "Flags representing the status or state of the raw message.", example = "71765")
 	private long flags = 0L;
 
-	@Schema(description = "Identifier for the platform associated with this message.", example = "221")
+	@Schema(description = "Unique numeric identifier for the platform associated with this message.", example = "221")
 	private String platformId = null;
 
 	// GOES fields:
@@ -46,7 +46,7 @@ public final class ApiRawMessage
 	@Schema(description = "Baud rate of the carrier signal.", example = "300")
 	private Integer baud = null;
 
-	@Schema(description = "Percentage of good phase signals received.", example = "100")
+	@Schema(description = "Percentage of good phase signals received.", example = "99.6")
 	private Double goodPhasePct = null;
 
 	@Schema(description = "Frequency offset of the signal in Hz.", example = "0.5")

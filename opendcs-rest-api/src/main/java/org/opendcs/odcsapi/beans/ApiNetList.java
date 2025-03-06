@@ -28,7 +28,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 @Schema(description = "Represents a network list, including its ID, name, type of transport medium, and other related metadata.")
 public final class ApiNetList
 {
-	@Schema(description = "Unique surrogate key ID of this network list.", example = "34")
+	@Schema(description = "Unique surrogate key identifier of this network list.", example = "34")
 	private Long netlistId = null;
 
 	@Schema(description = "Unique name of this network list.", example = "USGS-Sites")

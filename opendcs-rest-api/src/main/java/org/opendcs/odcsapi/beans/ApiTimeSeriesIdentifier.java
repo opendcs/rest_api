@@ -23,7 +23,7 @@ public final class ApiTimeSeriesIdentifier
 	@Schema(description = "A unique string identifying the time series.", example = "OKVI4.Stage.Inst.15Minutes.0.raw")
 	private String uniqueString = null;
 
-	@Schema(description = "The unique key for the time series.", example = "1")
+	@Schema(description = "The unique numeric key for the time series.", example = "1")
 	private Long key = null;
 
 	@Schema(description = "A short description of the time series.")

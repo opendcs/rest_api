@@ -23,7 +23,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 @Schema(description = "Represents a member of a data source, including the data source's ID and name.")
 public final class ApiDataSourceGroupMember
 {
-	@Schema(description = "The unique identifier of the data source.", example = "4")
+	@Schema(description = "The unique numeric identifier of the data source.", example = "4")
 	private Long dataSourceId = null;
 
 	@Schema(description = "The name of the data source.", example = "USGS-LRGS")

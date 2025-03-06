@@ -25,17 +25,17 @@ import io.swagger.v3.oas.annotations.media.Schema;
 @Schema(description = "Represents a computation entity with details about its configuration and properties.")
 public final class ApiComputation
 {
-	@Schema(description = "The unique identifier of the computation.", example = "45")
+	@Schema(description = "The unique numeric identifier of the computation.", example = "45")
 	private Long computationId = null;
 
-	@Schema(description = "The name of the computation.", example = "Daily Ave ( ... )")
+	@Schema(description = "The name of the computation.", example = "Daily Ave")
 	private String name = null;
 
 	@Schema(description = "A comment or description for the computation.",
 			example = "Used for calculating daily average.")
 	private String comment = null;
 
-	@Schema(description = "The ID of the associated application.", example = "35")
+	@Schema(description = "The numeric identifier of the associated application.", example = "35")
 	private Long appId = null;
 
 	@Schema(description = "The name of the associated application.", example = "compproc")
@@ -76,7 +76,7 @@ public final class ApiComputation
 	@Schema(description = "The end interval if effectiveEndType is set to 'Now -', 'Now', or 'Now +'.")
 	private String effectiveEndInterval = null;
 
-	@Schema(description = "The unique identifier of the algorithm used by this computation.", example = "9876")
+	@Schema(description = "The unique numeric identifier of the algorithm used by this computation.", example = "9876")
 	private Long algorithmId = null;
 
 	@Schema(description = "The name of the algorithm used by this computation.", example = "WaterFlowAlgorithm")
@@ -89,10 +89,10 @@ public final class ApiComputation
 	/**
 	 * Properties from the meta-data CompProperty records.
 	 */
-	@Schema(description = "Additional properties or metadata associated with the computation.")
+	@Schema(description = "Additional key-value pair properties or metadata associated with the computation.")
 	private Properties props = new Properties();
 
-	@Schema(description = "The unique identifier of the computation group.", example = "2468")
+	@Schema(description = "The unique numeric identifier of the computation group.", example = "2468")
 	private Long groupId = null;
 	@Schema(description = "The name of the computation group.", example = "AverageGroup")
 	private String groupName = null;

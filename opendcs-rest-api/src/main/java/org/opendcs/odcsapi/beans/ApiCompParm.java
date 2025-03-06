@@ -21,10 +21,10 @@ import io.swagger.v3.oas.annotations.media.Schema;
 		+ "sites, data types, intervals, and HDB/CWMS specifics.")
 public final class ApiCompParm
 {
-	@Schema(description = "The type of the algorithm parameter.", example = "i")
+	@Schema(description = "The type of the algorithm parameter. Can be input (i) or output (o)", example = "i")
 	private String algoParmType;
 
-	@Schema(description = "The role name of the algorithm parameter.", example = "input")
+	@Schema(description = "The role name of the algorithm parameter.", example = "output3")
 	private String algoRoleName = null;
 
 	// Non-group comp parms will be completely defined with a time series key.
@@ -44,7 +44,7 @@ public final class ApiCompParm
 			+ "Offset for retrieving this parameter relative to zero-based time.", example = "0")
 	private int deltaT = 0;
 
-	@Schema(description = "The time units for deltaT, default is 'Seconds'.", example = "Hours")
+	@Schema(description = "The time units for deltaT (seconds, minutes, etc.), default is 'Seconds'.", example = "Hours")
 	private String deltaTUnits = "Seconds";
 
 	@Schema(description = "The abbreviation for the units of the parameter.", example = "ft")
@@ -57,7 +57,7 @@ public final class ApiCompParm
 	private String siteName = null;
 
 	// HDB-specific fields:
-	@Schema(description = "HDB-specific: The table selector for this computation parameter.")
+	@Schema(description = "HDB-specific: The table selector for this computation parameter.", example = "R_")
 	private String tableSelector = null;
 
 	@Schema(description = "HDB-specific: The model ID associated with this computation parameter.")
@@ -73,7 +73,7 @@ public final class ApiCompParm
 	@Schema(description = "CWMS-specific: The version of this computation parameter.", example = "raw")
 	private String version = null;
 
-	@Schema(description = "CWMS-specific: Action to take if the parameter is missing.")
+	@Schema(description = "CWMS-specific: Action to take if the parameter is missing.", example = "IGNORE")
 	private String ifMissing = null;
 
 	public String getAlgoParmType()

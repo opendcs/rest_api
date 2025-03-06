@@ -30,18 +30,18 @@ import java.util.Date;
 		+ "app information, and activity metrics.")
 public final class ApiRoutingStatus
 {
-	@Schema(description = "The unique identifier of the routing specification.", example = "44")
+	@Schema(description = "The unique numeric identifier of the routing specification.", example = "44")
 	private Long routingSpecId = null;
 	@Schema(description = "The name of the routing specification.", example = "rs-MROI4-ROWI4")
 	private String name = null;
-	@Schema(description = "The identifier of the scheduled entry associated with the routing spec. "
+	@Schema(description = "The unique numeric identifier of the scheduled entry associated with the routing spec. "
 			+ "It can be null if it has never been explicitly scheduled.", example = "58")
 	private Long scheduleEntryId = null;
 	@Schema(description = "Indicates whether the routing specification is enabled.", example = "true")
 	private boolean isEnabled = false;
 	@Schema(description = "Indicates whether the routing specification is set to run manually.", example = "false")
 	private boolean isManual = false;
-	@Schema(description = "The identifier of the application associated with this routing specification.", example = "26")
+	@Schema(description = "The unique numeric identifier of the application associated with this routing specification.", example = "26")
 	private Long appId = null;
 	@Schema(description = "The name of the application associated with this routing specification.",
 			example = "RoutingScheduler")

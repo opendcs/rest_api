@@ -23,7 +23,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 @Schema(description = "Represents a reference to a site, including metadata such as IDs, names, and descriptions.")
 public final class ApiSiteRef
 {
-	@Schema(description = "Unique identifier for the site.", example = "1")
+	@Schema(description = "Unique numeric identifier for the site.", example = "1")
 	private Long siteId = null;
 
 	/**
