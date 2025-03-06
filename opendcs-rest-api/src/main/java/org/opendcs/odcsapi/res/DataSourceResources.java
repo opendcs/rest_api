@@ -253,7 +253,10 @@ public class DataSourceResources extends OpenDcsResource
 		ds.setName(ads.getName());
 		ds.dataSourceType = ads.getType();
 		ds.arguments = ads.getProps();
-		ds.setDataSourceArg(props2string(ads.getProps()));
+		if (ads.getProps() != null)
+		{
+			ds.setDataSourceArg(props2string(ads.getProps()));
+		}
 		ds.numUsedBy = ads.getUsedBy();
 		ds.groupMembers = map(ads.getGroupMembers());
 		return ds;
