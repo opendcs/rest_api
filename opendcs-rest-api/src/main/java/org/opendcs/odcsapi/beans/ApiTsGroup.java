@@ -23,7 +23,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 @Schema(description = "Represents a time series group with metadata like group type, description, and associated data.")
 public final class ApiTsGroup
 {
-	@Schema(description = "The unique identifier of the time series group.", example = "1001")
+	@Schema(description = "The unique numeric identifier of the time series group.", example = "1001")
 	private Long groupId = null;
 
 	@Schema(description = "The name of the time series group.", example = "Flow Data Group")

@@ -19,7 +19,7 @@ import java.util.Date;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
-@Schema(description = "Represents a reference to an application with its details, "
+@Schema(description = "Represents a reference to a computation process (application) with its details, "
 		+ "including type, name, and last modified date.")
 public final class ApiAppRef
 {

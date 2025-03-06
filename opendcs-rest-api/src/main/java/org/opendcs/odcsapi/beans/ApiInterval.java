@@ -20,7 +20,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 @Schema(description = "Represents an interval entity with its unique ID, name, calendar constant, and multiplier used in calculations.")
 public final class ApiInterval
 {
-	@Schema(description = "The unique identifier for the interval.", example = "1")
+	@Schema(description = "The unique numeric identifier for the interval.", example = "1")
 	private Long intervalId = null;
 
 	@Schema(description = "The name of the interval.", example = "irregular")
@@ -29,7 +29,7 @@ public final class ApiInterval
 	@Schema(description = "The calendar constant associated with the interval.", example = "Minute")
 	private String calConstant = null;
 
-	@Schema(description = "The multiplier applied to the calendar constant.", example = "0")
+	@Schema(description = "The multiplier applied to the calendar constant.", example = "4")
 	private int calMultilier = 1;
 
 	public ApiInterval()

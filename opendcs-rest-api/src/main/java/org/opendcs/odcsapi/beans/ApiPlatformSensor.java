@@ -28,8 +28,8 @@ public final class ApiPlatformSensor
 	/**
 	 * Null means this sensor is at same site as Platform
 	 */
-	@Schema(description = "The ID of the site where this sensor is located. Null indicates it's at the same "
-			+ "site as the platform.", example = "12345")
+	@Schema(description = "The unique numeric identifier of the site where this sensor is located. "
+			+ "Null indicates it's at the same site as the platform.", example = "12345")
 	private Long actualSiteId = null;
 
 	/**

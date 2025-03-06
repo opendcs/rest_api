@@ -25,7 +25,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 @Schema(description = "Represents a site with geographic, descriptive, and operational attributes.")
 public final class ApiSite
 {
-	@Schema(description = "Unique ID of the site.", example = "45")
+	@Schema(description = "Unique numeric identifier of the site.", example = "45")
 	private Long siteId = null;
 
 	/**

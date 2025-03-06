@@ -25,11 +25,11 @@ import io.swagger.v3.oas.annotations.media.Schema;
 @Schema(description = "Represents the routing configuration for data transmission, including metadata and processing settings.")
 public final class ApiRouting
 {
-	@Schema(description = "Unique identifier for the routing configuration.", example = "20")
+	@Schema(description = "Unique numeric identifier for the routing configuration.", example = "20")
 	private Long routingId = null;
 	@Schema(description = "Name of the routing configuration.", example = "Test Routing")
 	private String name = null;
-	@Schema(description = "Unique identifier of the associated data source.", example = "10")
+	@Schema(description = "Unique numeric identifier of the associated data source.", example = "10")
 	private Long dataSourceId = null;
 	@Schema(description = "The name of the associated data source.", example = "USGS-LRGS")
 	private String dataSourceName = null;
@@ -66,7 +66,7 @@ public final class ApiRouting
 	private List<String> platformIds = new ArrayList<>();
 	@Schema(description = "List of platform names associated with the routing.")
 	private List<String> platformNames = new ArrayList<>();
-	@Schema(description = "List of netlist names.")
+	@Schema(description = "List of netlist names associated with the routing.")
 	private List<String> netlistNames = new ArrayList<>();
 	@Schema(description = "List of GOES channels for the routing.")
 	private List<Integer> goesChannels = new ArrayList<>();

@@ -26,7 +26,7 @@ public final class ApiNetListItem
 	/**
 	 * The Transport Medium ID.
 	 */
-	@Schema(description = "The Transport Medium ID.", example = "55785")
+	@Schema(description = "The String representation of the Transport Medium ID.", example = "55785")
 	public String transportId;
 
 	/**

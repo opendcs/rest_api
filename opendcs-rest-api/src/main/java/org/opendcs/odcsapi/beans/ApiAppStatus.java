@@ -23,7 +23,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 		+ "type, hostname, and current state.")
 public final class ApiAppStatus
 {
-	@Schema(description = "Unique identifier for the application instance.", example = "9")
+	@Schema(description = "Unique numeric identifier for the application instance.", example = "9")
 	private Long appId = null;
 	@Schema(description = "Name of the application.", example = "compproc")
 	private String appName = null;

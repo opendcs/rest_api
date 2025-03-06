@@ -25,7 +25,8 @@ public final class ApiLogMessage
 	@Schema(description = "The timestamp when the log message was created.", example = "2025-01-01T12:00:00.605[UTC]")
 	private Date timeStamp = new Date();
 
-	@Schema(description = "The priority level of the log message, e.g., INFO, WARN, or ERROR.", example = "INFO")
+	@Schema(description = "The priority level of the log message, e.g., INFO, WARN, or ERROR. Corresponds to Logger levels.",
+			example = "INFO")
 	private String priority = null;
 
 	@Schema(description = "The text content of the log message.", example = "System started successfully.")

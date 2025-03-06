@@ -23,7 +23,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 @Schema(description = "Represents a computation application, including ID, name, type, and configuration details.")
 public final class ApiLoadingApp
 {
-	@Schema(description = "The unique identifier of the application.", example = "56")
+	@Schema(description = "The unique numeric identifier of the application.", example = "56")
 	private Long appId = null;
 
 	@Schema(description = "The name of the application.", example = "compproc")

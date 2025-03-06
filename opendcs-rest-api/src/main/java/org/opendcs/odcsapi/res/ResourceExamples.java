@@ -19,6 +19,276 @@ public class ResourceExamples
 {
 	private ResourceExamples() {}
 
+	public static class AlgorithmExamples
+	{
+		private AlgorithmExamples() {}
+
+		public static final String BASIC = "{\n" +
+				"  \"algorithmId\": 4,\n" +
+				"  \"name\": \"\",\n" +
+				"  \"execClass\": \"\",\n" +
+				"  \"description\": \"\",\n" +
+				"  \"props\": {\n" +
+				"    \"input1_MISSING\": \"\",\n" +
+				"    \"chooseHigher\": \"true\",\n" +
+				"    \"upperLimit\": \"\",\n" +
+				"    \"lowerLimit\": \"\",\n" +
+				"    \"input2_MISSING\": \"IGNORE\"\n" +
+				"  },\n" +
+				"  \"parms\": {\n" +
+				"    \"roleName\": \"\",\n" +
+				"    \"parmType\": \"\"\n" +
+				"  },\n" +
+				"  \"numCompsUsing\": 1,\n" +
+				"  \"algoScripts\": {}\n" +
+				"}";
+
+		public static final String NEW = "{\n" +
+				"  \"name\": \"ChooseOne\",\n" +
+				"  \"execClass\": \"decodes.tsdb.algo.ChooseOne\",\n" +
+				"  \"description\": \"Given two inputs, output the best one: If only one is present at the time-slice, " +
+				"output it. If one is outside the specified upper or lower limit (see properties) output the other. " +
+				"If both are acceptable, output the first one. Useful in situations where you have redundant sensors.\",\n" +
+				"  \"props\": {\n" +
+				"    \"input1_MISSING\": \"IGNORE\",\n" +
+				"    \"chooseHigher\": \"true\",\n" +
+				"    \"upperLimit\": \"999999999999.9\",\n" +
+				"    \"lowerLimit\": \"-999999999999.9\",\n" +
+				"    \"input2_MISSING\": \"IGNORE\"\n" +
+				"  },\n" +
+				"  \"parms\": [{\n" +
+				"    \"roleName\": \"input\",\n" +
+				"    \"parmType\": \"i\"\n" +
+				"  }," +
+				"  {\n" +
+				"    \"roleName\": \"output\",\n" +
+				"    \"parmType\": \"o\"\n" +
+				"  }],\n" +
+				"  \"numCompsUsing\": 1,\n" +
+				"  \"algoScripts\": {}\n" +
+				"}";
+
+		public static final String UPDATE = "{\n" +
+				"  \"algorithmId\": 4,\n" +
+				"  \"name\": \"ChooseOne\",\n" +
+				"  \"execClass\": \"decodes.tsdb.algo.ChooseOne\",\n" +
+				"  \"description\": \"Given two inputs, output the best one: If only one is present at the time-slice, " +
+				"output it. If one is outside the specified upper or lower limit (see properties) output the other. " +
+				"If both are acceptable, output the first one. Useful in situations where you have redundant sensors.\",\n" +
+				"  \"props\": {\n" +
+				"    \"input1_MISSING\": \"IGNORE\",\n" +
+				"    \"chooseHigher\": \"true\",\n" +
+				"    \"upperLimit\": \"999999999999.9\",\n" +
+				"    \"lowerLimit\": \"-999999999999.9\",\n" +
+				"    \"input2_MISSING\": \"IGNORE\"\n" +
+				"  },\n" +
+				"  \"parms\": [{\n" +
+				"    \"roleName\": \"input1\",\n" +
+				"    \"parmType\": \"i\"\n" +
+				"  }," +
+				"  {\n" +
+				"    \"roleName\": \"input2\",\n" +
+				"    \"parmType\": \"i\"\n" +
+				"  }," +
+				"  {\n" +
+				"    \"roleName\": \"output\",\n" +
+				"    \"parmType\": \"o\"\n" +
+				"  }],\n" +
+				"  \"numCompsUsing\": 1,\n" +
+				"  \"algoScripts\": [{\n" +
+				"    \"text\": \"#Tue May 03 11:42:01 PDT 2022\\nAlgorithmType=TIME_SLICE\\n\",\n" +
+				"    \"scriptType\": \"T\"\n" +
+				"  }]\n" +
+				"}";
+	}
+
+	public static class AppExamples
+	{
+		private AppExamples() {}
+
+		public static final String BASIC = "{\n" +
+				"  \"appId\": 4,\n" +
+				"  \"appName\": \"\",\n" +
+				"  \"appType\": \"\",\n" +
+				"  \"comment\": \"\",\n" +
+				"  \"lastModified\": null,\n" +
+				"  \"manualEditingApp\": false,\n" +
+				"  \"properties\": {}\n" +
+				"}";
+
+		public static final String NEW = "{\n" +
+				"  \"appName\": \"compproc\",\n" +
+				"  \"appType\": \"computationprocess\",\n" +
+				"  \"comment\": \"Main Computation Process\",\n" +
+				"  \"lastModified\": \"2025-03-04T22:03:48.910Z\",\n" +
+				"  \"manualEditingApp\": false,\n" +
+				"  \"properties\": {\n" +
+				"    \"fromName\": \"value\"\n" +
+				"  }\n" +
+				"}";
+
+		public static final String UPDATE = "{\n" +
+				"  \"appId\": 4,\n" +
+				"  \"appName\": \"compproc\",\n" +
+				"  \"appType\": \"computationprocess\",\n" +
+				"  \"comment\": \"Main Computation Process\",\n" +
+				"  \"lastModified\": \"2025-03-04T22:03:48.910Z\",\n" +
+				"  \"manualEditingApp\": false,\n" +
+				"  \"properties\": {\n" +
+				"    \"fromName\": \"value\"\n" +
+				"  }\n" +
+				"}";
+	}
+
+	public static class ComputationExamples
+	{
+		private ComputationExamples() {}
+
+		public static final String BASIC = "{\n" +
+				"  \"computationId\": 4,\n" +
+				"  \"name\": \"\",\n" +
+				"  \"comment\": \"\",\n" +
+				"  \"appId\": 5,\n" +
+				"  \"applicationName\": \"compproc\",\n" +
+				"  \"lastModified\": null,\n" +
+				"  \"enabled\": false,\n" +
+				"  \"effectiveStartType\": \"\",\n" +
+				"  \"effectiveStartDate\": \"2025-03-04T22:40:47.249Z\",\n" +
+				"  \"effectiveStartInterval\": \"string\",\n" +
+				"  \"effectiveEndType\": \"\",\n" +
+				"  \"effectiveEndDate\": \"2025-03-04T22:40:47.249Z\",\n" +
+				"  \"effectiveEndInterval\": \"string\",\n" +
+				"  \"algorithmId\": 24,\n" +
+				"  \"algorithmName\": \"\",\n" +
+				"  \"parmList\": [\n" +
+				"    {\n" +
+				"      \"algoParmType\": \"\",\n" +
+				"      \"algoRoleName\": \"\",\n" +
+				"      \"tsKey\": 1,\n" +
+				"      \"dataTypeId\": 48,\n" +
+				"      \"dataType\": \"\",\n" +
+				"      \"interval\": \"\",\n" +
+				"      \"deltaT\": 0,\n" +
+				"      \"deltaTUnits\": \"\",\n" +
+				"      \"unitsAbbr\": \"ft\",\n" +
+				"      \"siteId\": 1,\n" +
+				"      \"siteName\": \"\",\n" +
+				"      \"tableSelector\": \"\",\n" +
+				"      \"modelId\": 0,\n" +
+				"      \"paramType\": \"\",\n" +
+				"      \"duration\": \"0\",\n" +
+				"      \"version\": \"\",\n" +
+				"      \"ifMissing\": \"\"\n" +
+				"    }\n" +
+				"  ],\n" +
+				"  \"props\": {\n" +
+				"    \"minSamplesNeeded\": \"\",\n" +
+				"    \"aggUpperBoundClosed\": \"false\",\n" +
+				"    \"aggregateTimeZone\": \"\",\n" +
+				"    \"average_tsname\": \"\",\n" +
+				"    \"aggLowerBoundClosed\": \"false\"\n" +
+				"  },\n" +
+				"  \"groupId\": -1,\n" +
+				"  \"groupName\": \"\"\n" +
+				"}";
+
+		public static final String NEW = "{\n" +
+				"  \"computationId\": 45,\n" +
+				"  \"name\": \"Daily Ave ( ... )\",\n" +
+				"  \"comment\": \"Used for calculating daily average.\",\n" +
+				"  \"appId\": 35,\n" +
+				"  \"applicationName\": \"compproc\",\n" +
+				"  \"lastModified\": null,\n" +
+				"  \"enabled\": false,\n" +
+				"  \"effectiveStartType\": \"Calendar\",\n" +
+				"  \"effectiveStartDate\": \"2025-03-04T22:40:47.249Z\",\n" +
+				"  \"effectiveStartInterval\": \"string\",\n" +
+				"  \"effectiveEndType\": \"No Limit\",\n" +
+				"  \"effectiveEndDate\": \"2025-03-04T22:40:47.249Z\",\n" +
+				"  \"effectiveEndInterval\": \"string\",\n" +
+				"  \"algorithmId\": 9876,\n" +
+				"  \"algorithmName\": \"AverageAlgorithm\",\n" +
+				"  \"parmList\": [\n" +
+				"    {\n" +
+				"      \"algoParmType\": \"i\",\n" +
+				"      \"algoRoleName\": \"input\",\n" +
+				"      \"tsKey\": 1,\n" +
+				"      \"dataTypeId\": 48,\n" +
+				"      \"dataType\": \"Stage\",\n" +
+				"      \"interval\": \"15Minutes\",\n" +
+				"      \"deltaT\": 0,\n" +
+				"      \"deltaTUnits\": \"Hours\",\n" +
+				"      \"unitsAbbr\": \"ft\",\n" +
+				"      \"siteId\": 1,\n" +
+				"      \"siteName\": \"OKVI4\",\n" +
+				"      \"tableSelector\": \"string\",\n" +
+				"      \"modelId\": 0,\n" +
+				"      \"paramType\": \"Inst\",\n" +
+				"      \"duration\": \"0\",\n" +
+				"      \"version\": \"raw\",\n" +
+				"      \"ifMissing\": \"string\"\n" +
+				"    }\n" +
+				"  ],\n" +
+				"  \"props\": {\n" +
+				"    \"minSamplesNeeded\": \"1\",\n" +
+				"    \"aggUpperBoundClosed\": \"false\",\n" +
+				"    \"aggregateTimeZone\": \"UTC\",\n" +
+				"    \"average_tsname\": \"HG-Ave-Open-Open\",\n" +
+				"    \"aggLowerBoundClosed\": \"false\"\n" +
+				"  },\n" +
+				"  \"groupId\": -1,\n" +
+				"  \"groupName\": \"\"\n" +
+				"}";
+
+		public static final String UPDATE = "{\n" +
+				"  \"computationId\": 45,\n" +
+				"  \"name\": \"Daily Ave ( ... )\",\n" +
+				"  \"comment\": \"Used for calculating daily average.\",\n" +
+				"  \"appId\": 35,\n" +
+				"  \"applicationName\": \"compproc\",\n" +
+				"  \"lastModified\": \"2025-03-04T22:40:47.249Z\",\n" +
+				"  \"enabled\": false,\n" +
+				"  \"effectiveStartType\": \"Calendar\",\n" +
+				"  \"effectiveStartDate\": \"2025-03-04T22:40:47.249Z\",\n" +
+				"  \"effectiveStartInterval\": \"string\",\n" +
+				"  \"effectiveEndType\": \"No Limit\",\n" +
+				"  \"effectiveEndDate\": \"2025-03-04T22:40:47.249Z\",\n" +
+				"  \"effectiveEndInterval\": \"string\",\n" +
+				"  \"algorithmId\": 9876,\n" +
+				"  \"algorithmName\": \"WaterFlowAlgorithm\",\n" +
+				"  \"parmList\": [\n" +
+				"    {\n" +
+				"      \"algoParmType\": \"i\",\n" +
+				"      \"algoRoleName\": \"input\",\n" +
+				"      \"tsKey\": 1,\n" +
+				"      \"dataTypeId\": 48,\n" +
+				"      \"dataType\": \"Stage\",\n" +
+				"      \"interval\": \"15Minutes\",\n" +
+				"      \"deltaT\": 0,\n" +
+				"      \"deltaTUnits\": \"Hours\",\n" +
+				"      \"unitsAbbr\": \"ft\",\n" +
+				"      \"siteId\": 1,\n" +
+				"      \"siteName\": \"OKVI4\",\n" +
+				"      \"tableSelector\": \"string\",\n" +
+				"      \"modelId\": 0,\n" +
+				"      \"paramType\": \"Inst\",\n" +
+				"      \"duration\": \"0\",\n" +
+				"      \"version\": \"raw\",\n" +
+				"      \"ifMissing\": \"string\"\n" +
+				"    }\n" +
+				"  ],\n" +
+				"  \"props\": {\n" +
+				"    \"minSamplesNeeded\": \"1\",\n" +
+				"    \"aggUpperBoundClosed\": \"false\",\n" +
+				"    \"aggregateTimeZone\": \"UTC\",\n" +
+				"    \"average_tsname\": \"HG-Ave-Open-Open\",\n" +
+				"    \"aggLowerBoundClosed\": \"false\"\n" +
+				"  },\n" +
+				"  \"groupId\": 2468,\n" +
+				"  \"groupName\": \"AverageGroup\"\n" +
+				"}";
+	}
+
 	public static class ConfigExamples
 	{
 		private ConfigExamples() {}
@@ -276,60 +546,6 @@ public class ResourceExamples
 				"}";
 	}
 
-	public static class NetlistExamples
-	{
-		private NetlistExamples() {}
-
-		public static final String BASIC = "{\n" +
-				"  \"items\": {\n" +
-				"    \"\": {\n" +
-				"      \"description\": \"\",\n" +
-				"      \"platformName\": \"\",\n" +
-				"      \"transportId\": \"\"\n" +
-				"    }\n" +
-				"  },\n" +
-				"  \"lastModifyTime\": \"\",\n" +
-				"  \"name\": \"\",\n" +
-				"  \"netlistId\": 4,\n" +
-				"  \"siteNameTypePref\": \"\",\n" +
-				"  \"transportMediumType\": \"\"\n" +
-				"}";
-
-		public static final String NEW = "{\n" +
-				"  \"items\": {\n" +
-				"    \"14159500\": {\n" +
-				"      \"description\": \"\",\n" +
-				"      \"platformName\": \"CGRO\",\n" +
-				"      \"transportId\": \"14159500\"\n" +
-				"    }\n" +
-				"  },\n" +
-				"  \"lastModifyTime\": null,\n" +
-				"  \"name\": \"USGS-Sites\",\n" +
-				"  \"siteNameTypePref\": \"nwshb5\",\n" +
-				"  \"transportMediumType\": \"other\"\n" +
-				"}";
-
-		public static final String UPDATE = "{\n" +
-				"  \"items\": {\n" +
-				"    \"14159500\": {\n" +
-				"      \"description\": \"\",\n" +
-				"      \"platformName\": \"CGRO\",\n" +
-				"      \"transportId\": \"14159500\"\n" +
-				"    },\n" +
-				"    \"14372300\": {\n" +
-				"      \"description\": \"\",\n" +
-				"      \"platformName\": \"AGNO\",\n" +
-				"      \"transportId\": \"14372300\"\n" +
-				"    }\n" +
-				"  },\n" +
-				"  \"lastModifyTime\": \"2020-10-19T18:14:14.788Z[UTC]\",\n" +
-				"  \"name\": \"USGS-Sites\",\n" +
-				"  \"netlistId\": 4,\n" +
-				"  \"siteNameTypePref\": \"nwshb5\",\n" +
-				"  \"transportMediumType\": \"other\"\n" +
-				"}";
-	}
-
 	public static class DataSourceExamples
 	{
 		private DataSourceExamples() {}
@@ -387,69 +603,232 @@ public class ResourceExamples
 				"}";
 	}
 
-	public static class ReflistExamples
+	public static class DecodeExamples
 	{
-		private ReflistExamples() {}
+		private DecodeExamples() {}
 
 		public static final String BASIC = "{\n" +
-				"  \"reflistId\": 3,\n" +
-				"  \"enumName\": \"\",\n" +
+				"  \"rawmsg\": {\n" +
+				"    \"flags\": 71765,\n" +
+				"    \"platformId\": \"221\",\n" +
+				"    \"sequenceNum\": 25693,\n" +
+				"    \"localRecvTime\": \"2025-03-04T22:54:46.693Z\",\n" +
+				"    \"carrierStart\": \"2025-03-04T22:54:46.693Z\",\n" +
+				"    \"carrierStop\": \"2025-03-04T22:54:46.693Z\",\n" +
+				"    \"baud\": 300,\n" +
+				"    \"goodPhasePct\": 100,\n" +
+				"    \"freqOffset\": 0.5,\n" +
+				"    \"signalStrength\": 44.8,\n" +
+				"    \"phaseNoise\": 1.97,\n" +
+				"    \"xmitTime\": \"2025-03-04T22:54:46.693Z\",\n" +
+				"    \"momsn\": 0,\n" +
+				"    \"mtmsn\": 0,\n" +
+				"    \"cdrReference\": 0,\n" +
+				"    \"sessionStatus\": 0,\n" +
+				"    \"base64\": \"Q0UzMUQwMzAyMzEyOTEyMzQ1NUc0NSswTk4xNjFFTjIwMDAyN2JCMURBTXRBTXRBTXRBTXM6WUIgMTMuNTkgIA==\"\n" +
+				"  },\n" +
+				"  \"config\": {\n" +
+				"    \"configId\": 12,\n" +
+				"    \"name\": \"\",\n" +
+				"    \"numPlatforms\": 0,\n" +
+				"    \"description\": \"\",\n" +
+				"    \"configSensors\": [\n" +
+				"      {\n" +
+				"        \"sensorNumber\": 1,\n" +
+				"        \"sensorName\": \"\",\n" +
+				"        \"recordingMode\": \"\",\n" +
+				"        \"recordingInterval\": 3600,\n" +
+				"        \"timeOfFirstSample\": 0,\n" +
+				"        \"absoluteMin\": 0,\n" +
+				"        \"absoluteMax\": 100,\n" +
+				"        \"properties\": {},\n" +
+				"        \"dataTypes\": {},\n" +
+				"        \"usgsStatCode\": \"\"\n" +
+				"      }\n" +
+				"    ],\n" +
+				"    \"scripts\": [\n" +
+				"      {\n" +
+				"        \"name\": \"ST\",\n" +
+				"        \"dataOrder\": \"\",\n" +
+				"        \"headerType\": \"decodes:goes\",\n" +
+				"        \"scriptSensors\": {\n" +
+				"          \"sensorNumber\": 1,\n" +
+				"          \"unitConverter\": {\n" +
+				"            \"ucId\": 101,\n" +
+				"            \"fromAbbr\": \"\",\n" +
+				"            \"toAbbr\": \"\",\n" +
+				"            \"algorithm\": \"none\",\n" +
+				"            \"a\": 0,\n" +
+				"            \"b\": 0,\n" +
+				"            \"c\": 0,\n" +
+				"            \"d\": 0,\n" +
+				"            \"e\": 0,\n" +
+				"            \"f\": 0\n" +
+				"          }\n" +
+				"        },\n" +
+				"        \"formatStatements\": {\n" +
+				"          \"sequenceNum\": 0,\n" +
+				"          \"label\": \"\",\n" +
+				"          \"format\": \"\"\n" +
+				"        }\n" +
+				"      }\n" +
+				"    ]\n" +
+				"  }\n" +
+				"}";
+
+		public static final String VERBOSE = "{\n" +
+				"  \"rawmsg\": {\n" +
+				"    \"flags\": 71765,\n" +
+				"    \"platformId\": \"221\",\n" +
+				"    \"sequenceNum\": 25693,\n" +
+				"    \"localRecvTime\": \"2025-03-04T22:54:46.693Z\",\n" +
+				"    \"carrierStart\": \"2025-03-04T22:54:46.693Z\",\n" +
+				"    \"carrierStop\": \"2025-03-04T22:54:46.693Z\",\n" +
+				"    \"baud\": 300,\n" +
+				"    \"goodPhasePct\": 100,\n" +
+				"    \"freqOffset\": 0.5,\n" +
+				"    \"signalStrength\": 44.8,\n" +
+				"    \"phaseNoise\": 1.97,\n" +
+				"    \"xmitTime\": \"2025-03-04T22:54:46.693Z\",\n" +
+				"    \"momsn\": 0,\n" +
+				"    \"mtmsn\": 0,\n" +
+				"    \"cdrReference\": 0,\n" +
+				"    \"sessionStatus\": 0,\n" +
+				"    \"base64\": \"Q0UzMUQwMzAyMzEyOTEyMzQ1NUc0NSswTk4xNjFFTjIwMDAyN2JCMURBTXRBTXRBTXRBTXM6WUIgMTMuNTkgIA==\"\n" +
+				"  },\n" +
+				"  \"config\": {\n" +
+				"    \"configId\": 1,\n" +
+				"    \"name\": \"Shef-WSC-Hydro-RVERMMAR\",\n" +
+				"    \"numPlatforms\": 12,\n" +
+				"    \"description\": \"WSC SHEF - 2 sensors - HG, VB\",\n" +
+				"    \"configSensors\": [\n" +
+				"      {\n" +
+				"        \"sensorNumber\": 13,\n" +
+				"        \"sensorName\": \"WL\",\n" +
+				"        \"recordingMode\": \"F\",\n" +
+				"        \"recordingInterval\": 3600,\n" +
+				"        \"timeOfFirstSample\": 0,\n" +
+				"        \"absoluteMin\": 0,\n" +
+				"        \"absoluteMax\": 100,\n" +
+				"        \"properties\": {\n" +
+				"          \"additionalProp1\": \"value1\",\n" +
+				"          \"additionalProp2\": \"value2\",\n" +
+				"          \"additionalProp3\": \"value3\"\n" +
+				"        },\n" +
+				"        \"dataTypes\": {\n" +
+				"          \"NL-SHEF\": \"WL\",\n" +
+				"          \"SHEF-PE\": \"HG\",\n" +
+				"          \"W-SHEF\": \"WL\"\n" +
+				"        },\n" +
+				"        \"usgsStatCode\": \"string\"\n" +
+				"      },\n" +
+				"      {\n" +
+				"        \"sensorNumber\": 4,\n" +
+				"        \"sensorName\": \"VB\",\n" +
+				"        \"recordingMode\": \"F\",\n" +
+				"        \"recordingInterval\": 3600,\n" +
+				"        \"timeOfFirstSample\": 0,\n" +
+				"        \"absoluteMin\": 0,\n" +
+				"        \"absoluteMax\": 100,\n" +
+				"        \"properties\": {},\n" +
+				"        \"dataTypes\": {\n" +
+				"          \"SHEF-PE\": \"VB\"\n" +
+				"        },\n" +
+				"        \"usgsStatCode\": \"string\"\n" +
+				"      }\n" +
+				"    ],\n" +
+				"    \"scripts\": [\n" +
+				"      {\n" +
+				"        \"name\": \"ST\",\n" +
+				"        \"dataOrder\": \"D\",\n" +
+				"        \"headerType\": \"decodes:goes\",\n" +
+				"        \"scriptSensors\": [{\n" +
+				"          \"sensorNumber\": 1,\n" +
+				"          \"unitConverter\": {\n" +
+				"            \"ucId\": 101,\n" +
+				"            \"fromAbbr\": \"CFS\",\n" +
+				"            \"toAbbr\": \"CMS\",\n" +
+				"            \"algorithm\": \"string\",\n" +
+				"            \"a\": 1,\n" +
+				"            \"b\": 2,\n" +
+				"            \"c\": 3,\n" +
+				"            \"d\": 4,\n" +
+				"            \"e\": 5,\n" +
+				"            \"f\": 6\n" +
+				"          }\n" +
+				"        }],\n" +
+				"        \"formatStatements\": [{\n" +
+				"          \"sequenceNum\": 0,\n" +
+				"          \"label\": \"getlabel\",\n" +
+				"          \"format\": \"s(50,':',DONE),x,F(F,A,10d' ')\"\n" +
+				"        },\n" +
+				"        {\n" +
+				"          \"sequenceNum\": 1,\n" +
+				"          \"label\": \"hg\",\n" +
+				"          \"format\": \"s(12,'#',getlabel),x,f(mint,a,3d' +-',1),32(w,c(N,skiphg),F(S,A,12d' +-:',1)), >GETLABEL\"\n" +
+				"        },\n" +
+				"        {\n" +
+				"          \"sequenceNum\": 2,\n" +
+				"          \"label\": \"vb\",\n" +
+				"          \"format\": \"s(12,'.',getlabel),-2x,32(w,c(N,getlabel),F(S,A,12d' +-:',4)), >GETLABEL\"\n" +
+				"        }]\n" +
+				"      }\n" +
+				"    ]\n" +
+				"  }\n" +
+				"}";
+	}
+
+	public static class NetlistExamples
+	{
+		private NetlistExamples() {}
+
+		public static final String BASIC = "{\n" +
 				"  \"items\": {\n" +
-				"    \"standard\": {\n" +
-				"      \"value\": \"\",\n" +
+				"    \"\": {\n" +
 				"      \"description\": \"\",\n" +
-				"      \"execClassName\": \"\",\n" +
-				"      \"editClassName\": null,\n" +
-				"      \"sortNumber\": 3\n" +
+				"      \"platformName\": \"\",\n" +
+				"      \"transportId\": \"\"\n" +
 				"    }\n" +
 				"  },\n" +
-				"  \"defaultValue\": null,\n" +
-				"  \"description\": null\n" +
+				"  \"lastModifyTime\": \"\",\n" +
+				"  \"name\": \"\",\n" +
+				"  \"netlistId\": 4,\n" +
+				"  \"siteNameTypePref\": \"\",\n" +
+				"  \"transportMediumType\": \"\"\n" +
 				"}";
 
 		public static final String NEW = "{\n" +
-				"  \"enumName\": \"ScriptType\",\n" +
 				"  \"items\": {\n" +
-				"    \"standard\": {\n" +
-				"      \"value\": \"standard\",\n" +
-				"      \"description\": \"DECODES Format Statements and Unit Conversions\",\n" +
-				"      \"execClassName\": \"DecodesScript\",\n" +
-				"      \"editClassName\": null,\n" +
-				"      \"sortNumber\": 3\n" +
+				"    \"14159500\": {\n" +
+				"      \"description\": \"\",\n" +
+				"      \"platformName\": \"CGRO\",\n" +
+				"      \"transportId\": \"14159500\"\n" +
 				"    }\n" +
 				"  },\n" +
-				"  \"defaultValue\": null,\n" +
-				"  \"description\": null\n" +
+				"  \"lastModifyTime\": null,\n" +
+				"  \"name\": \"USGS-Sites\",\n" +
+				"  \"siteNameTypePref\": \"nwshb5\",\n" +
+				"  \"transportMediumType\": \"other\"\n" +
 				"}";
 
 		public static final String UPDATE = "{\n" +
-				"  \"reflistId\": 3,\n" +
-				"  \"enumName\": \"ScriptType\",\n" +
 				"  \"items\": {\n" +
-				"    \"standard\": {\n" +
-				"      \"value\": \"standard\",\n" +
-				"      \"description\": \"DECODES Format Statements and Unit Conversions\",\n" +
-				"      \"execClassName\": \"DecodesScript\",\n" +
-				"      \"editClassName\": null,\n" +
-				"      \"sortNumber\": 3\n" +
+				"    \"14159500\": {\n" +
+				"      \"description\": \"\",\n" +
+				"      \"platformName\": \"CGRO\",\n" +
+				"      \"transportId\": \"14159500\"\n" +
 				"    },\n" +
-				"    \"nos\": {\n" +
-				"      \"value\": \"nos\",\n" +
-				"      \"description\": \"Hard-coded NOS data parser\",\n" +
-				"      \"execClassName\": \"NOSMessageParser\",\n" +
-				"      \"editClassName\": null,\n" +
-				"      \"sortNumber\": 2\n" +
-				"    },\n" +
-				"    \"ndbc\": {\n" +
-				"      \"value\": \"ndbc\",\n" +
-				"      \"description\": \"National Data Buoy Center Context-Sensitive Parser\",\n" +
-				"      \"execClassName\": \"NDBCMessageParser\",\n" +
-				"      \"editClassName\": null,\n" +
-				"      \"sortNumber\": 1\n" +
+				"    \"14372300\": {\n" +
+				"      \"description\": \"\",\n" +
+				"      \"platformName\": \"AGNO\",\n" +
+				"      \"transportId\": \"14372300\"\n" +
 				"    }\n" +
 				"  },\n" +
-				"  \"defaultValue\": null,\n" +
-				"  \"description\": null\n" +
+				"  \"lastModifyTime\": \"2020-10-19T18:14:14.788Z[UTC]\",\n" +
+				"  \"name\": \"USGS-Sites\",\n" +
+				"  \"netlistId\": 4,\n" +
+				"  \"siteNameTypePref\": \"nwshb5\",\n" +
+				"  \"transportMediumType\": \"other\"\n" +
 				"}";
 	}
 
@@ -706,6 +1085,72 @@ public class ResourceExamples
 				"}";
 	}
 
+	public static class ReflistExamples
+	{
+		private ReflistExamples() {}
+
+		public static final String BASIC = "{\n" +
+				"  \"reflistId\": 3,\n" +
+				"  \"enumName\": \"\",\n" +
+				"  \"items\": {\n" +
+				"    \"standard\": {\n" +
+				"      \"value\": \"\",\n" +
+				"      \"description\": \"\",\n" +
+				"      \"execClassName\": \"\",\n" +
+				"      \"editClassName\": null,\n" +
+				"      \"sortNumber\": 3\n" +
+				"    }\n" +
+				"  },\n" +
+				"  \"defaultValue\": null,\n" +
+				"  \"description\": null\n" +
+				"}";
+
+		public static final String NEW = "{\n" +
+				"  \"enumName\": \"ScriptType\",\n" +
+				"  \"items\": {\n" +
+				"    \"standard\": {\n" +
+				"      \"value\": \"standard\",\n" +
+				"      \"description\": \"DECODES Format Statements and Unit Conversions\",\n" +
+				"      \"execClassName\": \"DecodesScript\",\n" +
+				"      \"editClassName\": null,\n" +
+				"      \"sortNumber\": 3\n" +
+				"    }\n" +
+				"  },\n" +
+				"  \"defaultValue\": null,\n" +
+				"  \"description\": null\n" +
+				"}";
+
+		public static final String UPDATE = "{\n" +
+				"  \"reflistId\": 3,\n" +
+				"  \"enumName\": \"ScriptType\",\n" +
+				"  \"items\": {\n" +
+				"    \"standard\": {\n" +
+				"      \"value\": \"standard\",\n" +
+				"      \"description\": \"DECODES Format Statements and Unit Conversions\",\n" +
+				"      \"execClassName\": \"DecodesScript\",\n" +
+				"      \"editClassName\": null,\n" +
+				"      \"sortNumber\": 3\n" +
+				"    },\n" +
+				"    \"nos\": {\n" +
+				"      \"value\": \"nos\",\n" +
+				"      \"description\": \"Hard-coded NOS data parser\",\n" +
+				"      \"execClassName\": \"NOSMessageParser\",\n" +
+				"      \"editClassName\": null,\n" +
+				"      \"sortNumber\": 2\n" +
+				"    },\n" +
+				"    \"ndbc\": {\n" +
+				"      \"value\": \"ndbc\",\n" +
+				"      \"description\": \"National Data Buoy Center Context-Sensitive Parser\",\n" +
+				"      \"execClassName\": \"NDBCMessageParser\",\n" +
+				"      \"editClassName\": null,\n" +
+				"      \"sortNumber\": 1\n" +
+				"    }\n" +
+				"  },\n" +
+				"  \"defaultValue\": null,\n" +
+				"  \"description\": null\n" +
+				"}";
+	}
+
 	public static class RoutingExamples
 	{
 		private RoutingExamples() {}
@@ -881,44 +1326,6 @@ public class ResourceExamples
 				"}";
 	}
 
-	public static class AppExamples
-	{
-		private AppExamples() {}
-
-		public static final String BASIC = "{\n" +
-				"  \"appId\": 4,\n" +
-				"  \"appName\": \"\",\n" +
-				"  \"appType\": \"\",\n" +
-				"  \"comment\": \"\",\n" +
-				"  \"lastModified\": null,\n" +
-				"  \"manualEditingApp\": false,\n" +
-				"  \"properties\": {}\n" +
-				"}";
-
-		public static final String NEW = "{\n" +
-				"  \"appName\": \"compproc\",\n" +
-				"  \"appType\": \"computationprocess\",\n" +
-				"  \"comment\": \"Main Computation Process\",\n" +
-				"  \"lastModified\": \"2025-03-04T22:03:48.910Z\",\n" +
-				"  \"manualEditingApp\": false,\n" +
-				"  \"properties\": {\n" +
-				"    \"fromName\": \"value\"\n" +
-				"  }\n" +
-				"}";
-
-		public static final String UPDATE = "{\n" +
-				"  \"appId\": 4,\n" +
-				"  \"appName\": \"compproc\",\n" +
-				"  \"appType\": \"computationprocess\",\n" +
-				"  \"comment\": \"Main Computation Process\",\n" +
-				"  \"lastModified\": \"2025-03-04T22:03:48.910Z\",\n" +
-				"  \"manualEditingApp\": false,\n" +
-				"  \"properties\": {\n" +
-				"    \"fromName\": \"value\"\n" +
-				"  }\n" +
-				"}";
-	}
-
 	public static class SiteExamples
 	{
 		private SiteExamples() {}
@@ -994,413 +1401,6 @@ public class ResourceExamples
 				"    \"additionalProp3\": \"value3\"\n" +
 				"  },\n" +
 				"  \"lastModified\": \"2025-03-04T22:17:13.441Z\"\n" +
-				"}";
-	}
-
-	public static class AlgorithmExamples
-	{
-		private AlgorithmExamples() {}
-
-		public static final String BASIC = "{\n" +
-				"  \"algorithmId\": 4,\n" +
-				"  \"name\": \"\",\n" +
-				"  \"execClass\": \"\",\n" +
-				"  \"description\": \"\",\n" +
-				"  \"props\": {\n" +
-				"    \"input1_MISSING\": \"\",\n" +
-				"    \"chooseHigher\": \"true\",\n" +
-				"    \"upperLimit\": \"\",\n" +
-				"    \"lowerLimit\": \"\",\n" +
-				"    \"input2_MISSING\": \"IGNORE\"\n" +
-				"  },\n" +
-				"  \"parms\": {\n" +
-				"    \"roleName\": \"\",\n" +
-				"    \"parmType\": \"\"\n" +
-				"  },\n" +
-				"  \"numCompsUsing\": 1,\n" +
-				"  \"algoScripts\": {}\n" +
-				"}";
-
-		public static final String NEW = "{\n" +
-				"  \"name\": \"ChooseOne\",\n" +
-				"  \"execClass\": \"decodes.tsdb.algo.ChooseOne\",\n" +
-				"  \"description\": \"Given two inputs, output the best one: If only one is present at the time-slice, " +
-				"output it. If one is outside the specified upper or lower limit (see properties) output the other. " +
-				"If both are acceptable, output the first one. Useful in situations where you have redundant sensors.\",\n" +
-				"  \"props\": {\n" +
-				"    \"input1_MISSING\": \"IGNORE\",\n" +
-				"    \"chooseHigher\": \"true\",\n" +
-				"    \"upperLimit\": \"999999999999.9\",\n" +
-				"    \"lowerLimit\": \"-999999999999.9\",\n" +
-				"    \"input2_MISSING\": \"IGNORE\"\n" +
-				"  },\n" +
-				"  \"parms\": [{\n" +
-				"    \"roleName\": \"input\",\n" +
-				"    \"parmType\": \"i\"\n" +
-				"  }," +
-				"  {\n" +
-				"    \"roleName\": \"output\",\n" +
-				"    \"parmType\": \"o\"\n" +
-				"  }],\n" +
-				"  \"numCompsUsing\": 1,\n" +
-				"  \"algoScripts\": {}\n" +
-				"}";
-
-		public static final String UPDATE = "{\n" +
-				"  \"algorithmId\": 4,\n" +
-				"  \"name\": \"ChooseOne\",\n" +
-				"  \"execClass\": \"decodes.tsdb.algo.ChooseOne\",\n" +
-				"  \"description\": \"Given two inputs, output the best one: If only one is present at the time-slice, " +
-				"output it. If one is outside the specified upper or lower limit (see properties) output the other. " +
-				"If both are acceptable, output the first one. Useful in situations where you have redundant sensors.\",\n" +
-				"  \"props\": {\n" +
-				"    \"input1_MISSING\": \"IGNORE\",\n" +
-				"    \"chooseHigher\": \"true\",\n" +
-				"    \"upperLimit\": \"999999999999.9\",\n" +
-				"    \"lowerLimit\": \"-999999999999.9\",\n" +
-				"    \"input2_MISSING\": \"IGNORE\"\n" +
-				"  },\n" +
-				"  \"parms\": [{\n" +
-				"    \"roleName\": \"input1\",\n" +
-				"    \"parmType\": \"i\"\n" +
-				"  }," +
-				"  {\n" +
-				"    \"roleName\": \"input2\",\n" +
-				"    \"parmType\": \"i\"\n" +
-				"  }," +
-				"  {\n" +
-				"    \"roleName\": \"output\",\n" +
-				"    \"parmType\": \"o\"\n" +
-				"  }],\n" +
-				"  \"numCompsUsing\": 1,\n" +
-				"  \"algoScripts\": [{\n" +
-				"    \"text\": \"#Tue May 03 11:42:01 PDT 2022\\nAlgorithmType=TIME_SLICE\\n\",\n" +
-				"    \"scriptType\": \"T\"\n" +
-				"  }]\n" +
-				"}";
-	}
-
-	public static class ComputationExamples
-	{
-		private ComputationExamples() {}
-
-		public static final String BASIC = "{\n" +
-				"  \"computationId\": 4,\n" +
-				"  \"name\": \"\",\n" +
-				"  \"comment\": \"\",\n" +
-				"  \"appId\": 5,\n" +
-				"  \"applicationName\": \"compproc\",\n" +
-				"  \"lastModified\": null,\n" +
-				"  \"enabled\": false,\n" +
-				"  \"effectiveStartType\": \"\",\n" +
-				"  \"effectiveStartDate\": \"2025-03-04T22:40:47.249Z\",\n" +
-				"  \"effectiveStartInterval\": \"string\",\n" +
-				"  \"effectiveEndType\": \"\",\n" +
-				"  \"effectiveEndDate\": \"2025-03-04T22:40:47.249Z\",\n" +
-				"  \"effectiveEndInterval\": \"string\",\n" +
-				"  \"algorithmId\": 24,\n" +
-				"  \"algorithmName\": \"\",\n" +
-				"  \"parmList\": [\n" +
-				"    {\n" +
-				"      \"algoParmType\": \"\",\n" +
-				"      \"algoRoleName\": \"\",\n" +
-				"      \"tsKey\": 1,\n" +
-				"      \"dataTypeId\": 48,\n" +
-				"      \"dataType\": \"\",\n" +
-				"      \"interval\": \"\",\n" +
-				"      \"deltaT\": 0,\n" +
-				"      \"deltaTUnits\": \"\",\n" +
-				"      \"unitsAbbr\": \"ft\",\n" +
-				"      \"siteId\": 1,\n" +
-				"      \"siteName\": \"\",\n" +
-				"      \"tableSelector\": \"\",\n" +
-				"      \"modelId\": 0,\n" +
-				"      \"paramType\": \"\",\n" +
-				"      \"duration\": \"0\",\n" +
-				"      \"version\": \"\",\n" +
-				"      \"ifMissing\": \"\"\n" +
-				"    }\n" +
-				"  ],\n" +
-				"  \"props\": {\n" +
-				"    \"minSamplesNeeded\": \"\",\n" +
-				"    \"aggUpperBoundClosed\": \"false\",\n" +
-				"    \"aggregateTimeZone\": \"\",\n" +
-				"    \"average_tsname\": \"\",\n" +
-				"    \"aggLowerBoundClosed\": \"false\"\n" +
-				"  },\n" +
-				"  \"groupId\": -1,\n" +
-				"  \"groupName\": \"\"\n" +
-				"}";
-
-		public static final String NEW = "{\n" +
-				"  \"computationId\": 45,\n" +
-				"  \"name\": \"Daily Ave ( ... )\",\n" +
-				"  \"comment\": \"Used for calculating daily average.\",\n" +
-				"  \"appId\": 35,\n" +
-				"  \"applicationName\": \"compproc\",\n" +
-				"  \"lastModified\": null,\n" +
-				"  \"enabled\": false,\n" +
-				"  \"effectiveStartType\": \"Calendar\",\n" +
-				"  \"effectiveStartDate\": \"2025-03-04T22:40:47.249Z\",\n" +
-				"  \"effectiveStartInterval\": \"string\",\n" +
-				"  \"effectiveEndType\": \"No Limit\",\n" +
-				"  \"effectiveEndDate\": \"2025-03-04T22:40:47.249Z\",\n" +
-				"  \"effectiveEndInterval\": \"string\",\n" +
-				"  \"algorithmId\": 9876,\n" +
-				"  \"algorithmName\": \"AverageAlgorithm\",\n" +
-				"  \"parmList\": [\n" +
-				"    {\n" +
-				"      \"algoParmType\": \"i\",\n" +
-				"      \"algoRoleName\": \"input\",\n" +
-				"      \"tsKey\": 1,\n" +
-				"      \"dataTypeId\": 48,\n" +
-				"      \"dataType\": \"Stage\",\n" +
-				"      \"interval\": \"15Minutes\",\n" +
-				"      \"deltaT\": 0,\n" +
-				"      \"deltaTUnits\": \"Hours\",\n" +
-				"      \"unitsAbbr\": \"ft\",\n" +
-				"      \"siteId\": 1,\n" +
-				"      \"siteName\": \"OKVI4\",\n" +
-				"      \"tableSelector\": \"string\",\n" +
-				"      \"modelId\": 0,\n" +
-				"      \"paramType\": \"Inst\",\n" +
-				"      \"duration\": \"0\",\n" +
-				"      \"version\": \"raw\",\n" +
-				"      \"ifMissing\": \"string\"\n" +
-				"    }\n" +
-				"  ],\n" +
-				"  \"props\": {\n" +
-				"    \"minSamplesNeeded\": \"1\",\n" +
-				"    \"aggUpperBoundClosed\": \"false\",\n" +
-				"    \"aggregateTimeZone\": \"UTC\",\n" +
-				"    \"average_tsname\": \"HG-Ave-Open-Open\",\n" +
-				"    \"aggLowerBoundClosed\": \"false\"\n" +
-				"  },\n" +
-				"  \"groupId\": -1,\n" +
-				"  \"groupName\": \"\"\n" +
-				"}";
-
-		public static final String UPDATE = "{\n" +
-				"  \"computationId\": 45,\n" +
-				"  \"name\": \"Daily Ave ( ... )\",\n" +
-				"  \"comment\": \"Used for calculating daily average.\",\n" +
-				"  \"appId\": 35,\n" +
-				"  \"applicationName\": \"compproc\",\n" +
-				"  \"lastModified\": \"2025-03-04T22:40:47.249Z\",\n" +
-				"  \"enabled\": false,\n" +
-				"  \"effectiveStartType\": \"Calendar\",\n" +
-				"  \"effectiveStartDate\": \"2025-03-04T22:40:47.249Z\",\n" +
-				"  \"effectiveStartInterval\": \"string\",\n" +
-				"  \"effectiveEndType\": \"No Limit\",\n" +
-				"  \"effectiveEndDate\": \"2025-03-04T22:40:47.249Z\",\n" +
-				"  \"effectiveEndInterval\": \"string\",\n" +
-				"  \"algorithmId\": 9876,\n" +
-				"  \"algorithmName\": \"WaterFlowAlgorithm\",\n" +
-				"  \"parmList\": [\n" +
-				"    {\n" +
-				"      \"algoParmType\": \"i\",\n" +
-				"      \"algoRoleName\": \"input\",\n" +
-				"      \"tsKey\": 1,\n" +
-				"      \"dataTypeId\": 48,\n" +
-				"      \"dataType\": \"Stage\",\n" +
-				"      \"interval\": \"15Minutes\",\n" +
-				"      \"deltaT\": 0,\n" +
-				"      \"deltaTUnits\": \"Hours\",\n" +
-				"      \"unitsAbbr\": \"ft\",\n" +
-				"      \"siteId\": 1,\n" +
-				"      \"siteName\": \"OKVI4\",\n" +
-				"      \"tableSelector\": \"string\",\n" +
-				"      \"modelId\": 0,\n" +
-				"      \"paramType\": \"Inst\",\n" +
-				"      \"duration\": \"0\",\n" +
-				"      \"version\": \"raw\",\n" +
-				"      \"ifMissing\": \"string\"\n" +
-				"    }\n" +
-				"  ],\n" +
-				"  \"props\": {\n" +
-				"    \"minSamplesNeeded\": \"1\",\n" +
-				"    \"aggUpperBoundClosed\": \"false\",\n" +
-				"    \"aggregateTimeZone\": \"UTC\",\n" +
-				"    \"average_tsname\": \"HG-Ave-Open-Open\",\n" +
-				"    \"aggLowerBoundClosed\": \"false\"\n" +
-				"  },\n" +
-				"  \"groupId\": 2468,\n" +
-				"  \"groupName\": \"AverageGroup\"\n" +
-				"}";
-	}
-
-	public static class DecodeExamples
-	{
-		private DecodeExamples() {}
-
-		public static final String BASIC = "{\n" +
-				"  \"rawmsg\": {\n" +
-				"    \"flags\": 71765,\n" +
-				"    \"platformId\": \"221\",\n" +
-				"    \"sequenceNum\": 25693,\n" +
-				"    \"localRecvTime\": \"2025-03-04T22:54:46.693Z\",\n" +
-				"    \"carrierStart\": \"2025-03-04T22:54:46.693Z\",\n" +
-				"    \"carrierStop\": \"2025-03-04T22:54:46.693Z\",\n" +
-				"    \"baud\": 300,\n" +
-				"    \"goodPhasePct\": 100,\n" +
-				"    \"freqOffset\": 0.5,\n" +
-				"    \"signalStrength\": 44.8,\n" +
-				"    \"phaseNoise\": 1.97,\n" +
-				"    \"xmitTime\": \"2025-03-04T22:54:46.693Z\",\n" +
-				"    \"momsn\": 0,\n" +
-				"    \"mtmsn\": 0,\n" +
-				"    \"cdrReference\": 0,\n" +
-				"    \"sessionStatus\": 0,\n" +
-				"    \"base64\": \"Q0UzMUQwMzAyMzEyOTEyMzQ1NUc0NSswTk4xNjFFTjIwMDAyN2JCMURBTXRBTXRBTXRBTXM6WUIgMTMuNTkgIA==\"\n" +
-				"  },\n" +
-				"  \"config\": {\n" +
-				"    \"configId\": 12,\n" +
-				"    \"name\": \"\",\n" +
-				"    \"numPlatforms\": 0,\n" +
-				"    \"description\": \"\",\n" +
-				"    \"configSensors\": [\n" +
-				"      {\n" +
-				"        \"sensorNumber\": 1,\n" +
-				"        \"sensorName\": \"\",\n" +
-				"        \"recordingMode\": \"\",\n" +
-				"        \"recordingInterval\": 3600,\n" +
-				"        \"timeOfFirstSample\": 0,\n" +
-				"        \"absoluteMin\": 0,\n" +
-				"        \"absoluteMax\": 100,\n" +
-				"        \"properties\": {},\n" +
-				"        \"dataTypes\": {},\n" +
-				"        \"usgsStatCode\": \"\"\n" +
-				"      }\n" +
-				"    ],\n" +
-				"    \"scripts\": [\n" +
-				"      {\n" +
-				"        \"name\": \"ST\",\n" +
-				"        \"dataOrder\": \"\",\n" +
-				"        \"headerType\": \"decodes:goes\",\n" +
-				"        \"scriptSensors\": {\n" +
-				"          \"sensorNumber\": 1,\n" +
-				"          \"unitConverter\": {\n" +
-				"            \"ucId\": 101,\n" +
-				"            \"fromAbbr\": \"\",\n" +
-				"            \"toAbbr\": \"\",\n" +
-				"            \"algorithm\": \"none\",\n" +
-				"            \"a\": 0,\n" +
-				"            \"b\": 0,\n" +
-				"            \"c\": 0,\n" +
-				"            \"d\": 0,\n" +
-				"            \"e\": 0,\n" +
-				"            \"f\": 0\n" +
-				"          }\n" +
-				"        },\n" +
-				"        \"formatStatements\": {\n" +
-				"          \"sequenceNum\": 0,\n" +
-				"          \"label\": \"\",\n" +
-				"          \"format\": \"\"\n" +
-				"        }\n" +
-				"      }\n" +
-				"    ]\n" +
-				"  }\n" +
-				"}";
-
-		public static final String VERBOSE = "{\n" +
-				"  \"rawmsg\": {\n" +
-				"    \"flags\": 71765,\n" +
-				"    \"platformId\": \"221\",\n" +
-				"    \"sequenceNum\": 25693,\n" +
-				"    \"localRecvTime\": \"2025-03-04T22:54:46.693Z\",\n" +
-				"    \"carrierStart\": \"2025-03-04T22:54:46.693Z\",\n" +
-				"    \"carrierStop\": \"2025-03-04T22:54:46.693Z\",\n" +
-				"    \"baud\": 300,\n" +
-				"    \"goodPhasePct\": 100,\n" +
-				"    \"freqOffset\": 0.5,\n" +
-				"    \"signalStrength\": 44.8,\n" +
-				"    \"phaseNoise\": 1.97,\n" +
-				"    \"xmitTime\": \"2025-03-04T22:54:46.693Z\",\n" +
-				"    \"momsn\": 0,\n" +
-				"    \"mtmsn\": 0,\n" +
-				"    \"cdrReference\": 0,\n" +
-				"    \"sessionStatus\": 0,\n" +
-				"    \"base64\": \"Q0UzMUQwMzAyMzEyOTEyMzQ1NUc0NSswTk4xNjFFTjIwMDAyN2JCMURBTXRBTXRBTXRBTXM6WUIgMTMuNTkgIA==\"\n" +
-				"  },\n" +
-				"  \"config\": {\n" +
-				"    \"configId\": 1,\n" +
-				"    \"name\": \"Shef-WSC-Hydro-RVERMMAR\",\n" +
-				"    \"numPlatforms\": 12,\n" +
-				"    \"description\": \"WSC SHEF - 2 sensors - HG, VB\",\n" +
-				"    \"configSensors\": [\n" +
-				"      {\n" +
-				"        \"sensorNumber\": 13,\n" +
-				"        \"sensorName\": \"WL\",\n" +
-				"        \"recordingMode\": \"F\",\n" +
-				"        \"recordingInterval\": 3600,\n" +
-				"        \"timeOfFirstSample\": 0,\n" +
-				"        \"absoluteMin\": 0,\n" +
-				"        \"absoluteMax\": 100,\n" +
-				"        \"properties\": {\n" +
-				"          \"additionalProp1\": \"value1\",\n" +
-				"          \"additionalProp2\": \"value2\",\n" +
-				"          \"additionalProp3\": \"value3\"\n" +
-				"        },\n" +
-				"        \"dataTypes\": {\n" +
-				"          \"NL-SHEF\": \"WL\",\n" +
-				"          \"SHEF-PE\": \"HG\",\n" +
-				"          \"W-SHEF\": \"WL\"\n" +
-				"        },\n" +
-				"        \"usgsStatCode\": \"string\"\n" +
-				"      },\n" +
-				"      {\n" +
-				"        \"sensorNumber\": 4,\n" +
-				"        \"sensorName\": \"VB\",\n" +
-				"        \"recordingMode\": \"F\",\n" +
-				"        \"recordingInterval\": 3600,\n" +
-				"        \"timeOfFirstSample\": 0,\n" +
-				"        \"absoluteMin\": 0,\n" +
-				"        \"absoluteMax\": 100,\n" +
-				"        \"properties\": {},\n" +
-				"        \"dataTypes\": {\n" +
-				"          \"SHEF-PE\": \"VB\"\n" +
-				"        },\n" +
-				"        \"usgsStatCode\": \"string\"\n" +
-				"      }\n" +
-				"    ],\n" +
-				"    \"scripts\": [\n" +
-				"      {\n" +
-				"        \"name\": \"ST\",\n" +
-				"        \"dataOrder\": \"D\",\n" +
-				"        \"headerType\": \"decodes:goes\",\n" +
-				"        \"scriptSensors\": [{\n" +
-				"          \"sensorNumber\": 1,\n" +
-				"          \"unitConverter\": {\n" +
-				"            \"ucId\": 101,\n" +
-				"            \"fromAbbr\": \"CFS\",\n" +
-				"            \"toAbbr\": \"CMS\",\n" +
-				"            \"algorithm\": \"string\",\n" +
-				"            \"a\": 1,\n" +
-				"            \"b\": 2,\n" +
-				"            \"c\": 3,\n" +
-				"            \"d\": 4,\n" +
-				"            \"e\": 5,\n" +
-				"            \"f\": 6\n" +
-				"          }\n" +
-				"        }],\n" +
-				"        \"formatStatements\": [{\n" +
-				"          \"sequenceNum\": 0,\n" +
-				"          \"label\": \"getlabel\",\n" +
-				"          \"format\": \"s(50,':',DONE),x,F(F,A,10d' ')\"\n" +
-				"        },\n" +
-				"        {\n" +
-				"          \"sequenceNum\": 1,\n" +
-				"          \"label\": \"hg\",\n" +
-				"          \"format\": \"s(12,'#',getlabel),x,f(mint,a,3d' +-',1),32(w,c(N,skiphg),F(S,A,12d' +-:',1)), >GETLABEL\"\n" +
-				"        },\n" +
-				"        {\n" +
-				"          \"sequenceNum\": 2,\n" +
-				"          \"label\": \"vb\",\n" +
-				"          \"format\": \"s(12,'.',getlabel),-2x,32(w,c(N,getlabel),F(S,A,12d' +-:',4)), >GETLABEL\"\n" +
-				"        }]\n" +
-				"      }\n" +
-				"    ]\n" +
-				"  }\n" +
 				"}";
 	}
 
