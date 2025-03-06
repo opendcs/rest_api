@@ -30,4 +30,9 @@ public final class DbInterface
 	//Will remove with issue: https://github.com/opendcs/rest_api/issues/191
 	@Deprecated
 	public static final Properties decodesProperties = new Properties();
+
+	private DbInterface()
+	{
+		//placeholder class that will get removed
+	}
 }
