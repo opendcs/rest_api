@@ -1,5 +1,5 @@
 /*
- *  Copyright 2024 OpenDCS Consortium and its Contributors
+ *  Copyright 2025 OpenDCS Consortium and its Contributors
  *
  *  Licensed under the Apache License, Version 2.0 (the "License")
  *  you may not use this file except in compliance with the License.
@@ -67,7 +67,7 @@ import org.opendcs.odcsapi.hydrojson.DbInterface;
 import org.opendcs.odcsapi.util.ApiPropertiesUtil;
 import org.opendcs.odcsapi.util.ApiTextUtil;
 
-public class TestDecoder
+public final class TestDecoder
 {
 	private static long lastDecodesInitMsec = 0L;
 
@@ -214,7 +214,7 @@ public class TestDecoder
 		return ret;
 	}
 	
-	public static boolean isGoes(byte[] msgData)
+	private static boolean isGoes(byte[] msgData)
 	{
 		Logger.instance().debug1("isGoes(" + new String(msgData) + ")");
 
@@ -228,7 +228,7 @@ public class TestDecoder
 		return true;
 	}
 	
-	public static boolean isIridium(byte[] msgData)
+	private static boolean isIridium(byte[] msgData)
 	{
 		return (new String(msgData,0,3)).startsWith("ID=");
 	}
