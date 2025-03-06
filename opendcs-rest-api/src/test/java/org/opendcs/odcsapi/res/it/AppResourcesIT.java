@@ -21,7 +21,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.TestTemplate;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.opendcs.fixtures.configuration.Configuration;
+import org.opendcs.fixtures.spi.Configuration;
 import org.opendcs.odcsapi.beans.ApiAppStatus;
 import org.opendcs.odcsapi.fixtures.DatabaseContextProvider;
 import org.opendcs.odcsapi.fixtures.DatabaseSetupExtension;
