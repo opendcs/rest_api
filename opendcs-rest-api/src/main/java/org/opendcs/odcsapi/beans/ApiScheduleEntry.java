@@ -22,15 +22,15 @@ import io.swagger.v3.oas.annotations.media.Schema;
 @Schema(description = "Represents a schedule entry, including its related application details, routing specification, and timing information.")
 public final class ApiScheduleEntry
 {
-	@Schema(description = "Unique ID of the schedule entry.", example = "14")
+	@Schema(description = "Unique numeric identifier of the schedule entry.", example = "14")
 	private Long schedEntryId = null;
 	@Schema(description = "Name of the schedule entry.", example = "something-else")
 	private String name = null;
-	@Schema(description = "ID of the associated application.", example = "1234")
+	@Schema(description = "Unique numeric identifier of the associated application.", example = "1234")
 	private Long appId = null;
 	@Schema(description = "Name of the associated application.", example = "RoutingScheduler")
 	private String appName = null;
-	@Schema(description = "ID of the associated routing specification.", example = "5678")
+	@Schema(description = "Unique numeric identifier of the associated routing specification.", example = "5678")
 	private Long routingSpecId = null;
 	@Schema(description = "Name of the associated routing specification.", example = "goes1")
 	private String routingSpecName = null;

@@ -30,13 +30,13 @@ public final class ApiRoutingExecStatus
 	/**
 	 * Corresponds to SCHEDULE_ENTRY_STATUS.SCHEDULE_ENTRY_STATUS_ID
 	 */
-	@Schema(description = "Unique ID of this routing execution.", example = "123456")
+	@Schema(description = "Unique numeric identifier of this routing execution.", example = "123456")
 	private Long routingExecId = null;
 
-	@Schema(description = "ID of the schedule entry associated with this execution.", example = "78910")
+	@Schema(description = "Unique numeric identifier of the schedule entry associated with this execution.", example = "78910")
 	private Long scheduleEntryId = null;
 
-	@Schema(description = "ID of the routing specification.", example = "45678")
+	@Schema(description = "Unique numeric identifier of the routing specification.", example = "45678")
 	private Long routingSpecId = null;
 
 	@Schema(description = "The timestamp when the execution started.", example = "2025-01-01T12:34:56.000[UTC]")

@@ -20,7 +20,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 @Schema(description = "Represents a time series group reference, including its ID, name, type, and description.")
 public final class ApiTsGroupRef
 {
-	@Schema(description = "Unique identifier for the time series group.", example = "101")
+	@Schema(description = "Unique numeric identifier for the time series group.", example = "101")
 	private Long groupId = null;
 
 	@Schema(description = "Name of the time series group.", example = "topgroup")

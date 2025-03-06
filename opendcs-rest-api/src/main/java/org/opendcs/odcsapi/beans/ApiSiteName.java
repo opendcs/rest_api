@@ -33,7 +33,7 @@ public final class ApiSiteName
 	@Schema(description = "The value of the name. Case sensitivity is significant.", example = "BFD")
 	private String nameValue = null;
 
-	@Schema(description = "The unique identifier for the site.", example = "867")
+	@Schema(description = "The unique numeric identifier for the site.", example = "867")
 	private Long siteId = null;
 
 	public ApiSiteName()

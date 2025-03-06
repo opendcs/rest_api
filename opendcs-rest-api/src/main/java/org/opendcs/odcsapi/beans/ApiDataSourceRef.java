@@ -22,10 +22,10 @@ import java.util.Properties;
 import org.opendcs.odcsapi.util.ApiPropertiesUtil;
 import io.swagger.v3.oas.annotations.media.Schema;
 
-@Schema(description = "Represents a data source reference including its identifier, name, and additional configuration details.")
+@Schema(description = "Represents a reference to a data source including its identifier, name, and additional configuration details.")
 public final class ApiDataSourceRef
 {
-	@Schema(description = "The unique identifier for the data source.", example = "15")
+	@Schema(description = "The unique numeric identifier for the data source.", example = "15")
 	private Long dataSourceId = null;
 
 	@Schema(description = "The name of the data source.", example = "CDADATA-As-MBHydro")

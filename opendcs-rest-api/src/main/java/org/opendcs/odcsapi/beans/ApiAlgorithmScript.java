@@ -27,8 +27,7 @@ public final class ApiAlgorithmScript
 	public static final char TYPE_TOOLTIP = 'P';
 	public static final char TYPE_UNDEFINED = 'U';
 
-	@Schema(description = "The script's source code in text form.",
-			example = "#Tue May 03 11:42:01 PDT 2022\nAlgorithmType=TIME_SLICE\n")
+	@Schema(description = "The script's source code in text form.")
 	private String text = "";
 
 	@Schema(description = "The type of the script, represented by a character code. "

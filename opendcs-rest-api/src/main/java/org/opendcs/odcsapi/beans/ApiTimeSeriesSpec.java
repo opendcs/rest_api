@@ -38,13 +38,13 @@ public final class ApiTimeSeriesSpec
 	@Schema(description = "Version identifier for the time series.", example = "raw")
 	private String version = null;
 
-	@Schema(description = "The unique identifier for the site associated with the time series.", example = "6")
+	@Schema(description = "The unique numeric identifier for the site associated with the time series.", example = "6")
 	private Long siteId = null;
-	@Schema(description = "The unique identifier for the datatype used in the time series.", example = "48")
+	@Schema(description = "The unique numeric identifier for the datatype used in the time series.", example = "48")
 	private Long datatypeId = null;
-	@Schema(description = "The unique identifier for the interval used in the time series.", example = "12")
+	@Schema(description = "The unique numeric identifier for the interval used in the time series.", example = "12")
 	private Long intervalId = null;
-	@Schema(description = "The unique identifier for the duration used in the time series.", example = "36")
+	@Schema(description = "The unique numeric identifier for the duration used in the time series.", example = "36")
 	private Long durationId = null;
 
 	@Schema(description = "The date and time when the time series configuration was last modified.",

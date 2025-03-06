@@ -27,7 +27,7 @@ public final class ApiAlgorithm
 	/**
 	 * Surrogate key for this algorithm in the time series database.
 	 */
-	@Schema(description = "Unique identifier for the algorithm.", example = "4")
+	@Schema(description = "Unique numeric identifier for the algorithm.", example = "4")
 	private Long algorithmId = null;
 
 	/**

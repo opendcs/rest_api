@@ -25,19 +25,19 @@ import java.util.Properties;
 @Schema(description = "Represents a platform, including its site, configuration, sensors, and transport media details.")
 public final class ApiPlatform
 {
-	@Schema(description = "The unique identifier of the platform.", example = "24")
+	@Schema(description = "The unique numeric identifier of the platform.", example = "24")
 	private Long platformId = null;
 
 	@Schema(description = "The name of the platform.", example = "BFD")
 	private String name = null;
 
-	@Schema(description = "The unique identifier of the site associated with the platform.", example = "9954")
+	@Schema(description = "The unique numeric identifier of the site associated with the platform.", example = "9954")
 	private Long siteId = null;
 
 	@Schema(description = "The agency responsible for the platform.", example = "USGS")
 	private String agency = null;
 
-	@Schema(description = "The unique identifier of the platform configuration.", example = "123")
+	@Schema(description = "The unique numeric identifier of the platform configuration.", example = "123")
 	private Long configId = null;
 
 	@Schema(description = "A description of the platform.", example = "Barre Falls Dam, Ware River, MA")
@@ -53,7 +53,7 @@ public final class ApiPlatform
 	@Schema(description = "Indicates if the platform is in production.", example = "true")
 	private boolean production = false;
 
-	@Schema(description = "Additional properties associated with the platform.")
+	@Schema(description = "Additional properties or metadata associated with the platform.")
 	private Properties properties = new Properties();
 
 	@Schema(description = "The list of sensors associated with the platform.")

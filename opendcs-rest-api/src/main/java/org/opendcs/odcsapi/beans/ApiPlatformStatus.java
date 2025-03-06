@@ -22,13 +22,13 @@ import io.swagger.v3.oas.annotations.media.Schema;
 @Schema(description = "Represents the status of a platform, including its last contact time, message information, and annotations.")
 public final class ApiPlatformStatus
 {
-	@Schema(description = "The unique identifier of the platform.", example = "1234")
+	@Schema(description = "The unique numeric identifier of the platform.", example = "1234")
 	private Long platformId = null;
 
 	@Schema(description = "The name of the platform.", example = "Platform A")
 	private String platformName = null;
 
-	@Schema(description = "The unique identifier of the site where the platform is located.", example = "5678")
+	@Schema(description = "The unique numeric identifier of the site where the platform is located.", example = "5678")
 	private Long siteId = null;
 
 	@Schema(description = "The date and time of the platform's last successful contact.",
@@ -49,7 +49,7 @@ public final class ApiPlatformStatus
 			example = "This platform requires maintenance.")
 	private String annotation = null;
 
-	@Schema(description = "The unique identifier of the last routing execution.", example = "8910")
+	@Schema(description = "The unique numeric identifier of the last routing execution.", example = "8910")
 	private Long lastRoutingExecId = null;
 
 	@Schema(description = "The name of the routing specification used during the last routing.", example = "Route 42")

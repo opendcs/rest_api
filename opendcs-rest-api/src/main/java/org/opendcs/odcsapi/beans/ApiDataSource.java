@@ -24,7 +24,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 @Schema(description = "Represents a data source including its ID, name, type, properties, usage information, and group membership details.")
 public final class ApiDataSource
 {
-	@Schema(description = "The unique identifier of the data source.", example = "10")
+	@Schema(description = "The unique numeric identifier of the data source.", example = "10")
 	private Long dataSourceId = null;
 	@Schema(description = "The name of the data source.", example = "USGS-Web")
 	private String name = null;

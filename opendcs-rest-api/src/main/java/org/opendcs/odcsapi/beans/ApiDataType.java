@@ -20,7 +20,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 @Schema(description = "Represents a data type entity with details including an identifier, standard, code, and display name.")
 public final class ApiDataType
 {
-	@Schema(description = "The unique identifier for the data type.")
+	@Schema(description = "The unique numeric identifier for the data type.")
 	private Long id = null;
 
 	/**

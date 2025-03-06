@@ -22,7 +22,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 @Schema(description = "Represents a schedule entry reference, including metadata such as name, application, routing specification, and enabled status.")
 public final class ApiScheduleEntryRef
 {
-	@Schema(description = "The unique identifier for the schedule entry.", example = "86")
+	@Schema(description = "The unique numeric identifier for the schedule entry.", example = "86")
 	private Long schedEntryId = null;
 
 	@Schema(description = "The name of the schedule entry.", example = "goes2")

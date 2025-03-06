@@ -28,19 +28,19 @@ public final class ApiPlatformRef
 	@Schema(description = "Name of the platform.", example = "BMD-tailwater")
 	private String name = null;
 
-	@Schema(description = "Site ID associated with the platform.", example = "61")
+	@Schema(description = "Unique numeric Site identifier associated with the platform.", example = "61")
 	private Long siteId = null;
 
 	@Schema(description = "Agency that owns or manages the platform.", example = "CWMS")
 	private String agency = null;
 
-	@Schema(description = "Properties object containing metadata.")
+	@Schema(description = "Properties object containing metadata associated with the platform.")
 	private Properties transportMedia = new Properties();
 
 	@Schema(description = "Configuration name associated with the platform.", example = "PrimaryPlatformConfig")
 	private String config = null;
 
-	@Schema(description = "Unique identifier for the platform configuration.", example = "6")
+	@Schema(description = "Unique numeric identifier for the platform configuration.", example = "6")
 	private Long configId = null;
 
 	@Schema(description = "Description of the platform.", example = "Ball Mountain TW")

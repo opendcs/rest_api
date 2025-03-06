@@ -283,6 +283,7 @@ public final class OdcsapiResource extends OpenDcsResource
 	@Path("decode")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
+	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
 	@Operation(
 			summary = "Decode a Message",
 			description = "Example URL for HTTP POST method:  \n"

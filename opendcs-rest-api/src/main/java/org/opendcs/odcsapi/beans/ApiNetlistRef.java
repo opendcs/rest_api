@@ -23,7 +23,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 public final class ApiNetlistRef
 {
 	/** Unique surrogate key ID of this network list */
-	@Schema(description = "Unique ID of this network list.", example = "881")
+	@Schema(description = "Unique numeric identifier of this network list.", example = "881")
 	private Long netlistId = null;
 
 	/** Unique name of this network list. */

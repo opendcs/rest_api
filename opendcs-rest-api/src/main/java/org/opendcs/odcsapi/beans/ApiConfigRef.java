@@ -17,10 +17,10 @@ package org.opendcs.odcsapi.beans;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
-@Schema(description = "Represents a configuration reference with its details such as ID, name, number of platforms, and description.")
+@Schema(description = "Represents a reference to a configuration entity with its key details.")
 public final class ApiConfigRef
 {
-	@Schema(description = "The unique identifier of the configuration.", example = "1")
+	@Schema(description = "The unique numeric identifier of the configuration.", example = "1")
 	private Long configId = null;
 
 	@Schema(description = "The name of the configuration.", example = "Shef-WSC-Hydro-RCOYCHER")

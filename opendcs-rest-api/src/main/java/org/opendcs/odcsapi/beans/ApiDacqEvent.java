@@ -25,22 +25,22 @@ import io.swagger.v3.oas.annotations.media.Schema;
 @Schema(description = "Represents a data acquisition entry, which stores event details for a specific time and context.")
 public final class ApiDacqEvent
 {
-	@Schema(description = "The unique identifier of the data acquisition event.", example = "181646")
+	@Schema(description = "The unique numeric identifier of the data acquisition event.", example = "181646")
 	private Long eventId = null;
 
-	@Schema(description = "The unique identifier of the routing execution instance.", example = "607")
+	@Schema(description = "The unique numeric identifier of the routing execution instance.", example = "607")
 	private Long routingExecId = null;
 
-	@Schema(description = "The unique identifier of the platform associated with the event.", example = "12")
+	@Schema(description = "The unique numeric identifier of the platform associated with the event.", example = "12")
 	private Long platformId = null;
 
 	@Schema(description = "The time when the event occurred.", example = "2023-06-08T19:21:15.281Z[UTC]")
 	private Date eventTime = null;
 
-	@Schema(description = "The priority of the event.", example = "INFO")
+	@Schema(description = "The priority of the event. Associated with logger levels.", example = "INFO")
 	private String priority = null;
 
-	@Schema(description = "The ID of the application that generated the event.", example = "26")
+	@Schema(description = "The unique numeric identifier of the application that generated the event.", example = "26")
 	private Long appId = null;
 
 	@Schema(description = "The name of the application that generated the event.", example = "RoutingScheduler")

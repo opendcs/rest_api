@@ -22,7 +22,7 @@ public final class ApiTransportMedium
 {
 	@Schema(description = "The type of the medium, defaulting to 'GOES'.", example = "GOES")
 	private String mediumType = "GOES";
-	@Schema(description = "The identifier of the medium.", example = "12345")
+	@Schema(description = "The identifier of the medium.", example = "CE31D030")
 	private String mediumId = null;
 	@Schema(description = "The name of the associated script.", example = "Script1")
 	private String scriptName = null;

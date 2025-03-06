@@ -23,7 +23,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 		+ "data source, and modification time.")
 public final class ApiRoutingRef
 {
-	@Schema(description = "Unique ID of the routing configuration.", example = "3")
+	@Schema(description = "Unique numeric identifier of the routing configuration.", example = "3")
 	private Long routingId = null;
 
 	@Schema(description = "Name of the routing configuration.", example = "OKVI4-input")

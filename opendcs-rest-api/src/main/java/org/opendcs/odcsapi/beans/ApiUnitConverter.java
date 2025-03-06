@@ -20,7 +20,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 @Schema(description = "Represents a unit conversion configuration, defining the source and target units, algorithm, and coefficients.")
 public final class ApiUnitConverter
 {
-	@Schema(description = "Unique identifier for the unit converter.", example = "101")
+	@Schema(description = "Unique numeric identifier for the unit converter.", example = "101")
 	private Long ucId = null;
 
 	@Schema(description = "Abbreviation of the source unit.", example = "CFS")
