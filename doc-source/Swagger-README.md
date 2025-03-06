@@ -1,4 +1,4 @@
-# OpenAPI Configuration
+# Swagger/OpenAPI Configuration
 
 The OpenAPI specification represents the structure and expected input and output values of the
 REST API.  
@@ -11,7 +11,10 @@ resources and their functionality in a user-friendly manner.
 To view the API specification, navigate to the Swagger UI located at:
 `https://[REST_API_URL]/odcsapi/swagger-ui.html`.
 
-On development machines running the REST API locally, this will be located at `http://localhost:7000/odcsapi/swagger-ui.html`.
+On development machines running the REST API locally, this will be located at 
+```
+http://localhost:7000/odcsapi/swagger-ui.html
+```
 
 > [!NOTE]
 > The Swagger UI is only available when the REST API is running.
@@ -27,8 +30,17 @@ To automatically generate the OpenAPI specification, initiate the `run` Gradle t
 The OpenAPI specification will be generated upon runtime and will be available at the Swagger UI
 endpoint mentioned above.
 
-The raw JSON or YAML for the specification can be found at `http://localhost:7000/odcsapi/openapi.json`
-or `http://localhost:7000/odcsapi/openapi.yaml`, respectively.
+The raw JSON or YAML for the specification can be found at 
+```
+http://localhost:7000/odcsapi/openapi.json
+```
+or 
+```
+http://localhost:7000/odcsapi/openapi.yaml
+```
+respectively.
+
+<br>
 
 On the local machine, the current specification can be found at within the `open-dcs-rest-api` source 
 code at `/build/resources/main/swaggerui/open_api.json`.  
@@ -42,8 +54,8 @@ the webserver. This method is useful for developers who are working on modifying
 wish to quickly generate the OpenAPI specification to view changes.
 
 > [!TIP]
-> Generated JSON and YAML OpenAPI specifications can be viewed by copying the content of the file and pasting it into the
-> [Swagger Editor](`https://editor.swagger.io/`).
+> Generated JSON and YAML OpenAPI specifications can be viewed by copying the content of the file 
+and pasting it into the [Swagger Editor](`https://editor.swagger.io/`).
 
 To manually generate the OpenAPI specification, run the `generateOpenAPI` Gradle task found within
 the `documentation` group. The default output format is JSON.
@@ -68,8 +80,7 @@ This is done by annotating the `Resource` endpoint classes and the appropriate D
 located in the `org.opendcs.odcsapi.res` and `org.opendcs.odcsapi.beans` packages, respectively.
 
 > [!TIP] 
-> The available annotations and their usage can be found 
-> [here](https://github.com/swagger-api/swagger-core/wiki/Swagger-2.X---Annotations).
+> The available annotations and their usage can be found [here](https://github.com/swagger-api/swagger-core/wiki/Swagger-2.X---Annotations).
 
 ### Examples
 
@@ -87,7 +98,6 @@ class is simple. Create a new inner class for the endpoint resource and add a
 
 > [!IMPORTANT]  
 > Due to a limitation of the Swagger annotations implementation, the examples must be String constants.
-As a result, the examples must be placed within the
-[ResourceExamples](../opendcs-rest-api/src/main/java/org/opendcs/odcsapi/res/ResourceExamples.java)
+> As a result, the examples must be placed within the [ResourceExamples](../opendcs-rest-api/src/main/java/org/opendcs/odcsapi/res/ResourceExamples.java)
 class as a JSON-formatted String constant and referenced by the `@ExampleObject` annotations located 
 within the `@RequestBody` annotation of each relevant endpoint. 
