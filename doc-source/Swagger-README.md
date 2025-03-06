@@ -10,12 +10,12 @@ resources and their functionality in a user-friendly manner.
 
 To view the API specification, navigate to the Swagger UI located at:
 ```
-https://[REST_API_URL]/odcsapi/swagger-ui.html
+https://[REST_API_URL]/odcsapi/swaggerui/index.html
 ```
 
 On development machines running the REST API locally, this will be located at 
 ```
-http://localhost:7000/odcsapi/swagger-ui.html
+http://localhost:7000/odcsapi/swaggerui/index.html
 ```
 
 > [!NOTE]
@@ -42,15 +42,6 @@ http://localhost:7000/odcsapi/openapi.yaml
 ```
 respectively.
 
-<br>
-
-On the local machine, the current specification can be found at within the `open-dcs-rest-api` source code at 
-```
-/build/resources/main/swaggerui/open_api.json
-```  
-It will only be present if the `run` task has already been initiated at least once without 
-cleaning the project afterward.
-
 ### Manual Generation
 
 For ease of use, a manual generation method has been developed to avoid the requirement of running
@@ -58,7 +49,7 @@ the webserver. This method is useful for developers who are working on modifying
 wish to quickly generate the OpenAPI specification to view changes.
 
 > [!TIP]
-> Generated JSON and YAML OpenAPI specifications can be viewed by copying the content of the file and pasting it into the [Swagger Editor](`https://editor.swagger.io/`).
+> Generated JSON and YAML OpenAPI specifications can be viewed by copying the content of the file and pasting it into the [Swagger Editor](https://editor.swagger.io/).
 
 To manually generate the OpenAPI specification, run the `generateOpenAPI` Gradle task found within
 the `documentation` group. The default output format is JSON.
