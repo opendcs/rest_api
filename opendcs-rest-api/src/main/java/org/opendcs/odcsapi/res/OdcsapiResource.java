@@ -112,7 +112,8 @@ public final class OdcsapiResource extends OpenDcsResource
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
 	@Operation(
 			summary = "Create or Update TSDB Properties",
-			description = "It takes one ore more properties in a structure as defined above for the GET method.  \n\n"
+			description = "The POST tsdb_properties method takes one or more properties in a structure"
+					+ " as defined above for the GET method.  \n\n"
 					+ "*\tAny property with the same name as one supplied will be overwritten by the passed value.\n"
 					+ "*\tIf there is no property in the database with a matching name, a new property is added.\n"
 					+ "*\tTo delete a property from the database, pass an empty string as the value.",
@@ -261,7 +262,7 @@ public final class OdcsapiResource extends OpenDcsResource
 						content = @Content(mediaType = MediaType.APPLICATION_JSON,
 							array = @ArraySchema(schema = @Schema(implementation = ApiPropSpec.class)))),
 					@ApiResponse(responseCode = "400", description = "Missing or invalid parameter."),
-					@ApiResponse(responseCode = "404", description = "Class not found."),
+					@ApiResponse(responseCode = "409", description = "Unable to retrieve property spec for class."),
 					@ApiResponse(responseCode = "500", description = "Internal Server Error")
 			},
 			tags = {"REST - Retrieving Property Specs"}

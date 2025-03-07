@@ -144,11 +144,12 @@ public class DataSourceResources extends OpenDcsResource
 			description = "The integer argument datasourceid is required.\n Example: " +
 					"\n\nhttp://localhost:8080/odcsapi/datasource?datasourceid=10",
 			responses = {
-					@ApiResponse(responseCode = "200", description = "success", content = @Content(
+					@ApiResponse(responseCode = "200", description = "Success",
+						content = @Content(
 							mediaType = MediaType.APPLICATION_JSON,
-							schema = @Schema(implementation = ApiDataSource.class)
-					)),
+							schema = @Schema(implementation = ApiDataSource.class))),
 					@ApiResponse(responseCode = "400", description = "Bad Request - Missing required datasourceid parameter"),
+					@ApiResponse(responseCode = "404", description = "Not Found - No such data source"),
 					@ApiResponse(responseCode = "500", description = "Internal Server Error")
 			},
 			tags = {"REST - DECODES Data Source Records"}
@@ -255,7 +256,7 @@ public class DataSourceResources extends OpenDcsResource
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
 	@Operation(
 			summary = "Create or Overwrite Existing Data Source",
-			description = "It takes a single datasource in JSON format, as described for the GET method." +
+			description = "The POST datasource method takes a single datasource in JSON format, as described for the GET method." +
 					"\n\nFor creating a new data source, leave datasourceId out of the passed data structure." +
 					"\n\nFor overwriting an existing one, include the datasourceId that was previously returned by GET." +
 					" The data source in the database is replaced with the one sent.",
@@ -355,6 +356,8 @@ public class DataSourceResources extends OpenDcsResource
 					" routing specs using the referenced datasource.",
 			responses = {
 					@ApiResponse(responseCode = "204", description = "Successfully deleted data source"),
+					@ApiResponse(responseCode = "400", description = "Bad Request - Missing required datasourceid parameter"),
+					@ApiResponse(responseCode = "404", description = "Not Found - No such data source"),
 					@ApiResponse(responseCode = "405", description = "Method Not Allowed - Currently in use by routing specs"),
 					@ApiResponse(responseCode = "500", description = "Internal Server Error")
 			},

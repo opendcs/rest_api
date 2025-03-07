@@ -99,7 +99,6 @@ public final class DatatypeUnitResources extends OpenDcsResource
 					@ApiResponse(responseCode = "200", description = "Successfully retrieved data type list.",
 							content = @Content(mediaType = MediaType.APPLICATION_JSON,
 									array = @ArraySchema(schema = @Schema(implementation = ApiDataType.class)))),
-					@ApiResponse(responseCode = "400", description = "Invalid standard parameter."),
 					@ApiResponse(responseCode = "500", description = "Failed to retrieve data type list.")
 			},
 			tags = {"REST - Data Type Methods"}
@@ -217,8 +216,7 @@ public final class DatatypeUnitResources extends OpenDcsResource
 	@Tag(name = "REST - Engineering Unit Methods")
 	@Operation(
 			summary = "Create a new, or update an existing Engineering Unit",
-			description = "Example URL for POST:  \n\n    http://localhost:8080/odcsapi/eu?token=6b994be905e1fddf\n\n\n"
-					+ "This method requires a valid session token.  \n"
+			description = "Example URL for POST:  \n\n    http://localhost:8080/odcsapi/eu\n\n\n"
 					+ "The POST data should contain a single engineering unit as described above for unitlist.\n  "
 					+ "For example, to create a new unit with abbreviation 'blob', the data could be:  \n  ```\n  {\n    "
 					+ "\"abbr\": \"blob\",\n    \"family\": \"Metric\",\n    \"measures\": \"stuff\",\n    "
@@ -232,7 +230,6 @@ public final class DatatypeUnitResources extends OpenDcsResource
 					@ApiResponse(responseCode = "201", description = "Successfully stored the engineering unit.",
 							content = @Content(mediaType = MediaType.APPLICATION_JSON,
 									schema = @Schema(implementation = ApiUnit.class))),
-					@ApiResponse(responseCode = "400", description = "Invalid input parameters."),
 					@ApiResponse(responseCode = "500", description = "Failed to store the engineering unit.")
 			},
 			tags = {"REST - Engineering Unit Methods"}
@@ -370,7 +367,7 @@ public final class DatatypeUnitResources extends OpenDcsResource
 	@Operation(
 			summary = "Create a new, or update an existing Engineering Unit Conversion",
 			description = "Example URL for POST:  \n\n    "
-					+ "http://localhost:8080/odcsapi/euconv?token=6b994be905e1fddf  \n\n\n"
+					+ "http://localhost:8080/odcsapi/euconv  \n\n\n"
 					+ "The POST data should contain a single engineering unit conversion as described"
 					+ " above for euconvlist.  \n\nFor example, to create a new conversion that declares "
 					+ "'cms' to be a synonym of 'blob', the data could be:\n```\n  {\n    "
@@ -393,7 +390,6 @@ public final class DatatypeUnitResources extends OpenDcsResource
 											description = "The returned data structure will be the same "
 													+ "as the data passed, except that if this is a new conversion "
 													+ "the ucId member will be added."))),
-					@ApiResponse(responseCode = "400", description = "Invalid input parameters."),
 					@ApiResponse(responseCode = "500", description = "Internal server error")
 			},
 			tags = {"REST - Engineering Unit Methods"}
@@ -508,7 +504,7 @@ public final class DatatypeUnitResources extends OpenDcsResource
 	@Operation(
 			summary = "Delete an existing Engineering Unit conversion record",
 			description = "Example URL for DELETE:\n\n    "
-					+ "http://localhost:8080/odcsapi/euconv?token=6b994be905e1fddf&euconvid=1459\n\n\n"
+					+ "http://localhost:8080/odcsapi/euconv\n\n\n"
 					+ "This deletes the EU Conversion record with ID 1459.",
 			responses = {
 					@ApiResponse(responseCode = "204", description = "Successfully deleted the unit converter."),

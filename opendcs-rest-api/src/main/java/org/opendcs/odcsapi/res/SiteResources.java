@@ -73,9 +73,9 @@ public final class SiteResources extends OpenDcsResource
 	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
 	@Operation(
 			summary = "This method returns a JSON list of DECODES Site records suitable for displaying in a table or pick-list.",
-			description = "The returned structure contains only the numeric ID (unique), description, and an array of site names." +
-					"\n\nExample:\n\n    http://localhost:8080/odcsapi/siterefs" +
-					"\n\n**Note:** The numeric ID may be used in subsequent calls to the `site` method.",
+			description = "The returned structure contains only the numeric ID (unique), description, and an array of site names."
+					+ "\n\nExample:\n\n    http://localhost:8080/odcsapi/siterefs"
+					+ "\n\n**Note:** The numeric ID may be used in subsequent calls to the `site` method.",
 			operationId = "getsiterefs",
 			tags = {"REST - DECODES Site Records"},
 			responses = {
@@ -141,7 +141,7 @@ public final class SiteResources extends OpenDcsResource
 			operationId = "getsite",
 			tags = {"REST - DECODES Site Records"},
 			responses = {
-					@ApiResponse(responseCode = "200", description = "success",
+					@ApiResponse(responseCode = "200", description = "Success",
 							content = @Content(mediaType = MediaType.APPLICATION_JSON,
 							schema = @Schema(implementation = ApiSite.class))),
 					@ApiResponse(responseCode = "400", description = "Missing or invalid site ID parameter"),
@@ -227,10 +227,10 @@ public final class SiteResources extends OpenDcsResource
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
 	@Operation(
 			summary = "Create or Overwrite Existing Site",
-			description = "The POST `site` method takes a single DECODES site record in JSON format." +
-					"\n\nFor creating a new site, leave `siteId` out of the passed data structure." +
-					"\n\nFor overwriting an existing one, include the `siteId` that was previously returned. " +
-					"The site list in the database is replaced with the one sent.",
+			description = "The POST `site` method takes a single DECODES site record in JSON format."
+					+ "\n\nFor creating a new site, leave `siteId` out of the passed data structure."
+					+ "\n\nFor overwriting an existing one, include the `siteId` that was previously returned. "
+					+ "The site list in the database is replaced with the one sent.",
 			operationId = "postsite",
 			tags = {"REST - DECODES Site Records"},
 			responses = {
@@ -320,8 +320,8 @@ public final class SiteResources extends OpenDcsResource
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
 	@Operation(
 			summary = "Delete Existing Site",
-			description = "Required parameter `siteid` must be passed." +
-					"\n\nError 405 will be returned if the site is used by one or more platforms and cannot be deleted.",
+			description = "Required parameter `siteid` must be passed."
+					+ "\n\nError 405 will be returned if the site is used by one or more platforms and cannot be deleted.",
 			operationId = "deletesite",
 			tags = {"REST - DECODES Site Records"},
 			responses = {

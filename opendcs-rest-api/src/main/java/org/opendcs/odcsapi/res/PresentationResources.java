@@ -145,10 +145,10 @@ public final class PresentationResources extends OpenDcsResource
 	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
 	@Operation(
 			summary = "This method returns a JSON representation of a single, complete DECODES Presentation Group record",
-			description = "Example: \n \n `http://localhost:8080/odcsapi/presentation?groupid=4` \n \n " +
-					"This method returns a JSON representation of a single, complete DECODES Presentation Group record. " +
-					"The following structure is returned.\n\n" +
-					"**Note**: the optional min and max elements are not always present.",
+			description = "Example: \n \n `http://localhost:8080/odcsapi/presentation?groupid=4` \n \n "
+					+ "This method returns a JSON representation of a single, complete DECODES Presentation Group record. "
+					+ "The following structure is returned.\n\n"
+					+ "**Note**: the optional min and max elements are not always present.",
 			tags = {"REST - DECODES Presentation Group Records"},
 			responses = {
 					@ApiResponse(responseCode = "200", description = "Success",
@@ -242,11 +242,11 @@ public final class PresentationResources extends OpenDcsResource
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
 	@Operation(
 			summary = "Create or Overwrite Existing Decodes Presentation Group",
-			description = "It takes a single DECODES " +
-					"Presentation Group in JSON format, as described above for GET.\n\n" +
-					"For creating a new record, leave groupId out of the passed data structure.\n\n" +
-					"For overwriting an existing one, include the groupId that was previously returned. " +
-					"The presentation group in the database is replaced with the one sent.",
+			description = "It takes a single DECODES "
+					+ "Presentation Group in JSON format, as described above for GET.\n\n"
+					+ "For creating a new record, leave groupId out of the passed data structure.\n\n"
+					+ "For overwriting an existing one, include the groupId that was previously returned. "
+					+ "The presentation group in the database is replaced with the one sent.",
 			tags = {"REST - DECODES Presentation Group Records"},
 			requestBody = @RequestBody(content = @Content(schema = @Schema(implementation = ApiPresentationGroup.class),
 					mediaType = MediaType.APPLICATION_JSON,
@@ -258,7 +258,6 @@ public final class PresentationResources extends OpenDcsResource
 			responses = {
 					@ApiResponse(responseCode = "201", description = "Successfully stored presentation group",
 							content = @Content(schema = @Schema(implementation = ApiPresentationGroup.class))),
-					@ApiResponse(responseCode = "400", description = "Invalid data provided"),
 					@ApiResponse(responseCode = "500", description = "Internal Server Error")
 			}
 	)

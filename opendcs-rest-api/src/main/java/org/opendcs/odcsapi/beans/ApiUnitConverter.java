@@ -20,20 +20,20 @@ import io.swagger.v3.oas.annotations.media.Schema;
 @Schema(description = "Represents a unit conversion configuration, defining the source and target units, algorithm, and coefficients.")
 public final class ApiUnitConverter
 {
-	@Schema(description = "Unique numeric identifier for the unit converter.", example = "101")
+	@Schema(description = "Unique numeric identifier for the unit converter.", example = "3689")
 	private Long ucId = null;
 
-	@Schema(description = "Abbreviation of the source unit.", example = "CFS")
+	@Schema(description = "Abbreviation of the source unit.", example = "m^3/s")
 	private String fromAbbr = null;
 
-	@Schema(description = "Abbreviation of the target unit.", example = "CMS")
+	@Schema(description = "Abbreviation of the target unit.", example = "cms")
 	private String toAbbr = null;
 
 	/**
 	 * One of Constants.eucvt_none, eucvt_linear, eucvt_usgsstd, eucvt_poly5
 	 */
 	@Schema(description = "Algorithm used for the unit conversion. One of: Constants.eucvt_none," +
-			" eucvt_linear, eucvt_usgsstd, eucvt_poly5.")
+			" eucvt_linear, eucvt_usgsstd, eucvt_poly5.", example = "none")
 	private String algorithm = "none";
 
 	/**
