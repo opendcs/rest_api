@@ -322,7 +322,8 @@ public final class ComputationResources extends OpenDcsResource
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
 	@Operation(
 			summary = "Create or Overwrite Existing OpenDCS Computation",
-			description = "It takes a single OpenDCS Computation Record in JSON format, as described above for GET.  \n\n"
+			description = "The Computation POST method takes a single OpenDCS Computation Record in JSON format,"
+					+ " as described above for GET.  \n\n"
 					+ "For creating a new record, leave computationId out of the passed data structure.  \n\n"
 					+ "For overwriting an existing one, include the computationId that was previously returned. "
 					+ "The computation in the database is replaced with the one sent.",
