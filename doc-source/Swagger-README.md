@@ -52,7 +52,7 @@ To manually generate the OpenAPI specification, run the `generateOpenAPI` Gradle
 the `documentation` group. The default output format is JSON.
 
 The manually generated OpenAPI specification will be placed in the `/build/swagger` directory. The
-file will be named `OpenDCS-REST-API.json`.
+file will be named `opendcs-openapi.json`.
 
 To change the output format from the default JSON to YAML, edit the `gradle.properties` file in the
 opendcs-rest-api project root. Change the `outputFormat` parameter from

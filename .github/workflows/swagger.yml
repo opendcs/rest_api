@@ -29,6 +29,6 @@ jobs:
         uses: actions/upload-artifact@v4.4.3
         with:
           name: openapi
-          path: ./**/build/swagger/OpenDCS-REST-API.json
+          path: ./**/build/swagger/opendcs-openapi.json
           retention-days: 1
           if-no-files-found: error

@@ -32,6 +32,6 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Attach OpenAPI Specification
         run: |
-            gh release upload ${{ github.event.release.tag_name }} opendcs-rest-api/build/swagger/OpenDCS-REST-API.json --repo ${{ github.repository }}
+            gh release upload ${{ github.event.release.tag_name }} opendcs-rest-api/build/swagger/opendcs-openapi.json --repo ${{ github.repository }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

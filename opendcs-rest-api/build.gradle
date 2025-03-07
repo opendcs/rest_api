@@ -124,7 +124,7 @@ if (JavaVersion.current() != JavaVersion.VERSION_1_8) {
 // task to generate OpenAPI JSON file
 resolve {
     classpath = sourceSets.main.runtimeClasspath
-    outputFileName = 'OpenDCS-REST-API'
+    outputFileName = 'opendcs-openapi'
     outputFormat = providers.gradleProperty('outputFormat').getOrElse('JSON')
     prettyPrint = 'TRUE'
     resourcePackages = ['org.opendcs.odcsapi.res', 'org.opendcs.odcsapi.beans']
