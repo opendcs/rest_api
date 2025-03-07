@@ -18,16 +18,13 @@ On development machines running the REST API locally, this will be located at
 http://localhost:7000/odcsapi/swaggerui/index.html
 ```
 
-> [!NOTE]
-> The Swagger UI is only available when the REST API is running.
-
 ## OpenAPI Specification Generation
 
 In order to provide multiple options for developers to interact with the API,
 the OpenAPI specification is generated in one of two ways.
 
 ### Automated Generation
-To automatically generate the OpenAPI specification, initiate the `run` Gradle task.
+To automatically generate the OpenAPI specification, initiate the `./gradlew run` Gradle task.
 
 The OpenAPI specification will be generated upon runtime and will be available at the Swagger UI
 endpoint mentioned above.
@@ -57,14 +54,13 @@ the `documentation` group. The default output format is JSON.
 The manually generated OpenAPI specification will be placed in the `/build/swagger` directory. The
 file will be named `OpenDCS-REST-API.json`.
 
-To change the output format from the default JSON to YAML, edit the `generateOpenAPI` task in the
-`build.gradle` file for the opendcs-rest-api project. Change the `outputFormat` parameter from
+To change the output format from the default JSON to YAML, edit the `gradle.properties` file in the
+opendcs-rest-api project root. Change the `outputFormat` parameter from
 `JSON` to `YAML`. The file will be located in the same location as the JSON file, but with the YAML
-file extension. To revert back to the JSON format, simply change the parameter value back to `JSON`.
+file extension. To revert back to the JSON format, change the parameter value back to `JSON`.
+The default output format is JSON if no format is specified.
 
-To remove the generated OpenAPI specification, run the `cleanOpenAPI` Gradle task, located in the 
-`documentation` group. This will remove both the generated JSON and YAML files from
-the `/build/swagger` directory.
+To remove the generated OpenAPI specification, run the `./gradlew clean` Gradle task.
 
 ## Annotations
 
@@ -84,10 +80,8 @@ class, located in the `org.opendcs.odcsapi.res` package. These examples provide 
 input data for the different endpoints, which can be useful for determining the expected input data 
 for each endpoint.
 
-Adding new examples to the
-[ResourceExamples](../opendcs-rest-api/src/main/java/org/opendcs/odcsapi/res/ResourceExamples.java) 
-class is simple. Create a new inner class for the endpoint resource and add a 
-`public static final String` constant with the JSON-formatted example data. 
+To add new examples to the [ResourceExamples](../opendcs-rest-api/src/main/java/org/opendcs/odcsapi/res/ResourceExamples.java) class,
+add a `public static final String` constant with the JSON-formatted example data. 
 **Remember to escape special characters in the JSON data.**
 
 > [!IMPORTANT]  

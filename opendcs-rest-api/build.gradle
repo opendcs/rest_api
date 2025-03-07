@@ -125,7 +125,7 @@ if (JavaVersion.current() != JavaVersion.VERSION_1_8) {
 resolve {
     classpath = sourceSets.main.runtimeClasspath
     outputFileName = 'OpenDCS-REST-API'
-    outputFormat = 'JSON'
+    outputFormat = providers.gradleProperty('outputFormat').getOrElse('JSON')
     prettyPrint = 'TRUE'
     resourcePackages = ['org.opendcs.odcsapi.res', 'org.opendcs.odcsapi.beans']
     outputDir = file('build/swagger/')
@@ -135,13 +135,4 @@ tasks.register('generateOpenAPI') {
     group = "documentation"
     description = "Generates the Swagger OpenAPI JSON file without running the application"
     dependsOn('resolve')
-}
-
-tasks.register('cleanOpenAPI') {
-    group = "documentation"
-    description = "Deletes the generated Swagger OpenAPI JSON file"
-    doLast {
-        project.delete file('build/swagger/OpenDCS-REST-API.json')
-        project.delete file('build/swagger/OpenDCS-REST-API.yaml')
-    }
 }
