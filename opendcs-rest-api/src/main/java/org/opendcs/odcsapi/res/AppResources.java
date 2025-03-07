@@ -160,10 +160,11 @@ public final class AppResources extends OpenDcsResource
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
 	@Operation(
 			summary = "Create or Overwrite Existing App",
-			description = "It takes a single DECODES Loading Application in JSON format, as described above for GET.  \n\n" +
-					"For creating a new record, leave appId out of the passed data structure.  \n\n" +
-					"For overwriting an existing one, include the appId that was previously returned. " +
-					"The app in the database is replaced with the one sent.",
+			description = "The App POST method takes a single DECODES Loading Application in JSON format, "
+					+ "as described above for GET.  \n\n"
+					+ "For creating a new record, leave appId out of the passed data structure.  \n\n"
+					+ "For overwriting an existing one, include the appId that was previously returned. "
+					+ "The app in the database is replaced with the one sent.",
 			requestBody = @RequestBody(
 					description = "Loading App",
 					required = true,
@@ -231,10 +232,10 @@ public final class AppResources extends OpenDcsResource
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
 	@Operation(
 			summary = "Delete Existing Loading App",
-			description = "Required argument appid must be passed in the URL.  \n\n" +
-					"This operation will fail if the loading application is currently being used by any " +
-					"computations or schedule entries, or if it is currently running and has " +
-					"an active CP_COMP_PROC_LOCK record.",
+			description = "Required argument appid must be passed in the URL.  \n\n"
+					+ "This operation will fail if the loading application is currently being used by any "
+					+ "computations or schedule entries, or if it is currently running and has "
+					+ "an active CP_COMP_PROC_LOCK record.",
 			responses = {
 					@ApiResponse(responseCode = "204", description = "Successfully deleted application"),
 					@ApiResponse(responseCode = "400", description = "Bad Request - Missing required appId parameter"),

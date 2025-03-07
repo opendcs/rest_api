@@ -345,9 +345,9 @@ public final class ReflistResources extends OpenDcsResource
 	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
 	@Operation(
 			summary = "Seasons are used in various places in OpenDCS, usually to specify some type of conditional processing",
-			description = "Seasons are denoted by an abbreviation, a full name, start date/time, end date/time, and an optional time zone." +
-					" Seasons are used in various places in OpenDCS, usually to specify some type of conditional processing." +
-					" For example, a platform water-level sensor may be disabled during a winter period because the river is likely to be covered in ice.\n"
+			description = "Seasons are denoted by an abbreviation, a full name, start date/time, end date/time, and an optional time zone."
+					+ " Seasons are used in various places in OpenDCS, usually to specify some type of conditional processing."
+					+ " For example, a platform water-level sensor may be disabled during a winter period because the river is likely to be covered in ice.\n"
 					+ "* The abbreviation should be a single alpha-numeric word with no embedded spaces.\n"
 					+ "* The name may contain spaces.\n"
 					+ "* Start and End date/time are strings in the format MM/dd-HH:mm. They specify a date and time within a year.\n"
@@ -407,7 +407,7 @@ public final class ReflistResources extends OpenDcsResource
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
 	@Operation(
-			summary = "return a single season data structure ",
+			summary = "Return a single season data structure ",
 			description = "Instead of a list of seasons, the returned data is a single season data structure:  ",
 			operationId = "getseason",
 			responses = {
@@ -415,8 +415,8 @@ public final class ReflistResources extends OpenDcsResource
 							mediaType = MediaType.APPLICATION_JSON,
 							schema = @Schema(implementation = ApiSeason.class))
 					),
-					@ApiResponse(responseCode = "404", description = "Season not found"),
 					@ApiResponse(responseCode = "400", description = "Missing Parameter"),
+					@ApiResponse(responseCode = "404", description = "Season not found"),
 					@ApiResponse(responseCode = "500", description = "Internal Server Error")
 			},
 			tags = {"REST - Reference Lists"}
@@ -472,7 +472,7 @@ public final class ReflistResources extends OpenDcsResource
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
 	@Operation(
-			summary = "creates or overwrites a single season record",
+			summary = "Creates or overwrites a single season record",
 			description = "It takes a data structure like the one described above for GET season.",
 			requestBody = @RequestBody(
 					description = "Season Object",
@@ -486,7 +486,6 @@ public final class ReflistResources extends OpenDcsResource
 					@ApiResponse(responseCode = "201", description = "Season successfully created or updated",
 						content = @Content(mediaType = MediaType.APPLICATION_JSON,
 							schema = @Schema(implementation = ApiSeason.class))),
-					@ApiResponse(responseCode = "400", description = "Missing Parameter"),
 					@ApiResponse(responseCode = "500", description = "Internal Server Error")
 			},
 			tags = {"REST - Reference Lists"}
@@ -555,8 +554,8 @@ public final class ReflistResources extends OpenDcsResource
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
 	@Operation(
 			summary = "Delete Existing Season",
-			description = "It requires an argument" +
-					" 'abbr' corresponding to the season abbreviation.  \n\n"
+			description = "The DELETE season method requires an argument"
+					+ " 'abbr' corresponding to the season abbreviation.  \n\n"
 					+ "For example, to DELETE the 'autumn' season, use the following URL:\n  \n"
 					+ "    http://localhost:8080/odcsapi/season?abbr=autumn",
 			responses = {

@@ -86,20 +86,20 @@ public final class PlatformResources extends OpenDcsResource
 	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
 	@Operation(
 			summary = "The GET platformrefs method returns a list of platforms",
-			description = "The GET platformrefs method returns a list of platforms, " +
-					"optionally with a given Transport Medium type.  \n\n" +
-					"It accepts the following arguments:  \n* **tmtype** – the transport medium type desired. " +
-					"If not provided, all types are returned. The method will return any platform that has a " +
-					"transport medium with the given type. The returned data structure will still contain all " +
-					"of the transport media in the platform, but the list of platforms will be filtered to only " +
-					"include platforms with a TM of the given type:\n  * **NOTE**: medium type 'goes' will match " +
-					"either goes-self-timed or goes-random.\n\nData Structure TBD but will include  " +
-					"\n* **name** – an index into the hashed set. Combination of site name and designator  " +
-					"\n* **agency** – The agency that owns and/or maintains this platform  " +
-					"\n* **configId** – Numeric surrogate key to the configuration record  \n* **description**  " +
-					"\n* **platformId** - Numeric surrogate key to the platform record  " +
-					"\n* **siteId** - Numeric surrogate key to the site record  " +
-					"\n* **transportMedia** – a list of tmtype/tm id pairs.",
+			description = "The GET platformrefs method returns a list of platforms, "
+					+ "optionally with a given Transport Medium type.  \n\n"
+					+ "It accepts the following arguments:  \n* **tmtype** – the transport medium type desired. "
+					+ "If not provided, all types are returned. The method will return any platform that has a "
+					+ "transport medium with the given type. The returned data structure will still contain all "
+					+ "of the transport media in the platform, but the list of platforms will be filtered to only "
+					+ "include platforms with a TM of the given type:\n  * **NOTE**: medium type 'goes' will match "
+					+ "either goes-self-timed or goes-random.\n\nData Structure TBD but will include  "
+					+ "\n* **name** – an index into the hashed set. Combination of site name and designator  "
+					+ "\n* **agency** – The agency that owns and/or maintains this platform  "
+					+ "\n* **configId** – Numeric surrogate key to the configuration record  \n* **description**  "
+					+ "\n* **platformId** - Numeric surrogate key to the platform record  "
+					+ "\n* **siteId** - Numeric surrogate key to the site record  "
+					+ "\n* **transportMedia** – a list of tmtype/tm id pairs.",
 			responses = {
 					@ApiResponse(responseCode = "200", description = "Successfully retrieved platform references",
 							content = @Content(array = @ArraySchema(schema = @Schema(implementation = ApiPlatformRef.class)),
@@ -187,8 +187,8 @@ public final class PlatformResources extends OpenDcsResource
 	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
 	@Operation(
 			summary = "This method returns a JSON representation of a single, complete DECODES Platform record",
-			description = "Fetches detailed information about a specific platform using its unique ID. " +
-					"Example: \n\n    http://localhost:8080/odcsapi/platform?platformid=5",
+			description = "Fetches detailed information about a specific platform using its unique ID. "
+					+ "Example: \n\n    http://localhost:8080/odcsapi/platform?platformid=5",
 			operationId = "getPlatform",
 			responses = {
 					@ApiResponse(responseCode = "200", description = "Platform details retrieved successfully",
@@ -309,10 +309,11 @@ public final class PlatformResources extends OpenDcsResource
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
 	@Operation(
 			summary = "Create or Overwrite Existing Decodes Platform",
-			description = "It takes a single DECODES Platform record in JSON format, as described above for GET.  \n\n" +
-					"For creating a new platform, leave platformId out of the passed data structure.  \n\n" +
-					"For overwriting an existing one, include the platformId that was previously returned. " +
-					"The platform in the database is replaced with the one sent.",
+			description = "The GET platform method takes a single DECODES Platform record in JSON format,"
+					+ " as described above for GET.  \n\n"
+					+ "For creating a new platform, leave platformId out of the passed data structure.  \n\n"
+					+ "For overwriting an existing one, include the platformId that was previously returned. "
+					+ "The platform in the database is replaced with the one sent.",
 			requestBody = @RequestBody(content = @Content(schema = @Schema(implementation = ApiPlatform.class),
 					mediaType = MediaType.APPLICATION_JSON,
 					examples = {
@@ -512,34 +513,34 @@ public final class PlatformResources extends OpenDcsResource
 	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
 	@Operation(
 			summary = "Returned structure contains information about recent activity on each platform",
-			description = "Sample URL:\n  \n    http://localhost:8080/odcsapi/platformstat  \n  \n  \n" +
-					"Optional argument 'netlistid' can be passed to only return platforms that have a " +
-					"transport medium in the referenced network list.\n  \nThe returned data structure contains " +
-					"information about recent activity on each platform:\n  \n```\n  [\n    {\n      " +
-					"\"platformId\": 53,\n      \"platformName\": \"OKVI4\",\n      \"siteId\": 1,\n      " +
-					"\"lastContact\": \"2023-06-09T18:30:53.086Z[UTC]\",\n      \"lastMessage\": " +
-					"\"2023-06-09T18:30:53.086Z[UTC]\",\n      \"lastError\": null,\n      \"lastMsgQuality\": \"G\",\n" +
-					"      \"annotation\": null,\n      \"lastRoutingExecId\": 609,\n      \"routingSpecName\": " +
-					"\"periodic-10-minute\"\n    },\n    {\n      \"platformId\": 54,\n      \"platformName\": " +
-					"\"MROI4\",\n      \"siteId\": 6,\n      \"lastContact\": \"2023-06-09T18:30:53.102Z[UTC]\",\n" +
-					"      \"lastMessage\": \"2023-06-09T18:30:53.102Z[UTC]\",\n      \"lastError\": null,\n      " +
-					"\"lastMsgQuality\": \"G\",\n      \"annotation\": null,\n      \"lastRoutingExecId\": 609,\n      " +
-					"\"routingSpecName\": \"periodic-10-minute\"\n    },\n    {\n      \"platformId\": 55,\n      " +
-					"\"platformName\": \"ROWI4\",\n      \"siteId\": 2,\n      " +
-					"\"lastContact\": \"2023-06-09T18:30:53.013Z[UTC]\",\n      " +
-					"\"lastMessage\": \"2023-06-09T18:30:53.013Z[UTC]\",\n      \"lastError\": null,\n      " +
-					"\"lastMsgQuality\": \"G\",\n      \"annotation\": null,\n      \"lastRoutingExecId\": 609,\n      " +
-					"\"routingSpecName\": \"periodic-10-minute\"\n    }\n  ]\n\n```\n  " +
-					"\nThis may be used to populate a GUI similar to the Java 'Platform Monitor' GUI in OpenDCS. " +
-					"A pulldown list of network list IDs and names is recommended.\n  \nNote the following:\n  " +
-					"\n*  **lastContact** is the last time that any communication from this platform was received.\n  " +
-					"\n*  **lastMessage** is the time stamp that the last message from this platform was received.\n  " +
-					"\n*  **lastError** is the time that a decoding or communications error last occurred with " +
-					"this platform.\n*  **lastRoutingExecId** indicates the specific execution of a routing spec " +
-					"that was last used to process this platform. (See Routing Exec Status above.)\n  " +
-					"\n*  **annotation** is the text of the last error message generated from this platform. " +
-					"To retrieve a list of Data Acquisition events for a platform, you can use the GET dacqevent " +
-					"method described in section 5.2.3, passing the 'platformid' argument.",
+			description = "Sample URL:\n  \n    http://localhost:8080/odcsapi/platformstat  \n  \n  \n"
+					+ "Optional argument 'netlistid' can be passed to only return platforms that have a "
+					+ "transport medium in the referenced network list.\n  \nThe returned data structure contains "
+					+ "information about recent activity on each platform:\n  \n```\n  [\n    {\n      "
+					+ "\"platformId\": 53,\n      \"platformName\": \"OKVI4\",\n      \"siteId\": 1,\n      "
+					+ "\"lastContact\": \"2023-06-09T18:30:53.086Z[UTC]\",\n      \"lastMessage\": "
+					+ "\"2023-06-09T18:30:53.086Z[UTC]\",\n      \"lastError\": null,\n      \"lastMsgQuality\": \"G\",\n"
+					+ "      \"annotation\": null,\n      \"lastRoutingExecId\": 609,\n      \"routingSpecName\": "
+					+ "\"periodic-10-minute\"\n    },\n    {\n      \"platformId\": 54,\n      \"platformName\": "
+					+ "\"MROI4\",\n      \"siteId\": 6,\n      \"lastContact\": \"2023-06-09T18:30:53.102Z[UTC]\",\n"
+					+ "      \"lastMessage\": \"2023-06-09T18:30:53.102Z[UTC]\",\n      \"lastError\": null,\n      "
+					+ "\"lastMsgQuality\": \"G\",\n      \"annotation\": null,\n      \"lastRoutingExecId\": 609,\n      "
+					+ "\"routingSpecName\": \"periodic-10-minute\"\n    },\n    {\n      \"platformId\": 55,\n      "
+					+ "\"platformName\": \"ROWI4\",\n      \"siteId\": 2,\n      "
+					+ "\"lastContact\": \"2023-06-09T18:30:53.013Z[UTC]\",\n      "
+					+ "\"lastMessage\": \"2023-06-09T18:30:53.013Z[UTC]\",\n      \"lastError\": null,\n      "
+					+ "\"lastMsgQuality\": \"G\",\n      \"annotation\": null,\n      \"lastRoutingExecId\": 609,\n      "
+					+ "\"routingSpecName\": \"periodic-10-minute\"\n    }\n  ]\n\n```\n  "
+					+ "\nThis may be used to populate a GUI similar to the Java 'Platform Monitor' GUI in OpenDCS. "
+					+ "A pulldown list of network list IDs and names is recommended.\n  \nNote the following:\n  "
+					+ "\n*  **lastContact** is the last time that any communication from this platform was received.\n  "
+					+ "\n*  **lastMessage** is the time stamp that the last message from this platform was received.\n  "
+					+ "\n*  **lastError** is the time that a decoding or communications error last occurred with "
+					+ "this platform.\n*  **lastRoutingExecId** indicates the specific execution of a routing spec "
+					+ "that was last used to process this platform. (See Routing Exec Status above.)\n  "
+					+ "\n*  **annotation** is the text of the last error message generated from this platform. "
+					+ "To retrieve a list of Data Acquisition events for a platform, you can use the GET dacqevent "
+					+ "method described in section 5.2.3, passing the 'platformid' argument.",
 			responses = {
 					@ApiResponse(responseCode = "200", description = "Successfully retrieved platform status",
 						content = @Content(array = @ArraySchema(schema = @Schema(implementation = ApiPlatformStatus.class)))),

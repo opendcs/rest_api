@@ -74,20 +74,20 @@ public final class NetlistResources extends OpenDcsResource
 	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
 	@Operation(
 			summary = "The GET netlistrefs method returns references to network lists",
-			description = "It is intended to populate a pick list of network lists and does not contain" +
-					" all of the list elements.\n\nExamples:\n\n" +
-					"    http://localhost:8080/odcsapi/netlistrefs\n\n" +
-					"    http://localhost:8080/odcsapi/netlistrefs?tmtype=goes\n\nWith no arguments," +
-					" a list of network lists in the database is returned. The format is as follows:" +
-					"\n```\n[\n  {\n    \"lastModifyTime\": \"2020-08-22T14:36:55.705Z[UTC]\",\n" +
-					"    \"name\": \"BFD-BMD\",\n    \"netlistId\": 1,\n    \"numPlatforms\": 3,\n" +
-					"    \"siteNameTypePref\": \"nwshb5\",\n    \"transportMediumType\": \"goes\"\n  }," +
-					"\n  {\n    \"lastModifyTime\": \"2020-12-15T17:51:04.194Z[UTC]\",\n" +
-					"    \"name\": \"goes2\",\n    \"netlistId\": 6,\n    \"numPlatforms\": 3,\n" +
-					"    \"siteNameTypePref\": \"nwshb5\",\n    \"transportMediumType\": \"goes\"\n  }\n]" +
-					"\n```\n\n**Note** that the list contents (i.e., the references to the platforms in the list)" +
-					" is not included. Rather a count of platforms in the list is given." +
-					" The 'netlistId' element is a unique key to be used for retrieving entire lists.",
+			description = "The GET netlistrefs method is intended to populate a pick list of network lists and"
+					+ " does not contain all of the list elements.\n\nExamples:\n\n"
+					+ "    http://localhost:8080/odcsapi/netlistrefs\n\n"
+					+ "    http://localhost:8080/odcsapi/netlistrefs?tmtype=goes\n\nWith no arguments,"
+					+ " a list of network lists in the database is returned. The format is as follows:"
+					+ "\n```\n[\n  {\n    \"lastModifyTime\": \"2020-08-22T14:36:55.705Z[UTC]\",\n"
+					+ "    \"name\": \"BFD-BMD\",\n    \"netlistId\": 1,\n    \"numPlatforms\": 3,\n"
+					+ "    \"siteNameTypePref\": \"nwshb5\",\n    \"transportMediumType\": \"goes\"\n  },"
+					+ "\n  {\n    \"lastModifyTime\": \"2020-12-15T17:51:04.194Z[UTC]\",\n"
+					+ "    \"name\": \"goes2\",\n    \"netlistId\": 6,\n    \"numPlatforms\": 3,\n"
+					+ "    \"siteNameTypePref\": \"nwshb5\",\n    \"transportMediumType\": \"goes\"\n  }\n]"
+					+ "\n```\n\n**Note** that the list contents (i.e., the references to the platforms in the list)"
+					+ " is not included. Rather a count of platforms in the list is given."
+					+ " The 'netlistId' element is a unique key to be used for retrieving entire lists.",
 			responses = {
 					@ApiResponse(responseCode = "200", description = "Success",
 							content = @Content(mediaType = MediaType.APPLICATION_JSON,
@@ -322,6 +322,7 @@ public final class NetlistResources extends OpenDcsResource
 					@ApiResponse(responseCode = "409",
 							description = "Conflict - Network list is used by one or more routing specs"),
 					@ApiResponse(responseCode = "400", description = "Missing required netlistid parameter"),
+					@ApiResponse(responseCode = "500", description = "Internal Server Error")
 			},
 			tags = {"REST - Network Lists"}
 	)
