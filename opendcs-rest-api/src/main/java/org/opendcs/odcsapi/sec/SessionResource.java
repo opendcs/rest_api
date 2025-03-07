@@ -27,7 +27,6 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import io.swagger.v3.oas.annotations.StringToClassMapItem;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import org.opendcs.odcsapi.util.ApiConstants;
@@ -49,20 +48,17 @@ public final class SessionResource
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
 	@Operation(
-			summary = "Check if token is valid for authentication",
-			description = "The ‘check’ GET method can be called with a token argument." +
-					"  \nExample:  \n\n    http://localhost:8080/odcsapi/check?token=6d34fa0e3bb72fcd",
+			summary = "Check if session authentication is valid",
+			description = "The ‘check’ GET method can be called with a configured session.",
 			responses = {
-					@ApiResponse(responseCode = "200", description = "If the token is valid," +
-							" the token JSON object will be returned in the same format" +
-							" as the /credentials request for authentication."),
+					@ApiResponse(responseCode = "200", description = "If the session is valid," +
+							" a successful response will be returned."),
 					@ApiResponse(
 							responseCode = "410",
-							description = "If the token is not valid, HTTP 410 is returned.",
+							description = "If the session is not valid, HTTP 410 is returned.",
 							content = @Content(mediaType = MediaType.APPLICATION_JSON,
-									schema = @Schema(type = "object", implementation = StringToClassMapItem.class),
-								examples = @ExampleObject(value = "{\"errMessage\":\"Token '6d34fa0e3bb72fcd' "
-										+ "does not exist.\",\"status\":410}"))
+									schema = @Schema(implementation = String.class),
+								examples = @ExampleObject(value = "Session Valid"))
 					)
 			},
 			tags = {"REST - Authentication and Authorization"}
@@ -70,7 +66,7 @@ public final class SessionResource
 	public Response checkSessionAuthorization()
 	{
 		//Security filters will ensure this method is only accessible via an authenticated client
-		return ApiHttpUtil.createResponse("Token Valid");
+		return ApiHttpUtil.createResponse("Session Valid");
 	}
 
 	@DELETE
