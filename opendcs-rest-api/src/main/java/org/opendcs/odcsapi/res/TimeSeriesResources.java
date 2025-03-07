@@ -777,7 +777,7 @@ public final class TimeSeriesResources extends OpenDcsResource
 			},
 			tags = {"Time Series Methods - Groups"}
 	)
-	public Response getTsGroupRefs (@Parameter(description = "Requested group id", required = true,
+	public Response getTsGroup (@Parameter(description = "Requested group id", required = true,
 			schema = @Schema(implementation = Long.class), example = "9")
 		@QueryParam("groupid") Long groupId)
 			throws WebAppException, DbException
