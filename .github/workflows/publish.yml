@@ -18,6 +18,8 @@ jobs:
         uses: gradle/gradle-build-action@v3.5.0
       - name: Build
         run: ./gradlew build
+      - name: Generate OpenAPI
+        run: ./gradlew generateOpenAPI
       - name: Bundle tarballs
         run: ./gradlew bundle
       - name: Attach OpenDCS REST API WAR file
@@ -28,5 +30,10 @@ jobs:
       - name: Attach OpenDCS Web Client WAR file
         run: |
           gh release upload ${{ github.event.release.tag_name }} opendcs-web-client/build/libs/opendcs-web-client-${{ github.event.release.tag_name }}.war --repo ${{ github.repository }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Attach OpenAPI Specification
+        run: |
+            gh release upload ${{ github.event.release.tag_name }} opendcs-rest-api/build/swagger/OpenDCS-REST-API.json --repo ${{ github.repository }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
