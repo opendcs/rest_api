@@ -13,19 +13,26 @@
  *  limitations under the License.
  */
 
-package org.opendcs.odcsapi.util;
+package org.opendcs.odcsapi.fixtures;
 
-/**
- * Various constants used by the API.
- */
-public final class ApiConstants
+import org.opendcs.fixtures.configurations.cwms.CwmsOracleConfiguration;
+import org.opendcs.fixtures.configurations.opendcs.pg.OpenDCSPGConfiguration;
+
+public enum DbType
 {
-	public static final String ODCS_API_GUEST = "ODCS_API_GUEST";
-	public static final String ODCS_API_USER = "ODCS_API_USER";
-	public static final String ODCS_API_ADMIN = "ODCS_API_ADMIN";
+	CWMS(CwmsOracleConfiguration.NAME),
+	OPEN_TSDB(OpenDCSPGConfiguration.NAME);
 
-	private ApiConstants()
+	private final String name;
+
+	DbType(String name)
 	{
-		throw new AssertionError("Utility class");
+		this.name = name;
+	}
+
+	@Override
+	public String toString()
+	{
+		return name;
 	}
 }
