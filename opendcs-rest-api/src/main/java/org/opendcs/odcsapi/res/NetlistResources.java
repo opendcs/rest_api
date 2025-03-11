@@ -314,7 +314,7 @@ public final class NetlistResources extends OpenDcsResource
 	@Operation(
 			summary = "Delete Existing netlists",
 			description = "Required argument netlistid must be passed.\n\n" +
-					"Error 405 will be returned if network list is used by one or more " +
+					"Error 409 will be returned if network list is used by one or more " +
 					"routing specs and cannot be deleted. The body of the error will be " +
 					"a message containing the name of the routing specs using the referenced netlist.",
 			responses = {

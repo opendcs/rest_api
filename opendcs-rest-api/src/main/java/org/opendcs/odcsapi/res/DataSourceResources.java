@@ -142,7 +142,7 @@ public class DataSourceResources extends OpenDcsResource
 	@Operation(
 			summary = "The GET datasource method returns a single DECODES data source with all of its detail.",
 			description = "The integer argument datasourceid is required.\n Example: " +
-					"\n\nhttp://localhost:8080/odcsapi/datasource?datasourceid=10",
+					"\n\n\t http://localhost:8080/odcsapi/datasource?datasourceid=10 \n",
 			responses = {
 					@ApiResponse(responseCode = "200", description = "Success",
 						content = @Content(
@@ -283,7 +283,7 @@ public class DataSourceResources extends OpenDcsResource
 			},
 			tags = {"REST - DECODES Data Source Records"}
 	)
-	public Response postDatasource(ApiDataSource datasource) throws DbException, MissingParameterException
+	public Response postDatasource(ApiDataSource datasource) throws DbException
 	{
 		DatabaseIO dbIo = getLegacyDatabase();
 		try

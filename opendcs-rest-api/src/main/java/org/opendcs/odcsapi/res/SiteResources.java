@@ -133,6 +133,8 @@ public final class SiteResources extends OpenDcsResource
 			description = "Example:\n\n    http://localhost:8080/odcsapi/site?siteid=3\n\n"
 					+ "The structure is as follows:\n```\n{\n  \"country\": \"USA\",\n  \"description\": "
 					+ "\"Barre Falls Dam, Ware River\",\n  \"elevUnits\": \"M\",\n  \"elevation\": 234.7,\n  "
+					+ "\"active\": true,\n  \"lastModified\": \"2021-07-07T14:00:00Z\",\n  \"locationtype\": \"\"\n  "
+					+ "\"publicName\": \"Barre Falls Dam\",\n  "
 					+ "\"latitude\": \"42.4278\",\n  \"longitude\": \"-72.0261\",\n  \"nearestCity\": "
 					+ "\"Barre Falls Dam\",\n  \"properties\": {\n    \"some\": \"thing\",\n    "
 					+ "\"something\": \"else\"\n  },\n  \"region\": \"\",\n  \"siteId\": 7,\n  "
@@ -320,14 +322,13 @@ public final class SiteResources extends OpenDcsResource
 	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
 	@Operation(
 			summary = "Delete Existing Site",
-			description = "Required parameter `siteid` must be passed."
-					+ "\n\nError 405 will be returned if the site is used by one or more platforms and cannot be deleted.",
+			description = "Required parameter `siteid` must be passed.",
 			operationId = "deletesite",
 			tags = {"REST - DECODES Site Records"},
 			responses = {
 					@ApiResponse(responseCode = "204", description = "Site deleted successfully"),
 					@ApiResponse(responseCode = "400", description = "Missing or invalid site ID parameter"),
-					@ApiResponse(responseCode = "500", description = "Internal server error")
+					@ApiResponse(responseCode = "500", description = "Internal server error - see error message for details")
 			}
 	)
 	public Response deleteSite(@Parameter(description = "id to delete", required = true, 
