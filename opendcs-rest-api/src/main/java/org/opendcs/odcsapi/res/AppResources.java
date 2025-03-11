@@ -85,7 +85,7 @@ public final class AppResources extends OpenDcsResource
 	)
 	public Response getAppRefs() throws DbException
 	{
-		try (LoadingAppDAI dai = getLegacyDatabase().makeLoadingAppDAO())
+		try(LoadingAppDAI dai = getLegacyDatabase().makeLoadingAppDAO())
 		{
 			List<ApiAppRef> ret = dai.listComputationApps(false)
 					.stream()
@@ -94,7 +94,7 @@ public final class AppResources extends OpenDcsResource
 			return Response.status(HttpServletResponse.SC_OK)
 					.entity(ret).build();
 		}
-		catch (DbIoException ex)
+		catch(DbIoException ex)
 		{
 			throw new DbException("Unable to retrieve apps", ex);
 		}
@@ -117,8 +117,7 @@ public final class AppResources extends OpenDcsResource
 	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
 	@Operation(
 			summary = "Retrieve a Single Application by its ID",
-			description = "Example: \n\n    http://localhost:8080/odcsapi/app?appid=4  \n" +
-					"**Note**: appType may be omitted if it is not defined in the database.",
+			description = "Example: \n\n    http://localhost:8080/odcsapi/app?appid=4  \n",
 			responses = {
 					@ApiResponse(responseCode = "200", description = "Success",
 							content = @Content(mediaType = MediaType.APPLICATION_JSON,

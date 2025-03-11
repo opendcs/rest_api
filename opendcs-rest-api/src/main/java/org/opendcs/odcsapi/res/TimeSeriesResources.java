@@ -629,7 +629,7 @@ public final class TimeSeriesResources extends OpenDcsResource
 					+ "This deletes the Time Interval with ID 1459.  \n\n"
 					+ "**Use care with this method**. The system needs to know about all of the 'interval' "
 					+ "and 'duration' specifiers used for time series IDs. \n\n"
-					+ "Deletion of intervals is currently unsupported!.",
+					+ "Deletion of intervals is currently unsupported!",
 			responses = {
 					@ApiResponse(responseCode = "204", description = "Successfully deleted the interval"),
 					@ApiResponse(responseCode = "400", description = "Invalid parameters"),
@@ -663,7 +663,7 @@ public final class TimeSeriesResources extends OpenDcsResource
 					+ "E.g. All time series at a particular with interval '30minutes'.  \n"
 					+ "*  A list of sub-groups that can be included, excluded, "
 					+ "or intersected with the group being defined.\n  \n"
-					+ "***\n  \nExample URL:  \n\n    http://localhost:8080/odcsapi-0-7/tsgrouprefs\n\n"
+					+ "***\n  \nExample URL:  \n\n    http://localhost:8080/odcsapi/tsgrouprefs\n\n"
 					+ "The returned list has the following structure:\n  \n```\n  [\n    {\n      "
 					+ "\"groupId\": 8,\n      \"groupName\": \"topgroup\",\n      \"groupType\": \"basin\",\n      "
 					+ "\"description\": \"\"\n    },\n    {\n      \"groupId\": 7,\n      "
