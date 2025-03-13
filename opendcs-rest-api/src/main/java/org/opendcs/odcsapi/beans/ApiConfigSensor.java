@@ -1,7 +1,7 @@
 /*
- *  Copyright 2023 OpenDCS Consortium
+ *  Copyright 2025 OpenDCS Consortium and its Contributors
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  Licensed under the Apache License, Version 2.0 (the "License")
  *  you may not use this file except in compliance with the License.
  *  You may obtain a copy of the License at
  *       http://www.apache.org/licenses/LICENSE-2.0
@@ -16,9 +16,10 @@
 package org.opendcs.odcsapi.beans;
 
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 
-public class ApiConfigSensor
+public final class ApiConfigSensor
 {
 	private int sensorNumber = 0;
 
@@ -38,7 +39,7 @@ public class ApiConfigSensor
 
 	private Properties properties = new Properties();
 
-	private HashMap<String, String> dataTypes = new HashMap<String, String>();
+	private Map<String, String> dataTypes = new HashMap<>();
 
 	private String usgsStatCode = null;
 
@@ -122,12 +123,12 @@ public class ApiConfigSensor
 		this.properties = properties;
 	}
 
-	public HashMap<String, String> getDataTypes()
+	public Map<String, String> getDataTypes()
 	{
 		return dataTypes;
 	}
 
-	public void setDataTypes(HashMap<String, String> dataTypes)
+	public void setDataTypes(Map<String, String> dataTypes)
 	{
 		this.dataTypes = dataTypes;
 	}

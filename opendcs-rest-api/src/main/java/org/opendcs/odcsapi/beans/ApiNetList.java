@@ -1,7 +1,7 @@
 /*
- *  Copyright 2023 OpenDCS Consortium
+ *  Copyright 2025 OpenDCS Consortium and its Contributors
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  Licensed under the Apache License, Version 2.0 (the "License")
  *  you may not use this file except in compliance with the License.
  *  You may obtain a copy of the License at
  *       http://www.apache.org/licenses/LICENSE-2.0
@@ -18,12 +18,13 @@ package org.opendcs.odcsapi.beans;
 
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author mmaloney
  *
  */
-public class ApiNetList
+public final class ApiNetList
 {
 	/** Unique surrogate key ID of this network list */
 	private Long netlistId = null;
@@ -46,7 +47,7 @@ public class ApiNetList
 	 * being used as a key in this HashMap.
 	 * This data member is never null.
 	 */
-	private HashMap<String, ApiNetListItem> items = new HashMap<String, ApiNetListItem>();
+	private Map<String, ApiNetListItem> items = new HashMap<>();
 
 	/**
 	 * Default ctor required for POST method.
@@ -98,12 +99,12 @@ public class ApiNetList
 		this.lastModifyTime = lastModifyTime;
 	}
 
-	public HashMap<String, ApiNetListItem> getItems()
+	public Map<String, ApiNetListItem> getItems()
 	{
 		return items;
 	}
 
-	public void setItems(HashMap<String, ApiNetListItem> items)
+	public void setItems(Map<String, ApiNetListItem> items)
 	{
 		this.items = items;
 	}

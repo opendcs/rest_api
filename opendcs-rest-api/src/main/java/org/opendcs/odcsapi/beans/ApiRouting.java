@@ -1,7 +1,7 @@
 /*
- *  Copyright 2023 OpenDCS Consortium
+ *  Copyright 2025 OpenDCS Consortium and its Contributors
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  Licensed under the Apache License, Version 2.0 (the "License")
  *  you may not use this file except in compliance with the License.
  *  You may obtain a copy of the License at
  *       http://www.apache.org/licenses/LICENSE-2.0
@@ -17,9 +17,10 @@ package org.opendcs.odcsapi.beans;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Properties;
 
-public class ApiRouting
+public final class ApiRouting
 {
 	private Long routingId = null;
 	private String name = null;
@@ -39,10 +40,10 @@ public class ApiRouting
 	private String applyTimeTo = "Local Receive Time";
 	private boolean ascendingTime = false;
 	
-	private ArrayList<String> platformIds = new ArrayList<String>();
-	private ArrayList<String> platformNames = new ArrayList<String>();
-	private ArrayList<String> netlistNames = new ArrayList<String>();
-	private ArrayList<Integer> goesChannels = new ArrayList<Integer>();
+	private List<String> platformIds = new ArrayList<>();
+	private List<String> platformNames = new ArrayList<>();
+	private List<String> netlistNames = new ArrayList<>();
+	private List<Integer> goesChannels = new ArrayList<>();
 	
 	private Properties properties = new Properties();
 	
@@ -185,35 +186,35 @@ public class ApiRouting
 	{
 		this.applyTimeTo = applyTimeTo;
 	}
-	public ArrayList<String> getPlatformIds()
+	public List<String> getPlatformIds()
 	{
 		return platformIds;
 	}
-	public void setPlatformIds(ArrayList<String> platformIds)
+	public void setPlatformIds(List<String> platformIds)
 	{
 		this.platformIds = platformIds;
 	}
-	public ArrayList<String> getPlatformNames()
+	public List<String> getPlatformNames()
 	{
 		return platformNames;
 	}
-	public void setPlatformNames(ArrayList<String> platformNames)
+	public void setPlatformNames(List<String> platformNames)
 	{
 		this.platformNames = platformNames;
 	}
-	public ArrayList<String> getNetlistNames()
+	public List<String> getNetlistNames()
 	{
 		return netlistNames;
 	}
-	public void setNetlistNames(ArrayList<String> netlistNames)
+	public void setNetlistNames(List<String> netlistNames)
 	{
 		this.netlistNames = netlistNames;
 	}
-	public ArrayList<Integer> getGoesChannels()
+	public List<Integer> getGoesChannels()
 	{
 		return goesChannels;
 	}
-	public void setGoesChannels(ArrayList<Integer> goesChannels)
+	public void setGoesChannels(List<Integer> goesChannels)
 	{
 		this.goesChannels = goesChannels;
 	}

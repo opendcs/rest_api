@@ -1,5 +1,5 @@
 /*
- *  Copyright 2024 OpenDCS Consortium and its Contributors
+ *  Copyright 2025 OpenDCS Consortium and its Contributors
  *
  *  Licensed under the Apache License, Version 2.0 (the "License")
  *  you may not use this file except in compliance with the License.
@@ -25,6 +25,7 @@ import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+import javax.sql.DataSource;
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
@@ -36,34 +37,40 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import org.opendcs.odcsapi.dao.DbException;
+import decodes.tsdb.TimeSeriesDb;
+import org.opendcs.odcsapi.dao.ApiAuthorizationDAI;
 import org.opendcs.odcsapi.errorhandling.WebAppException;
-import org.opendcs.odcsapi.hydrojson.DbInterface;
-import org.opendcs.odcsapi.sec.AuthorizationCheck;
+import org.opendcs.odcsapi.res.OpenDcsResource;
 import org.opendcs.odcsapi.sec.OpenDcsApiRoles;
 import org.opendcs.odcsapi.sec.OpenDcsPrincipal;
+import org.opendcs.odcsapi.util.ApiConstants;
 import org.opendcs.odcsapi.util.ApiHttpUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static org.opendcs.odcsapi.res.DataSourceContextCreator.DATA_SOURCE_ATTRIBUTE_KEY;
+
 @Path("/")
-public class BasicAuthResource
+public final class BasicAuthResource extends OpenDcsResource
 {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(BasicAuthResource.class);
 	private static final String MODULE = "BasicAuthResource";
 
-	@Context private HttpServletRequest request;
-	@Context private HttpHeaders httpHeaders;
+	@Context
+	private HttpServletRequest request;
+	@Context
+	private HttpHeaders httpHeaders;
 
 	@POST
 	@Path("credentials")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	@RolesAllowed({AuthorizationCheck.ODCS_API_GUEST})
+	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
 	public Response postCredentials(Credentials credentials) throws WebAppException
 	{
-		if(!DbInterface.isOpenTsdb)
+		TimeSeriesDb db = getLegacyTimeseriesDB();
+		if(!db.isOpenTSDB())
 		{
 			throw new ServerErrorException("Basic Auth is not supported", Response.Status.NOT_IMPLEMENTED);
 		}
@@ -77,7 +84,7 @@ public class BasicAuthResource
 		String authorizationHeader = httpHeaders.getHeaderString(HttpHeaders.AUTHORIZATION);
 		credentials = getCredentials(credentials, authorizationHeader);
 		validateDbCredentials(credentials);
-		Set<OpenDcsApiRoles> roles = BasicAuthCheck.getUserRoles(credentials.getUsername());
+		Set<OpenDcsApiRoles> roles = getUserRoles(credentials.getUsername());
 		OpenDcsPrincipal principal = new OpenDcsPrincipal(credentials.getUsername(), roles);
 		HttpSession oldSession = request.getSession(false);
 		if(oldSession != null)
@@ -167,12 +174,13 @@ public class BasicAuthResource
 		return credentials;
 	}
 
-	private static String getDatabaseUrl(DbInterface dbi) throws WebAppException
+	private String getDatabaseUrl() throws WebAppException
 	{
-		try
+		DataSource dataSource = (DataSource) context.getAttribute(DATA_SOURCE_ATTRIBUTE_KEY);
+		try(Connection poolCon = dataSource.getConnection())
 		{
-			Connection poolCon = dbi.getConnection();
 			// The only way to verify that user/pw is valid is to attempt to establish a connection:
+			// This should eventually be moved to a users table
 			DatabaseMetaData metaData = poolCon.getMetaData();
 			return metaData.getURL();
 		}
@@ -183,19 +191,13 @@ public class BasicAuthResource
 		}
 	}
 
-	private static void validateDbCredentials(Credentials creds) throws WebAppException
+	private void validateDbCredentials(Credentials creds) throws WebAppException
 	{
 
 		// Use username and password to attempt to connect to the database
-		try(DbInterface dbi = new DbInterface())
+		try
 		{
-			String url = getDatabaseUrl(dbi);
-			if(DbInterface.isOpenTsdb)
-			{
-				//Workaround for driver not automatically registering. Not adding basic auth to other databases
-				//And this one will get removed in a future update.
-				Class.forName("org.postgresql.Driver");//NOSONAR
-			}
+			String url = getDatabaseUrl();
 			/*
 			 Intentional unused connection. Makes a new db connection using passed credentials
 			 This validates the username & password and will throw SQLException if user/pw is not valid.
@@ -211,10 +213,28 @@ public class BasicAuthResource
 			throw new WebAppException(HttpServletResponse.SC_FORBIDDEN,
 					"Unable to authorize user.", e);
 		}
-		catch(DbException | ClassNotFoundException e)
+	}
+
+	private Set<OpenDcsApiRoles> getUserRoles(String username)
+	{
+		try(ApiAuthorizationDAI dao = getAuthDao())
 		{
-			throw new WebAppException(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
-					"Failed to obtain database URL.", e);
+			return dao.getRoles(username);
 		}
+		catch(Exception e)
+		{
+			throw new IllegalStateException("Unable to query the database for user authorization", e);
+		}
+	}
+
+	private ApiAuthorizationDAI getAuthDao()
+	{
+		TimeSeriesDb timeSeriesDb = getLegacyTimeseriesDB();
+		// Username+Password login only supported by OpenTSDB
+		if(timeSeriesDb.isOpenTSDB())
+		{
+			return new OpenTsdbAuthorizationDAO(timeSeriesDb);
+		}
+		throw new UnsupportedOperationException("Endpoint is unsupported by the OpenDCS REST API.");
 	}
 }

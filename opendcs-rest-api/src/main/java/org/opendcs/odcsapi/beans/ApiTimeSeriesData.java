@@ -1,7 +1,7 @@
 /*
- *  Copyright 2023 OpenDCS Consortium
+ *  Copyright 2025 OpenDCS Consortium and its Contributors
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  Licensed under the Apache License, Version 2.0 (the "License")
  *  you may not use this file except in compliance with the License.
  *  You may obtain a copy of the License at
  *       http://www.apache.org/licenses/LICENSE-2.0
@@ -16,12 +16,13 @@
 package org.opendcs.odcsapi.beans;
 
 import java.util.ArrayList;
+import java.util.List;
 
-public class ApiTimeSeriesData
+public final class ApiTimeSeriesData
 {
 	private ApiTimeSeriesIdentifier tsid = null;
 	
-	private ArrayList<ApiTimeSeriesValue> values = new ArrayList<ApiTimeSeriesValue>();
+	private List<ApiTimeSeriesValue> values = new ArrayList<>();
 
 	public ApiTimeSeriesIdentifier getTsid()
 	{
@@ -33,12 +34,12 @@ public class ApiTimeSeriesData
 		this.tsid = tsid;
 	}
 
-	public ArrayList<ApiTimeSeriesValue> getValues()
+	public List<ApiTimeSeriesValue> getValues()
 	{
 		return values;
 	}
 
-	public void setValues(ArrayList<ApiTimeSeriesValue> values)
+	public void setValues(List<ApiTimeSeriesValue> values)
 	{
 		this.values = values;
 	}

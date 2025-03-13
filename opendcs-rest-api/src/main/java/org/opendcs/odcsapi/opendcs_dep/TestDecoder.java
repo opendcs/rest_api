@@ -1,7 +1,7 @@
 /*
- *  Copyright 2023 OpenDCS Consortium
+ *  Copyright 2025 OpenDCS Consortium and its Contributors
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  Licensed under the Apache License, Version 2.0 (the "License")
  *  you may not use this file except in compliance with the License.
  *  You may obtain a copy of the License at
  *       http://www.apache.org/licenses/LICENSE-2.0
@@ -20,26 +20,8 @@ import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Date;
 import java.util.Iterator;
-
+import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.WebApplicationException;
-
-import org.opendcs.odcsapi.beans.ApiDecodedMessage;
-import org.opendcs.odcsapi.beans.ApiDecodesTSValue;
-import org.opendcs.odcsapi.beans.ApiDecodesTimeSeries;
-import org.opendcs.odcsapi.beans.ApiPlatformConfig;
-import org.opendcs.odcsapi.beans.ApiConfigSensor;
-import org.opendcs.odcsapi.beans.ApiConfigScript;
-import org.opendcs.odcsapi.beans.ApiConfigScriptSensor;
-import org.opendcs.odcsapi.beans.ApiRawMessage;
-import org.opendcs.odcsapi.beans.ApiScriptFormatStatement;
-import org.opendcs.odcsapi.beans.ApiTokenPosition;
-import org.opendcs.odcsapi.beans.ApiUnitConverter;
-import org.opendcs.odcsapi.dao.DbException;
-import org.opendcs.odcsapi.errorhandling.ErrorCodes;
-import org.opendcs.odcsapi.errorhandling.WebAppException;
-import org.opendcs.odcsapi.hydrojson.DbInterface;
-import org.opendcs.odcsapi.util.ApiPropertiesUtil;
-import org.opendcs.odcsapi.util.ApiTextUtil;
 
 import decodes.datasource.GoesPMParser;
 import decodes.datasource.HeaderParseException;
@@ -61,29 +43,56 @@ import decodes.db.UnitConverterDb;
 import decodes.decoder.DecodedMessage;
 import decodes.decoder.DecodedSample;
 import decodes.sql.DbKey;
+import decodes.tsdb.DbIoException;
+import decodes.tsdb.TimeSeriesDb;
 import ilex.util.Logger;
 import ilex.var.TimedVariable;
+import opendcs.dai.DataTypeDAI;
+import opendcs.dai.EnumDAI;
+import org.opendcs.database.api.OpenDcsDatabase;
+import org.opendcs.odcsapi.beans.ApiConfigScript;
+import org.opendcs.odcsapi.beans.ApiConfigScriptSensor;
+import org.opendcs.odcsapi.beans.ApiConfigSensor;
+import org.opendcs.odcsapi.beans.ApiDecodedMessage;
+import org.opendcs.odcsapi.beans.ApiDecodesTSValue;
+import org.opendcs.odcsapi.beans.ApiDecodesTimeSeries;
+import org.opendcs.odcsapi.beans.ApiPlatformConfig;
+import org.opendcs.odcsapi.beans.ApiRawMessage;
+import org.opendcs.odcsapi.beans.ApiScriptFormatStatement;
+import org.opendcs.odcsapi.beans.ApiTokenPosition;
+import org.opendcs.odcsapi.beans.ApiUnitConverter;
+import org.opendcs.odcsapi.dao.DbException;
+import org.opendcs.odcsapi.errorhandling.WebAppException;
+import org.opendcs.odcsapi.hydrojson.DbInterface;
+import org.opendcs.odcsapi.util.ApiPropertiesUtil;
 
-public class TestDecoder
+public final class TestDecoder
 {
+	private static long lastDecodesInitMsec = 0L;
+
+	private TestDecoder()
+	{
+		throw new AssertionError("Utility class, do not instantiate.");
+	}
+
 	/**
 	 * Do a test decode of the passed message data using the named script within the
 	 * passed configuration.
 	 * @param msgData
 	 * @param cfg
 	 * @param scriptName
-	 * @param dbi 
+	 * @param db
 	 * @return
 	 */
 	public static ApiDecodedMessage decodeMessage(ApiRawMessage msgData, 
-		ApiPlatformConfig cfg, String scriptName, DbInterface dbi)
+		ApiPlatformConfig cfg, String scriptName, OpenDcsDatabase db)
 		throws DbException, WebAppException
 	{
 		final ApiDecodedMessage ret = new ApiDecodedMessage();
 		
 		// Capture the OpenDCS log messages to return to client.
 		Logger origLogger = Logger.instance();
-		Logger traceLogger = new TraceLogger(ret.getLogMessages());
+		Logger traceLogger = new TraceLogger();
 		traceLogger.setMinLogPriority(Logger.E_DEBUG3);
 		Logger.setLogger(traceLogger);
 
@@ -108,7 +117,7 @@ public class TestDecoder
 		else if (platformConfig.getNumScripts() > 0)
 			script = platformConfig.decodesScripts.get(0);
 		if (script == null)
-			throw new WebAppException(ErrorCodes.BAD_CONFIG, "No such script '" + scriptName
+			throw new WebAppException(HttpServletResponse.SC_PRECONDITION_FAILED, "No such script '" + scriptName
 				+ "' within the passed configuration.");
 
 		String mediumType = script.getHeaderType();
@@ -130,11 +139,11 @@ public class TestDecoder
 		{
 			try
 			{
-				CompRunner.initDecodes(TsdbManager.makeTsdb(dbi));
+				initDecodes(db);
 				PMParser pmParser = PMParser.getPMParser(mediumType);
 				if (pmParser == null)
 				{
-					throw new WebAppException(ErrorCodes.BAD_CONFIG, 
+					throw new WebAppException(HttpServletResponse.SC_PRECONDITION_FAILED,
 						"Cannot get pmParser for mediumType '" + mediumType + "'");
 				}
 				pmParser.parsePerformanceMeasurements(rawMessage);
@@ -167,7 +176,7 @@ public class TestDecoder
 				}
 				catch (HeaderParseException ex2)
 				{
-					throw new WebAppException(ErrorCodes.MISSING_ID, 
+					throw new WebAppException(HttpServletResponse.SC_BAD_REQUEST,
 						"Cannot parse message header as " + mediumType + " or edl: " + ex2);
 				}
 			}
@@ -199,7 +208,7 @@ public class TestDecoder
 			}
 			catch (Exception ex)
 			{
-				throw new WebAppException(ErrorCodes.BAD_CONFIG, "Decoding failed: " + ex);
+				throw new WebAppException(HttpServletResponse.SC_PRECONDITION_FAILED, "Decoding failed: " + ex);
 			}
 		}
 		finally
@@ -209,13 +218,13 @@ public class TestDecoder
 		return ret;
 	}
 	
-	public static boolean isGoes(byte[] msgData)
+	private static boolean isGoes(byte[] msgData)
 	{
 		Logger.instance().debug1("isGoes(" + new String(msgData) + ")");
 
 		if (msgData.length < 37)
 			return false;
-		if (!ApiTextUtil.isHexString(new String(msgData, 0, 8)))
+		if (!isHexString(new String(msgData, 0, 8)))
 			return false;
 		for(int i=8; i<8+11; i++)
 			if (!Character.isDigit((char)msgData[i]))
@@ -223,7 +232,7 @@ public class TestDecoder
 		return true;
 	}
 	
-	public static boolean isIridium(byte[] msgData)
+	private static boolean isIridium(byte[] msgData)
 	{
 		return (new String(msgData,0,3)).startsWith("ID=");
 	}
@@ -339,5 +348,107 @@ public class TestDecoder
 		}
 	}
 
+	/**
+	 * Synchronized to make sure multiple concurrent sessions don't init at the same time.
+	 * Also, only initialize once per minute.
+	 */
+	private static synchronized void initDecodes(OpenDcsDatabase db)
+			throws DbException
+	{
+		// Don't init more than once per minute.
+		long now = System.currentTimeMillis();
+		if (now - lastDecodesInitMsec < 60*1000L)
+			return;
+		lastDecodesInitMsec = now;
 
+		if (decodes.db.Database.getDb() == null)
+			decodes.db.Database.setDb(new decodes.db.Database());
+
+		try (DataTypeDAI dtDAO = db.getLegacyDatabase(TimeSeriesDb.class)
+				.orElseThrow(() -> new UnsupportedOperationException("TestDecodes is not supported")).makeDataTypeDAO();
+			 EnumDAI enumDAO = db.getLegacyDatabase(TimeSeriesDb.class).orElseThrow(() -> new UnsupportedOperationException("TestDecodes is not supported")).makeEnumDAO())
+		{
+			enumDAO.readEnumList(decodes.db.Database.getDb().enumList);
+			dtDAO.readDataTypeSet(decodes.db.Database.getDb().dataTypeSet);
+		}
+		catch (DbIoException ex)
+		{
+			throw new DbException("Error initializing decodes for test decoding", ex);
+		}
+	}
+
+	/**
+	 * @return true if passed string is a hex number.
+	 */
+	private static boolean isHexString(String s)
+	{
+		int len = s.length();
+		for(int i = 0; i < len; i++)
+		{
+			if(!isHexChar((byte) s.charAt(i)))
+			{
+				return false;
+			}
+		}
+		return true;
+	}
+
+	/**
+	 * Converts hex char to in in the range 0...15
+	 *
+	 * @param c the hex char
+	 * @return the int
+	 */
+	private static int fromHexChar(char c)
+	{
+		int retval;
+		if(Character.isDigit(c))
+		{
+			retval = c - '0';
+		}
+		else
+		{
+			switch(c)
+			{
+				case 'a':
+				case 'A':
+					retval = 10;
+					break;
+				case 'b':
+				case 'B':
+					retval = 11;
+					break;
+				case 'c':
+				case 'C':
+					retval = 12;
+					break;
+				case 'd':
+				case 'D':
+					retval = 13;
+					break;
+				case 'e':
+				case 'E':
+					retval = 14;
+					break;
+				case 'f':
+				case 'F':
+					retval = 15;
+					break;
+				default:
+					retval = -1;
+					break;
+			}
+		}
+		return retval;
+	}
+
+	/**
+	 * @param c the char
+	 * @return true if the character is a hex char.
+	 */
+	private static boolean isHexChar(byte c)
+	{
+		int i = fromHexChar((char) c);
+		return i != -1;
+	}
 }

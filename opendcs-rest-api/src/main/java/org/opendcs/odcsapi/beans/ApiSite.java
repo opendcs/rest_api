@@ -1,7 +1,7 @@
 /*
- *  Copyright 2023 OpenDCS Consortium
+ *  Copyright 2025 OpenDCS Consortium and its Contributors
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  Licensed under the Apache License, Version 2.0 (the "License")
  *  you may not use this file except in compliance with the License.
  *  You may obtain a copy of the License at
  *       http://www.apache.org/licenses/LICENSE-2.0
@@ -17,14 +17,15 @@ package org.opendcs.odcsapi.beans;
 
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 
-public class ApiSite
+public final class ApiSite
 {
 	private Long siteId = null;
 	
 	/** nametype - namevalue */
-	private HashMap<String, String> sitenames = new HashMap<String, String>();
+	private Map<String, String> sitenames = new HashMap<>();
 	
 	private String description = null;
 	
@@ -60,12 +61,12 @@ public class ApiSite
 		this.siteId = siteId;
 	}
 
-	public HashMap<String, String> getSitenames()
+	public Map<String, String> getSitenames()
 	{
 		return sitenames;
 	}
 
-	public void setSitenames(HashMap<String, String> sitenames)
+	public void setSitenames(Map<String, String> sitenames)
 	{
 		this.sitenames = sitenames;
 	}

@@ -1,7 +1,7 @@
 /*
- *  Copyright 2023 OpenDCS Consortium
+ *  Copyright 2025 OpenDCS Consortium and its Contributors
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  Licensed under the Apache License, Version 2.0 (the "License")
  *  you may not use this file except in compliance with the License.
  *  You may obtain a copy of the License at
  *       http://www.apache.org/licenses/LICENSE-2.0
@@ -16,8 +16,9 @@
 package org.opendcs.odcsapi.beans;
 
 import java.util.ArrayList;
+import java.util.List;
 
-public class ApiPlatformConfig
+public final class ApiPlatformConfig
 {
 	private Long configId = null;
 	
@@ -27,11 +28,11 @@ public class ApiPlatformConfig
 	
 	private String description = null;
 	
-	private ArrayList<ApiConfigSensor> configSensors = 
-		new ArrayList<ApiConfigSensor>();
+	private List<ApiConfigSensor> configSensors =
+		new ArrayList<>();
 	
-	private ArrayList<ApiConfigScript> scripts = 
-		new ArrayList<ApiConfigScript>();
+	private List<ApiConfigScript> scripts =
+		new ArrayList<>();
 
 	public Long getConfigId()
 	{
@@ -73,22 +74,22 @@ public class ApiPlatformConfig
 		this.description = description;
 	}
 
-	public ArrayList<ApiConfigSensor> getConfigSensors()
+	public List<ApiConfigSensor> getConfigSensors()
 	{
 		return configSensors;
 	}
 	
-	public void setConfigSensors(ArrayList<ApiConfigSensor> configSensors)
+	public void setConfigSensors(List<ApiConfigSensor> configSensors)
 	{
 		this.configSensors = configSensors;
 	}
 
-	public ArrayList<ApiConfigScript> getScripts()
+	public List<ApiConfigScript> getScripts()
 	{
 		return scripts;
 	}
 
-	public void setScripts(ArrayList<ApiConfigScript> scripts)
+	public void setScripts(List<ApiConfigScript> scripts)
 	{
 		this.scripts = scripts;
 	}

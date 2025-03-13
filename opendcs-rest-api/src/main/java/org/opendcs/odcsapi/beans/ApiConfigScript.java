@@ -1,7 +1,7 @@
 /*
- *  Copyright 2023 OpenDCS Consortium
+ *  Copyright 2025 OpenDCS Consortium and its Contributors
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  Licensed under the Apache License, Version 2.0 (the "License")
  *  you may not use this file except in compliance with the License.
  *  You may obtain a copy of the License at
  *       http://www.apache.org/licenses/LICENSE-2.0
@@ -16,8 +16,9 @@
 package org.opendcs.odcsapi.beans;
 
 import java.util.ArrayList;
+import java.util.List;
 
-public class ApiConfigScript
+public final class ApiConfigScript
 {
 	private String name = null;
 	
@@ -26,11 +27,11 @@ public class ApiConfigScript
 	
 	private String headerType = null;
 	
-	private ArrayList<ApiConfigScriptSensor> scriptSensors = 
-		new ArrayList<ApiConfigScriptSensor>();
+	private List<ApiConfigScriptSensor> scriptSensors =
+		new ArrayList<>();
 	
-	private ArrayList<ApiScriptFormatStatement> formatStatements =
-		new ArrayList<ApiScriptFormatStatement>();
+	private List<ApiScriptFormatStatement> formatStatements =
+		new ArrayList<>();
 
 	public String getName()
 	{
@@ -62,22 +63,22 @@ public class ApiConfigScript
 		this.headerType = headerType;
 	}
 
-	public ArrayList<ApiConfigScriptSensor> getScriptSensors()
+	public List<ApiConfigScriptSensor> getScriptSensors()
 	{
 		return scriptSensors;
 	}
 
-	public void setScriptSensors(ArrayList<ApiConfigScriptSensor> scriptSensors)
+	public void setScriptSensors(List<ApiConfigScriptSensor> scriptSensors)
 	{
 		this.scriptSensors = scriptSensors;
 	}
 
-	public ArrayList<ApiScriptFormatStatement> getFormatStatements()
+	public List<ApiScriptFormatStatement> getFormatStatements()
 	{
 		return formatStatements;
 	}
 
-	public void setFormatStatements(ArrayList<ApiScriptFormatStatement> formatStatements)
+	public void setFormatStatements(List<ApiScriptFormatStatement> formatStatements)
 	{
 		this.formatStatements = formatStatements;
 	}

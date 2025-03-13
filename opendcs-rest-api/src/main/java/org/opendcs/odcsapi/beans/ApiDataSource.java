@@ -1,7 +1,7 @@
 /*
- *  Copyright 2023 OpenDCS Consortium
+ *  Copyright 2025 OpenDCS Consortium and its Contributors
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  Licensed under the Apache License, Version 2.0 (the "License")
  *  you may not use this file except in compliance with the License.
  *  You may obtain a copy of the License at
  *       http://www.apache.org/licenses/LICENSE-2.0
@@ -16,16 +16,17 @@
 package org.opendcs.odcsapi.beans;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 
-public class ApiDataSource
+public final class ApiDataSource
 {
 	private Long dataSourceId = null;
 	private String name = null;
 	private String type = null;
 	private int usedBy = 0;
 	private Properties props = null;
-	private ArrayList<ApiDataSourceGroupMember> groupMembers = new ArrayList<ApiDataSourceGroupMember>();
+	private List<ApiDataSourceGroupMember> groupMembers = new ArrayList<>();
 	
 	public Long getDataSourceId()
 	{
@@ -67,11 +68,11 @@ public class ApiDataSource
 	{
 		this.props = props;
 	}
-	public ArrayList<ApiDataSourceGroupMember> getGroupMembers()
+	public List<ApiDataSourceGroupMember> getGroupMembers()
 	{
 		return groupMembers;
 	}
-	public void setGroupMembers(ArrayList<ApiDataSourceGroupMember> groupMembers)
+	public void setGroupMembers(List<ApiDataSourceGroupMember> groupMembers)
 	{
 		this.groupMembers = groupMembers;
 	}

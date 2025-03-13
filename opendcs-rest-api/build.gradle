@@ -1,5 +1,5 @@
 /*
- *  Copyright 2024 OpenDCS Consortium and its Contributors
+ *  Copyright 2025 OpenDCS Consortium and its Contributors
  *
  *  Licensed under the Apache License, Version 2.0 (the "License")
  *  you may not use this file except in compliance with the License.
@@ -25,17 +25,27 @@ configurations {
 }
 
 dependencies {
-    api(libs.opendcs) {
-        //Workaround for the excessive opendcs dependencies
-        exclude group: '*', module: '*'
+    implementation(libs.opendcs) {
+        exclude group: "javax.media", module: "jai_core"
+        exclude group: "javax.media", module: "jai_codec"
+        exclude group: "org.jooq.pro", module: "jooq-meta"
+        exclude group: "org.jooq.pro", module: "jooq-codegen"
+        exclude group: "com.oracle.database.jdbc", module: "jmscommon"
+        exclude group: "com.oracle.database.jdbc", module: "aqapi"
+        exclude group: "com.oracle.database.jdbc", module: "xmlparserv2"
+        exclude group: "com.oracle.database.jdbc", module: "xdb"
+        exclude group: "com.sun.media", module: "jai_imageio"
+        exclude group: "com.mrsid", module: "mrsidreader"
     }
+    implementation(libs.opendcs.api)
+
     implementation(libs.servlet.api)
     implementation(libs.json.jackson)
     implementation(libs.jersey.container.servlet)
     implementation(libs.nimbus)
     implementation(libs.jwt)
     implementation(libs.jersey.hk2)
-    implementation(libs.slf4j.jdk)
+    implementation(libs.slf4j.api)
     runtimeOnly(libs.jaxb.runtime)
     runtimeOnly(libs.postgresql)
     webjars(libs.swagger.ui)
@@ -47,6 +57,15 @@ dependencies {
     testImplementation(libs.rest.assured)
     testImplementation(libs.hamcrest)
     testImplementation(libs.bundles.tomcat)
+    testImplementation(libs.commons.io)
+    testImplementation(libs.apache.derby)
+    testImplementation(libs.webcompere.system.stubs.jupiter)
+    testImplementation(libs.testcontainers.core)
+    testImplementation(libs.testcontainers.postgresql)
+    testImplementation(libs.hec.testcontainers.cwms)
+    testImplementation(libs.bundles.jdbi)
+    testImplementation(libs.org.flywaydb.flyway.core)
+    testRuntimeOnly(libs.jul.to.slf4j)
     compileOnly(libs.auto.service)
     annotationProcessor(libs.auto.service)
 }
@@ -93,51 +112,7 @@ if (JavaVersion.current() != JavaVersion.VERSION_1_8) {
     sonarqube {
         properties {
             property 'sonar.exclusions', 'src/main/resources/swaggerui/**'
+            property 'sonar.coverage.jacoco.xmlReportPaths', "${layout.buildDirectory.get().asFile.toString()}/reports/jacoco/test/jacocoTestReport.xml"
         }
-    }
-}
-
-
-tasks.register('generateConfig', Copy) {
-    doFirst {
-        project.delete "$buildDir/tomcat/"
-        project.mkdir "$buildDir/tomcat/logs"
-    }
-    from 'src/test/resources/tomcat'
-    into "$buildDir/tomcat"
-
-    //rename "context.xml", "context.xml.template"
-    rename "tomcat-server.xml", "server.xml"
-
-    inputs.dir "src/test/resources"
-    outputs.dir "$buildDir/tomcat/conf"
-}
-
-tasks.register('integrationTest', Test) {
-    group "verification"
-    useJUnitPlatform {
-        includeTags "integration"
-    }
-    shouldRunAfter test
-    dependsOn war
-    dependsOn generateConfig
-    jvmArgs += "-DwarContext=/opendcs-rest-api"
-    jvmArgs += "-Djava.util.logging.config.file=$projectDir/test/resources/logging.properties"
-    jvmArgs += "-Dorg.apache.tomcat.util.digester.PROPERTY_SOURCE=org.apache.tomcat.util.digester.EnvironmentPropertySource"
-    jvmArgs += "-Dcatalina.base=$buildDir/tomcat"
-    systemProperties += project.properties.findAll { k, v -> k.startsWith("opendcs") }
-    systemProperties += project.properties.findAll { k, v -> k.startsWith("postgresdb") }
-    if (!project.hasProperty("postgresdb.url")) {
-        systemProperties.put("postgresdb.url", "jdbc:postgresql://localhost:5432/open_tsdb")
-        systemProperties.put("opendcs.db.username", "tsdbadm")
-        systemProperties.put("opendcs.db.password", "postgres_pass")
-    }
-    dependsOn(":opendcs-rest-api-jetty:startPostgresContainer")
-    finalizedBy(":opendcs-rest-api-jetty:stopPostgresContainer")
-}
-
-test {
-    useJUnitPlatform {
-        excludeTags "integration"
     }
 }
