@@ -102,12 +102,32 @@ public final class BasicAuthResource extends OpenDcsResource
 							description = "Successful authentication."
 					),
 					@ApiResponse(
-							responseCode = "401",
+							responseCode = "400",
+							description = "Bad request - null or otherwise invalid credentials.",
+							content = @Content(mediaType = MediaType.APPLICATION_JSON,
+									schema = @Schema(type = "object", implementation = StringToClassMapItem.class),
+									examples = @ExampleObject(value = "{\"status\":400," +
+											"\"message\": \"Neither username nor password may be null.\"}"))
+					),
+					@ApiResponse(
+							responseCode = "403",
 							description = "Invalid credentials or insufficient role.",
 							content = @Content(mediaType = MediaType.APPLICATION_JSON,
 									schema = @Schema(type = "object", implementation = StringToClassMapItem.class),
-									examples = @ExampleObject(value = "{\"status\":401," +
-											"\"message\":\"FATAL: password authentication failed for user 'xyz'.\"}"))
+									examples = @ExampleObject(value = "{\"status\":403," +
+											"\"message\":\"Failed to authorize user.\"}"))
+					),
+					@ApiResponse(
+							responseCode = "500",
+							description = "Internal Server Error"
+					),
+					@ApiResponse(
+							responseCode = "501",
+							description = "This authentication method is not supported by the OpenTSDB database.",
+							content = @Content(mediaType = MediaType.APPLICATION_JSON,
+									schema = @Schema(type = "object", implementation = StringToClassMapItem.class),
+									examples = @ExampleObject(value = "{\"status\":501," +
+											"\"message\":\"Basic Auth is not supported.\"}"))
 					)
 			}
 	)
