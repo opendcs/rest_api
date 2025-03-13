@@ -123,7 +123,7 @@ public final class BasicAuthResource extends OpenDcsResource
 					),
 					@ApiResponse(
 							responseCode = "501",
-							description = "This authentication method is not supported by the OpenTSDB database.",
+							description = "This authentication method is only supported by the OpenTSDB database.",
 							content = @Content(mediaType = MediaType.APPLICATION_JSON,
 									schema = @Schema(type = "object", implementation = StringToClassMapItem.class),
 									examples = @ExampleObject(value = "{\"status\":501," +
