@@ -42,7 +42,6 @@ import org.opendcs.fixtures.spi.Configuration;
 import org.opendcs.fixtures.spi.ConfigurationProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.bridge.SLF4JBridgeHandler;
 import uk.org.webcompere.systemstubs.environment.EnvironmentVariables;
 import uk.org.webcompere.systemstubs.properties.SystemProperties;
 import uk.org.webcompere.systemstubs.security.SystemExit;
@@ -75,8 +74,6 @@ public final class TomcatServer implements AutoCloseable
 	 */
 	public TomcatServer(String baseDir, int port, String restWar, String guiWar) throws IOException
 	{
-		SLF4JBridgeHandler.removeHandlersForRootLogger();
-		SLF4JBridgeHandler.install();
 		tomcatInstance = new Tomcat();
 		tomcatInstance.setBaseDir(baseDir);
 		Connector connector = new Connector();
