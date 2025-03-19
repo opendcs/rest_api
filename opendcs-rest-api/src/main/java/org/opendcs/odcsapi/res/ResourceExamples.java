@@ -15,13 +15,21 @@
 
 package org.opendcs.odcsapi.res;
 
-public class ResourceExamples
+public final class ResourceExamples
 {
-	private ResourceExamples() {}
+	private static final String UTILITY_CLASS = "Utility Class";
 
-	public static class AlgorithmExamples
+	private ResourceExamples()
 	{
-		private AlgorithmExamples() {}
+		throw new AssertionError(UTILITY_CLASS);
+	}
+
+	static final class AlgorithmExamples
+	{
+		private AlgorithmExamples()
+		{
+			throw new AssertionError(UTILITY_CLASS);
+		}
 
 		public static final String BASIC = "{\n" +
 				"  \"algorithmId\": 4,\n" +
@@ -102,9 +110,12 @@ public class ResourceExamples
 				"}";
 	}
 
-	public static class AppExamples
+	static final class AppExamples
 	{
-		private AppExamples() {}
+		private AppExamples()
+		{
+			throw new AssertionError(UTILITY_CLASS);
+		}
 
 		public static final String BASIC = "{\n" +
 				"  \"appId\": 4,\n" +
@@ -140,9 +151,12 @@ public class ResourceExamples
 				"}";
 	}
 
-	public static class ComputationExamples
+	static final class ComputationExamples
 	{
-		private ComputationExamples() {}
+		private ComputationExamples()
+		{
+			throw new AssertionError(UTILITY_CLASS);
+		}
 
 		public static final String BASIC = "{\n" +
 				"  \"computationId\": 4,\n" +
@@ -289,9 +303,12 @@ public class ResourceExamples
 				"}";
 	}
 
-	public static class ConfigExamples
+	static final class ConfigExamples
 	{
-		private ConfigExamples() {}
+		private ConfigExamples()
+		{
+			throw new AssertionError(UTILITY_CLASS);
+		}
 
 		public static final String BASIC = "{\n" +
 				"  \"configId\": 12,\n" +
@@ -546,9 +563,12 @@ public class ResourceExamples
 				"}";
 	}
 
-	public static class DataSourceExamples
+	static final class DataSourceExamples
 	{
-		private DataSourceExamples() {}
+		private DataSourceExamples()
+		{
+			throw new AssertionError(UTILITY_CLASS);
+		}
 
 		public static final String BASIC = "{\n" +
 				"  \"dataSourceId\": 10,\n" +
@@ -603,9 +623,12 @@ public class ResourceExamples
 				"}";
 	}
 
-	public static class DecodeExamples
+	static final class DecodeExamples
 	{
-		private DecodeExamples() {}
+		private DecodeExamples()
+		{
+			throw new AssertionError(UTILITY_CLASS);
+		}
 
 		public static final String BASIC = "{\n" +
 				"  \"rawmsg\": {\n" +
@@ -778,9 +801,12 @@ public class ResourceExamples
 				"}";
 	}
 
-	public static class NetlistExamples
+	static final class NetlistExamples
 	{
-		private NetlistExamples() {}
+		private NetlistExamples()
+		{
+			throw new AssertionError(UTILITY_CLASS);
+		}
 
 		public static final String BASIC = "{\n" +
 				"  \"items\": {\n" +
@@ -832,9 +858,12 @@ public class ResourceExamples
 				"}";
 	}
 
-	public static class PlatformExamples
+	static final class PlatformExamples
 	{
-		private PlatformExamples() {}
+		private PlatformExamples()
+		{
+			throw new AssertionError(UTILITY_CLASS);
+		}
 
 		public static final String BASIC = "{\n" +
 				"  \"agency\": \"\",\n" +
@@ -994,9 +1023,12 @@ public class ResourceExamples
 				"}";
 	}
 
-	public static class PresentationExamples
+	static final class PresentationExamples
 	{
-		private PresentationExamples() {}
+		private PresentationExamples()
+		{
+			throw new AssertionError(UTILITY_CLASS);
+		}
 
 		public static final String BASIC = "{\n" +
 				"  \"groupId\": 4,\n" +
@@ -1085,9 +1117,12 @@ public class ResourceExamples
 				"}";
 	}
 
-	public static class ReflistExamples
+	static final class ReflistExamples
 	{
-		private ReflistExamples() {}
+		private ReflistExamples()
+		{
+			throw new AssertionError(UTILITY_CLASS);
+		}
 
 		public static final String BASIC = "{\n" +
 				"  \"reflistId\": 3,\n" +
@@ -1151,9 +1186,12 @@ public class ResourceExamples
 				"}";
 	}
 
-	public static class RoutingExamples
+	static final class RoutingExamples
 	{
-		private RoutingExamples() {}
+		private RoutingExamples()
+		{
+			throw new AssertionError(UTILITY_CLASS);
+		}
 
 		public static final String BASIC = "{\n" +
 				"  \"routingId\": 20,\n" +
@@ -1279,9 +1317,12 @@ public class ResourceExamples
 				"}";
 	}
 
-	public static class ScheduleExamples
+	static final class ScheduleExamples
 	{
-		private ScheduleExamples() {}
+		private ScheduleExamples()
+		{
+			throw new AssertionError(UTILITY_CLASS);
+		}
 
 		public static final String BASIC = "{\n" +
 				"  \"schedEntryId\": 21,\n" +
@@ -1326,9 +1367,12 @@ public class ResourceExamples
 				"}";
 	}
 
-	public static class SiteExamples
+	static final class SiteExamples
 	{
-		private SiteExamples() {}
+		private SiteExamples()
+		{
+			throw new AssertionError(UTILITY_CLASS);
+		}
 
 		public static final String BASIC = "{\n" +
 				"  \"siteId\": 7,\n" +
@@ -1404,9 +1448,12 @@ public class ResourceExamples
 				"}";
 	}
 
-	public static class TsGroupExamples
+	static final class TsGroupExamples
 	{
-		private TsGroupExamples() {}
+		private TsGroupExamples()
+		{
+			throw new AssertionError(UTILITY_CLASS);
+		}
 
 		public static final String BASIC = "{\n" +
 				"  \"groupId\": 19,\n" +
