@@ -58,7 +58,7 @@ public final class ApiConfigSensor
 	@Schema(description = "A map of data type identifiers and their corresponding descriptions.")
 	private Map<String, String> dataTypes = new HashMap<>();
 
-	@Schema(description = "The USGS statistical code associated with the sensor.")
+	@Schema(description = "The USGS statistical code associated with the sensor. Null means undefined.")
 	private String usgsStatCode = null;
 
 	public int getSensorNumber()
