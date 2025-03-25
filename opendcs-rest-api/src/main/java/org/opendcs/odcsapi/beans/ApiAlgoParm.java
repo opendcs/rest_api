@@ -29,7 +29,8 @@ public final class ApiAlgoParm
 	/**
 	 * The parameter type.
 	 */
-	@Schema(description = "The type of the parameter. Can be input (i) or output (o).", example = "i")
+	@Schema(description = "The type of the parameter. Can be input (i), output (o), or can embed extra information.",
+			example = "i")
 	private String parmType;
 
 	public String getRoleName()

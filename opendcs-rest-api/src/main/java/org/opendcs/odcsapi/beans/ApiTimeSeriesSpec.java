@@ -17,6 +17,7 @@ package org.opendcs.odcsapi.beans;
 
 import java.util.Date;
 
+import decodes.sql.DbKey;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 @Schema(description = "Represents the specification of a time series, including metadata and configuration details.")
@@ -39,13 +40,13 @@ public final class ApiTimeSeriesSpec
 	private String version = null;
 
 	@Schema(description = "The unique numeric identifier for the site associated with the time series.", example = "6")
-	private Long siteId = null;
+	private DbKey siteId = null;
 	@Schema(description = "The unique numeric identifier for the datatype used in the time series.", example = "48")
-	private Long datatypeId = null;
+	private DbKey datatypeId = null;
 	@Schema(description = "The unique numeric identifier for the interval used in the time series.", example = "12")
-	private Long intervalId = null;
+	private DbKey intervalId = null;
 	@Schema(description = "The unique numeric identifier for the duration used in the time series.", example = "36")
-	private Long durationId = null;
+	private DbKey durationId = null;
 
 	@Schema(description = "The date and time when the time series configuration was last modified.",
 			example = "2020-05-11T20:50:55.795Z[UTC]")
@@ -232,35 +233,35 @@ public final class ApiTimeSeriesSpec
 	{
 		this.newest = newest;
 	}
-	public Long getSiteId()
+	public DbKey getSiteId()
 	{
 		return siteId;
 	}
-	public void setSiteId(Long siteId)
+	public void setSiteId(DbKey siteId)
 	{
 		this.siteId = siteId;
 	}
-	public Long getDatatypeId()
+	public DbKey getDatatypeId()
 	{
 		return datatypeId;
 	}
-	public void setDatatypeId(Long datatypeId)
+	public void setDatatypeId(DbKey datatypeId)
 	{
 		this.datatypeId = datatypeId;
 	}
-	public Long getIntervalId()
+	public DbKey getIntervalId()
 	{
 		return intervalId;
 	}
-	public void setIntervalId(Long intervalId)
+	public void setIntervalId(DbKey intervalId)
 	{
 		this.intervalId = intervalId;
 	}
-	public Long getDurationId()
+	public DbKey getDurationId()
 	{
 		return durationId;
 	}
-	public void setDurationId(Long durationId)
+	public void setDurationId(DbKey durationId)
 	{
 		this.durationId = durationId;
 	}

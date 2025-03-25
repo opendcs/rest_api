@@ -83,20 +83,14 @@ public final class ComputationResources extends OpenDcsResource
 					@ApiResponse(responseCode = "500", description = "Internal Server Error")
 			}
 	)
-	public Response getComputationRefs(@Parameter(schema = @Schema(implementation = String.class))
-		@QueryParam("site") String site,
-			@Parameter(schema = @Schema(implementation = String.class))
-		@QueryParam("algorithm") String algorithm,
-			@Parameter(schema = @Schema(implementation = String.class))
-		@QueryParam("datatype") String datatype,
-			@Parameter(schema = @Schema(implementation = String.class))
-		@QueryParam("group") String group,
-			@Parameter(schema = @Schema(implementation = String.class))
-		@QueryParam("process") String process,
-			@Parameter(schema = @Schema(implementation = Boolean.class))
-		@QueryParam("enabled") Boolean enabled,
-			@Parameter(schema = @Schema(implementation = String.class))
-		@QueryParam("interval") String interval)
+	public Response getComputationRefs(
+			@Parameter(schema = @Schema(implementation = String.class)) @QueryParam("site") String site,
+			@Parameter(schema = @Schema(implementation = String.class)) @QueryParam("algorithm") String algorithm,
+			@Parameter(schema = @Schema(implementation = String.class)) @QueryParam("datatype") String datatype,
+			@Parameter(schema = @Schema(implementation = String.class)) @QueryParam("group") String group,
+			@Parameter(schema = @Schema(implementation = String.class)) @QueryParam("process") String process,
+			@Parameter(schema = @Schema(implementation = Boolean.class)) @QueryParam("enabled") Boolean enabled,
+			@Parameter(schema = @Schema(implementation = String.class)) @QueryParam("interval") String interval)
 			throws DbException, WebAppException
 	{
 		try (ComputationDAI dai = getLegacyTimeseriesDB().makeComputationDAO())

@@ -243,19 +243,19 @@ public final class TimeSeriesResources extends OpenDcsResource
 			ret.setVersion((ctsid).getVersion());
 			if (ctsid.getDataTypeId() != null)
 			{
-				ret.setDatatypeId(ctsid.getDataTypeId().getValue());
+				ret.setDatatypeId(ctsid.getDataTypeId());
 			}
 			else
 			{
-				ret.setDatatypeId(DbKey.NullKey.getValue());
+				ret.setDatatypeId(DbKey.NullKey);
 			}
 			if (ctsid.getSite() != null && ctsid.getSite().getId() != null)
 			{
-				ret.setSiteId(ctsid.getSite().getId().getValue());
+				ret.setSiteId(ctsid.getSite().getId());
 			}
 			else
 			{
-				ret.setSiteId(DbKey.NullKey.getValue());
+				ret.setSiteId(DbKey.NullKey);
 			}
 			if (ctsid.getSubLoc() != null)
 			{
@@ -272,22 +272,22 @@ public final class TimeSeriesResources extends OpenDcsResource
 			ret.setInterval(htsid.getInterval());
 			if (htsid.getDataTypeId() != null)
 			{
-				ret.setDatatypeId(htsid.getDataTypeId().getValue());
+				ret.setDatatypeId(htsid.getDataTypeId());
 			}
 			else
 			{
-				ret.setDatatypeId(DbKey.NullKey.getValue());
+				ret.setDatatypeId(DbKey.NullKey);
 			}
 			if (htsid.getSite() != null && htsid.getSite().getId() != null)
 			{
-				ret.setSiteId(htsid.getSite().getId().getValue());
+				ret.setSiteId(htsid.getSite().getId());
 			}
 			else
 			{
-				ret.setSiteId(DbKey.NullKey.getValue());
+				ret.setSiteId(DbKey.NullKey);
 			}
 		}
-		ret.setDatatypeId(id.getDataTypeId().getValue());
+		ret.setDatatypeId(id.getDataTypeId());
 		if (ret.getLocation() == null || ret.getLocation().isEmpty())
 		{
 			ret.setLocation(id.getSiteName());

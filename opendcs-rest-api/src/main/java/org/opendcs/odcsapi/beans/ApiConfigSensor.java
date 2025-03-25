@@ -19,6 +19,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonValue;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 @Schema(description = "Represents the configuration details of a sensor including its recording mode, interval, and other properties.")
@@ -33,9 +35,11 @@ public final class ApiConfigSensor
 	/**
 	 * V=Variable, F=Fixed, U=undefined
 	 */
-	@Schema(description = "The sensor's recording mode. Possible values are V (Variable), F (Fixed), or U (Undefined).",
+	@JsonProperty("recordingMode")
+	@Schema(description = "The sensor's recording mode. Possible values from the RecordingMode enum are V (Variable), " +
+			"F (Fixed), or U (Undefined).",
 			example = "F")
-	private char recordingMode = 'U'; // undefined
+	private RecordingMode recordingMode = RecordingMode.UNDEFINED; // undefined
 
 	@Schema(description = "The duration between successive samples in seconds. Default is 3600.", example = "3600")
 	private int recordingInterval = 3600;
@@ -81,12 +85,12 @@ public final class ApiConfigSensor
 		this.sensorName = sensorName;
 	}
 
-	public char getRecordingMode()
+	public RecordingMode getRecordingMode()
 	{
 		return recordingMode;
 	}
 
-	public void setRecordingMode(char recordingMode)
+	public void setRecordingMode(RecordingMode recordingMode)
 	{
 		this.recordingMode = recordingMode;
 	}
@@ -161,4 +165,35 @@ public final class ApiConfigSensor
 		this.usgsStatCode = usgsStatCode;
 	}
 
+	public enum RecordingMode
+	{
+		VARIABLE('V'),
+		FIXED('F'),
+		UNDEFINED('U');
+
+		private final char code;
+
+		RecordingMode(char code)
+		{
+			this.code = code;
+		}
+
+		@JsonValue
+		public char getCode()
+		{
+			return code;
+		}
+
+		public static RecordingMode fromChar(char code)
+		{
+			for (RecordingMode mode : values())
+			{
+				if (mode.code == code)
+				{
+					return mode;
+				}
+			}
+			return UNDEFINED;
+		}
+	}
 }

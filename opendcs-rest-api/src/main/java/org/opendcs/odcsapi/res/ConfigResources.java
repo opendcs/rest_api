@@ -229,7 +229,7 @@ public final class ConfigResources extends OpenDcsResource
 			apiSensor.setAbsoluteMin(sensor.absoluteMin);
 			apiSensor.setRecordingInterval(sensor.recordingInterval);
 			apiSensor.setTimeOfFirstSample(sensor.timeOfFirstSample);
-			apiSensor.setRecordingMode(sensor.recordingMode);
+			apiSensor.setRecordingMode(ApiConfigSensor.RecordingMode.fromChar(sensor.recordingMode));
 			Map<String, String> dataTypes = new HashMap<>();
 			sensor.getDataTypes()
 				.forEachRemaining(entry ->
@@ -347,7 +347,7 @@ public final class ConfigResources extends OpenDcsResource
 				configSensor.absoluteMin = sensor.getAbsoluteMin();
 				configSensor.recordingInterval = sensor.getRecordingInterval();
 				configSensor.timeOfFirstSample = sensor.getTimeOfFirstSample();
-				configSensor.recordingMode = sensor.getRecordingMode();
+				configSensor.recordingMode = sensor.getRecordingMode().getCode();
 				for (Map.Entry<String, String> entry : sensor.getDataTypes().entrySet())
 				{
 					DataType dt = new DataType(entry.getKey(), entry.getValue());
