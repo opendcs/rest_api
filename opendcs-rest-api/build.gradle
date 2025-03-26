@@ -38,8 +38,6 @@ dependencies {
         exclude group: "com.sun.media", module: "jai_imageio"
         exclude group: "com.mrsid", module: "mrsidreader"
         exclude group: "org.eclipse.jetty", module: "jetty-annotations"
-        exclude group: "org.glassfish.jersey.containers"
-        exclude group: "org.glassfish.jersey.inject"
     }
     implementation(libs.opendcs.api)
     implementation(libs.servlet.api)

@@ -22,15 +22,9 @@ dependencies {
     implementation(libs.bundles.tomcat)
     implementation(libs.commons.io)
     implementation(libs.slf4j.api)
-    implementation(libs.opendcs) {
-        exclude group: "org.glassfish.jersey.containers"
-        exclude group: "org.glassfish.jersey.inject"
-    }
+    implementation(libs.opendcs)
     implementation(libs.opendcs.api)
-    implementation(libs.opendcs.integrationtesting.fixtures) {
-        exclude group: "org.glassfish.jersey.containers"
-        exclude group: "org.glassfish.jersey.inject"
-    }
+    implementation(libs.opendcs.integrationtesting.fixtures)
     runtimeClasspath(libs.slf4j.jdk14)
 
 
