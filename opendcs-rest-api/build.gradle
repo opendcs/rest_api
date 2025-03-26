@@ -51,8 +51,6 @@ dependencies {
     runtimeClasspath(libs.slf4j.jdk14)
     implementation(libs.jackson)
     runtimeOnly(libs.jackson.annotations) // updated for swagger compatibility
-    runtimeOnly(libs.jaxb.runtime)
-    runtimeOnly(libs.postgresql)
     webjars(libs.swagger.ui)
     testImplementation(libs.jersey.test)
     testImplementation(libs.mockito.core)
