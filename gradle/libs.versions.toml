@@ -14,7 +14,7 @@ monolith = { strictly = "2.0.2" }
 
 swagger = "2.2.24"
 swagger-ui = "5.17.14"
-glassfish-jaxb = "2.3.3"
+glassfish-jaxb = "4.0.5"
 websocket = "1.1"
 selenium = "3.141.59"
 nimbus = "9.41.1"
