@@ -85,33 +85,40 @@ public final class ComputationResources extends OpenDcsResource
 			}
 		)
 	public Response getComputationRefs(
-			@Parameter(schema = @Schema(implementation = Long.class)) @QueryParam("site") Long site,
-			@Parameter(schema = @Schema(implementation = Long.class)) @QueryParam("algorithm") Long algorithm,
-			@Parameter(schema = @Schema(implementation = Long.class)) @QueryParam("datatype") Long datatype,
-			@Parameter(schema = @Schema(implementation = Long.class)) @QueryParam("group") Long group,
-			@Parameter(schema = @Schema(implementation = Long.class)) @QueryParam("process") Long process,
-			@Parameter(schema = @Schema(implementation = Boolean.class)) @QueryParam("enabled") Boolean enabled,
-			@Parameter(schema = @Schema(implementation = String.class)) @QueryParam("interval") String interval)
+			@Parameter(schema = @Schema(implementation = Long.class),
+					description = "Site ID to filter on") @QueryParam("site") Long siteId,
+			@Parameter(schema = @Schema(implementation = Long.class),
+					description = "Algorithm ID to filter on") @QueryParam("algorithm") Long algorithmId,
+			@Parameter(schema = @Schema(implementation = Long.class),
+					description = "Datatype ID to filter on") @QueryParam("datatype") Long dataTypeId,
+			@Parameter(schema = @Schema(implementation = Long.class),
+					description = "Group ID to filter on") @QueryParam("group") Long groupId,
+			@Parameter(schema = @Schema(implementation = Long.class),
+					description = "Process ID to filter on") @QueryParam("process") Long processId,
+			@Parameter(schema = @Schema(implementation = Boolean.class),
+					description = "Whether to filter only enabled computations") @QueryParam("enabled") Boolean enabled,
+			@Parameter(schema = @Schema(implementation = String.class),
+					description = "Interval code to filter on") @QueryParam("interval") String interval)
 			throws DbException, WebAppException
 	{
 		try (ComputationDAI dai = getLegacyTimeseriesDB().makeComputationDAO())
 		{
 			CompFilter compFilter = new CompFilter();
-			if (datatype != null)
+			if (dataTypeId != null)
 			{
-				compFilter.setDataTypeId(DbKey.createDbKey(datatype));
+				compFilter.setDataTypeId(DbKey.createDbKey(dataTypeId));
 			}
-			if (group != null)
+			if (groupId != null)
 			{
-				compFilter.setGroupId(DbKey.createDbKey(group));
+				compFilter.setGroupId(DbKey.createDbKey(groupId));
 			}
-			if (process != null)
+			if (processId != null)
 			{
-				compFilter.setProcessId(DbKey.createDbKey(process));
+				compFilter.setProcessId(DbKey.createDbKey(processId));
 			}
-			if (site != null)
+			if (siteId != null)
 			{
-				compFilter.setSiteId(DbKey.createDbKey(site));
+				compFilter.setSiteId(DbKey.createDbKey(siteId));
 			}
 			if (interval != null)
 			{
