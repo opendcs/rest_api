@@ -18,6 +18,8 @@ package org.opendcs.odcsapi.opendcs_dep;
 import java.util.stream.Stream;
 
 import decodes.db.Database;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.opendcs.odcsapi.beans.ApiPropSpec;
@@ -28,16 +30,30 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 final class PropSpecHelperTest
 {
 
-	@ParameterizedTest
-	@MethodSource("classNames")
-	void testPropSpecClasses(String className)
+	private Database oldDb;
+
+	@BeforeEach
+	void setup()
 	{
-		Database db = Database.getDb();
-		if(db == null)
+
+		oldDb = Database.getDb();
+		if(oldDb == null)
 		{
 			//Workaround for PMParser using global instance
 			Database.setDb(new Database());
 		}
+	}
+
+	@AfterEach
+	void tearDown()
+	{
+		Database.setDb(oldDb);
+	}
+
+	@ParameterizedTest
+	@MethodSource("classNames")
+	void testPropSpecClasses(String className)
+	{
 		ApiPropSpec[] apiPropSpecs = assertDoesNotThrow(() -> PropSpecHelper.getPropSpecs(className), "Failed to get prop specs for " + className);
 		assertNotNull(apiPropSpecs, "Prop specs for " + className + " is null");
 	}
