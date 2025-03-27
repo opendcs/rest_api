@@ -178,7 +178,7 @@ public final class PropSpecHelper
 	public static ApiPropSpec[] getPropSpecs(String className)
 			throws WebAppException
 	{
-		PropertySpec[] ps = gedecodesPropSpecs(className);
+		PropertySpec[] ps = getDecodesPropSpecs(className);
 		ApiPropSpec[] ret = new ApiPropSpec[ps.length];
 		for(int i = 0; i < ps.length; i++)
 			ret[i] = new ApiPropSpec(ps[i].getName(), ps[i].getType(), ps[i].getDescription());
@@ -186,7 +186,7 @@ public final class PropSpecHelper
 	}
 
 
-	private static PropertySpec[] gedecodesPropSpecs(String className) throws WebAppException
+	private static PropertySpec[] getDecodesPropSpecs(String className) throws WebAppException
 	{
 		//className is user controlled, so it is logged at trace level.
 		LOGGER.trace("PropSpecHelper.getPropSpecs class='{}'", className);
@@ -304,16 +304,16 @@ public final class PropSpecHelper
 	{
 		// The above special cases failed. Try to instantiate an object and ask it for
 		// its prop specs.
-		PropertiesOwner pw = null;
+		PropertiesOwner propertiesOwner = null;
 		try
 		{
 			if(ConfigSensor.class.getName().equalsIgnoreCase(className))
 			{
-				pw = new ConfigSensor(null, 0);
+				propertiesOwner = new ConfigSensor(null, 0);
 			}
 			else if(StringBufferConsumer.class.getName().equalsIgnoreCase(className))
 			{
-				pw = new StringBufferConsumer(new StringBuffer());
+				propertiesOwner = new StringBufferConsumer(new StringBuffer());
 			}
 			else
 			{
@@ -324,25 +324,25 @@ public final class PropSpecHelper
 					if(ctor.getParameterCount() == 0)
 					{
 
-						pw = (PropertiesOwner) ctor.newInstance();
+						propertiesOwner = (PropertiesOwner) ctor.newInstance();
 					}
 					else if(ctor.getParameterCount() == 2
 							&& ctor.getParameterTypes()[0] == DataSource.class
 							&& ctor.getParameterTypes()[1] == Database.class)
 					{
-						pw = (PropertiesOwner) ctor.newInstance(null, null);
+						propertiesOwner = (PropertiesOwner) ctor.newInstance(null, null);
 					}
-					if(pw != null)
+					if(propertiesOwner != null)
 					{
 						break;
 					}
 				}
 			}
-			if(pw == null)
+			if(propertiesOwner == null)
 			{
 				throw new WebAppException(HttpServletResponse.SC_CONFLICT, "Cannot get property specs for '" + className + "'");
 			}
-			return pw.getSupportedProps();
+			return propertiesOwner.getSupportedProps();
 		}
 		catch (RuntimeException | InstantiationException | IllegalAccessException | InvocationTargetException | ClassNotFoundException ex)
 		{
