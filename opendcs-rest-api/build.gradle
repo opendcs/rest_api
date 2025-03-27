@@ -54,7 +54,6 @@ dependencies {
     webjars(libs.swagger.ui)
     testImplementation(libs.jersey.test)
     testImplementation(libs.mockito.core)
-    testImplementation(libs.mockito.inline)
     testImplementation(libs.mockito.junit.jupiter)
     compileOnly(libs.auto.service)
     annotationProcessor(libs.auto.service)
