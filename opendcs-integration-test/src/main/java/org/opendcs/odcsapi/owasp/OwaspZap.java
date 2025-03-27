@@ -55,7 +55,7 @@ public final class OwaspZap
 
 		try(TomcatServer tomcat = new TomcatServer(baseDir, Integer.parseInt(port), restWar, guiWar))
 		{
-			tomcat.start(dbType);
+			tomcat.start();
 			System.exit(runOwaspZap(tomcat).intValue());
 		}
 		catch(InterruptedException e)

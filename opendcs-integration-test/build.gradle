@@ -84,8 +84,8 @@ tasks.register('run', JavaExec) {
 
 
     mainClass = "org.opendcs.odcsapi.fixtures.TomcatServer"
-    systemProperties += project.properties.findAll { k, v -> k.startsWith("testcontainer") }
-    systemProperties += project.properties.findAll { k, v -> k.startsWith("opendcs") }
+    systemProperties += project.properties.findAll { k, v -> k.toLowerCase().startsWith("testcontainer") }
+    systemProperties += project.properties.findAll { k, v -> k.toLowerCase().startsWith("opendcs") }
     systemProperties.put("org.apache.tomcat.util.digester.PROPERTY_SOURCE", "org.apache.tomcat.util.digester.EnvironmentPropertySource")
     systemProperties.put("java.util.logging.config.file", "build/tomcat/conf/logging.properties")
     systemProperties.put("DCSTOOL_USERDIR", "build/resources/test/tomcat/conf")
