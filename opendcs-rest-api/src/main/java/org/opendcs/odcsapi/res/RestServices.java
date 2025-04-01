@@ -15,9 +15,19 @@
 
 package org.opendcs.odcsapi.res;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import javax.servlet.ServletContext;
 import javax.ws.rs.ApplicationPath;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.UriInfo;
 
 import io.swagger.v3.jaxrs2.integration.resources.OpenApiResource;
+import io.swagger.v3.oas.integration.SwaggerConfiguration;
+import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.servers.Server;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,11 +37,24 @@ public final class RestServices extends ResourceConfig
 {
 	private static final Logger LOGGER = LoggerFactory.getLogger(RestServices.class);
 
-	public RestServices()
+	;
+
+	public RestServices(@Context ServletContext servletContext)
 	{
 		LOGGER.debug("Initializing odcsapi RestServices.");
 		packages("org.opendcs.odcsapi");
-
-		register(OpenApiResource.class);
+		Set<String> resourcePackages = new HashSet<>();
+		resourcePackages.add("org.opendcs.odcsapi");
+		List<Server> servers = new ArrayList<>();
+		String contextPath = servletContext.getContextPath();
+		servers.add(new Server().url(contextPath));
+		OpenAPI openAPI = new OpenAPI();
+		openAPI.setServers(servers);
+		SwaggerConfiguration swaggerConfig = new SwaggerConfiguration();
+		swaggerConfig.setResourcePackages(resourcePackages);
+		swaggerConfig.setOpenAPI(openAPI);
+		OpenApiResource openApiResource = new OpenApiResource();
+		openApiResource.setOpenApiConfiguration(swaggerConfig);
+		register(openApiResource);
 	}
 }
