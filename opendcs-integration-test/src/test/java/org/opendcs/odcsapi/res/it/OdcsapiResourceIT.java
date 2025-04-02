@@ -17,6 +17,7 @@ package org.opendcs.odcsapi.res.it;
 
 
 import java.time.Instant;
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -193,7 +194,7 @@ final class OdcsapiResourceIT extends BaseIT
 			.extract();
 
 		JsonNode responseNode = MAPPER.readTree(response.body().asString());
-		assertDoesNotThrow(() -> Instant.parse(responseNode.get("messageTime").asText()),
+		assertDoesNotThrow(() -> ZonedDateTime.parse(responseNode.get("messageTime").asText()),
 				"messageTime in the actual response is not parseable to an Instant");
 		JsonNode expected = MAPPER.readTree(getJsonFromResource("odcsapi_decode_response.json"));
 		((ObjectNode)expected).remove("messageTime");
