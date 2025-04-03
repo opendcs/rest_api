@@ -72,7 +72,7 @@ public final class NetlistResources extends OpenDcsResource
 	@GET
 	@Path("netlistrefs")
 	@Produces(MediaType.APPLICATION_JSON)
-	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
+	@RolesAllowed({ApiConstants.ODCS_API_USER, ApiConstants.ODCS_API_ADMIN})
 	@Operation(
 			summary = "The GET netlistrefs method returns references to network lists",
 			description = "The GET netlistrefs method is intended to populate a pick list of network lists and"
@@ -152,7 +152,7 @@ public final class NetlistResources extends OpenDcsResource
 	@GET
 	@Path("netlist")
 	@Produces(MediaType.APPLICATION_JSON)
-	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
+	@RolesAllowed({ApiConstants.ODCS_API_USER, ApiConstants.ODCS_API_ADMIN})
 	@Operation(
 			summary = "The ‘netlists’ GET method will return a specific network list in its entirety.",
 			description = "Example:\n\n    http://localhost:8080/odcsapi/netlist?netlistid=1",
@@ -388,7 +388,7 @@ public final class NetlistResources extends OpenDcsResource
 	@Path("cnvtnl")
 	@Consumes(MediaType.TEXT_PLAIN)
 	@Produces(MediaType.APPLICATION_JSON)
-	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
+	@RolesAllowed({ApiConstants.ODCS_API_USER, ApiConstants.ODCS_API_ADMIN})
 	@Operation(
 			summary = "Convert Network List File",
 			description = "Parses a network list file (in text format) and converts it to an object representation.",

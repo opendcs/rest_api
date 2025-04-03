@@ -90,7 +90,7 @@ public final class TimeSeriesResources extends OpenDcsResource
 	@Path("tsrefs")
 	@Produces(MediaType.APPLICATION_JSON)
 	@Tag(name = "Time Series Methods")
-	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
+	@RolesAllowed({ApiConstants.ODCS_API_USER, ApiConstants.ODCS_API_ADMIN})
 	@Operation(
 			summary = "The tsrefs method returns a list of time series defined in the database.",
 			description = "You have the option to filter out inactive time series by passing 'active=true' argument.  \n"
@@ -300,7 +300,7 @@ public final class TimeSeriesResources extends OpenDcsResource
 	@GET
 	@Path("tsdata")
 	@Produces(MediaType.APPLICATION_JSON)
-	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
+	@RolesAllowed({ApiConstants.ODCS_API_USER, ApiConstants.ODCS_API_ADMIN})
 	@Operation(
 			summary = "The tsdata method returns data for a time series over a specified time range.",
 			description = "The method takes 3 arguments:\n"
@@ -477,7 +477,7 @@ public final class TimeSeriesResources extends OpenDcsResource
 	@GET
 	@Path("intervals")
 	@Produces(MediaType.APPLICATION_JSON)
-	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
+	@RolesAllowed({ApiConstants.ODCS_API_USER, ApiConstants.ODCS_API_ADMIN})
 	@Tag(name = "Time Series Methods - Interval Methods", description = "Time Intervals are stored in the database "
 			+ "for OpenTSDB. They are hardcoded for CWMS and HDB.")
 	@Operation(
@@ -654,7 +654,7 @@ public final class TimeSeriesResources extends OpenDcsResource
 	@GET
 	@Path("tsgrouprefs")
 	@Produces(MediaType.APPLICATION_JSON)
-	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
+	@RolesAllowed({ApiConstants.ODCS_API_USER, ApiConstants.ODCS_API_ADMIN})
 	@Tag(name = "Time Series Methods - Groups", description = "Time Series Groups are used to define a "
 			+ "set of time series identifiers")
 	@Operation(
@@ -722,7 +722,7 @@ public final class TimeSeriesResources extends OpenDcsResource
 	@GET
 	@Path("tsgroup")
 	@Produces(MediaType.APPLICATION_JSON)
-	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
+	@RolesAllowed({ApiConstants.ODCS_API_USER, ApiConstants.ODCS_API_ADMIN})
 	@Operation(
 			summary = "Provide a complete definition of a single group.",
 			description = "Example URL:  \n\n    http://localhost:8080/odcsapi-0-7/tsgroup?groupid=9\n\n"

@@ -79,7 +79,7 @@ public final class DatatypeUnitResources extends OpenDcsResource
 	@GET
 	@Path("datatypelist")
 	@Produces(MediaType.APPLICATION_JSON)
-	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
+	@RolesAllowed({ApiConstants.ODCS_API_USER, ApiConstants.ODCS_API_ADMIN})
 	@Operation(
 			summary = "Retrieve Data Type List",
 			description = "Examples:  \n\n    http://localhost:8080/odcsapi/datatypelist  \n\n    " 
@@ -147,7 +147,7 @@ public final class DatatypeUnitResources extends OpenDcsResource
 	@GET
 	@Path("unitlist")
 	@Produces(MediaType.APPLICATION_JSON)
-	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
+	@RolesAllowed({ApiConstants.ODCS_API_USER, ApiConstants.ODCS_API_ADMIN})
 	@Tag(name = "REST - Engineering Unit Methods")
 	@Operation(
 			summary = "Returns an array of data structures representing all known Engineering Units",
@@ -306,7 +306,7 @@ public final class DatatypeUnitResources extends OpenDcsResource
 	@GET
 	@Path("euconvlist")
 	@Produces(MediaType.APPLICATION_JSON)
-	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
+	@RolesAllowed({ApiConstants.ODCS_API_USER, ApiConstants.ODCS_API_ADMIN})
 	@Tag(name = "REST - Engineering Unit Methods")
 	@Operation(
 			summary = "Returns a list of Engineering Unit Conversions defined in the database",

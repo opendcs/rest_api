@@ -75,7 +75,7 @@ public final class PresentationResources extends OpenDcsResource
 	@GET
 	@Path("presentationrefs")
 	@Produces(MediaType.APPLICATION_JSON)
-	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
+	@RolesAllowed({ApiConstants.ODCS_API_USER, ApiConstants.ODCS_API_ADMIN})
 	@Operation(
 			summary = "Returns a list of references to presentation groups suitable for displaying a list",
 			tags = {"REST - DECODES Presentation Group Records"},
@@ -147,7 +147,7 @@ public final class PresentationResources extends OpenDcsResource
 	@GET
 	@Path("presentation")
 	@Produces(MediaType.APPLICATION_JSON)
-	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
+	@RolesAllowed({ApiConstants.ODCS_API_USER, ApiConstants.ODCS_API_ADMIN})
 	@Operation(
 			summary = "This method returns a JSON representation of a single, complete DECODES Presentation Group record",
 			description = "Example: \n \n `http://localhost:8080/odcsapi/presentation?groupid=4` \n \n "

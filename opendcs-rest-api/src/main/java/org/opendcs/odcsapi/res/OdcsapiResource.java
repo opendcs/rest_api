@@ -63,7 +63,7 @@ public final class OdcsapiResource extends OpenDcsResource
 	@GET
 	@Path("tsdb_properties")
 	@Produces(MediaType.APPLICATION_JSON)
-	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
+	@RolesAllowed({ApiConstants.ODCS_API_USER, ApiConstants.ODCS_API_ADMIN})
 	@Operation(
 			summary = "Get TSDB Properties",
 			description = "Example:  \n\n    http://localhost:8080/odcsapi/tsdb_properties  \n    \n    \n"
@@ -161,7 +161,7 @@ public final class OdcsapiResource extends OpenDcsResource
 	@GET
 	@Path("propspecs")
 	@Produces(MediaType.APPLICATION_JSON)
-	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
+	@RolesAllowed({ApiConstants.ODCS_API_USER, ApiConstants.ODCS_API_ADMIN})
 	@Tag(name = "REST - Retrieving Property Specs", description = "Many of the Java classes within OpenDCS maintain a "
 			+ "set of properties that can alter the object’s behavior. "
 			+ "This method allows the caller to get a list of acceptable properties for a given class.")

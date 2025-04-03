@@ -71,7 +71,7 @@ public final class SiteResources extends OpenDcsResource
 	@GET
 	@Path("siterefs")
 	@Produces(MediaType.APPLICATION_JSON)
-	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
+	@RolesAllowed({ApiConstants.ODCS_API_USER, ApiConstants.ODCS_API_ADMIN})
 	@Operation(
 			summary = "This method returns a JSON list of DECODES Site records suitable for displaying in a table or pick-list.",
 			description = "The returned structure contains only the numeric ID (unique), description, and an array of site names."
@@ -128,7 +128,7 @@ public final class SiteResources extends OpenDcsResource
 	@GET
 	@Path("site")
 	@Produces(MediaType.APPLICATION_JSON)
-	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
+	@RolesAllowed({ApiConstants.ODCS_API_USER, ApiConstants.ODCS_API_ADMIN})
 	@Operation(
 			summary = "This method returns a JSON representation of a single, complete DECODES Site record.",
 			description = "Example:\n\n    http://localhost:8080/odcsapi/site?siteid=3\n\n"

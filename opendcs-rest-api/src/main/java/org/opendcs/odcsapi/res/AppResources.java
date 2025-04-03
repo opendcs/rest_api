@@ -71,7 +71,7 @@ public final class AppResources extends OpenDcsResource
 	@GET
 	@Path("apprefs")
 	@Produces(MediaType.APPLICATION_JSON)
-	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
+	@RolesAllowed({ApiConstants.ODCS_API_USER, ApiConstants.ODCS_API_ADMIN})
 	@Operation(
 			summary = "Retrieves a list of application references",
 			description = "Example:  \n\n    http://localhost:8080/odcsapi/apprefs",
@@ -114,7 +114,7 @@ public final class AppResources extends OpenDcsResource
 	@GET
 	@Path("app")
 	@Produces(MediaType.APPLICATION_JSON)
-	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
+	@RolesAllowed({ApiConstants.ODCS_API_USER, ApiConstants.ODCS_API_ADMIN})
 	@Operation(
 			summary = "Retrieve a Single Application by its ID",
 			description = "Example: \n\n    http://localhost:8080/odcsapi/app?appid=4  \n",

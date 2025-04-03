@@ -67,7 +67,7 @@ public final class AlgorithmResources extends OpenDcsResource
 	@GET
 	@Path("algorithmrefs")
 	@Produces(MediaType.APPLICATION_JSON)
-	@RolesAllowed(ApiConstants.ODCS_API_GUEST)
+	@RolesAllowed({ApiConstants.ODCS_API_USER, ApiConstants.ODCS_API_ADMIN})
 	@Operation(
 			summary = "Retrieve all algorithm references",
 			description = "Example: \n\n    http://localhost:8080/odcsapi/algorithmrefs",
@@ -108,7 +108,7 @@ public final class AlgorithmResources extends OpenDcsResource
 	@GET
 	@Path("algorithm")
 	@Produces(MediaType.APPLICATION_JSON)
-	@RolesAllowed(ApiConstants.ODCS_API_GUEST)
+	@RolesAllowed({ApiConstants.ODCS_API_USER, ApiConstants.ODCS_API_ADMIN})
 	@Operation(
 			summary = "Retrieve an algorithm by its ID",
 			description = "Example: \n\n    http://localhost:8080/odcsapi/algorithm?algorithmid=4",

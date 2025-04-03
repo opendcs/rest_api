@@ -76,7 +76,7 @@ public final class ReflistResources extends OpenDcsResource
 	@GET
 	@Path("reflists")
 	@Produces(MediaType.APPLICATION_JSON)
-	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
+	@RolesAllowed({ApiConstants.ODCS_API_USER, ApiConstants.ODCS_API_ADMIN})
 	@Tag(name = "REST - Reference Lists", description = "Reference lists are used in OpenDCS to populate pulldown lists "
 			+ "and extend the functionality of the software.")
 	@Operation(
@@ -342,7 +342,7 @@ public final class ReflistResources extends OpenDcsResource
 	@GET
 	@Path("seasons")
 	@Produces(MediaType.APPLICATION_JSON)
-	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
+	@RolesAllowed({ApiConstants.ODCS_API_USER, ApiConstants.ODCS_API_ADMIN})
 	@Operation(
 			summary = "Seasons are used in various places in OpenDCS, usually to specify some type of conditional processing",
 			description = "Seasons are denoted by an abbreviation, a full name, start date/time, end date/time, and an optional time zone."
@@ -405,7 +405,7 @@ public final class ReflistResources extends OpenDcsResource
 	@GET
 	@Path("season")
 	@Produces(MediaType.APPLICATION_JSON)
-	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
+	@RolesAllowed({ApiConstants.ODCS_API_USER, ApiConstants.ODCS_API_ADMIN})
 	@Operation(
 			summary = "Return a single season data structure ",
 			description = "Instead of a list of seasons, the returned data is a single season data structure:  ",

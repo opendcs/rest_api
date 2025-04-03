@@ -71,7 +71,7 @@ public final class ComputationResources extends OpenDcsResource
 	@GET
 	@Path("computationrefs")
 	@Produces(MediaType.APPLICATION_JSON)
-	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
+	@RolesAllowed({ApiConstants.ODCS_API_USER, ApiConstants.ODCS_API_ADMIN})
 	@Operation(
 			summary = "Retrieve Computation References",
 			description = "Example:  \n\n    http://localhost:8080/odcsapi/computationrefs",
@@ -173,7 +173,7 @@ public final class ComputationResources extends OpenDcsResource
 	@GET
 	@Path("computation")
 	@Produces(MediaType.APPLICATION_JSON)
-	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
+	@RolesAllowed({ApiConstants.ODCS_API_USER, ApiConstants.ODCS_API_ADMIN})
 	@Operation(
 			summary = "Retrieve Computation by its ID",
 			description = "Example: \n\n    http://localhost:8080/odcsapi/computation?computationid=4",

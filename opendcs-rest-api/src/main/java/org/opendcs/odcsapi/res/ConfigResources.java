@@ -111,7 +111,7 @@ public final class ConfigResources extends OpenDcsResource
 			},
 			tags = {"REST - DECODES Platform Configurations"}
 	)
-	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
+	@RolesAllowed({ApiConstants.ODCS_API_USER, ApiConstants.ODCS_API_ADMIN})
 	public Response getConfigRefs() throws DbException
 	{
 		DatabaseIO dbIo = getLegacyDatabase();
@@ -156,7 +156,7 @@ public final class ConfigResources extends OpenDcsResource
 	@GET
 	@Path("config")
 	@Produces(MediaType.APPLICATION_JSON)
-	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
+	@RolesAllowed({ApiConstants.ODCS_API_USER, ApiConstants.ODCS_API_ADMIN})
 	@Operation(
 			summary = "This method returns a JSON representation of a single, complete DECODES Config record",
 			description = "Example:  \n\n    http://localhost:8080/odcsapi/config?configid=12\n\n\n"
