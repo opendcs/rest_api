@@ -307,7 +307,7 @@ public final class PlatformResources extends OpenDcsResource
 	@Path("platform")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
+	@RolesAllowed({ApiConstants.ODCS_API_USER, ApiConstants.ODCS_API_ADMIN})
 	@Operation(
 			summary = "Create or Overwrite Existing Decodes Platform",
 			description = "The GET platform method takes a single DECODES Platform record in JSON format,"
@@ -477,7 +477,7 @@ public final class PlatformResources extends OpenDcsResource
 	@Path("platform")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
+	@RolesAllowed({ApiConstants.ODCS_API_USER, ApiConstants.ODCS_API_ADMIN})
 	@Operation(
 			summary = "Delete Existing Decodes Platform",
 			description = "Required argument platformid must be passed.",

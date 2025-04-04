@@ -253,7 +253,7 @@ public class DataSourceResources extends OpenDcsResource
 	@Path("datasource")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
+	@RolesAllowed({ApiConstants.ODCS_API_USER, ApiConstants.ODCS_API_ADMIN})
 	@Operation(
 			summary = "Create or Overwrite Existing Data Source",
 			description = "The POST datasource method takes a single datasource in JSON format, as described for the GET method." +
@@ -347,7 +347,7 @@ public class DataSourceResources extends OpenDcsResource
 	@Path("datasource")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
+	@RolesAllowed({ApiConstants.ODCS_API_USER, ApiConstants.ODCS_API_ADMIN})
 	@Operation(
 			summary = "Delete Existing Data Source",
 			description = "Required argument datasourceid must be passed. " +

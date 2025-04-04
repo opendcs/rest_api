@@ -230,7 +230,7 @@ public final class NetlistResources extends OpenDcsResource
 	@Path("netlist")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
+	@RolesAllowed({ApiConstants.ODCS_API_USER, ApiConstants.ODCS_API_ADMIN})
 	@Tag(name = "REST - Network Lists", description = "A Network List is simply a list of Platforms.")
 	@Operation(
 			summary = "Create or Overwrite Existing Netlist",
@@ -311,7 +311,7 @@ public final class NetlistResources extends OpenDcsResource
 	@Path("netlist")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
+	@RolesAllowed({ApiConstants.ODCS_API_USER, ApiConstants.ODCS_API_ADMIN})
 	@Operation(
 			summary = "Delete Existing netlists",
 			description = "Required argument netlistid must be passed.\n\n" +

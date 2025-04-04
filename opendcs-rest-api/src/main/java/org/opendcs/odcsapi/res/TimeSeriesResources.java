@@ -189,7 +189,7 @@ public final class TimeSeriesResources extends OpenDcsResource
 	@GET
 	@Path("tsspec")
 	@Produces(MediaType.APPLICATION_JSON)
-	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
+	@RolesAllowed({ApiConstants.ODCS_API_USER, ApiConstants.ODCS_API_ADMIN})
 	@Operation(
 			summary = "The tsspec method returns a complete specification for a time series "
 					+ "identified by the 'key' parameter.",
@@ -548,7 +548,7 @@ public final class TimeSeriesResources extends OpenDcsResource
 			},
 			tags = {"Time Series Methods - Interval Methods"}
 	)
-	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
+	@RolesAllowed({ApiConstants.ODCS_API_USER, ApiConstants.ODCS_API_ADMIN})
 	public Response postInterval(ApiInterval intv)
 			throws DbException
 	{
@@ -623,7 +623,7 @@ public final class TimeSeriesResources extends OpenDcsResource
 	@Path("interval")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
+	@RolesAllowed({ApiConstants.ODCS_API_USER, ApiConstants.ODCS_API_ADMIN})
 	@Operation(
 			summary = "Delete an existing Time Interval record.",
 			description = "Example URL for DELETE:  \n\n    "
@@ -855,7 +855,7 @@ public final class TimeSeriesResources extends OpenDcsResource
 	@Path("tsgroup")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
+	@RolesAllowed({ApiConstants.ODCS_API_USER, ApiConstants.ODCS_API_ADMIN})
 	@Operation(
 			summary = "Create a new, or update an existing time series group",
 			description = "Example URL for POST:  \n\n    "
@@ -988,7 +988,7 @@ public final class TimeSeriesResources extends OpenDcsResource
 	@Path("tsgroup")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
+	@RolesAllowed({ApiConstants.ODCS_API_USER, ApiConstants.ODCS_API_ADMIN})
 	@Operation(
 			summary = "Delete Time Series Group",
 			description = "Example URL for DELETE:  \n\n    "

@@ -208,7 +208,7 @@ public final class ReflistResources extends OpenDcsResource
 	@Path("reflist")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
+	@RolesAllowed({ApiConstants.ODCS_API_USER, ApiConstants.ODCS_API_ADMIN})
 	@Operation(
 			summary = "Create New Reference List, or Overwrite Existing Reference List",
 			description = "The ‘reflist’ POST method takes a single network "
@@ -304,7 +304,7 @@ public final class ReflistResources extends OpenDcsResource
 	@Path("reflist")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
+	@RolesAllowed({ApiConstants.ODCS_API_USER, ApiConstants.ODCS_API_ADMIN})
 	@Operation(
 			summary = "Delete Existing Reference List",
 			description = "Required argument reflistid must be passed.  \n\n"
@@ -470,7 +470,7 @@ public final class ReflistResources extends OpenDcsResource
 	@Path("season")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
+	@RolesAllowed({ApiConstants.ODCS_API_USER, ApiConstants.ODCS_API_ADMIN})
 	@Operation(
 			summary = "Creates or overwrites a single season record",
 			description = "It takes a data structure like the one described above for GET season.",
@@ -551,7 +551,7 @@ public final class ReflistResources extends OpenDcsResource
 	@Path("season")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
+	@RolesAllowed({ApiConstants.ODCS_API_USER, ApiConstants.ODCS_API_ADMIN})
 	@Operation(
 			summary = "Delete Existing Season",
 			description = "The DELETE season method requires an argument"

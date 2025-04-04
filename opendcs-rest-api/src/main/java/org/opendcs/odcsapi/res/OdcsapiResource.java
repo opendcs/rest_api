@@ -111,7 +111,7 @@ public final class OdcsapiResource extends OpenDcsResource
 	@Path("tsdb_properties")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
+	@RolesAllowed({ApiConstants.ODCS_API_USER, ApiConstants.ODCS_API_ADMIN})
 	@Operation(
 			summary = "Create or Update TSDB Properties",
 			description = "The POST tsdb_properties method takes one or more properties in a structure"
@@ -233,7 +233,7 @@ public final class OdcsapiResource extends OpenDcsResource
 	@Path("decode")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	@RolesAllowed({ApiConstants.ODCS_API_ADMIN, ApiConstants.ODCS_API_USER})
+	@RolesAllowed({ApiConstants.ODCS_API_USER, ApiConstants.ODCS_API_ADMIN})
 	@Operation(
 			summary = "Decode a Message",
 			description = "Example URL for HTTP POST method:  \n"
