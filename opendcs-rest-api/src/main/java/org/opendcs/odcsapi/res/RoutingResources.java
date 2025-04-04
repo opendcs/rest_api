@@ -274,21 +274,22 @@ public final class RoutingResources extends OpenDcsResource
 			else if(key.startsWith("sc:source_"))
 			{
 				value = value.toLowerCase();
-				if(value.equals("netdcp"))
+				switch(value)
 				{
-					ret.setNetworkDCP(true);
-				}
-				else if(value.equals("goes_random"))
-				{
-					ret.setGoesRandom(true);
-				}
-				else if(value.equals("goes_selftimed"))
-				{
-					ret.setGoesSelfTimed(true);
-				}
-				else if(value.equals("iridium"))
-				{
-					ret.setIridium(true);
+					case "netdcp":
+						ret.setNetworkDCP(true);
+						break;
+					case "goes_random":
+						ret.setGoesRandom(true);
+						break;
+					case "goes_selftimed":
+						ret.setGoesSelfTimed(true);
+						break;
+					case "iridium":
+						ret.setIridium(true);
+						break;
+					default:
+						LOGGER.atDebug().log("Unknown source type: " + value);
 				}
 			}
 			else if(key.equals("sc:spacecraft"))
@@ -476,7 +477,7 @@ public final class RoutingResources extends OpenDcsResource
 		if(routing.isParityCheck())
 		{
 			props.setProperty("sc:PARITY_ERROR",
-					routing.getParitySelection().toLowerCase().equals("good") ? "R" : "A");
+					routing.getParitySelection().equalsIgnoreCase("good") ? "R" : "A");
 		}
 		if(routing.isGoesSpacecraftCheck())
 		{
@@ -524,7 +525,7 @@ public final class RoutingResources extends OpenDcsResource
 		}
 
 		String s = routing.getApplyTimeTo();
-		if(s != null && s.length() > 0)
+		if(s != null && !s.isEmpty())
 		{
 			char c = s.charAt(0);
 			props.setProperty("rs.timeApplyTo",
@@ -1062,6 +1063,8 @@ public final class RoutingResources extends OpenDcsResource
 			execStatus.setNumPlatforms(status.getNumPlatforms());
 			execStatus.setNumMessages(status.getNumMessages());
 			execStatus.setLastActivity(status.getLastModified());
+			execStatus.setLastInput(status.getLastSource());
+			execStatus.setLastOutput(status.getLastConsumer());
 			if(status.getId() != null)
 			{
 				execStatus.setRoutingExecId(status.getId().getValue());

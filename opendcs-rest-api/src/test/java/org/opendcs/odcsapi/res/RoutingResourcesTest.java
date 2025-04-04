@@ -324,6 +324,8 @@ final class RoutingResourcesTest
 		scheduleEntry.setRunStop(Date.from(Instant.parse("2021-03-01T00:00:00Z")));
 		scheduleEntry.setRunStart(Date.from(Instant.parse("2021-02-01T00:00:00Z")));
 		scheduleEntry.setLastModified(Date.from(Instant.parse("2021-04-01T00:00:00Z")));
+		scheduleEntry.setLastConsumer("Test consumer");
+		scheduleEntry.setLastSource("Test source");
 		scheduleEntries.add(scheduleEntry);
 
 		ArrayList<ApiRoutingExecStatus> results = statusMap(scheduleEntries);
@@ -340,6 +342,8 @@ final class RoutingResourcesTest
 		assertEquals(scheduleEntry.getRunStop(), result.getRunStop());
 		assertEquals(scheduleEntry.getRunStart(), result.getRunStart());
 		assertEquals(scheduleEntry.getLastModified(), result.getLastActivity());
+		assertEquals(scheduleEntry.getLastConsumer(), result.getLastOutput());
+		assertEquals(scheduleEntry.getLastSource(), result.getLastInput());
 	}
 
 	@Test
