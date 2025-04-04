@@ -379,6 +379,7 @@ public final class ConfigResources extends OpenDcsResource
 				configSensor.recordingInterval = sensor.getRecordingInterval();
 				configSensor.timeOfFirstSample = sensor.getTimeOfFirstSample();
 				configSensor.recordingMode = sensor.getRecordingMode().getCode();
+				configSensor.setUsgsStatCode(sensor.getUsgsStatCode());
 				for (Map.Entry<String, String> entry : sensor.getDataTypes().entrySet())
 				{
 					DataType dt = new DataType(entry.getKey(), entry.getValue());
