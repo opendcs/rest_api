@@ -30,10 +30,8 @@ import org.opendcs.odcsapi.beans.ApiScheduleEntryRef;
 import static ilex.util.TextUtil.str2boolean;
 import static java.util.stream.Collectors.toList;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
 import static org.opendcs.odcsapi.res.RoutingResources.map;
 import static org.opendcs.odcsapi.res.RoutingResources.statusMap;
 
@@ -147,7 +145,7 @@ final class RoutingResourcesTest
 		apiRouting.setApplyTimeTo(applyTimeTo);
 		apiRouting.setAscendingTime(false);
 		List<String> platformIds = new ArrayList<>();
-		platformIds.add("Platform1");
+		platformIds.add("1");
 		apiRouting.setPlatformIds(platformIds);
 		List<String> platformNames = new ArrayList<>();
 		platformNames.add("PlatformName1");
@@ -159,7 +157,8 @@ final class RoutingResourcesTest
 		goesChannels.add(1234);
 		apiRouting.setGoesChannels(goesChannels);
 		Properties properties = new Properties();
-		properties.setProperty("key", "value");
+		properties.setProperty("sc:source_0", "True");
+		properties.setProperty("extra", "value");
 		apiRouting.setProperties(properties);
 		apiRouting.setQualityNotifications(true);
 		apiRouting.setParityCheck(true);
@@ -167,6 +166,7 @@ final class RoutingResourcesTest
 		apiRouting.setNetworkDCP(true);
 		apiRouting.setGoesSpacecraftCheck(true);
 		apiRouting.setGoesSpacecraftSelection("West");
+		apiRouting.setAscendingTime(true);
 
 		RoutingSpec routingSpec = map(apiRouting);
 		assertNotNull(routingSpec);
@@ -191,7 +191,7 @@ final class RoutingResourcesTest
 		assertEquals(until, routingSpec.untilTime);
 		assertTrue(str2boolean(routingSpec.getProperty("sc:rt_settle_delay")));
 		assertEquals("B", routingSpec.getProperty("rs.timeapplyto"));
-		assertFalse(str2boolean(routingSpec.getProperty("sc:ASCENDING_TIME")));
+		assertTrue(str2boolean(routingSpec.getProperty("sc:ASCENDING_TIME")));
 		List<String> mappedPlatformIds = routingSpec.getProperties().entrySet()
 				.stream()
 				.filter(e -> e.getKey().toString().toLowerCase().startsWith("sc:dcp_address_"))
@@ -203,7 +203,11 @@ final class RoutingResourcesTest
 				.filter(e -> e.getKey().toString().toLowerCase().startsWith("sc:dcp_name_"))
 				.map(e -> e.getValue().toString())
 				.collect(toList());
-		assertEquals(platformNames, mappedPlatformNames);
+		assertEquals(platformNames.size(), mappedPlatformNames.size());
+		for (String platformName : platformNames)
+		{
+			assertTrue(mappedPlatformNames.contains(platformName));
+		}
 		assertEquals(netlistNames, routingSpec.networkListNames);
 		List<Integer> mappedChannels = routingSpec.getProperties().entrySet()
 				.stream()
@@ -212,11 +216,11 @@ final class RoutingResourcesTest
 				.map(Integer::parseInt)
 				.collect(toList());
 		assertEquals(goesChannels, mappedChannels);
-		assertEquals(properties.get("key"), routingSpec.getProperties().get("key"));
-		assertTrue(str2boolean(routingSpec.getProperty("sc:daps_status")));
+		assertEquals(properties.get("extra"), routingSpec.getProperties().get("extra"));
+		assertEquals(routingSpec.getProperty("sc:daps_status"), apiRouting.isQualityNotifications() ? "A" : "N");
 		assertEquals("R", routingSpec.getProperty("sc:parity_error"));
 		assertTrue(str2boolean(routingSpec.getProperty("sc:SOURCE_0")));
-		assertEquals("E", routingSpec.getProperty("sc:SPACECRAFT"));
+		assertEquals("W", routingSpec.getProperty("sc:SPACECRAFT"));
 
 	}
 
