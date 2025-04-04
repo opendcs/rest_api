@@ -15,24 +15,23 @@
 
 package org.opendcs.odcsapi.beans;
 
-import java.io.Serializable;
-
 import io.swagger.v3.oas.annotations.media.Schema;
+import org.opendcs.odcsapi.sec.TraceFilter;
+import org.slf4j.MDC;
 
 @Schema(description = "Represents a status message response for API operations.")
-public final class Status implements Serializable
+public final class Status
 {
-	private static final long serialVersionUID = -9130603850117689481L;
 	@Schema(description = "The status message providing additional details about the API operation.")
-	private String message;
+	private final String message;
 
-	public Status()
-	{
-	} // needed for JAXB
+	@Schema(description = "Trace parent for identifying the request.", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
+	private final String incidentIdentifier;
 
 	public Status(String message)
 	{
 		this.message = message;
+		this.incidentIdentifier = MDC.get(TraceFilter.TRACE_PARENT_HEADER);
 	}
 
 	public String getMessage()
@@ -40,8 +39,8 @@ public final class Status implements Serializable
 		return message;
 	}
 
-	public void setMessage(String message)
+	public String getIncidentIdentifier()
 	{
-		this.message = message;
+		return incidentIdentifier;
 	}
 }

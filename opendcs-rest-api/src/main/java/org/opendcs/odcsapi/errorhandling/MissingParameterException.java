@@ -35,7 +35,7 @@ public final class MissingParameterException extends WebAppException
 	}
 
 	@Override
-	public String getErrMessage()
+	public String toString()
 	{
 		return errMessage;
 	}

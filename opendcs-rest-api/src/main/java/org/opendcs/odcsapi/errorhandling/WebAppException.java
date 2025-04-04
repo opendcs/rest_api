@@ -15,16 +15,20 @@
 
 package org.opendcs.odcsapi.errorhandling;
 
-public class WebAppException 
-	extends Exception 
+import org.opendcs.odcsapi.sec.TraceFilter;
+import org.slf4j.MDC;
+
+import static java.lang.String.format;
+
+public class WebAppException extends Exception
 {
 	private static final long serialVersionUID = 5143111031434975319L;
 
 	/** HTTP Status Code */
-	private Integer status = 0;
+	private final Integer status;
 
 	/** detailed error msg */
-	private String errMessage = "";
+	private final String errMessage;
 
 	public WebAppException(Integer status, String errMessage)
 	{
@@ -44,7 +48,9 @@ public class WebAppException
 		return status;
 	}
 
-	public String getErrMessage() {
+	@Override
+	public String toString()
+	{
 		return errMessage;
 	}
 

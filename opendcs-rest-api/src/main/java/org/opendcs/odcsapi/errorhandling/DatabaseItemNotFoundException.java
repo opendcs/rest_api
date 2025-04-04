@@ -41,7 +41,7 @@ public final class DatabaseItemNotFoundException extends WebAppException
 	}
 
 	@Override
-	public String getErrMessage()
+	public String toString()
 	{
 		return errMessage;
 	}

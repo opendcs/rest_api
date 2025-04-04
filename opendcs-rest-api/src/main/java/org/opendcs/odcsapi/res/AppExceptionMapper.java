@@ -27,8 +27,13 @@ import decodes.tsdb.TsdbException;
 import org.opendcs.odcsapi.beans.Status;
 import org.opendcs.odcsapi.dao.DbException;
 import org.opendcs.odcsapi.errorhandling.WebAppException;
+import org.opendcs.odcsapi.sec.TraceFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
+import org.slf4j.event.Level;
+
+import static java.lang.String.format;
 
 
 @Provider
@@ -75,7 +80,7 @@ public final class AppExceptionMapper implements ExceptionMapper<Throwable>
 
 	private static Response handle(Throwable ex)
 	{
-		LOGGER.warn("Unknown Error", ex);
+		log(Level.WARN, "Unknown Error", ex);
 		Status status = new Status("Bad Request.  There was an issue with the request, please try again or contact your system administrator.");
 		return Response.status(HttpServletResponse.SC_INTERNAL_SERVER_ERROR)
 				.entity(status)
@@ -84,7 +89,7 @@ public final class AppExceptionMapper implements ExceptionMapper<Throwable>
 
 	private static Response handle(UnsupportedOperationException wae)
 	{
-		LOGGER.warn("Unsupported endpoint", wae);
+		log(Level.WARN, "Unsupported endpoint", wae);
 		return Response.status(HttpServletResponse.SC_NOT_IMPLEMENTED)
 				.entity(new Status(wae.getMessage()))
 				.build();
@@ -92,7 +97,7 @@ public final class AppExceptionMapper implements ExceptionMapper<Throwable>
 
 	private static Response handle(WebApplicationException wae)
 	{
-		LOGGER.warn("Error in request", wae);
+		log(Level.WARN, "Error in request", wae);
 		String message = wae.getMessage();
 		if(wae instanceof InternalServerErrorException)
 		{
@@ -121,7 +126,7 @@ public final class AppExceptionMapper implements ExceptionMapper<Throwable>
 						"Please contact your system administrator for more information.";
 			}
 		}
-		LOGGER.warn(returnErrMsg, dbex);
+		log(Level.WARN, returnErrMsg, dbex);
 		return Response.status(HttpServletResponse.SC_BAD_REQUEST)
 				.entity(new Status(returnErrMsg))
 				.build();
@@ -129,7 +134,7 @@ public final class AppExceptionMapper implements ExceptionMapper<Throwable>
 
 	private static Response handle(TsdbException dbex)
 	{
-		LOGGER.warn("Unexpected DbIoException thrown from request", dbex);
+		log(Level.WARN, "Unexpected DbIoException thrown from request", dbex);
 		String returnErrMsg = INTERNAL_ERROR;
 		if(dbex.getCause() != null)
 		{
@@ -140,7 +145,7 @@ public final class AppExceptionMapper implements ExceptionMapper<Throwable>
 						"The most likely error is that there is an attempt to save a value that exceeds the allowed length.  " +
 						"Please contact your system administrator for more information.";
 			}
-			LOGGER.warn(returnErrMsg, dbex);
+			log(Level.WARN, returnErrMsg, dbex);
 		}
 		return Response.status(HttpServletResponse.SC_INTERNAL_SERVER_ERROR)
 				.entity(new Status(returnErrMsg))
@@ -157,11 +162,11 @@ public final class AppExceptionMapper implements ExceptionMapper<Throwable>
 			{
 				returnErrMsg = "There was an error saving this.  The most likely error is that there is a duplicate key value.  Please contact your system administrator for more information.";
 			}
-			LOGGER.warn(returnErrMsg, dbex);
+			log(Level.WARN, returnErrMsg, dbex);
 		}
 		else
 		{
-			LOGGER.warn("Violated constraint exception thrown from request", dbex);
+			log(Level.WARN, "Violated constraint exception thrown from request", dbex);
 		}
 		return Response.status(HttpServletResponse.SC_BAD_REQUEST)
 				.entity(new Status(returnErrMsg))
@@ -172,15 +177,20 @@ public final class AppExceptionMapper implements ExceptionMapper<Throwable>
 	{
 		if(wae.getStatus() >= 500)
 		{
-			LOGGER.warn("Server error", wae);
+			log(Level.WARN, "Server error", wae);
 		}
 		else
 		{
-			LOGGER.info("Client error", wae);
+			log(Level.INFO, "Client error", wae);
 		}
 		return Response.status(wae.getStatus())
 				.entity(new Status(wae.getMessage()))
 				.build();
+	}
+
+	private static void log(Level level, String msg, Throwable t)
+	{
+		LOGGER.atLevel(level).setCause(t).log(format("%s: %s", MDC.get(TraceFilter.TRACE_PARENT_HEADER), msg));
 	}
 
 }
