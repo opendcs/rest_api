@@ -1,8 +1,11 @@
 package org.opendcs.odcsapi.res;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 import java.util.Vector;
 
 import decodes.db.ConfigSensor;
@@ -18,6 +21,7 @@ import org.junit.jupiter.api.Test;
 import org.opendcs.odcsapi.beans.ApiConfigRef;
 import org.opendcs.odcsapi.beans.ApiConfigScript;
 import org.opendcs.odcsapi.beans.ApiConfigScriptSensor;
+import org.opendcs.odcsapi.beans.ApiConfigSensor;
 import org.opendcs.odcsapi.beans.ApiPlatformConfig;
 import org.opendcs.odcsapi.beans.ApiScriptFormatStatement;
 import org.opendcs.odcsapi.beans.ApiUnitConverter;
@@ -115,6 +119,23 @@ final class ConfigResourcesTest
 		apiConfig.setDescription("Platform description");
 		apiConfig.setScripts(scriptListBuilder());
 		apiConfig.setConfigId(5899L);
+		List<ApiConfigSensor> configSensors = new ArrayList<>();
+		ApiConfigSensor configSensor = new ApiConfigSensor();
+		configSensor.setAbsoluteMax(100.0);
+		configSensor.setAbsoluteMin(0.0);
+		configSensor.setRecordingInterval(15);
+		configSensor.setRecordingMode(ApiConfigSensor.RecordingMode.VARIABLE);
+		configSensor.setSensorName("Test sensor");
+		configSensor.setSensorNumber(12);
+		configSensor.setUsgsStatCode("00000");
+		Map<String, String> dataTypes = new HashMap<>();
+		dataTypes.put("Test data type", "Test data type description");
+		configSensor.setDataTypes(dataTypes);
+		Properties properties = new Properties();
+		properties.put("Test property", "Test property value");
+		configSensor.setProperties(properties);
+		configSensors.add(configSensor);
+		apiConfig.setConfigSensors(configSensors);
 
 		PlatformConfig config = map(apiConfig);
 
@@ -143,7 +164,11 @@ final class ConfigResourcesTest
 			assertEquals(apiConfig.getConfigSensors().get(0).getSensorName(), sensorConfig.sensorName);
 			assertEquals(apiConfig.getConfigSensors().get(0).getSensorNumber(), sensorConfig.sensorNumber);
 			assertEquals(apiConfig.getConfigSensors().get(0).getUsgsStatCode(), sensorConfig.getUsgsStatCode());
-			assertEquals(apiConfig.getConfigSensors().get(0).getDataTypes(), sensorConfig.getDataType());
+			for (Map.Entry<String, String> entry : apiConfig.getConfigSensors().get(0).getDataTypes().entrySet())
+			{
+				assertEquals(sensorConfig.getDataType().getStandard(), entry.getKey());
+				assertEquals(sensorConfig.getDataType().getCode(), entry.getValue());
+			}
 			assertEquals(apiConfig.getConfigSensors().get(0).getProperties(), sensorConfig.getProperties());
 		}
 	}
