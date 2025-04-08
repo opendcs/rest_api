@@ -289,8 +289,27 @@ public final class PlatformResources extends OpenDcsResource
 		{
 			retval.setActualSiteId(ps.site.getId().getValue());
 		}
-		retval.setUsgsDdno(ps.getUsgsDdno());
-		retval.setSensorProps(ps.getProperties());
+		int usgsDdno = ps.getUsgsDdno();
+		if(usgsDdno != 0)
+		{
+			retval.setUsgsDdno(usgsDdno);
+		}
+		ps.getProperties()
+				.forEach((key, value) ->
+				{
+					if("min".equalsIgnoreCase(key.toString()))
+					{
+						retval.setMin(Double.valueOf(value.toString()));
+					}
+					else if("max".equalsIgnoreCase(key.toString()))
+					{
+						retval.setMax(Double.valueOf(value.toString()));
+					}
+					else
+					{
+						retval.getSensorProps().setProperty(key.toString(), value.toString());
+					}
+				});
 		return retval;
 	}
 
@@ -437,6 +456,14 @@ public final class PlatformResources extends OpenDcsResource
 			for (String name : props.stringPropertyNames())
 			{
 				ps.setProperty(name, props.getProperty(name));
+			}
+			if(sensor.getMin() != null)
+			{
+				ps.setProperty("min", sensor.getMin().toString());
+			}
+			if(sensor.getMax() != null)
+			{
+				ps.setProperty("max", sensor.getMax().toString());
 			}
 			ret.add(ps);
 		}
