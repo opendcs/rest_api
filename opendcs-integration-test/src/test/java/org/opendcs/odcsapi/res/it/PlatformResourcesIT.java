@@ -362,12 +362,30 @@ final class PlatformResourcesIT extends BaseIT
 		JsonPath actual = response.body().jsonPath();
 		assertNotNull(actual);
 		Map<String, Object> actualMap = actual.getMap("");
-		actualMap = (Map<String, Object>) actualMap.get(expected.getString("name")); // Name of platform is not stored in Platform object, could cause issues with collision
+		actualMap = (Map<String, Object>) actualMap.get(expected.getString("name") + "-" + expected.getString("designator"));
+		// Name of platform is not stored in Platform object, could cause issues with collision
 		assertNotNull(actualMap);
 		assertEquals(expected.get("description"), actualMap.get("description"));
 		assertEquals(expected.get("agency"), actualMap.get("agency"));
 		assertEquals(expected.get("designator"), actualMap.get("designator"));
 		assertEquals(expected.get("production"), actualMap.get("production"));
+		// The transportMedia map is interpreted by the JSON parser as a map of maps, but the actual JSON is a map of objects
+		Map<String, Object> transportMedia = (Map<String, Object>) actualMap.get("transportMedia");
+		assertEquals(expected.get("transportMedia.password"), transportMedia.get("goes.IDENT.password"));
+		assertEquals(expected.get("transportMedia.username"), transportMedia.get("goes.IDENT.username"));
+		assertEquals(expected.get("transportMedia.doLogin"), Boolean.parseBoolean(transportMedia.get("goes.IDENT.doLogin").toString()));
+		assertEquals((Integer) expected.get("transportMedia.baud"), Integer.parseInt(transportMedia.get("goes.IDENT.baud").toString()));
+		assertEquals((Integer) expected.get("transportMedia.stopBits"), Integer.parseInt(transportMedia.get("goes.IDENT.stopBits").toString()));
+		assertEquals((Integer) expected.get("transportMedia.dataBits"), Integer.parseInt(transportMedia.get("goes.IDENT.dataBits").toString()));
+		assertEquals(expected.get("transportMedia.parity"), transportMedia.get("goes.IDENT.parity"));
+		assertEquals(expected.get("transportMedia.timezone"), transportMedia.get("goes.IDENT.timezone"));
+		assertEquals((Integer) expected.get("transportMedia.timeAdjustment"), Integer.parseInt(transportMedia.get("goes.IDENT.timeAdjustment").toString()));
+		assertEquals((Integer) expected.get("transportMedia.transportWindow"), Integer.parseInt(transportMedia.get("goes.IDENT.transportWindow").toString()));
+		assertEquals((Integer) expected.get("transportMedia.transportInterval"), Integer.parseInt(transportMedia.get("goes.IDENT.transportInterval").toString()));
+		assertEquals((Integer) expected.get("transportMedia.channelNum"), Integer.parseInt(transportMedia.get("goes.IDENT.channelNum").toString()));
+		assertEquals(expected.get("transportMedia.scriptName"), transportMedia.get("goes.IDENT.scriptName"));
+		assertEquals((Integer) expected.get("transportMedia.assignedTime"), Integer.parseInt(transportMedia.get("goes.IDENT.assignedTime").toString()));
+
 		assertEquals(configId, ((Integer) actualMap.get("configId")).longValue());
 
 		// Retrieve with a tmtype filter
@@ -390,12 +408,29 @@ final class PlatformResourcesIT extends BaseIT
 
 		actual = response.body().jsonPath();
 		actualMap = actual.getMap("");
-		actualMap = (Map<String, Object>) actualMap.get(expected.getString("name")); // Name of platform is not stored in Platform object, could cause issues with collision
+		actualMap = (Map<String, Object>) actualMap.get(expected.getString("name") + "-" + expected.getString("designator")); // Name of platform is not stored in Platform object, could cause issues with collision
 		assertNotNull(actualMap);
 		assertEquals(expected.get("description"), actualMap.get("description"));
 		assertEquals(expected.get("agency"), actualMap.get("agency"));
 		assertEquals(expected.get("designator"), actualMap.get("designator"));
 		assertEquals(expected.get("production"), actualMap.get("production"));
+		// The transportMedia map is interpreted by the JSON parser as a map of maps, but the actual JSON is a map of objects
+		transportMedia = (Map<String, Object>) actualMap.get("transportMedia");
+		assertEquals(expected.get("transportMedia.password"), transportMedia.get("goes.IDENT.password"));
+		assertEquals(expected.get("transportMedia.username"), transportMedia.get("goes.IDENT.username"));
+		assertEquals(expected.get("transportMedia.doLogin"), Boolean.parseBoolean(transportMedia.get("goes.IDENT.doLogin").toString()));
+		assertEquals((Integer) expected.get("transportMedia.baud"), Integer.parseInt(transportMedia.get("goes.IDENT.baud").toString()));
+		assertEquals((Integer) expected.get("transportMedia.stopBits"), Integer.parseInt(transportMedia.get("goes.IDENT.stopBits").toString()));
+		assertEquals((Integer) expected.get("transportMedia.dataBits"), Integer.parseInt(transportMedia.get("goes.IDENT.dataBits").toString()));
+		assertEquals(expected.get("transportMedia.parity"), transportMedia.get("goes.IDENT.parity"));
+		assertEquals(expected.get("transportMedia.timezone"), transportMedia.get("goes.IDENT.timezone"));
+		assertEquals((Integer) expected.get("transportMedia.timeAdjustment"), Integer.parseInt(transportMedia.get("goes.IDENT.timeAdjustment").toString()));
+		assertEquals((Integer) expected.get("transportMedia.transportWindow"), Integer.parseInt(transportMedia.get("goes.IDENT.transportWindow").toString()));
+		assertEquals((Integer) expected.get("transportMedia.transportInterval"), Integer.parseInt(transportMedia.get("goes.IDENT.transportInterval").toString()));
+		assertEquals((Integer) expected.get("transportMedia.channelNum"), Integer.parseInt(transportMedia.get("goes.IDENT.channelNum").toString()));
+		assertEquals(expected.get("transportMedia.scriptName"), transportMedia.get("goes.IDENT.scriptName"));
+		assertEquals((Integer) expected.get("transportMedia.assignedTime"), Integer.parseInt(transportMedia.get("goes.IDENT.assignedTime").toString()));
+
 		assertEquals(configId, ((Integer) actualMap.get("configId")).longValue());
 
 		// Retrieve with an invalid tmtype to check filtering

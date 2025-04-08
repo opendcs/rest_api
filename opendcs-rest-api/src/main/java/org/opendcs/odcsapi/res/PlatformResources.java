@@ -173,8 +173,61 @@ public final class PlatformResources extends OpenDcsResource
 			{
 				ref.setSiteId(DbKey.NullKey.getValue());
 			}
-			ref.setName(plat.getSiteName(false));
-			ref.setTransportMedia(plat.getProperties());
+			Properties transportProps = new Properties();
+			transportProps.putAll(plat.getProperties());
+			for(Iterator<TransportMedium> it = plat.getTransportMedia(); it.hasNext(); )
+			{
+				final TransportMedium medium = it.next();
+				String keyBase = medium.getMediumType() + "." + medium.getMediumId() + ".";
+				transportProps.setProperty(keyBase + "assignedTime", String.valueOf(medium.assignedTime));
+				transportProps.setProperty(keyBase + "channelNum", String.valueOf(medium.channelNum));
+				if (medium.equipmentModel != null)
+				{
+					transportProps.setProperty(keyBase + "equipmentModel.name", medium.equipmentModel.getName());
+					transportProps.setProperty(keyBase + "equipmentModel.id", String.valueOf(medium.equipmentModel.getId()));
+					transportProps.setProperty(keyBase + "equipmentModel.type", medium.equipmentModel.equipmentType);
+					transportProps.setProperty(keyBase + "equipmentModel.description", medium.equipmentModel.description);
+					transportProps.setProperty(keyBase + "equipmentModel.model", medium.equipmentModel.model);
+					transportProps.setProperty(keyBase + "equipmentModel.company", medium.equipmentModel.company);
+				}
+				if (medium.scriptName != null)
+				{
+					transportProps.setProperty(keyBase + "scriptName", medium.scriptName);
+				}
+				transportProps.setProperty(keyBase + "transportInterval", String.valueOf(medium.transmitInterval));
+				transportProps.setProperty(keyBase + "transportWindow", String.valueOf(medium.transmitWindow));
+				transportProps.setProperty(keyBase + "baud", String.valueOf(medium.getBaud()));
+				transportProps.setProperty(keyBase + "dataBits", String.valueOf(medium.getDataBits()));
+				transportProps.setProperty(keyBase + "parity", String.valueOf(medium.getParity()));
+				transportProps.setProperty(keyBase + "stopBits", String.valueOf(medium.getStopBits()));
+				if (medium.getTimeZone() != null)
+				{
+					transportProps.setProperty(keyBase + "timezone", medium.getTimeZone());
+				}
+				transportProps.setProperty(keyBase + "username", medium.getUsername());
+				transportProps.setProperty(keyBase + "password", medium.getPassword());
+				transportProps.setProperty(keyBase + "doLogin", String.valueOf(medium.isDoLogin()));
+				transportProps.setProperty(keyBase + "isGoes", String.valueOf(medium.isGoes()));
+				transportProps.setProperty(keyBase + "isPrepared", String.valueOf(medium.isPrepared()));
+				if (medium.getLoggerType() != null)
+				{
+					transportProps.setProperty(keyBase + "loggerType", medium.getLoggerType());
+				}
+				transportProps.setProperty(keyBase + "preamble", String.valueOf(medium.getPreamble()));
+				transportProps.setProperty(keyBase + "selector", medium.getSelector());
+				transportProps.setProperty(keyBase + "timeAdjustment", String.valueOf(medium.getTimeAdjustment()));
+				if (medium.getTmKey() != null)
+				{
+					transportProps.setProperty(keyBase + "tmKey", medium.getTmKey());
+				}
+				if (medium.performanceMeasurements != null)
+				{
+					transportProps.setProperty(keyBase + "performanceMeasurements.configName", medium.performanceMeasurements.configName);
+					transportProps.setProperty(keyBase + "performanceMeasurements.description", medium.performanceMeasurements.description);
+					transportProps.setProperty(keyBase + "performanceMeasurements.numPlatformsUsing", String.valueOf(medium.performanceMeasurements.numPlatformsUsing));
+				}
+			}
+			ref.setTransportMedia(transportProps);
 			ref.setDesignator(plat.getPlatformDesignator());
 			ret.add(ref);
 		}
