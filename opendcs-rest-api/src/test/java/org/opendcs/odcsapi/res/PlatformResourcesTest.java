@@ -41,6 +41,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.when;
@@ -123,7 +124,7 @@ final class PlatformResourcesTest
 		tm2.setParity('U');
 		tm2.setTimeZone("America/New_York");
 		tm2.setMediumId("TM-test2");
-		tm2.setMediumType("Serial");
+		tm2.setMediumType("Analog");
 		tm2.channelNum = 22;
 		tm2.setUsername("user2");
 		tm2.setPassword("password2");
@@ -306,30 +307,8 @@ final class PlatformResourcesTest
 		while(expectedTransportMedium.hasNext())
 		{
 			final TransportMedium tm = expectedTransportMedium.next();
-			String keyBase = tm.getMediumType() + "." + tm.getMediumId() + ".";
-			assertEquals(tm.scriptName, transportMedium.getProperty(keyBase + "scriptName"));
-			assertEquals(String.valueOf(tm.channelNum), transportMedium.getProperty(keyBase + "channelNum"));
-			assertEquals(String.valueOf(tm.assignedTime), transportMedium.getProperty(keyBase + "assignedTime"));
-			assertEquals(String.valueOf(tm.transmitWindow), transportMedium.getProperty(keyBase + "transmitWindow"));
-			assertEquals(String.valueOf(tm.transmitInterval), transportMedium.getProperty(keyBase + "transmitInterval"));
-			assertEquals(String.valueOf(tm.getTimeZone()), transportMedium.getProperty(keyBase + "timeZone"));
-			assertEquals(String.valueOf(tm.getBaud()), transportMedium.getProperty(keyBase + "baud"));
-			assertEquals(String.valueOf(tm.getStopBits()), transportMedium.getProperty(keyBase + "stopBits"));
-			assertEquals(String.valueOf(tm.getDataBits()), transportMedium.getProperty(keyBase + "dataBits"));
-			assertEquals(String.valueOf(tm.getParity()), transportMedium.getProperty(keyBase + "parity"));
-			assertEquals(tm.getUsername(), transportMedium.getProperty(keyBase + "username"));
-			assertEquals(tm.getPassword(), transportMedium.getProperty(keyBase + "password"));
-			assertEquals(tm.isDoLogin(), Boolean.parseBoolean(transportMedium
-					.getProperty(keyBase + "doLogin")));
-			assertEquals(tm.getLoggerType(), transportMedium.getProperty(keyBase + "loggerType"));
-			assertEquals(tm.getTimeAdjustment(), Integer.parseInt(transportMedium
-					.getProperty(keyBase + "timeAdjustment")));
-			assertEquals(tm.equipmentModel.model, transportMedium.getProperty(keyBase + "equipmentModel.model"));
-			assertEquals(tm.equipmentModel.description, transportMedium.getProperty(keyBase + "equipmentModel.description"));
-			assertEquals(tm.equipmentModel.name, transportMedium.getProperty(keyBase + "equipmentModel.name"));
-			assertEquals(tm.equipmentModel.company, transportMedium.getProperty(keyBase + "equipmentModel.company"));
-			assertEquals(String.valueOf(tm.getPreamble()), transportMedium.getProperty(keyBase + "preamble"));
-			assertEquals(String.valueOf(tm.getTmKey()), transportMedium.getProperty(keyBase + "tmKey"));
+			assertTrue(transportMedium.containsKey(tm.getMediumType()));
+			assertEquals(tm.getMediumId(), transportMedium.getProperty(tm.getMediumType()));
 		}
 	}
 

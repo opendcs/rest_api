@@ -371,20 +371,8 @@ final class PlatformResourcesIT extends BaseIT
 		assertEquals(expected.get("production"), actualMap.get("production"));
 		// The transportMedia map is interpreted by the JSON parser as a map of maps, but the actual JSON is a map of objects
 		Map<String, Object> transportMedia = (Map<String, Object>) actualMap.get("transportMedia");
-		assertEquals(expected.get("transportMedia.password"), transportMedia.get("goes.IDENT.password"));
-		assertEquals(expected.get("transportMedia.username"), transportMedia.get("goes.IDENT.username"));
-		assertEquals(expected.get("transportMedia.doLogin"), Boolean.parseBoolean(transportMedia.get("goes.IDENT.doLogin").toString()));
-		assertEquals((Integer) expected.get("transportMedia.baud"), Integer.parseInt(transportMedia.get("goes.IDENT.baud").toString()));
-		assertEquals((Integer) expected.get("transportMedia.stopBits"), Integer.parseInt(transportMedia.get("goes.IDENT.stopBits").toString()));
-		assertEquals((Integer) expected.get("transportMedia.dataBits"), Integer.parseInt(transportMedia.get("goes.IDENT.dataBits").toString()));
-		assertEquals(expected.get("transportMedia.parity"), transportMedia.get("goes.IDENT.parity"));
-		assertEquals(expected.get("transportMedia.timezone"), transportMedia.get("goes.IDENT.timezone"));
-		assertEquals((Integer) expected.get("transportMedia.timeAdjustment"), Integer.parseInt(transportMedia.get("goes.IDENT.timeAdjustment").toString()));
-		assertEquals((Integer) expected.get("transportMedia.transportWindow"), Integer.parseInt(transportMedia.get("goes.IDENT.transportWindow").toString()));
-		assertEquals((Integer) expected.get("transportMedia.transportInterval"), Integer.parseInt(transportMedia.get("goes.IDENT.transportInterval").toString()));
-		assertEquals((Integer) expected.get("transportMedia.channelNum"), Integer.parseInt(transportMedia.get("goes.IDENT.channelNum").toString()));
-		assertEquals(expected.get("transportMedia.scriptName"), transportMedia.get("goes.IDENT.scriptName"));
-		assertEquals((Integer) expected.get("transportMedia.assignedTime"), Integer.parseInt(transportMedia.get("goes.IDENT.assignedTime").toString()));
+		assertTrue(transportMedia.containsKey("goes"));
+		assertEquals(expected.get("transportMedia.goes"), transportMedia.get("goes"));
 
 		assertEquals(configId, ((Integer) actualMap.get("configId")).longValue());
 
@@ -416,20 +404,8 @@ final class PlatformResourcesIT extends BaseIT
 		assertEquals(expected.get("production"), actualMap.get("production"));
 		// The transportMedia map is interpreted by the JSON parser as a map of maps, but the actual JSON is a map of objects
 		transportMedia = (Map<String, Object>) actualMap.get("transportMedia");
-		assertEquals(expected.get("transportMedia.password"), transportMedia.get("goes.IDENT.password"));
-		assertEquals(expected.get("transportMedia.username"), transportMedia.get("goes.IDENT.username"));
-		assertEquals(expected.get("transportMedia.doLogin"), Boolean.parseBoolean(transportMedia.get("goes.IDENT.doLogin").toString()));
-		assertEquals((Integer) expected.get("transportMedia.baud"), Integer.parseInt(transportMedia.get("goes.IDENT.baud").toString()));
-		assertEquals((Integer) expected.get("transportMedia.stopBits"), Integer.parseInt(transportMedia.get("goes.IDENT.stopBits").toString()));
-		assertEquals((Integer) expected.get("transportMedia.dataBits"), Integer.parseInt(transportMedia.get("goes.IDENT.dataBits").toString()));
-		assertEquals(expected.get("transportMedia.parity"), transportMedia.get("goes.IDENT.parity"));
-		assertEquals(expected.get("transportMedia.timezone"), transportMedia.get("goes.IDENT.timezone"));
-		assertEquals((Integer) expected.get("transportMedia.timeAdjustment"), Integer.parseInt(transportMedia.get("goes.IDENT.timeAdjustment").toString()));
-		assertEquals((Integer) expected.get("transportMedia.transportWindow"), Integer.parseInt(transportMedia.get("goes.IDENT.transportWindow").toString()));
-		assertEquals((Integer) expected.get("transportMedia.transportInterval"), Integer.parseInt(transportMedia.get("goes.IDENT.transportInterval").toString()));
-		assertEquals((Integer) expected.get("transportMedia.channelNum"), Integer.parseInt(transportMedia.get("goes.IDENT.channelNum").toString()));
-		assertEquals(expected.get("transportMedia.scriptName"), transportMedia.get("goes.IDENT.scriptName"));
-		assertEquals((Integer) expected.get("transportMedia.assignedTime"), Integer.parseInt(transportMedia.get("goes.IDENT.assignedTime").toString()));
+		assertTrue(transportMedia.containsKey("goes"));
+		assertEquals(expected.get("transportMedia.goes"), transportMedia.get("goes"));
 
 		assertEquals(configId, ((Integer) actualMap.get("configId")).longValue());
 
