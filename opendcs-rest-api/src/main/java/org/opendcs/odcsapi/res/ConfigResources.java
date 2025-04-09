@@ -251,22 +251,26 @@ public final class ConfigResources extends OpenDcsResource
 				ApiConfigScriptSensor apiSensor = new ApiConfigScriptSensor();
 				apiSensor.setSensorNumber(sensor.sensorNumber);
 				ApiUnitConverter uc = new ApiUnitConverter();
-				uc.setFromAbbr(sensor.rawConverter.fromAbbr);
-				uc.setToAbbr(sensor.rawConverter.toAbbr);
-				uc.setAlgorithm(sensor.rawConverter.algorithm);
-				uc.setA(sensor.rawConverter.coefficients[0]);
-				uc.setB(sensor.rawConverter.coefficients[1]);
-				uc.setC(sensor.rawConverter.coefficients[2]);
-				uc.setD(sensor.rawConverter.coefficients[3]);
-				uc.setE(sensor.rawConverter.coefficients[4]);
-				uc.setF(sensor.rawConverter.coefficients[5]);
+				UnitConverterDb rawConverter = sensor.rawConverter;
+				if(rawConverter != null)
+				{
+					uc.setFromAbbr(rawConverter.fromAbbr);
+					uc.setToAbbr(rawConverter.toAbbr);
+					uc.setAlgorithm(rawConverter.algorithm);
+					uc.setA(rawConverter.coefficients[0]);
+					uc.setB(rawConverter.coefficients[1]);
+					uc.setC(rawConverter.coefficients[2]);
+					uc.setD(rawConverter.coefficients[3]);
+					uc.setE(rawConverter.coefficients[4]);
+					uc.setF(rawConverter.coefficients[5]);
+				}
 				uc.setUcId(sensor.getUnitConverterId().getValue());
 				apiSensor.setUnitConverter(uc);
 				scriptSensors.add(apiSensor);
 			});
 			apiScript.setScriptSensors(scriptSensors);
 			apiScript.setFormatStatements(map(script.getFormatStatements()));
-			apiScript.setHeaderType(script.getHeaderType());
+			apiScript.setHeaderType(script.scriptType);
 			switch(String.valueOf(script.getDataOrder()).toLowerCase())
 			{
 				case "d":
@@ -431,6 +435,7 @@ public final class ConfigResources extends OpenDcsResource
 				dsb.platformConfig(config);
 				dsb.scriptName(script.getName());
 				DecodesScript ds = dsb.build();
+				ds.scriptType = script.getHeaderType();
 				for (ApiConfigScriptSensor sensor : script.getScriptSensors())
 				{
 					ds.addScriptSensor(map(sensor));
