@@ -435,7 +435,11 @@ public final class ConfigResources extends OpenDcsResource
 				dsb.platformConfig(config);
 				dsb.scriptName(script.getName());
 				DecodesScript ds = dsb.build();
-				ds.scriptType = script.getHeaderType();
+				String headerType = script.getHeaderType();
+				if(headerType != null)
+				{
+					ds.scriptType = headerType;
+				}
 				for (ApiConfigScriptSensor sensor : script.getScriptSensors())
 				{
 					ds.addScriptSensor(map(sensor));
