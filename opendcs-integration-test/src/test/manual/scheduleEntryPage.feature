@@ -55,7 +55,7 @@ Feature: Schedule Entry Page Functionality
     And I click Save in the Schedule Entry editor
     And I receive a confirmation message to save the schedule entry
     And I click Yes in the message
-    Then I should receive a message that my schedule entry is saved successfully
+    Then I should receive a message that the schedule entry is saved successfully
     And I click on the OK button in the message
     And the new schedule entry should be added to the Schedule Entry page
 

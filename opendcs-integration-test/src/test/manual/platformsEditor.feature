@@ -1,7 +1,7 @@
 Feature: Platforms Editor Functionality
 
   As a user of the OpenDCS Web Client
-  I want to work in the Platform editor
+  I want to work in the Platforms editor
   So that I can create or edit platform data
 
   Background:
@@ -30,7 +30,7 @@ Feature: Platforms Editor Functionality
     When I click on the Plus button in the Properties table
     And a new row is added to the Properties table
     And I configure the content for the Property Name and Value
-    Then the entenred information for the Property Name and Value should persist
+    Then the entered information for the Property Name and Value should persist
 
   Scenario: Displaying rows in the Platform Sensor Information
     When I select a config with sensors in the Config field

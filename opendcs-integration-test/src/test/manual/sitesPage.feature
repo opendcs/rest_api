@@ -67,7 +67,7 @@ Feature: Sites Page Functionality
     And I click Save in the Sites editor
     And I receive a confirmation message to save the site
     And I click Yes in the confirmation message
-    Then I should receive a message that my site is saved successfully
+    Then I should receive a message that the site is saved successfully
     And I click on the OK button in the message
     And the new site should be added to the Sites page
 

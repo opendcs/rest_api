@@ -53,7 +53,7 @@ Feature: Sources Page Functionality
     And I click Save in the Sources editor
     And I receive a confirmation message to save the source
     And I click Yes in the message
-    Then I should receive a message that my source is saved successfully
+    Then I should receive a message that the source is saved successfully
     And I click on the OK button in the message
     And the new source should be added to the Sources page
 

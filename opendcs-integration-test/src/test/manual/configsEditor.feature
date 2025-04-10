@@ -42,6 +42,6 @@ Feature: Configs Editor Functionality
     And I click the Save button
     And I receive a confirmation message to save the config
     And I click OK in the message
-    Then I should receive a message that my config is saved successfully
+    Then I should receive a message that the config is saved successfully
     And I click on the OK button in the message
     And the new config should be added to the Configs page

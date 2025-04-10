@@ -51,7 +51,7 @@ Feature: Netlists Page Functionality
     And I click Save in the Netlists editor
     And I receive a confirmation message to save the netlist
     And I click Yes in the message
-    Then I should receive a message that my netlist is saved successfully
+    Then I should receive a message that the netlist is saved successfully
     And I click on the OK button in the message
     And the new netlist should be added to the Netlists page
 

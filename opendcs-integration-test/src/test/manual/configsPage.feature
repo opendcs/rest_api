@@ -1,8 +1,8 @@
 Feature: Configs Page Functionality
 
   As a user of the OpenDCS Web Client
-  I want to work in the Config page
-  So that I can create, retrieve, update and delete Config data
+  I want to work in the Configs page
+  So that I can create, retrieve, update and delete config data
 
   Background:
     Given I am successfully logged into the OpenDCS Web Client

@@ -34,13 +34,13 @@ Feature: Sites Editor Functionality
     When I click on the Plus button in the Site Names table
     And a new row is added to the Site Names table
     And I configure the content for the Type and Identifier
-    Then the entenred information for the Type and Identifier should persist
+    Then the entered information for the Type and Identifier should persist
 
   Scenario: Configuring the Properties table
     When I click on the Plus button in the Properties table
     And a new row is added to the Properties table
     And I configure the content for the Property Name and Value
-    Then the entenred information for the Property Name and Value should persist
+    Then the entered information for the Property Name and Value should persist
 
   Scenario: Configuring and successfully saving the updates in the Sites editor
     When I configure the Details section
@@ -49,6 +49,6 @@ Feature: Sites Editor Functionality
     And I click the Save button
     And I receive a confirmation message to save the site
     And I click OK in the message
-    Then I should receive a message that my site is saved successfully
+    Then I should receive a message that the site is saved successfully
     And I click on the OK button in the message
     And the new site should be added to the Sites page

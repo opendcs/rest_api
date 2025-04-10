@@ -43,35 +43,35 @@ Feature: Processes Page Functionality
       | 100               |
       | All               |
 
-  Scenario: Access to the Processes editor by clicking on the Plus button.
+  Scenario: Access to the Process editor by clicking on the Plus button.
     When I click on the Plus button
-    Then the Processes editor should be loaded
+    Then the Process editor should be loaded
 
   Scenario: Creating a new process
-    When I access the Processes editor
-    And I configure the information needed in the Processes editor
-    And I click Save in the Processes editor
+    When I access the Process editor
+    And I configure the information needed in the Process editor
+    And I click Save in the Process editor
     And I receive a confirmation message to save the process
     And I click Yes in the message
-    Then I should receive a message that my process is saved successfully
+    Then I should receive a message that the process is saved successfully
     And I click on the OK button in the message
     And the new process should be added to the Processes page
 
-  Scenario: Access the Processes editor for a process
+  Scenario: Access the Process editor for a process
     When I click on an existing row in the Processes page
-    Then the Processes editor should be loaded with the information for the selected row
+    Then the Process editor should be loaded with the information for the selected row
 
   Scenario: Editing the information for a process
     When I click on an existing row in the Processes page
-    And the Processes editor should be loaded with the information for the selected row
-    And I edit the information in the Processes editor
+    And the Process editor should be loaded with the information for the selected row
+    And I edit the information in the Process editor
     And I click the Save button
     Then I should receive a message that the edits are saved successfully
 
   Scenario: Copying an existing entry
     When I select the Copy option from a row's Actions button
-    And the Processes editor is loaded
-    And I edit the information in the Processes editor
+    And the Process editor is loaded
+    And I edit the information in the Process editor
     And I click the Save button
     Then I should receive a message that the edits are saved successfully
     And I click OK in the message

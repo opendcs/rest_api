@@ -43,35 +43,35 @@ Feature: Algorithms Page Functionality
       | 100               |
       | All               |
 
-  Scenario: Access to the Algorithms editor by clicking on the Plus button.
+  Scenario: Access to the Algorithm editor by clicking on the Plus button.
     When I click on the Plus button
-    Then the Algorithms editor should be loaded
+    Then the Algorithm editor should be loaded
 
   Scenario: Creating a new algorithm
-    When I access the Algorithms editor
-    And I configure the information needed in the Algorithms editor
-    And I click Save in the Algorithms editor
+    When I access the Algorithm editor
+    And I configure the information needed in the Algorithm editor
+    And I click Save in the Algorithm editor
     And I receive a confirmation message to save the algorithm
     And I click Yes in the message
-    Then I should receive a message that my algorithm is saved successfully
+    Then I should receive a message that the algorithm is saved successfully
     And I click on the OK button in the message
     And the new algorithm should be added to the Algorithms page
 
-  Scenario: Access the Algorithms editor for a algorithm
+  Scenario: Access the Algorithm editor for a algorithm
     When I click on an existing row in the Algorithms page
-    Then the Algorithms editor should be loaded with the information for the selected row
+    Then the Algorithm editor should be loaded with the information for the selected row
 
   Scenario: Editing the information for a algorithm
     When I click on an existing row in the Algorithms page
-    And the Algorithms editor should be loaded with the information for the selected row
-    And I edit the information in the Algorithms editor
+    And the Algorithm editor should be loaded with the information for the selected row
+    And I edit the information in the Algorithm editor
     And I click the Save button
     Then I should receive a message that the edits are saved successfully
 
   Scenario: Copying an existing entry
     When I select the Copy option from a row's Actions button
-    And the Algorithms editor is loaded
-    And I edit the information in the Algorithms editor
+    And the Algorithm editor is loaded
+    And I edit the information in the Algorithm editor
     And I click the Save button
     Then I should receive a message that the edits are saved successfully
     And I click OK in the message

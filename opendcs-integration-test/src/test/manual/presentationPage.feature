@@ -47,9 +47,9 @@ Feature: Presentation Page Functionality
       | 100               |
       | All               |
 
-  Scenario: Access to the Presentation editor by clicking on the Plus button.
+  Scenario: Access to the Presentation Element editor by clicking on the Plus button.
     When I click on the Plus button
-    Then the Presentation editor should be loaded
+    Then the Presentation Element editor should be loaded
 
   Scenario: Creating a new presentation
     When I access the Presentation editor
@@ -57,7 +57,7 @@ Feature: Presentation Page Functionality
     And I click Save in the Presentation editor
     And I receive a confirmation message to save the presentation
     And I click Yes in the message
-    Then I should receive a message that my presentation is saved successfully
+    Then I should receive a message that the presentation is saved successfully
     And I click on the OK button in the message
     And the new presentation should be added to the Presentation page
 

@@ -1,12 +1,12 @@
 Feature: Routing editor Functionality
 
   As a user of the OpenDCS Web Client
-  I want to work in the Platform editor
-  So that I can create or edit platform data
+  I want to work in the Routing editor
+  So that I can create or edit routing data
 
   Background:
     Given I am successfully logged into the OpenDCS Web Client
-    And I am on the Platforms page
+    And I am on the Routing page
     And I load the Routing editor
 
   Scenario: Display of the Routing editor
@@ -43,7 +43,7 @@ Feature: Routing editor Functionality
     When I click on the Plus button in the Properties table
     And a new row is added to the Properties table
     And I configure the content for the Property Name and Value
-    Then the entenred information for the Property Name and Value should persist
+    Then the entered information for the Property Name and Value should persist
 
   Scenario: Configuring the Platform Selection section
     When I click the Plus button in the Platform Selection table
