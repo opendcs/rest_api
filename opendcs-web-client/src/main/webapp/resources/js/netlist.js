@@ -244,7 +244,7 @@ function populateNetlistDetails(netlistId)
     if (netlistId != -1) 
     {
         var params = {
-                "netlistid": netlistId
+            "netlistid": netlistId
         };
         $.ajax({
             url: `${window.API_URL}/netlist`,
@@ -418,11 +418,13 @@ function set_netlist_modal(netlistDetails, platformsList, tmTypes)
         {
             var curPlatform = platformsList[key];
             var desc = (curPlatform.description != null ? curPlatform.description : "");
-            var tmDataHtml = "";
+            var tmDataHtml = "<div>";
             for (var key in curPlatform.transportMedia)
             {
-                tmDataHtml += key + " - " + curPlatform.transportMedia[key] + "<br>";
+                //tmDataHtml += key + " - " + curPlatform.transportMedia[key] + "<br>";
+                tmDataHtml += `<div data-transportmedium="${key}">${key} - ${curPlatform.transportMedia[key]}</div><br>`;
             }
+            tmDataHtml += "</div>";
 
             var platformRow = [curPlatform.platformId, curPlatform.name, curPlatform.agency, tmDataHtml, curPlatform.config, desc];
 
@@ -455,6 +457,7 @@ function initializeEvents()
                 function() {
 
             var tsm = $("#transportMediumTypeSelectbox").val();
+            var isGoesVariant = goesTms.includes(tsm);
             var params = {
                     "name": $("#netlistName").val(),
                     "siteNameTypePref": $("#siteNameType").val(),
@@ -512,18 +515,10 @@ function initializeEvents()
                 var allPlatformTms = curData[3].split("<br>");
                 var validTmType = false;
                 allPlatformTms.forEach(ptm => {
-                    if (ptm.startsWith(tsm))
+                    var definedTm = $(ptm).find("div").data("transportmedium");
+                    if (definedTm === tsm || (isGoesVariant && goesTms.includes(definedTm)))
                     {
                         validTmType = true;
-                    }
-                    else
-                    {
-                        goesTms.forEach(tm => {
-                            if (ptm.startsWith(tm))
-                            {
-                                validTmType = true;
-                            }
-                        });
                     }
                     if (!validTmType)
                     {
@@ -691,7 +686,20 @@ function initializeDataTables()
                     for (var x = 0; x < selectedRowData.length; x++)
                     {
                         var curData = selectedRowData[x];
-                        if (curData[3] != val && goesTms.indexOf(curData[3]) == -1 && goesTms.indexOf(val) == -1)
+                        var curDataHtml = $(curData[3]).find("[data-transportmedium]");
+                        var tmMatched = false;
+                        var isGoesVariant = goesTms.includes(val);
+                        for (var y = 0; y < curDataHtml.length; y++)
+                        {
+                            var linkedTm = $(curDataHtml[y]).data("transportmedium");
+                            if (linkedTm === val || (isGoesVariant && goesTms.includes(linkedTm)))
+                            {
+                                //Found a linked trasnport medium
+                                tmMatched = true;
+                                break;
+                            }
+                        }
+                        if (!tmMatched)
                         {
                             set_yesno_modal(
                                     "Transport Medium Type Mismatch", 
