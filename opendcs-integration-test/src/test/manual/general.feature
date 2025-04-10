@@ -1,61 +1,105 @@
-Feature: General Page Functionality
+Feature: General Display of the OpenDCS Web Client
 
   As a user of the OpenDCS Web Client
-  I want to test the General page
-  So that I can ensure it functions correctly
+  I want to verify the general display of the OpenDCS Web Client
+  So that I can verify the default display of the OpenDCS Web Client
 
-  Scenario: Loading the site
-    Given I am on the General page
-    When Access the following URL: and https://dc3-vl-cwms-rdr:8443/opendcs-web-client/portal/login
-    Then Must find a certificate  The user should be prompted to agree to a disclaimer regarding accessing the U.S. Government Infromation System.
+  Background:
+    Given I am successfully logged into the OpenDCS Web Client
+    And I am on the default page of the OpenDCS Web Client
 
-  Scenario: Unnamed Scenario
-    Given I am on the General page
-    When Click the Agree button
-    Then After clicking the Agree button, the OpenDCS Web Client Login page should be loaded.
+  Scenario: Display of the groups available in the OpenDCS Web Client
+    Then the OpenDCS Web Client should have 3 groups:
+     | Decodes Database Editor |
+     | Computations            |
+     | Reflist Editor          |
 
-  Scenario: Unnamed Scenario
-    Given I am on the General page
-    When Observe the OpenDCS Web Client Login page
-    Then The OpenDCS Web Client Login page should have a Login with the option to either Login or the alternative of "Don't have an account?"
+  Scenario: Display of the Decodes Database Editor group's Platform page by default
+    Then the Decodes Database Editor group should be expanded
+    And the Platforms page is displayed
 
-  Scenario: Unnamed Scenario
-    Given I am on the General page
-    When Click the Login button
-    Then The user should be promted to enter their PIN
-
-  Scenario: Display of the OpenDCS Web Client after successfully logging in
-    Given I am on the General page
-    When Successfully log in to the OpenDCS Web Client
-    Then The OpenDCS Web Client should have 3 groups: - Decodes Database Editor - Computations - Reflist Editor  Right after successfully logging in, the OpenDCS Web Client should have the Decodes Database Editor selected and the Platforms item selected and displayed
-
-  Scenario: Display of the Menu
-    Given I am on the General page
-    When nan
-    Then This should be displayed in the upper left corner.
+   Scenario: Display of the Menu
+    Then the Menu should be displayed in the upper left corner.
 
   Scenario: Clicking the Menu
-    Given I am on the General page
-    When Click on the Menu and observe any changes in the OpenDCS Web Client.
-    Then The whole menu should collapse.
+    When I click on the "Menu" button
+    Then The whole menu should collapse
 
   Scenario: Hover over items in collapsed menu
-    Given I am on the General page
-    When After collapsing the menu, hover over a menu item and observe any changes in the OpenDCS Web Client.
-    Then There should be a menu listing the options under the Decodes Database Editor.
+    Given the menu is collapsed
+    When I hover over the menu
+    Then the menu should list the 3 groups of:
+      | Decodes Database Editor |
+      | Computations            |
+      | Reflist Editor          |
 
   Scenario: Determine the number of items under the Decodes Database Editor Items
-    Given I am on the General page
-    When Note the available options under the Decodes Database Editor group.
-    Then There should be 8 options:     - Platforms     - Sites     - Configs     - Presentation     - Routing     - Sources     - Netlists     - Schedule Entry
+    When I select the Decodes Database Editor option in the menu
+    Then There should be 8 options:
+      | Platforms       |
+      | Sites           |
+      | Configs         |
+      | Presentation    |
+      | Routing         |
+      | Sources         |
+      | Netlists        |
+      | Schedule Entry  |
 
   Scenario: Determine the number of items under the Computations Items
-    Given I am on the General page
-    When Note the available options under the Computations group.
-    Then There should be 3 options:     - Algorithms     - Computations     - Processes
+    When I select the Computations option in the menu
+    Then There should be 3 options:
+      | Algorithms   |
+      | Computations |
+      | Processes    |
 
   Scenario: Determine the number of items under the Reflist Editor Items
-    Given I am on the General page
-    When Note the available options under the Reflist Editor group.
-    Then There should be 4 options:     - Enumerations     - Engineering Units     - EU Conversions     - Seasons
+    When I select the Reflist option in the menu
+    Then There should be 4 options:
+      | Enumerations      |
+      | Engineering Units |
+      | EU Conversions    |
+      | Seasons |
+
+  Scenario Outline: Using search filters for each page in the OpenDCS Web Client
+    When I am on the <Page> page
+    And I enter "<Text>" in the Search field
+    Then the content filters to rows that contain "<Text>"
+
+    Examples:
+      | Page              | Text  |
+      | Platforms         | nws   |
+      | Sites             | wms   |
+      | Configs           | wms   |
+      | Presentation      | wms   |
+      | Routing           | nws   |
+      | Sources           | nwp   |
+      | Netlists          | nwp   |
+      | Schedule Entry    | nwp   |
+      | Algorithms        | dec   |
+      | Computations      | nws   |
+      | Processes         | nwp   |
+      | Engineering Units | flo   |
+      | EU Conversions    | lin   |
+
+  Scenario Outline: Default number of entries displayed in a page
+    When I click on the <Page> page
+    Then there should be <Number_of_Rows> rows displayed
+
+    Examples:
+      | Page              | Number_of_Rows  |
+      | Platforms         | 10              |
+      | Sites             | 10              |
+      | Configs           | 10              |
+      | Presentation      | 10              |
+      | Routing           | 10              |
+      | Sources           | 10              |
+      | Netlists          | 10              |
+      | Schedule Entry    | 10              |
+      | Algorithms        | all             |
+      | Computations      | all             |
+      | Processes         | all             |
+      | Enumerations      | all             |
+      | Engineering Units | all             |
+      | EU Conversions    | all             |
+      | Seasons           | all             |
 
