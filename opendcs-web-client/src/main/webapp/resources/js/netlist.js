@@ -421,8 +421,7 @@ function set_netlist_modal(netlistDetails, platformsList, tmTypes)
             var tmDataHtml = "<div>";
             for (var key in curPlatform.transportMedia)
             {
-                //tmDataHtml += key + " - " + curPlatform.transportMedia[key] + "<br>";
-                tmDataHtml += `<div data-transportmedium="${key}">${key} - ${curPlatform.transportMedia[key]}</div><br>`;
+                tmDataHtml += `<div data-transportmedium="${key}">${key} - ${curPlatform.transportMedia[key]}</div>`;
             }
             tmDataHtml += "</div>";
 
