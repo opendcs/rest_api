@@ -30,4 +30,5 @@
               maxActive="10"
               maxIdle="4"
               minIdle="1"/>
+    <Valve className="org.apache.catalina.valves.rewrite.RewriteValve" />
 </Context>
