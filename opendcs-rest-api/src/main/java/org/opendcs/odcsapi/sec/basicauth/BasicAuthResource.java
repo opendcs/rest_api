@@ -67,6 +67,7 @@ public final class BasicAuthResource extends OpenDcsResource
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(BasicAuthResource.class);
 	private static final String MODULE = "BasicAuthResource";
+	private static final String DEFAULT_PASSWORD = "verysecureverymindful";
 
 	@Context
 	private HttpServletRequest request;
@@ -143,8 +144,12 @@ public final class BasicAuthResource extends OpenDcsResource
 		if(credentials != null)
 		{
 			verifyCredentials(credentials);
-		}
 
+			if(credentials.getPassword() == null)
+			{
+				credentials.setPassword(DEFAULT_PASSWORD);
+			}
+		}
 		String authorizationHeader = httpHeaders.getHeaderString(HttpHeaders.AUTHORIZATION);
 		credentials = getCredentials(credentials, authorizationHeader);
 		validateDbCredentials(credentials);
