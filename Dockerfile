@@ -34,5 +34,6 @@ COPY --from=builder /builddir/opendcs-web-client/build/libs/*.war /usr/local/tom
 COPY /docker_files/tomcat/conf/context.xml /usr/local/tomcat/conf
 COPY /docker_files/tomcat/conf/tomcat-server.xml /usr/local/tomcat/conf
 COPY /docker_files/tomcat/conf/setenv.sh /usr/local/tomcat/bin
+RUN curl -o /usr/local/tomcat/lib/ojdbc8.jar https://repo1.maven.org/maven2/com/oracle/database/jdbc/ojdbc8/23.9.0.25.07/ojdbc8-23.9.0.25.07.jar
 ENV DCSTOOL_HOME="/"
 EXPOSE 7000
