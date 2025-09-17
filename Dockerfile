@@ -22,15 +22,13 @@ RUN mkdir /download && \
     mv apache-tomcat-9.0.105 /usr/local/tomcat/ && \
     cd / && \
     rm -rf /download && \
-    rm -rf /usr/local/tomcat/webapps/* && \
-    mkdir /usr/local/tomcat/webapps/ROOT && \
-    echo "<html><body>Nothing to see here</body></html>" > /usr/local/tomcat/webapps/ROOT/index.html
+    rm -rf /usr/local/tomcat/webapps/*
 CMD ["/usr/local/tomcat/bin/catalina.sh","run"]
 
 FROM tomcat_base AS api
 
 COPY --from=builder /builddir/opendcs-rest-api/build/libs/*.war /usr/local/tomcat/webapps/odcsapi.war
-COPY --from=builder /builddir/opendcs-web-client/build/libs/*.war /usr/local/tomcat/webapps/opendcs-web-client.war
+COPY --from=builder /builddir/opendcs-web-client/build/libs/*.war /usr/local/tomcat/webapps/ROOT.war
 COPY /docker_files/tomcat/conf/context.xml /usr/local/tomcat/conf
 COPY /docker_files/tomcat/conf/tomcat-server.xml /usr/local/tomcat/conf/server.xml
 COPY /docker_files/tomcat/conf/setenv.sh /usr/local/tomcat/bin

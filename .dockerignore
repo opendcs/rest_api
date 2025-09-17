@@ -4,3 +4,4 @@ Dockerfile
 .settings
 .gradle
 **/bin
+**/*.md
