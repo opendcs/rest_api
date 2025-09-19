@@ -20,6 +20,12 @@ jsr305 = "3.0.2"
 openapitools-databind-nullable = "0.2.1"
 httpmime-version = "4.5.13"
 
+swagger-codegen = "3.0.61"
+jakarta-annotation-api = "1.3.5"
+jsr305 = "3.0.2"
+openapitools-databind-nullable = "0.2.1"
+httpmime-version = "4.5.13"
+
 #Test Dependencies
 junit = "5.10.2"
 mockito = "4.11.0"
@@ -114,4 +120,9 @@ openapi-deps = [
 ]
 jaxrs-client = [
     "jersey-core", "json-jackson", "jersey-hk2", "jersey-media-multipart", "jersey-apache-connector"
+]
+openapi-deps = [
+    "com-google-jsr305", "org-openapitools-jackson-databind", "jakarta-annotation-api",
+    "com-faster-xml-jackson-core", "com-faster-xml-jackson-databind", "com-faster-xml-jackson-annotations",
+    "com-faster-xml-jackson-jsr310", "org-http-httpmime"
 ]
