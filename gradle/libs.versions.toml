@@ -103,7 +103,8 @@ swagger-ui = { module ="org.webjars:swagger-ui", version.ref = "swagger-ui" }
 junit = [ "junit-api", "junit-engine", "junit-params" ]
 junit-platform = [ "junit-platform-launcher", "junit-platform-engine", "junit-platform-commons" ]
 tomcat = ["tomcat-embedded-core", "tomcat-embedded-jasper", "tomcat-jdbc"]
-testcontainers = [ "test-containers-core", "test-containers-jdbc", "test-containers-postgresql", "test-containers-oracle"]openapi-deps = [
+testcontainers = [ "test-containers-core", "test-containers-jdbc", "test-containers-postgresql", "test-containers-oracle"]
+openapi-deps = [
     "com-google-jsr305", "org-openapitools-jackson-databind", "jakarta-annotation-api",
     "com-faster-xml-jackson-core", "com-faster-xml-jackson-databind", "com-faster-xml-jackson-annotations",
     "com-faster-xml-jackson-jsr310", "org-http-httpmime"

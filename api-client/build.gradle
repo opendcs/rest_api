@@ -14,16 +14,14 @@ openApiGenerate {
     modelPackage = "org/opendcs/rest/client/model"
     invokerPackage = "org/opendcs/rest/client/invoker"
     globalProperties.set([
-        modelDocs: "false",
+        modelDocs: "true",
         modelTests: "false",
-        apiDocs: "false",
+        apiDocs: "true",
         apiTests: "false",
         enabledPostProcessFile: "false"
     ])
     ignoreFileOverride = "$projectDir/.openapi-generator-ignore"
-    typeMappings = [
-        
-    ]
+    
 }
 
 sourceSets.main {
