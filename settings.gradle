@@ -18,6 +18,7 @@ rootProject.name = "opendcs_rest_api"
 include "opendcs-rest-api"
 include "opendcs-web-client"
 include "opendcs-integration-test"
+include "api-client"
 
 // Version overide for local development
 if(hasProperty('librarySourcesDir')) {
