@@ -1,5 +1,4 @@
 Dockerfile
-docker_files
 compose_files
 .dockerignore
 **/build

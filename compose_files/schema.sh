@@ -1,16 +1,16 @@
 #!/bin/bash
 
-export DATABASE_URL=`cat /secrets/db-admin/jdbcUrl`
+echo $DATABASE_URL
 export DATABASE_TYPE=OPENTSDB
 export DATABASE_DRIVER="org.postgresql.Driver"
 export DATATYPE_STANDARD="CWMS"
 export KEYGENERATOR="decodes.sql.SequenceKeyGenerator"
 
-source /opt/opendcs/tsdb_config.sh
+rm /dcs_user_dir/user.properties
+bash /opt/opendcs/tsdb_config.sh
 echo "***** GENERATED PROPERTIES FILE *****"
 cat /dcs_user_dir/user.properties
 echo "***** END GENERATED PROPERTIES FILE *****"
-
 # TODO: Get all "placeholder. envvars and strip the placeholder. off and make list
 # to Apply to below command.
 
@@ -25,7 +25,8 @@ for var in $(compgen -e); do
     
 done
 echo "Placeholders ${PLACEHOLDERS[@]}"
-exec /opt/opendcs/bin/manageDatabase -I OpenDCS-Postgres \
+set -x
+exec /opt/opendcs/bin/manageDatabase -I ${DCS_IMPLEMENTATION} \
                -P /dcs_user_dir/user.properties \
                -username "${DCS_OWNER}" \
                -password "${DCS_OWNER_PASS}" \
