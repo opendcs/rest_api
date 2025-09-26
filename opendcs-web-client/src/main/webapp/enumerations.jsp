@@ -68,7 +68,7 @@
 	<jsp:include page="/resources/jsp/includes/decodes.jsp" /> 
 	
 <script src="/webjars/switchery/switchery.js"></script>
-<script src="/webjars/bootstrap-switch/3.3.4/js/bootstrap-switch.min.js"></script>
+<script src="/webjars/bootstrap-switch/js/bootstrap-switch.min.js"></script>
 <script src="/webjars/uniform/jquery.uniform.min.js"></script>
 	<script src="../resources/js/datatables/helpers.js"></script>
 	<script src="../resources/js/lib/dom_utilities.js"></script>

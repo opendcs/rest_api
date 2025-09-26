@@ -15,13 +15,6 @@
   ~  limitations under the License.
   --%>
 
-<%-- Global stylesheets --%>
-<link href="../resources/css/select.dataTables.css" rel="stylesheet"
-	type="text/css">
-<link href="../resources/css/main.css" rel="stylesheet" type="text/css">
-
-<%-- /global stylesheets --%>
-
 <%-- Core JS files --%>
 <script src="/webjars/jquery/jquery.min.js"></script>
 <script src="/webjars/bootstrap/js/bootstrap.bundle.min.js"></script>

@@ -16,7 +16,7 @@
   --%>
 
 <%-- Main navbar --%>
-<div class="navbar navbar-expand-md navbar-dark fixed-top">
+<nav class="navbar navbar-expand-md navbar-dark fixed-top">
 	<a href="dashboard" class="navbar-brand navbarMenuHome">OpenDCS</a>
 	<ul class="navbar-nav mr-auto">
 
@@ -59,6 +59,6 @@
 
 		</ul>
 	</div>
-</div>
+</nav>
 <%-- /main navbar --%>
 <script src="../resources/js/main.js"></script>

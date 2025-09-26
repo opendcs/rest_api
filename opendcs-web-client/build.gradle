@@ -41,12 +41,19 @@ dependencies {
         exclude group: "org.webjars.npm", module: "cssify"
     }
     runtimeOnly("org.webjars:datatables-rowreorder:1.4.1")
+    runtimeOnly("org.webjars:bootstrap-sidebar:0.2.2")
+    runtimeOnly("org.webjars:jquery-validation:1.20.0")
+    runtimeOnly("org.webjars:pickadate.js:3.6.4")
+    runtimeOnly("org.webjars:bootstrap-daterangepicker:3.1")
+    runtimeOnly("org.webjars:momentjs:2.30.1-1")
 
 
 
     runtimeOnly("org.webjars:webjars-locator-core:0.59")
     runtimeOnly("org.webjars:webjars-servlet-2.x:1.6")
     
+
+
 
     /*
     runtimeOnly("org.webjars:ladda-bootstrap:0.1.0")

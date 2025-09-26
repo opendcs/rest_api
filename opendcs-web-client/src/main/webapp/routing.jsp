@@ -1,7 +1,7 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <!DOCTYPE html>
 <html lang="en">
-
+	<jsp:include page="/resources/jsp/headers/decodes.jsp" />   
 	<body class="navbar-top">
 		<!-- Main navbar -->
 		<jsp:include page="/resources/jsp/menus/decodes/main.jsp" />   
@@ -432,7 +432,7 @@
 
 <jsp:include page="/resources/jsp/includes/decodes.jsp" /> 
 <script src="/webjars/switchery/switchery.js"></script>
-<script src="/webjars/bootstrap-switch/3.3.4/js/bootstrap-switch.min.js"></script>
+<script src="/webjars/bootstrap-switch/js/bootstrap-switch.min.js"></script>
 <script src="/webjars/uniform/jquery.uniform.min.js"></script>
 <script src="/webjars/datatables/js/dataTables.min.js"></script>
 <script src="../resources/js/datatables/helpers.js"></script>

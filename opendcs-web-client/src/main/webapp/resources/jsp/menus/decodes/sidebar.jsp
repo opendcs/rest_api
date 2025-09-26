@@ -16,6 +16,8 @@
   --%>
 
 <%-- Main sidebar --%>
+
+<script src="/webjars/bootstrap-sidebar/js/sidebar.js"></script>
 <div
 	class="sidebar sidebar-dark sidebar-main sidebar-expand-md sidebar-fixed">
 

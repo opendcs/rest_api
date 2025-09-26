@@ -246,7 +246,7 @@
 
 <jsp:include page="/resources/jsp/includes/decodes.jsp" />
 
-<script src="../resources/js/plugins/forms/validation/validate.min.js"></script>
+<script src="/webjars/jquery-validation/jquery.validate.min.js"></script>
 <script src="../resources/js/lib/time.js"></script>
 <script src="../resources/js/datatables/helpers.js"></script>
 <script src="/webjars/datatables/js/dataTables.min.js"></script>
