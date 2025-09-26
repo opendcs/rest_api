@@ -170,4 +170,3 @@
 
 </div>
 <%-- /main sidebar --%>
-<script src="../resources/js/limitless/app.js"></script>
