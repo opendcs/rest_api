@@ -22,10 +22,8 @@
   <link rel="icon" type="image/png" href="../resources/img/odcs-favicon.png"/>
   <%-- Global stylesheets --%>
   <link href="../resources/css/select.dataTables.css" rel="stylesheet" type="text/css"/>
-  <link href="/webjars/bootstrap/css/bootstrap.min.css" rel="stylesheet"/>
-  <link href="/webjars/bootstrap/css/bootstrap-grid.min.css" rel="stylesheet"/>
-  <link  href="/webjars/bootstrap-sidebar/css/sidebar.css" rel="stylesheet" type="text/css"/>
-  <link href="/webjars/bootstrap-daterangepicker/css/bootstrap-daterangepicker.css" rel="stylesheet"/>
+  <link href="/webjars/bootstrap/css/bootstrap.min.css" rel="stylesheet" type="text/css"/>
+  <link href="/webjars/bootstrap-daterangepicker/css/bootstrap-daterangepicker.css" rel="stylesheet" type="text/css"/>
   <link href="../resources/css/main.css" rel="stylesheet" type="text/css"/>
   <%-- <meta http-equiv="Content-Security-Policy" content="script-src 'self'"> --%>
   <title>OpenDCS Web Client</title>

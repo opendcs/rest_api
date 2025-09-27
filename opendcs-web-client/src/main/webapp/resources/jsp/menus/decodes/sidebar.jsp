@@ -17,45 +17,42 @@
 
 <%-- Main sidebar --%>
 
-<!--<script src="/webjars/bootstrap-sidebar/js/sidebar.js"></script>-->
-
-
 <nav class="nav d-flex flex-column flex-shrink-0 p3" style="width: 30em;">
-	<ul class=""list-unstyled ps-0">
+	<ul class="list-unstyled ps-0">
 		<li class="mb-1">
 			<button class="btn btn-toggle d-inline-flex align-items-center rounded border-0 collapsed" data-bs-toggle="collapse" data-bs-target="#decodes-collapse" aria-expanded="true">
 				Decodes
 			</button>
-			<div id="decodes-collapse" class="collapse show">
-				<a class="nav-link active" aria-current="page" href="#">Platforms</a>
-				<a class="nav-link" href="#">Sites</a>
-				<a class="nav-link" href="#">Configs</a>
-				<a class="nav-link" href="#">Presentation</a>
-				<a class="nav-link" href="#">Routing</a>
-				<a class="nav-link" href="#">Data Sources</a>
-				<a class="nav-link" href="#">Netlists</a>
-				<a class="nav-link" href="#">Schedule Entry</a>
+			<div id="decodes-collapse" class="collapse <% if (request.getAttribute("tool") == "decodes") { %> show <% }%> ">
+				<a class="nav-link <% if (request.getAttribute("page") == "platforms") { %>active<% } %>" aria-current="page" href="platforms">Platforms</a>
+				<a class="nav-link <% if (request.getAttribute("page") == "sites") { %>active<% } %>" href="sites">Sites</a>
+				<a class="nav-link <% if (request.getAttribute("page") == "configs") { %>active<% } %>" href="configs">Configs</a>
+				<a class="nav-link <% if (request.getAttribute("page") == "presentations") { %>active<% } %>" href="presentation">Presentation</a>
+				<a class="nav-link <% if (request.getAttribute("page") == "routing") { %>active<% } %>" href="routing">Routing</a>
+				<a class="nav-link <% if (request.getAttribute("page") == "sources") { %>active<% } %>" href="sources">Data Sources</a>
+				<a class="nav-link <% if (request.getAttribute("page") == "netlist") { %>active<% } %>" href="netlist">Netlists</a>
+				<a class="nav-link <% if (request.getAttribute("page") == "schedule") { %>active<% } %>" href="schedule">Schedule Entry</a>
 			</div>
 		</li>
 		<li class="mb-1">
 			<button class="btn btn-toggle d-inline-flex align-items-center rounded border-0 collapsed" data-bs-toggle="collapse" data-bs-target="#computations-collapse" aria-expanded="true">
 				Computations
 			</button>
-			<div id="computations-collapse" class="collapse">
-				<a class="nav-link" aria-current="page" href="#">Algorithms</a>
-				<a class="nav-link" href="#">Computations</a>
-				<a class="nav-link" href="#">Processes</a>
+			<div id="computations-collapse" class="collapse <% if (request.getAttribute("tool") == "computations") { %> show <% }%>">
+				<a class="nav-link <% if (request.getAttribute("page") == "algorithm") { %>active<% } %>" aria-current="page" href="algorithms">Algorithms</a>
+				<a class="nav-link <% if (request.getAttribute("page") == "computations") { %>active<% } %>" href="computations">Computations</a>
+				<a class="nav-link <% if (request.getAttribute("page") == "processes") { %>active<% } %>" href="processes">Processes</a>
 			</div>
 		</li>
 		<li class="mb-1">
 			<button class="btn btn-toggle d-inline-flex align-items-center rounded border-0 collapsed" data-bs-toggle="collapse" data-bs-target="#reflist-collapse" aria-expanded="true">
 				Reference List
 			</button>
-			<div id="reflist-collapse" class="collapse">
-				<a class="nav-link" aria-current="page" href="#">Enumerations</a>
-				<a class="nav-link" href="#">Engineering Units</a>
-				<a class="nav-link" href="#">Unit Conversions</a>
-				<a class="nav-link" href="#">Seasons</a>
+			<div id="reflist-collapse" class="collapse <% if (request.getAttribute("tool") == "rledit") { %> show <% }%>">
+				<a class="nav-link <% if (request.getAttribute("page") == "enumerations") { %>active<% } %>" aria-current="page" href="enumerations">Enumerations</a>
+				<a class="nav-link <% if (request.getAttribute("page") == "engineering_units") { %>active<% } %>" href="engineering_units">Engineering Units</a>
+				<a class="nav-link <% if (request.getAttribute("page") == "eu_conversions") { %>active<% } %>" href="eu_conversions">Unit Conversions</a>
+				<a class="nav-link <% if (request.getAttribute("page") == "seasons") { %>active<% } %>" href="seasons">Seasons</a>
 			</div>
 		</li>
 	</ul>
