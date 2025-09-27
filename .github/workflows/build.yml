@@ -54,7 +54,7 @@ jobs:
       - name: Upload Test Reports
         uses: actions/upload-artifact@v5.0.0
         with:
-          name: test-report
+          name: test-report-${{ matrix.Java }}
           path: ./**/build/reports/tests/**
           if-no-files-found: error
       - name: Upload Coverage Reports
