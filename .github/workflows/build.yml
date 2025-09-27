@@ -47,7 +47,7 @@ jobs:
       - name: Upload WAR files
         uses: actions/upload-artifact@v5.0.0
         with:
-          name: warfile
+          name: warfile-${{ matrix.Java }}
           path: ./**/build/libs/*.war
           retention-days: 1
           if-no-files-found: error
