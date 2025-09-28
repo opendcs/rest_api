@@ -1,4 +1,4 @@
-FROM gradle:8.14-jdk11 AS builder
+FROM gradle:8.14-jdk17 AS builder
 
 RUN --mount=type=cache,target=/home/gradle/.gradle
 WORKDIR /builddir
