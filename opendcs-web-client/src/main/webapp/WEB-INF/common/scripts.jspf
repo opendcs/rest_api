@@ -36,10 +36,6 @@
 <script src="../resources/js/datatables/helpers.js"></script>
 <%-- /opendcs web files --%>
 
-<!-- Web Client files -->
-<script src="/resources/js/decodes.js"></script>
-<script src="/resources/js/lib/dom_utilities.js"></script>
-<script src="/resources/js/lib/opendcs_utilities.js"></script>
 
 <%@include file="/WEB-INF/common/modals/waiting.jspf" %>
 <%@include file="/WEB-INF/common/modals/notification.jspf" %>
@@ -53,3 +49,4 @@
 		window.API_URL = new URL(apiBasePath, origin).href;
 	})();
 </script>
+<script src="../resources/js/main.js"></script>
