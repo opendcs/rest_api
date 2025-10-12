@@ -5,12 +5,16 @@
             "numberOfRuns": 1,
             "startServerCommand": "",
             "url": [
-                "http://localhost:8080/portal/login",
-                "http://localhost:8080/portal/error"
+                "http://localhost:7001/login",
+                "http://localhost:7001/error"
             ],
             "settings": {
                 "disableStorageReset": true,
-                "chromeFlags": "--headless=new --disable-gpu --no-sandbox --disable-dev-shm-usage --window-size=1366,768"
+                "chromeFlags": "--headless=new --disable-gpu --no-sandbox --disable-dev-shm-usage --window-size=1366,768",
+                "output": [
+                    "html",
+                    "json"
+                ]
             }
         },
         "assert": {
