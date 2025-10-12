@@ -79,3 +79,163 @@ ext.sonarVersion = {
     }
     return stdout.toString().trim() + "+"
 }
+
+// =====================================
+//          Accessibility (LHCI)
+// =====================================
+import org.gradle.internal.os.OperatingSystem
+
+ext {
+  A11Y_PORT = (project.findProperty("a11yPort") ?: "7001") as String
+  A11Y_DOCKER_IMAGE = (project.findProperty("a11yDockerImage") ?: "tomcat:9.0-jdk17-temurin") as String
+  A11Y_CONTAINER = (project.findProperty("a11yContainer") ?: "opendcs-a11y") as String
+}
+
+/** Which WAR to test: default to the JSP UI */
+Project findWarProject() {
+  if (project.hasProperty("a11yWarProject")) return project.project(project.property("a11yWarProject") as String)
+  def ui = rootProject.findProject(":opendcs-web-client")
+  if (ui != null) return ui
+  throw new GradleException("No WAR module resolved. Pass -Pa11yWarProject=':opendcs-web-client'.")
+}
+
+File resolveWarFile(Project warProject) {
+  def libsDir = new File(warProject.buildDir, "libs")
+  def wars = libsDir.listFiles()?.findAll { it.name.toLowerCase().endsWith(".war") } ?: []
+  if (wars.isEmpty()) throw new GradleException("No WAR found under ${libsDir}. Run assemble first.")
+  wars.sort { a, b -> b.lastModified() <=> a.lastModified() }.first()
+}
+
+tasks.register("serveWarForA11y") {
+  group = "verification"
+  description = "Run the built WAR in Docker Tomcat for Lighthouse scans."
+  doLast {
+    def warProject = findWarProject()
+
+    // build the WAR we will deploy
+    exec {
+      workingDir rootProject.projectDir
+      commandLine OperatingSystem.current().isWindows()
+        ? ["cmd","/c",".\\gradlew","${warProject.path}:assemble"]
+        : ["bash","-lc","./gradlew ${warProject.path}:assemble"]
+    }
+
+    def warFile = resolveWarFile(warProject)
+
+    // ensure docker
+    try {
+      exec {
+        commandLine OperatingSystem.current().isWindows()
+          ? ["cmd","/c","docker","--version"]
+          : ["bash","-lc","docker --version"]
+        standardOutput = new ByteArrayOutputStream()
+      }
+    } catch (ignore) {
+      throw new GradleException("Docker not found. Install Docker Desktop.")
+    }
+
+    // reset container
+    exec {
+      ignoreExitValue true
+      commandLine OperatingSystem.current().isWindows()
+        ? ["cmd","/c","docker","rm","-f", A11Y_CONTAINER]
+        : ["bash","-lc","docker rm -f ${A11Y_CONTAINER} || true"]
+    }
+
+    // run Tomcat + mount as ROOT.war; expose host port 7001 -> 8080
+    def runCmd = "docker run -d --name ${A11Y_CONTAINER} -p ${A11Y_PORT}:8080 " +
+                 "-v \"${warFile.absolutePath}\":/usr/local/tomcat/webapps/ROOT.war:ro " +
+                 "${A11Y_DOCKER_IMAGE}"
+    println "Launching: ${runCmd}"
+    exec {
+      commandLine OperatingSystem.current().isWindows()
+        ? ["cmd","/c", runCmd]
+        : ["bash","-lc", runCmd]
+    }
+
+    // wait until the app actually responds (not just Tomcat up)
+    println "Waiting for Tomcat + app on http://localhost:${A11Y_PORT}/ ..."
+    def ready = false
+    for (int i=0; i<180; i++) { // up to 3 min for first JSP compile
+      def head = new ByteArrayOutputStream()
+      exec {
+        ignoreExitValue true
+        standardOutput = head
+        commandLine OperatingSystem.current().isWindows()
+          ? ["cmd","/c","docker","exec", A11Y_CONTAINER, "curl","-sSI","http://localhost:8080/"]
+          : ["bash","-lc","docker exec ${A11Y_CONTAINER} curl -sSI http://localhost:8080/"]
+      }
+      def h = head.toString()
+      if (h.startsWith("HTTP/1.1 200") || h.startsWith("HTTP/1.1 302")) { ready = true; break }
+      Thread.sleep(1000)
+    }
+    if (!ready) {
+      println "----- Tomcat logs (tail) -----"
+      exec {
+        ignoreExitValue true
+        commandLine OperatingSystem.current().isWindows()
+          ? ["cmd","/c","docker","logs", "--tail","200", A11Y_CONTAINER]
+          : ["bash","-lc","docker logs --tail 200 ${A11Y_CONTAINER} || true"]
+      }
+      throw new GradleException("App did not become ready on http://localhost:${A11Y_PORT}/")
+    }
+    println "Server is up: http://localhost:${A11Y_PORT}/"
+  }
+}
+
+tasks.register("stopA11yServer") {
+  group = "verification"
+  description = "Stop and remove the Docker Tomcat container."
+  doLast {
+    exec {
+      ignoreExitValue true
+      commandLine OperatingSystem.current().isWindows()
+        ? ["cmd","/c","docker","rm","-f", A11Y_CONTAINER]
+        : ["bash","-lc","docker rm -f ${A11Y_CONTAINER} || true"]
+    }
+  }
+}
+
+tasks.register("a11yScan", Exec) {
+  group = "verification"
+  description = "Run Lighthouse CI using .lighthouserc.json"
+  dependsOn("serveWarForA11y")
+
+  // Find Chrome for Windows/macOS/Linux; LHCI can also auto-detect
+  def chromePath = System.getenv("CHROME_PATH")
+  if (!chromePath) {
+    def candidates = [
+      "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+      "/usr/bin/google-chrome", "/usr/bin/chromium-browser", "/usr/bin/chromium",
+      "C:/Program Files/Google/Chrome/Application/chrome.exe"
+    ]
+    chromePath = candidates.find { new File(it).exists() }
+  }
+  if (chromePath) {
+    environment "CHROME_PATH", chromePath
+    println "Using Chrome at: ${chromePath}"
+  }
+
+  // run LHCI (asserts will cause non-zero exit -> build fails)
+  commandLine OperatingSystem.current().isWindows()
+    ? ["cmd","/c","npx","--yes","@lhci/cli@0.13.x","autorun"]
+    : ["bash","-lc","npx --yes @lhci/cli@0.13.x autorun"]
+
+  finalizedBy("copyA11yReports", "stopA11yServer")
+}
+
+// gather artifacts into build/reports/a11y for local + CI publishing
+tasks.register("copyA11yReports") {
+  group = "verification"
+  description = "Copy LHCI output to build/reports/a11y"
+  doLast {
+    def out = file("${project.buildDir}/reports/a11y")
+    out.mkdirs()
+    copy {
+      from file("lhci-results")
+      include "**/*.html", "**/*.json"
+      into out
+    }
+    println "LHCI reports copied to ${out}"
+  }
+}
