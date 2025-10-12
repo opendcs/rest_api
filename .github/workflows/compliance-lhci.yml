@@ -1,58 +1,58 @@
 name: 508-a11y-lighthouse
 
 on:
-    pull_request:
-        types: [opened, synchronize, reopened]
+  pull_request:
+    types: [opened, synchronize, reopened]
 
 permissions:
-    contents: read
+  contents: read
 
 jobs:
-    lhci:
-        runs-on: ubuntu-latest
+  lhci:
+    runs-on: ubuntu-latest
 
-        steps:
-            - name: Checkout
-              uses: actions/checkout@v4
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
-            - name: Setup Java
-              uses: actions/setup-java@v4
-              with:
-                  distribution: temurin
-                  java-version: "17"
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
 
-            - name: Setup Node
-              uses: actions/setup-node@v4
-              with:
-                  node-version: "20"
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
 
-            - name: Cache Gradle
-              uses: gradle/actions/setup-gradle@v3
+      - name: Cache Gradle
+        uses: gradle/actions/setup-gradle@v3
 
-            - name: Build project (WAR)
-              run: ./gradlew build --stacktrace
+      - name: Build project (WAR)
+        run: ./gradlew build --stacktrace
 
-            # Start Tomcat to serve for Lighthouse
-            - name: Start app server (webapp-runner)
-              run: ./gradlew serveWarForA11y
+      # Start Tomcat to serve for Lighthouse
+      - name: Start app server (webapp-runner)
+        run: ./gradlew serveWarForA11y
 
-            # Wait for the app to respond
-            - name: Wait for server
-              run: npx --yes wait-on@7 http-get://localhost:8080/portal/login
+      # Wait for the app to respond
+      - name: Wait for server
+        run: npx --yes wait-on@7 http-get://localhost:7001/portal/login
 
-            # Run Lighthouse CI, fail if thresholds not met
-            - name: Run Lighthouse CI
-              run: npx --yes @lhci/cli@0.13.x autorun
+      # Run Lighthouse CI, fail if thresholds not met
+      - name: Run Lighthouse CI
+        run: npx --yes @lhci/cli@0.13.x autorun
 
-            # Cleanup after ourselves
-            - name: Stop server
-              if: always()
-              run: ./gradlew stopA11yServer
+      # Cleanup after ourselves
+      - name: Stop server
+        if: always()
+        run: ./gradlew stopA11yServer
 
-            # Upload artifacts to view reports
-            - name: Upload LHCI artifacts
-              if: always()
-              uses: actions/upload-artifact@v4
-              with:
-                  name: lhci-results
-                  path: lhci-results/**
+      # Upload artifacts to view reports
+      - name: Upload LHCI artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lhci-results
+          path: lhci-results/**
