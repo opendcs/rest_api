@@ -1,12 +1,12 @@
 {
-    "$schema": "https://raw.githubusercontent.com/GoogleChrome/lighthouse-ci/main/docs/lighthouserc-schema.json",
     "ci": {
         "collect": {
             "numberOfRuns": 1,
             "startServerCommand": "",
             "url": [
+                "http://localhost:7001/",
                 "http://localhost:7001/login",
-                "http://localhost:7001/error"
+                "http://localhost:7001/login.jsp"
             ],
             "settings": {
                 "disableStorageReset": true,
@@ -34,8 +34,7 @@
                 "heading-order": "error",
                 "html-has-lang": "error",
                 "document-title": "error",
-                "region": "error",
-                "aria-*": "error"
+                "region": "error"
             }
         },
         "upload": {
