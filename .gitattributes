@@ -1,1 +1,7 @@
-*.sh text eol=lf
+# Scripts must be LF on Linux runners
+*.sh          text eol=lf
+gradlew       text eol=lf
+
+# Windows scripts keep CRLF
+*.bat         text eol=crlf
+*.cmd         text eol=crlf

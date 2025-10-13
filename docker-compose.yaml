@@ -27,14 +27,14 @@ services:
       - DATABASE_URL=jdbc:postgresql://db:5432/dcs
       - placeholder_NUM_TS_TABLES=1
       - placeholder_NUM_TEXT_TABLES=1
-    command: ["/schema.sh"]
+    command: ["sh", "/schema.sh"]
     volumes:
       - ./compose_files/schema.sh:/schema.sh:ro
     restart: no
     depends_on:
       db:
-       condition: service_healthy
-  
+        condition: service_healthy
+
   api:
     build:
       context: .

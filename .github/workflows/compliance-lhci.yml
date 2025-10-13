@@ -29,6 +29,8 @@ jobs:
       - name: Cache Gradle
         uses: gradle/actions/setup-gradle@v3
 
+      - name: Ensure Gradle wrapper is executable
+        run: chmod +x ./gradlew
       - name: Build project (WAR)
         run: ./gradlew build --stacktrace
 
@@ -38,7 +40,7 @@ jobs:
 
       # Wait for the app to respond
       - name: Wait for server
-        run: npx --yes wait-on@7 http-get://localhost:7001/portal/login
+        run: npx --yes wait-on@7 http-get://localhost:7001/login
 
       # Run Lighthouse CI, fail if thresholds not met
       - name: Run Lighthouse CI
@@ -47,7 +49,7 @@ jobs:
       # Cleanup after ourselves
       - name: Stop server
         if: always()
-        run: ./gradlew stopA11yServer
+        run: ./gradlew stopA11yWar
 
       # Upload artifacts to view reports
       - name: Upload LHCI artifacts
