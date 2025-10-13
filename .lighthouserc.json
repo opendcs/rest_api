@@ -5,8 +5,7 @@
             "startServerCommand": "",
             "url": [
                 "http://localhost:7001/",
-                "http://localhost:7001/login",
-                "http://localhost:7001/login.jsp"
+                "http://localhost:7001/login"
             ],
             "settings": {
                 "disableStorageReset": true,
@@ -26,6 +25,7 @@
                         "minScore": 0.9
                     }
                 ],
+                "installable-manifest": "off",
                 "color-contrast": "error",
                 "image-alt": "error",
                 "label": "error",
