@@ -110,7 +110,7 @@ String toComposePath(File f) {
   return f.absolutePath.replace("\\", "/")
 }
 
-tasks.register("serveStackForA11y") {
+tasks.register("serveWarForA11y") {
   group = "verification"
   description = "Bring up tomcat (a11yweb) via docker compose, mounting the built WAR."
 
@@ -194,7 +194,7 @@ services:
   }
 }
 
-tasks.register("stopA11yStack") {
+tasks.register("stopA11yWar") {
   group = "verification"
   description = "Shutdown a11yweb service from compose."
   doLast {
@@ -211,7 +211,7 @@ tasks.register("stopA11yStack") {
 tasks.register("a11yScan", Exec) {
   group = "verification"
   description = "Run Lighthouse CI on the mounted WAR via a11yweb."
-  dependsOn("serveStackForA11y")
+  dependsOn("serveWarForA11y")
 
   // tell Lighthouse what URL to hit via .lighthouserc.json (or override with LHCI_* env vars)
   def chromePath = System.getenv("CHROME_PATH")
