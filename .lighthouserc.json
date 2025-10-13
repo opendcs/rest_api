@@ -3,6 +3,7 @@
         "collect": {
             "numberOfRuns": 1,
             "startServerCommand": "",
+            "puppeteerScript": "./opendcs-web-client/src/test/508/scripts/lhci-login.js",
             "url": [
                 "http://localhost:7001/",
                 "http://localhost:7001/login"
