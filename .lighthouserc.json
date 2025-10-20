@@ -1,0 +1,46 @@
+{
+    "ci": {
+        "collect": {
+            "numberOfRuns": 1,
+            "startServerCommand": "",
+            "puppeteerScript": "./opendcs-web-client/src/test/508/scripts/lhci-login.js",
+            "url": [
+                "http://localhost:7001/",
+                "http://localhost:7001/login"
+            ],
+            "settings": {
+                "disableStorageReset": true,
+                "chromeFlags": "--headless=new --disable-gpu --no-sandbox --disable-dev-shm-usage --window-size=1366,768",
+                "output": [
+                    "html",
+                    "json"
+                ]
+            }
+        },
+        "assert": {
+            "preset": "lighthouse:recommended",
+            "assertions": {
+                "categories:accessibility": [
+                    "error",
+                    {
+                        "minScore": 0.9
+                    }
+                ],
+                "installable-manifest": "off",
+                "color-contrast": "error",
+                "image-alt": "error",
+                "label": "error",
+                "link-name": "error",
+                "meta-viewport": "error",
+                "heading-order": "error",
+                "html-has-lang": "error",
+                "document-title": "error",
+                "region": "error"
+            }
+        },
+        "upload": {
+            "target": "filesystem",
+            "outputDir": "./lhci-results"
+        }
+    }
+}
