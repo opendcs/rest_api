@@ -20,17 +20,20 @@ import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Base64;
+import java.util.Map;
 import java.util.Set;
 import javax.annotation.security.RolesAllowed;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.StringToClassMapItem;
+import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityScheme;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -38,6 +41,7 @@ import javax.servlet.http.HttpSession;
 import javax.sql.DataSource;
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.FormParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -62,6 +66,7 @@ import static org.opendcs.odcsapi.res.DataSourceContextCreator.DATA_SOURCE_ATTRI
 
 @Path("/")
 @Tag(name = "REST - Authentication and Authorization", description = "Endpoints for authentication and authorization.")
+
 public final class BasicAuthResource extends OpenDcsResource
 {
 
@@ -75,7 +80,7 @@ public final class BasicAuthResource extends OpenDcsResource
 
 	@POST
 	@Path("credentials")
-	@Consumes(MediaType.APPLICATION_JSON)
+	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
 	@Operation(
@@ -92,7 +97,7 @@ public final class BasicAuthResource extends OpenDcsResource
 					description = "Login Credentials",
 					required = true,
 					content = @Content(
-							mediaType = MediaType.APPLICATION_JSON,
+							mediaType = MediaType.APPLICATION_FORM_URLENCODED,
 							schema = @Schema(implementation = Credentials.class)
 					)
 			),
@@ -131,8 +136,12 @@ public final class BasicAuthResource extends OpenDcsResource
 					)
 			}
 	)
-	public Response postCredentials(Credentials credentials) throws WebAppException
+	public Response postCredentials(@FormParam("username") String username,
+                                @FormParam("password") String password) throws WebAppException
 	{
+		Credentials credentials = new Credentials();
+		credentials.setUsername(username);
+		credentials.setPassword(password);
 		TimeSeriesDb db = getLegacyTimeseriesDB();
 		if(!db.isOpenTSDB())
 		{

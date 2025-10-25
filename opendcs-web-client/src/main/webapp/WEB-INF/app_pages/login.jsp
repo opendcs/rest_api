@@ -37,19 +37,19 @@
 				    </div>  
 				</div>
 				<!-- /page header -->
-            
 
 	            <!-- Content area -->
 	            <div class="content loginPageBackground">
 
 					<div class="wrapper fadeInDown">
-					  <div id="formContent" class="slightOpacity">
+					  <div id="formContent" class="slightOpacity bg-primary">
 					    <!-- Tabs Titles -->
 					    <h2>Login</h2>
 					    <!-- Icon -->
 					    <div class="fadeIn first">
-					      <img src="../resources/img/user_profile_image_large.png" id="icon" alt="User Icon" />
+						  <i class="bi large-icon bi-person" stye="width: 5em;" alt="User Icon"></i>
 					    </div>
+						<div id="login_options">
 						  	<% if (Objects.equals(authType, "sso") && authBasePath != null) { %>
 						  	  <button class="btn btn-primary mb-2" id="ssoLoginButton">Login</button>
 						  	<% } else { %>
@@ -61,7 +61,7 @@
 								  </p>
 						  		<button class="btn btn-primary mb-2" id="loginButton">Login</button>
 						  	<% } %>
-					    <!-- Remind Passowrd -->
+					    </div>
 					    <div id="formFooter">
 					      <a class="underlineHover" href="#">Don't have an account?</a>
 					    </div>
