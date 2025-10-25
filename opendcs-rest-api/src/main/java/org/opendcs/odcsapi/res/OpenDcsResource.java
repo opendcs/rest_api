@@ -23,7 +23,13 @@ import decodes.db.Database;
 import decodes.db.DatabaseIO;
 import decodes.tsdb.TimeSeriesDb;
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
+import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
 import io.swagger.v3.oas.annotations.info.Info;
+import io.swagger.v3.oas.annotations.security.OAuthFlow;
+import io.swagger.v3.oas.annotations.security.OAuthFlows;
+import io.swagger.v3.oas.annotations.security.SecurityScheme;
+import io.swagger.v3.oas.annotations.security.SecuritySchemes;
+
 import org.opendcs.database.api.OpenDcsDatabase;
 import org.opendcs.odcsapi.dao.OpenDcsDatabaseFactory;
 
@@ -37,6 +43,12 @@ import static org.opendcs.odcsapi.res.DataSourceContextCreator.DATA_SOURCE_ATTRI
 				version = "0.0.3"
 		)
 )
+@SecuritySchemes({
+@SecurityScheme(name = "default", type = SecuritySchemeType.OAUTH2, 
+	flows = @OAuthFlows(
+		password = @OAuthFlow(tokenUrl = "/odcsapi/credentials")
+	))
+})
 public class OpenDcsResource
 {
 	private static final String UNSUPPORTED_OPERATION_MESSAGE = "Endpoint is unsupported by the OpenDCS REST API.";

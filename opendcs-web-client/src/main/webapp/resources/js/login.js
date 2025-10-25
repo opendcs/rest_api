@@ -31,6 +31,12 @@
  */
 $( document ).ready(function() {
     console.log("Loaded login.js.");
+    $.ajax({
+                url: `${window.API_URL}/openapi.json`,
+                type: "GET",
+                success: (res) => createLogin(res),
+                error: (p) => console.log(p)
+            });
     $(".dropdown-user").addClass("invisible");
     $("#loginButton").on("click", function(e) {
         login();
@@ -50,6 +56,13 @@ function inputBoxLogin(event)
     if (event.keyCode === 13) {
         login();
     }
+}
+
+function createLogin(spec) {
+    console.log(spec);
+
+    const schemes = spec.components.securitySchemes;
+    console.log(schemes);
 }
 
 /**
