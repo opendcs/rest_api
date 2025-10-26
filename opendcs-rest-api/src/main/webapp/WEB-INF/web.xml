@@ -34,7 +34,9 @@
             <param-name>jersey.config.server.provider.packages</param-name>
             <param-value>
                 io.swagger.jaxrs.listing,
-                org.opendcs.odcsapi.res
+                org.opendcs.odcsapi.res,
+                org.opendcs.odcsapi.sec,
+                org.opendcs.odcsapi.openapi
             </param-value>
         </init-param>
         <load-on-startup>1</load-on-startup>
@@ -50,20 +52,6 @@
         <param-name>opendcs.rest.api.authorization.expiration.duration</param-name>
         <param-value>PT15M</param-value>
     </context-param>
-    <!--
-    <context-param>
-        <param-name>opendcs.rest.api.cwms.office</param-name>
-        <param-value></param-value>
-    </context-param>
-    <context-param>
-        <param-name>opendcs.rest.api.authorization.jwt.jwkset.url</param-name>
-        <param-value></param-value>
-    </context-param>
-    <context-param>
-        <param-name>opendcs.rest.api.authorization.jwt.issuer.url</param-name>
-        <param-value></param-value>
-    </context-param>
-    -->
     <servlet-mapping>
         <servlet-name>jersey-servlet</servlet-name>
         <url-pattern>/*</url-pattern>
