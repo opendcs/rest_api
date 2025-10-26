@@ -63,12 +63,12 @@ import org.opendcs.odcsapi.errorhandling.MissingParameterException;
 import org.opendcs.odcsapi.errorhandling.WebAppException;
 import org.opendcs.odcsapi.util.ApiConstants;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.opendcs.utils.logging.OpenDcsLoggerFactory;
 
 @Path("/")
 public final class PresentationResources extends OpenDcsResource
 {
-	private static final Logger LOGGER = LoggerFactory.getLogger(PresentationResources.class);
+	private static final Logger log = OpenDcsLoggerFactory.getLogger();
 
 	@Context HttpHeaders httpHeaders;
 
@@ -341,9 +341,9 @@ public final class PresentationResources extends OpenDcsResource
 						dt = retDt;
 					}
 				}
-				catch (DbIoException | NoSuchObjectException e)
+				catch (DbIoException | NoSuchObjectException ex)
 				{
-					LOGGER.atDebug().setCause(e).log("Unable to lookup data type {}. Setting to null.", ape.getDataTypeCode());
+					log.atDebug().setCause(ex).log("Unable to lookup data type {}. Setting to null.", ape.getDataTypeCode());
 					dt.setId(DbKey.NullKey);
 				}
 			}
