@@ -96,9 +96,9 @@ public final class PresentationResources extends OpenDcsResource
 			dbIo.readPresentationGroupList(groupList);
 			return Response.status(HttpServletResponse.SC_OK).entity(map(groupList)).build();
 		}
-		catch (DatabaseException e)
+		catch (DatabaseException ex)
 		{
-			throw new DbException("Unable to retrieve presentation groups", e);
+			throw new DbException("Unable to retrieve presentation groups", ex);
 		}
 		finally
 		{
@@ -182,17 +182,17 @@ public final class PresentationResources extends OpenDcsResource
 			dbIo.readPresentationGroup(group);
 			return Response.status(HttpServletResponse.SC_OK).entity(map(group)).build();
 		}
-		catch (ValueNotFoundException e)
+		catch (ValueNotFoundException ex)
 		{
-			throw new DatabaseItemNotFoundException(String.format("Presentation group with ID %s not found", groupId), e);
+			throw new DatabaseItemNotFoundException(String.format("Presentation group with ID %s not found", groupId), ex);
 		}
-		catch (DatabaseException e)
+		catch (DatabaseException ex)
 		{
-			if (e.getCause() instanceof ValueNotFoundException)
+			if (ex.getCause() instanceof ValueNotFoundException)
 			{
-				throw new DatabaseItemNotFoundException(String.format("Presentation group with ID %s not found", groupId), e);
+				throw new DatabaseItemNotFoundException(String.format("Presentation group with ID %s not found", groupId), ex);
 			}
-			throw new DbException(String.format("Unable to retrieve presentation group with ID: %s", groupId), e);
+			throw new DbException(String.format("Unable to retrieve presentation group with ID: %s", groupId), ex);
 		}
 		finally
 		{
@@ -279,9 +279,9 @@ public final class PresentationResources extends OpenDcsResource
 					.entity(map(group))
 					.build();
 		}
-		catch (DatabaseException e)
+		catch (DatabaseException ex)
 		{
-			throw new DbException("Unable to store presentation group", e);
+			throw new DbException("Unable to store presentation group", ex);
 		}
 		finally
 		{
@@ -415,9 +415,9 @@ public final class PresentationResources extends OpenDcsResource
 					.entity("Presentation Group with ID " + groupId + " deleted")
 					.build();
 		}
-		catch (DatabaseException e)
+		catch (DatabaseException ex)
 		{
-			throw new DbException("Unable to delete presentation group", e);
+			throw new DbException("Unable to delete presentation group", ex);
 		}
 		finally
 		{

@@ -115,7 +115,7 @@ public final class DatatypeUnitResources extends OpenDcsResource
 		}
 		catch(DbIoException ex)
 		{
-			throw new DbException("Unable to retrieve data type list", e);
+			throw new DbException("Unable to retrieve data type list", ex);
 		}
 	}
 

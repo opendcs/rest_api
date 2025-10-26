@@ -172,9 +172,9 @@ public final class SiteResources extends OpenDcsResource
 			return Response.status(HttpServletResponse.SC_OK)
 					.entity(map(returnedSite, props)).build();
 		}
-		catch (NoSuchObjectException e)
+		catch (NoSuchObjectException ex)
 		{
-			throw new DatabaseItemNotFoundException(String.format("Requested site with matching ID: %d not found", siteId), e);
+			throw new DatabaseItemNotFoundException(String.format("Requested site with matching ID: %d not found", siteId), ex);
 		}
 		catch(DbIoException ex)
 		{
