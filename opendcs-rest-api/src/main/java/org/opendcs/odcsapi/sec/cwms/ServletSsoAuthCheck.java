@@ -27,14 +27,18 @@ import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.Response;
 
 import com.google.auto.service.AutoService;
+
+import io.swagger.v3.oas.models.security.SecurityScheme;
+
 import org.opendcs.odcsapi.dao.ApiAuthorizationDAI;
+import org.opendcs.odcsapi.sec.AbstractAuthorizationCheck;
 import org.opendcs.odcsapi.sec.AuthorizationCheck;
 import org.opendcs.odcsapi.sec.OpenDcsApiRoles;
 import org.opendcs.odcsapi.sec.OpenDcsPrincipal;
 import org.opendcs.odcsapi.sec.OpenDcsSecurityContext;
 
 @AutoService(AuthorizationCheck.class)
-public final class ServletSsoAuthCheck extends AuthorizationCheck
+public final class ServletSsoAuthCheck extends AbstractAuthorizationCheck
 {
 	static final String SESSION_COOKIE_NAME = "JSESSIONIDSSO";
 
@@ -72,5 +76,12 @@ public final class ServletSsoAuthCheck extends AuthorizationCheck
 		Map<String, Cookie> cookies = request.getCookies();
 		Cookie cookie = cookies.get(SESSION_COOKIE_NAME);
 		return cookie != null;
+	}
+
+	@Override
+	public SecurityScheme getOaSecurityScheme()
+	{
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException("Unimplemented method 'getOaSecurityScheme'");
 	}
 }
