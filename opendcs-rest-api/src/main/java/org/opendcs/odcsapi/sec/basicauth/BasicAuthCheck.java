@@ -26,9 +26,12 @@ import javax.ws.rs.core.SecurityContext;
 
 import com.google.auto.service.AutoService;
 import decodes.tsdb.TimeSeriesDb;
+import io.swagger.v3.oas.models.security.SecurityScheme;
+
 import org.opendcs.database.api.OpenDcsDatabase;
 import org.opendcs.odcsapi.dao.ApiAuthorizationDAI;
 import org.opendcs.odcsapi.dao.OpenDcsDatabaseFactory;
+import org.opendcs.odcsapi.sec.AbstractAuthorizationCheck;
 import org.opendcs.odcsapi.sec.AuthorizationCheck;
 import org.opendcs.odcsapi.sec.OpenDcsApiRoles;
 import org.opendcs.odcsapi.sec.OpenDcsPrincipal;
@@ -37,7 +40,7 @@ import org.opendcs.odcsapi.sec.OpenDcsSecurityContext;
 import static org.opendcs.odcsapi.res.DataSourceContextCreator.DATA_SOURCE_ATTRIBUTE_KEY;
 
 @AutoService(AuthorizationCheck.class)
-public final class BasicAuthCheck extends AuthorizationCheck
+public final class BasicAuthCheck extends AbstractAuthorizationCheck
 {
 
 	@Override
@@ -80,5 +83,12 @@ public final class BasicAuthCheck extends AuthorizationCheck
 		{
 			throw new IllegalStateException("Unable to query the database for user authorization", ex);
 		}
+	}
+
+	@Override
+	public SecurityScheme getOaSecurityScheme()
+	{
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException("Unimplemented method 'getOaSecurityScheme'");
 	}
 }

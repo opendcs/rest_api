@@ -34,9 +34,12 @@ import com.nimbusds.jose.proc.BadJOSEException;
 import com.nimbusds.jose.proc.SecurityContext;
 import com.nimbusds.jwt.JWTClaimsSet;
 
+import io.swagger.v3.oas.models.security.SecurityScheme;
+
 import org.opendcs.odcsapi.dao.ApiAuthorizationDAI;
 import org.opendcs.odcsapi.hydrojson.DbInterface;
 import org.opendcs.odcsapi.sec.AuthorizationCheck;
+import org.opendcs.odcsapi.sec.AbstractAuthorizationCheck;
 import org.opendcs.odcsapi.sec.OpenDcsApiRoles;
 import org.opendcs.odcsapi.sec.OpenDcsPrincipal;
 import org.opendcs.odcsapi.sec.OpenDcsSecurityContext;
@@ -44,7 +47,7 @@ import org.slf4j.Logger;
 import org.opendcs.utils.logging.OpenDcsLoggerFactory;
 
 @AutoService(AuthorizationCheck.class)
-public final class OidcAuthCheck extends AuthorizationCheck
+public final class OidcAuthCheck extends AbstractAuthorizationCheck
 {
 
 	private static final Logger log = OpenDcsLoggerFactory.getLogger();
@@ -127,5 +130,12 @@ public final class OidcAuthCheck extends AuthorizationCheck
 	{
 		String authorizationHeader = requestContext.getHeaderString(AUTHORIZATION_HEADER);
 		return keySource != null && "openid".equals(type) && authorizationHeader != null && authorizationHeader.startsWith(BEARER_PREFIX);
+	}
+
+	@Override
+	public SecurityScheme getOaSecurityScheme()
+	{
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException("Unimplemented method 'getOaSecurityScheme'");
 	}
 }
