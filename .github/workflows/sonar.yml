@@ -2,7 +2,7 @@ name: SonarCloud Scan
 on:
   workflow_run:
     workflows: ["Build and Test"]
-    type: [completed]
+    types: [completed]
 
 jobs:
   Sonar:
