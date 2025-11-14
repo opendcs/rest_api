@@ -163,7 +163,7 @@ class BaseIT
 
 	static void logout(SessionFilter sessionFilter)
 	{
-		if (DatabaseSetupExtension.getCurrentDbType() == DbType.OPEN_TSDB)
+		if (DatabaseSetupExtension.getCurrentDbType() == DbType.OPENDCS_POSTGRES)
 		{
 			given()
 				.log().ifValidationFails(LogDetail.ALL, true)
