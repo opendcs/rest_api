@@ -133,11 +133,24 @@ class BaseIT
 		OpenDcsPrincipal mcup = new OpenDcsPrincipal(username, EnumSet.allOf(OpenDcsApiRoles.class));
 		session.setAuthType("CLIENT-CERT");
 		session.setPrincipal(mcup);
+<<<<<<< Updated upstream
 		session.activate();
 		tomcat.getSsoValve()
 				.wrappedRegister(COOKIE, mcup, "CLIENT-CERT");
 
 
+=======
+		session.setAttribute(OpenDcsPrincipal.USER_PRINCIPAL_SESSION_ATTRIBUTE, mcup);
+		
+		Cookie cookie = new Cookie.Builder("JSESSIONID", COOKIE)
+								  .setHttpOnly(true)
+								  .setSecured(true)
+								  .setMaxAge(-1)
+								  .setPath("/odcsapi")
+								  .build();
+
+		authSpec = new RequestSpecBuilder().addCookie(cookie).build();
+>>>>>>> Stashed changes
 		//Check while passing in cookie
 		given()
 			.log().ifValidationFails(LogDetail.ALL, true)
@@ -157,7 +170,7 @@ class BaseIT
 
 	static void logout(SessionFilter sessionFilter)
 	{
-		if (DatabaseSetupExtension.getCurrentDbType() == DbType.OPEN_TSDB)
+		if (DatabaseSetupExtension.getCurrentDbType() == DbType.OPENDCS_POSTGRES)
 		{
 			given()
 				.log().ifValidationFails(LogDetail.ALL, true)
