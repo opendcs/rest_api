@@ -37,20 +37,20 @@ public final class TestSingleSignOn extends SingleSignOn
 	@Override
 	public void invoke(Request request, Response response) throws IOException, ServletException
 	{
-		request.setUserPrincipal(new GenericPrincipal(System.getProperty("DB_USERNAME"), null, null));
-		if(request.getCookies() == null || Arrays.stream(request.getCookies())
-				.noneMatch(c -> c.getName().equals(Constants.SINGLE_SIGN_ON_COOKIE)))
-		{
-			String value = "ABCD";
-			Cookie cookie = new Cookie(Constants.SINGLE_SIGN_ON_COOKIE, value);
-			cookie.setSecure(true);
-			cookie.setHttpOnly(true);
-			cookie.setComment("OpenDCS Dev Environment Only");
-			request.addCookie(cookie);
-			response.addCookie(cookie);
-			cache.put(value, new SingleSignOnEntry(() -> System.getProperty("DB_USERNAME"), "test",
-					System.getProperty("DB_USERNAME"), System.getProperty("DB_PASSWORD")));
-		}
+		// request.setUserPrincipal(new GenericPrincipal(System.getProperty("DB_USERNAME"), null, null));
+		// if(request.getCookies() == null || Arrays.stream(request.getCookies())
+		// 		.noneMatch(c -> c.getName().equals(Constants.SINGLE_SIGN_ON_COOKIE)))
+		// {
+		// 	String value = "ABCD";
+		// 	Cookie cookie = new Cookie(Constants.SINGLE_SIGN_ON_COOKIE, value);
+		// 	cookie.setSecure(true);
+		// 	cookie.setHttpOnly(true);
+		// 	cookie.setComment("OpenDCS Dev Environment Only");
+		// 	request.addCookie(cookie);
+		// 	response.addCookie(cookie);
+		// 	cache.put(value, new SingleSignOnEntry(() -> System.getProperty("DB_USERNAME"), "test",
+		// 			System.getProperty("DB_USERNAME"), System.getProperty("DB_PASSWORD")));
+		// }
 		super.invoke(request, response);
 	}
 

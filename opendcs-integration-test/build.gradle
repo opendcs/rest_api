@@ -48,6 +48,7 @@ dependencies {
 
     testRuntimeOnly(libs.opendcs.schemas)
     testRuntimeOnly(libs.opendcs.schemas.cwms)
+    testRuntimeOnly(libs.bundles.testcontainers)
 }
 
 configurations.all {

@@ -23,6 +23,7 @@ hamcrest = "3.0"
 tomcat = "9.0.107"
 commons-io = "2.11.0"
 commons-lang = "2.5"
+test-containers = { strictly = "2.0.2"}
 
 [libraries]
 opendcs = { module = "org.opendcs:opendcs", version.ref = "opendcs" }
@@ -69,9 +70,14 @@ commons-io = { module = "commons-io:commons-io", version.ref = "commons-io" }
 commons-lang = { module = "commons-lang:commons-lang", version.ref = "commons-lang" }
 slf4j-jdk14 = { module = "org.slf4j:slf4j-jdk14", version.ref = "slf4j"}
 swagger-parser = { module = "io.swagger.parser.v3:swagger-parser-v3", version.ref = "swagger-parser"}
+test-containers-core = { module = "org.testcontainers:testcontainers", version.ref = "test-containers" }
+test-containers-jdbc = { module = "org.testcontainers:testcontainers-jdbc", version.ref = "test-containers" }
+test-containers-postgresql= { module = "org.testcontainers:testcontainers-postgresql", version.ref = "test-containers" }
+test-containers-oracle = { module = "org.testcontainers:testcontainers-oracle-free", version.ref = "test-containers" }
 
 # webjars
 swagger-ui = { module ="org.webjars:swagger-ui", version.ref = "swagger-ui" }
 
 [bundles]
 tomcat = ["tomcat-embedded-core", "tomcat-embedded-jasper", "tomcat-jdbc"]
+testcontainers = [ "test-containers-core", "test-containers-jdbc", "test-containers-postgresql", "test-containers-oracle"]
