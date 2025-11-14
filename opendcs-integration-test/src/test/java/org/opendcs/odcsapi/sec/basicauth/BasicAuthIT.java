@@ -47,7 +47,6 @@ final class BasicAuthIT
 	@TestTemplate
 	void testBasicAuthFlow()
 	{
-		DbInterface.decodesProperties.setProperty("opendcs.rest.api.authorization.type", "basic");
 		given()
 			.log().ifValidationFails(LogDetail.ALL, true)
 			.accept(MediaType.APPLICATION_JSON)
