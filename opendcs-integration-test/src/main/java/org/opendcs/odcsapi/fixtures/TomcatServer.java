@@ -62,7 +62,6 @@ public final class TomcatServer implements AutoCloseable
 	public static final String DB_USERNAME = "DB_USERNAME";
 	public static final String DB_PASSWORD = "DB_PASSWORD";
 	private final Tomcat tomcatInstance;
-	private final TestSingleSignOn singleSignOn = new TestSingleSignOn();
 	private final Supplier<Manager> sessionManager;
 
 	/**
@@ -91,7 +90,6 @@ public final class TomcatServer implements AutoCloseable
 		StandardContext restApiContext = (StandardContext) tomcatInstance.addWebapp("/odcsapi", restWar);
 		restApiContext.setDelegate(true);
 		restApiContext.setParentClassLoader(TomcatServer.class.getClassLoader());
-		restApiContext.getPipeline().addValve(singleSignOn);
 		restApiContext.setReloadable(true);
 		restApiContext.setPrivileged(true);
 		sessionManager = restApiContext::getManager;
@@ -321,11 +319,6 @@ public final class TomcatServer implements AutoCloseable
 				log.atDebug().setCause(ex).log("Error setting up client user");
 			}
 		}
-	}
-
-	public TestSingleSignOn getSsoValve()
-	{
-		return singleSignOn;
 	}
 
 	public Manager getTestSessionManager()
