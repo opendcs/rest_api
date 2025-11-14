@@ -20,17 +20,20 @@ import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Base64;
+import java.util.Map;
 import java.util.Set;
 import javax.annotation.security.RolesAllowed;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.StringToClassMapItem;
+import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityScheme;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -38,6 +41,7 @@ import javax.servlet.http.HttpSession;
 import javax.sql.DataSource;
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.FormParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -62,6 +66,7 @@ import static org.opendcs.odcsapi.res.DataSourceContextCreator.DATA_SOURCE_ATTRI
 
 @Path("/")
 @Tag(name = "REST - Authentication and Authorization", description = "Endpoints for authentication and authorization.")
+
 public final class BasicAuthResource extends OpenDcsResource
 {
 
@@ -133,20 +138,85 @@ public final class BasicAuthResource extends OpenDcsResource
 	)
 	public Response postCredentials(Credentials credentials) throws WebAppException
 	{
-		TimeSeriesDb db = getLegacyTimeseriesDB();
-		if(!db.isOpenTSDB())
-		{
-			throw new ServerErrorException("Basic Auth is not supported", Response.Status.NOT_IMPLEMENTED);
-		}
+		return doLogin(credentials);
+	}
 
+	@POST
+	@Path("credentials")
+	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+	@Produces(MediaType.APPLICATION_JSON)
+	@RolesAllowed({ApiConstants.ODCS_API_GUEST})
+	@Operation(
+			summary = "The ‘credentials’ POST method is used to obtain a new token",
+			description = "The user name and password provided must be a valid login for the underlying database.   \n"
+					+ "Also, that user must be assigned either of the roles OTSDB_ADMIN or OTSDB_MGR.\n"
+					+ "--- \n\n\n"
+					+ "Starting in **API Version 0.0.3**, authentication credentials (username and password) "
+					+ "may be passed as shown above in the POST body.   \n"
+					+ "They may also be passed in a GET call to the 'credentials' method, "
+					+ "(e.g. '*http://localhost:8080/odcsapi/credentials*') containing an HTTP Authentication Basic "
+					+ "header in the form 'username:password'.  \n\nThe returned data to the GET call will be empty.",
+			requestBody = @RequestBody(
+					description = "Login Credentials",
+					required = true,
+					content = @Content(
+							mediaType = MediaType.APPLICATION_FORM_URLENCODED,
+							schema = @Schema(implementation = Credentials.class)
+					)
+			),
+			responses = {
+					@ApiResponse(
+							responseCode = "200",
+							description = "Successful authentication."
+					),
+					@ApiResponse(
+							responseCode = "400",
+							description = "Bad request - null or otherwise invalid credentials.",
+							content = @Content(mediaType = MediaType.APPLICATION_JSON,
+									schema = @Schema(type = "object", implementation = StringToClassMapItem.class),
+									examples = @ExampleObject(value = "{\"status\":400," +
+											"\"message\": \"Neither username nor password may be null.\"}"))
+					),
+					@ApiResponse(
+							responseCode = "403",
+							description = "Invalid credentials or insufficient role.",
+							content = @Content(mediaType = MediaType.APPLICATION_JSON,
+									schema = @Schema(type = "object", implementation = StringToClassMapItem.class),
+									examples = @ExampleObject(value = "{\"status\":403," +
+											"\"message\":\"Failed to authorize user.\"}"))
+					),
+					@ApiResponse(
+							responseCode = "500",
+							description = "Internal Server Error"
+					),
+					@ApiResponse(
+							responseCode = "501",
+							description = "This authentication method is only supported by the OpenTSDB database.",
+							content = @Content(mediaType = MediaType.APPLICATION_JSON,
+									schema = @Schema(type = "object", implementation = StringToClassMapItem.class),
+									examples = @ExampleObject(value = "{\"status\":501," +
+											"\"message\":\"Basic Auth is not supported.\"}"))
+					)
+			}
+	)
+	public Response postCredentials(@FormParam("username") String username,
+                                @FormParam("password") String password) throws WebAppException
+	{
+		Credentials credentials = new Credentials();
+		credentials.setUsername(username);
+		credentials.setPassword(password);
+		return doLogin(credentials);
+	}
+
+	private Response doLogin(Credentials credentials) throws WebAppException
+	{
 		//If credentials are null, Authorization header will be checked.
-		if(credentials != null)
+		if(credentials == null)
 		{
-			verifyCredentials(credentials);
+			throw newAuthException();
 		}
-
-		String authorizationHeader = httpHeaders.getHeaderString(HttpHeaders.AUTHORIZATION);
-		credentials = getCredentials(credentials, authorizationHeader);
+		
+		verifyCredentials(credentials);
 		validateDbCredentials(credentials);
 		Set<OpenDcsApiRoles> roles = getUserRoles(credentials.getUsername());
 		OpenDcsPrincipal principal = new OpenDcsPrincipal(credentials.getUsername(), roles);
@@ -187,56 +257,9 @@ public final class BasicAuthResource extends OpenDcsResource
 		}
 	}
 
-	private static Credentials getCredentials(Credentials postBody, String authorizationHeader)
-	{
-		if(postBody != null)
-		{
-			return postBody;
-		}
-		if(authorizationHeader == null || authorizationHeader.isEmpty())
-		{
-			throw newAuthException();
-		}
-		return parseAuthorizationHeader(authorizationHeader);
-	}
-
 	private static BadRequestException newAuthException()
 	{
 		return new BadRequestException("Credentials not provided.");
-	}
-
-	private static Credentials parseAuthorizationHeader(String authString)
-	{
-		String[] authHeaders = authString.split(",");
-		for(String header : authHeaders)
-		{
-			String trimmedHeader = header.trim();
-			log.debug(MODULE + ".makeToken authHdr = {}", trimmedHeader);
-			if(trimmedHeader.startsWith("Basic"))
-			{
-				return extractCredentials(trimmedHeader.substring(6).trim());
-			}
-		}
-		throw newAuthException();
-	}
-
-	private static Credentials extractCredentials(String base64Credentials)
-	{
-		String decodedCredentials = new String(Base64.getDecoder().decode(base64Credentials.getBytes()));
-		String[] parts = decodedCredentials.split(":", 2);
-
-		if(parts.length < 2 || parts[0] == null || parts[1] == null
-				|| parts[0].isEmpty() || parts[1].isEmpty())
-		{
-			throw newAuthException();
-		}
-
-		Credentials credentials = new Credentials();
-		credentials.setUsername(parts[0]);
-		credentials.setPassword(parts[1]);
-
-		log.info(MODULE + ".checkToken found tokstr in header.");
-		return credentials;
 	}
 
 	private void validateDbCredentials(Credentials creds) throws WebAppException

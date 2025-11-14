@@ -10,6 +10,10 @@ main {
 	height: 1.5em;
 }
 
+.bi.large-icon {
+	font-size: 10em;
+}
+
 .mode-icon-active {
 	width: 1.5em;
 	height: 1.5em;
