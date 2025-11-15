@@ -26,10 +26,16 @@ for var in $(compgen -e); do
 done
 echo "Placeholders ${PLACEHOLDERS[@]}"
 set -x
-exec /opt/opendcs/bin/manageDatabase -I ${DCS_IMPLEMENTATION} \
-               -P /dcs_user_dir/user.properties \
-               -username "${DCS_OWNER}" \
-               -password "${DCS_OWNER_PASS}" \
-               -appUsername "${DCS_USER}" \
-               -appPassword "${DCS_PASS}" \
-               "${PLACEHOLDERS[@]}"
+echo "Placeholders ${PLACEHOLDERS[@]}"
+exec java  -Xms120m -cp $CP \
+    -Dlogback.configurationFile=$DCSTOOL_HOME/logback.xml \
+    -DAPP_NAME=migration \
+    -DLOG_LEVEL=${LOG_LEVEL:-INFO} \
+    -DDCSTOOL_HOME=$DCSTOOL_HOME -DDECODES_INSTALL_DIR=$DCSTOOL_HOME -DDCSTOOL_USERDIR=$DCSTOOL_USERDIR \
+    org.opendcs.database.ManageDatabaseApp  -I ${DCS_IMPLEMENTATION} \
+    -P /dcs_user_dir/user.properties \
+    -username "${DCS_OWNER}" \
+    -password "${DCS_OWNER_PASS}" \
+    -appUsername "${DCS_USER}" \
+    -appPassword "${DCS_PASS}" \
+    "${PLACEHOLDERS[@]}"
