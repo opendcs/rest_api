@@ -144,8 +144,6 @@ class BaseIT
 								  .setMaxAge(-1)
 								  .setPath("/odcsapi")
 								  .build();
-		tomcat.getSsoValve()
-			  .wrappedRegister(COOKIE, mcup, "CLIENT-CERT");
 		authSpec = new RequestSpecBuilder().addCookie(cookie).build();
 		//Check while passing in cookie
 		given()
