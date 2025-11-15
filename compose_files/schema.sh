@@ -11,8 +11,16 @@ bash /opt/opendcs/tsdb_config.sh
 echo "***** GENERATED PROPERTIES FILE *****"
 cat /dcs_user_dir/user.properties
 echo "***** END GENERATED PROPERTIES FILE *****"
-# TODO: Get all "placeholder. envvars and strip the placeholder. off and make list
-# to Apply to below command.
+
+# Build classpath
+CP=$DCSTOOL_HOME/bin/opendcs.jar
+
+# If a user-specific 'dep' (dependencies) directory exists, then
+# add all the jars therein to the classpath.
+if [ -d "$DCSTOOL_USERDIR/dep" ]; then
+  CP=$CP:$DCSTOOL_USERDIR/dep/*
+fi
+CP=$CP:$DCSTOOL_HOME/dep/*
 
 PLACEHOLDERS=()
 unset IFS
