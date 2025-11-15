@@ -18,7 +18,7 @@ jobs:
       max-parallel: 4
     runs-on: ubuntu-latest
     outputs:
-      api_image: ${{steps.save_jdk.outputs.jdk}}
+      jdk: ${{steps.save_jdk.outputs.jdk}}
     steps:
       - uses: actions/checkout@v5.0.0
         with:
