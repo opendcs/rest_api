@@ -23,6 +23,10 @@ plugins {
 
 configurations {
     webjars
+    api_spec {
+        canBeResolved = false // Consumers will resolve, not this config
+        canBeConsumed = true // This config can be consumed by others
+    }
 }
 
 dependencies {
@@ -122,8 +126,13 @@ resolve {
     outputDir = file('build/swagger/')
 }
 
-tasks.register('generateOpenAPI') {
+def genSpec = tasks.register('generateOpenAPI') {
     group = "documentation"
     description = "Generates the Swagger OpenAPI JSON file without running the application"
     dependsOn('resolve')
+    outputs.files(resolve.outputDir.get().asPath()+"/"+outputFileName+"."+outputFormat.get())
+}
+
+artifacts {
+    add("api_spec", genSpec)
 }
