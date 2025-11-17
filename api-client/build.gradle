@@ -3,11 +3,22 @@ plugins {
     id 'opendcs-rest-api.java-conventions'
     id 'opendcs-rest-api.publishing-conventions'
     id 'java-library'
-    id "org.openapi.generator" version "7.12.0"
+    id "org.openapi.generator" version "7.17.0"
+}
+
+configurations {
+    apiSpec
+}
+
+dependencies {
+    api(libs.bundles.openapi.deps)
+    implementation(project(":opendcs-rest-api"))
+    apiSpec(project(path: ":opendcs-rest-api", configuration: 'api_spec'))
 }
 
 openApiGenerate {
-    inputSpec = "$rootDir/opendcs-rest-api/build/swagger/opendcs-openapi.json"
+    //dependsOn configurations.api_spec
+    inputSpec = configurations.apiSpec.files.singleFile.asPath
     outputDir = "$buildDir/generated/openApi"
     generatorName = "typescript"
     apiPackage = "org/opendcs/rest/client/api"
@@ -31,10 +42,7 @@ sourceSets.main {
 compileJava.dependsOn tasks.openApiGenerate
 sourcesJar.dependsOn tasks.openApiGenerate
 
-dependencies {
-    api(libs.bundles.openapi.deps)
-    implementation(project(":opendcs-rest-api"))
-}
+
 
 javadoc {
     options {
