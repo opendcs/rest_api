@@ -54,13 +54,13 @@ public abstract class AuthorizationCheck
 		TimeSeriesDb timeSeriesDb = db.getLegacyDatabase(TimeSeriesDb.class)
 				.orElseThrow(() -> new UnsupportedOperationException("Endpoint is unsupported by the OpenDCS REST API."));
 		//Need to figure out a better way to extend the toolkit API to be able to add dao's within the REST API
-		if(timeSeriesDb instanceof CwmsTimeSeriesDb)
+		if(timeSeriesDb instanceof CwmsTimeSeriesDb cwms)
 		{
-			return new CwmsAuthorizationDAO(timeSeriesDb);
+			return new CwmsAuthorizationDAO(cwms);
 		}
-		else if(timeSeriesDb instanceof OpenTsdb)
+		else if(timeSeriesDb instanceof OpenTsdb opentsdb)
 		{
-			return new OpenTsdbAuthorizationDAO(timeSeriesDb);
+			return new OpenTsdbAuthorizationDAO(opentsdb);
 		}
 		throw new UnsupportedOperationException("Endpoint is unsupported by the OpenDCS REST API.");
 	}

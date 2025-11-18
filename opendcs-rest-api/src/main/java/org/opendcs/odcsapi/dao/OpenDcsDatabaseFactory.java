@@ -17,6 +17,8 @@ package org.opendcs.odcsapi.dao;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 import javax.sql.DataSource;
 
 import decodes.cwms.CwmsDatabaseProvider;
@@ -26,6 +28,12 @@ import decodes.util.DecodesSettings;
 import opendcs.opentsdb.OpenTsdbProvider;
 import org.opendcs.database.DatabaseService;
 import org.opendcs.database.api.OpenDcsDatabase;
+import org.opendcs.odcsapi.dao.datasource.ConnectionPreparer;
+import org.opendcs.odcsapi.dao.datasource.ConnectionPreparingDataSource;
+import org.opendcs.odcsapi.dao.datasource.DelegatingConnectionPreparer;
+import org.opendcs.odcsapi.dao.datasource.DirectUserPreparer;
+import org.opendcs.odcsapi.dao.datasource.SessionOfficePreparer;
+import org.opendcs.odcsapi.dao.datasource.SessionTimeZonePreparer;
 import org.opendcs.odcsapi.hydrojson.DbInterface;
 import org.opendcs.spi.database.DatabaseProvider;
 import org.slf4j.Logger;
@@ -41,8 +49,14 @@ public final class OpenDcsDatabaseFactory
 		throw new AssertionError("Utility class");
 	}
 
-	public static synchronized OpenDcsDatabase createDb(DataSource dataSource)
+	public static synchronized OpenDcsDatabase createDb(DataSource dataSource, String organization, String user)
 	{
+		List<ConnectionPreparer> preparers = new ArrayList<>();
+		preparers.add(new SessionTimeZonePreparer());
+		preparers.add(new SessionOfficePreparer(organization));
+		preparers.add(new DirectUserPreparer(user));
+
+		DataSource wrappedDataSource = new ConnectionPreparingDataSource(new DelegatingConnectionPreparer(preparers), dataSource);
 		if(database != null)
 		{
 			return database;

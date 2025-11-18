@@ -21,20 +21,19 @@ import java.sql.SQLException;
 import java.util.EnumSet;
 import java.util.Set;
 
+import decodes.cwms.CwmsTimeSeriesDb;
 import opendcs.dao.DaoBase;
-import opendcs.dao.DatabaseConnectionOwner;
 import org.opendcs.odcsapi.dao.ApiAuthorizationDAI;
 import org.opendcs.odcsapi.dao.DbException;
-import org.opendcs.odcsapi.hydrojson.DbInterface;
 import org.opendcs.odcsapi.sec.OpenDcsApiRoles;
-import org.slf4j.Logger;
 import org.opendcs.utils.logging.OpenDcsLoggerFactory;
+import org.slf4j.Logger;
 
 public final class CwmsAuthorizationDAO extends DaoBase implements ApiAuthorizationDAI
 {
 	private static final Logger log = OpenDcsLoggerFactory.getLogger();
 
-	public CwmsAuthorizationDAO(DatabaseConnectionOwner tsdb)
+	public CwmsAuthorizationDAO(CwmsTimeSeriesDb tsdb)
 	{
 		super(tsdb, "AuthorizationDAO");
 	}
@@ -56,7 +55,7 @@ public final class CwmsAuthorizationDAO extends DaoBase implements ApiAuthorizat
 				"            upper(?) " +
 				"      end " +
 				"  and is_member = 'T'";
-		String cwmsOfficeId = DbInterface.decodesProperties.getProperty("CwmsOfficeId");
+		String cwmsOfficeId = ((CwmsTimeSeriesDb) db).getDbOfficeId();
 		try
 		{
 			withConnection(c ->

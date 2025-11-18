@@ -23,6 +23,7 @@ import java.util.Set;
 
 import opendcs.dao.DaoBase;
 import opendcs.dao.DatabaseConnectionOwner;
+import opendcs.opentsdb.OpenTsdb;
 import org.opendcs.odcsapi.dao.ApiAuthorizationDAI;
 import org.opendcs.odcsapi.dao.DbException;
 import org.opendcs.odcsapi.sec.OpenDcsApiRoles;
@@ -33,7 +34,7 @@ public final class OpenTsdbAuthorizationDAO extends DaoBase implements ApiAuthor
 {
 	private static final Logger log = OpenDcsLoggerFactory.getLogger();
 
-	public OpenTsdbAuthorizationDAO(DatabaseConnectionOwner tsdb)
+	public OpenTsdbAuthorizationDAO(OpenTsdb tsdb)
 	{
 		super(tsdb, "AuthorizationDAO");
 	}
