@@ -17,8 +17,7 @@ dependencies {
 }
 
 openApiGenerate {
-    //dependsOn configurations.api_spec
-    inputSpec = configurations.apiSpec.files.singleFile.asPath
+    inputSpec = configurations.apiSpec.asPath
     outputDir = "$buildDir/generated/openApi"
     generatorName = "typescript"
     apiPackage = "org/opendcs/rest/client/api"
@@ -39,8 +38,13 @@ sourceSets.main {
     java.srcDir("$buildDir/generated/openApi/src/main/java")
 }
 
-compileJava.dependsOn tasks.openApiGenerate
-sourcesJar.dependsOn tasks.openApiGenerate
+def genTask = tasks.named("openApiGenerate")
+
+genTask.configure {
+    dependsOn configurations.apiSpec
+}
+compileJava.dependsOn genTask
+sourcesJar.dependsOn genTask
 
 
 
