@@ -72,3 +72,173 @@ ext.sonarVersion = {
     }
     return stdout.toString().trim() + "+"
 }
+
+// =====================================
+//          Accessibility (LHCI)
+// =====================================
+import org.gradle.internal.os.OperatingSystem
+
+ext {
+  A11Y_PORT = (project.findProperty("a11yPort") ?: "7001") as String
+  A11Y_PROJECT = (project.findProperty("a11yProject") ?: "opendcs-a11y") as String
+  A11Y_URL = (project.findProperty("a11yUrl") ?: "http://localhost:${A11Y_PORT}/") as String
+  A11Y_COMPOSE_BASE = (project.findProperty("a11yComposeBase") ?: "docker-compose.yaml") as String
+}
+
+Project findUiProject() {
+  def p = rootProject.findProject(":opendcs-web-client")
+  if (p == null) throw new GradleException("Missing :opendcs-web-client module.")
+  return p
+}
+
+File resolveWarFile(Project warProject) {
+  def libsDir = new File(warProject.buildDir, "libs")
+  def wars = libsDir.listFiles()?.findAll { it.name.toLowerCase().endsWith(".war") } ?: []
+  if (wars.isEmpty()) throw new GradleException("No WAR in ${libsDir}. Run assemble first.")
+  wars.sort { a, b -> b.lastModified() <=> a.lastModified() }.first()
+}
+
+String toComposePath(File f) {
+  // Compose accepts Windows absolute paths; normalize slashes to be safe
+  return f.absolutePath.replace("\\", "/")
+}
+
+tasks.register("serveWarForA11y") {
+  group = "verification"
+  description = "Bring up tomcat (a11yweb) via docker compose, mounting the built WAR."
+
+  doLast {
+    // ensure docker compose available
+    try {
+      exec {
+        commandLine OperatingSystem.current().isWindows()
+          ? ["cmd","/c","docker","compose","version"]
+          : ["bash","-lc","docker compose version"]
+        standardOutput = new ByteArrayOutputStream()
+      }
+    } catch (ignore) {
+      throw new GradleException("`docker compose` not found. Install/enable Docker Desktop.")
+    }
+
+    // 1) build WAR from the web client module
+    def ui = findUiProject()
+    exec {
+      workingDir rootProject.projectDir
+      commandLine OperatingSystem.current().isWindows()
+        ? ["cmd","/c",".\\gradlew","${ui.path}:assemble"]
+        : ["bash","-lc","./gradlew ${ui.path}:assemble"]
+    }
+    def warFile = resolveWarFile(ui)
+    def warPath = toComposePath(warFile)
+
+    // 2) write a throwaway compose override that runs plain Tomcat with the WAR mounted as ROOT.war
+    def a11yDir = file("${buildDir}/a11y"); a11yDir.mkdirs()
+    def overrideFile = new File(a11yDir, "docker-compose.a11y.override.yaml")
+    overrideFile.text = """
+services:
+  a11yweb:
+    image: tomcat:9.0-jdk17-temurin
+    ports:
+      - "${A11Y_PORT}:8080"
+    volumes:
+      - "${warPath}:/usr/local/tomcat/webapps/ROOT.war:ro"
+    restart: unless-stopped
+""".stripIndent()
+
+    // before starting a11yweb
+    exec {
+      // bring up db + migration + api from your root compose
+      commandLine OperatingSystem.current().isWindows()
+        ? ["cmd","/c","docker","compose","-p",A11Y_PROJECT,"-f",A11Y_COMPOSE_BASE,"up","-d","db","migration","api"]
+        : ["bash","-lc","docker compose -p ${A11Y_PROJECT} -f ${A11Y_COMPOSE_BASE} up -d db migration api"]
+    }
+
+    // then start a11yweb with the override (as we already do)
+    exec {
+      commandLine OperatingSystem.current().isWindows()
+        ? ["cmd","/c","docker","compose","-p",A11Y_PROJECT,"-f",A11Y_COMPOSE_BASE,"-f",overrideFile.absolutePath,"up","-d","a11yweb"]
+        : ["bash","-lc","docker compose -p ${A11Y_PROJECT} -f ${A11Y_COMPOSE_BASE} -f ${overrideFile.absolutePath} up -d a11yweb"]
+    }
+
+    // 4) wait until the app responds
+    println "Waiting for ${A11Y_URL} ..."
+    boolean ready = false
+    for (int i=0; i<180; i++) {
+      def out = new ByteArrayOutputStream()
+      def cmd = OperatingSystem.current().isWindows()
+        ? ["cmd","/c","curl","-sSI","--max-time","2", A11Y_URL]
+        : ["bash","-lc","curl -sSI --max-time 2 ${A11Y_URL}"]
+      exec { ignoreExitValue true; standardOutput = out; commandLine cmd }
+      def head = out.toString()
+      if (head.startsWith("HTTP/1.1 200") || head.startsWith("HTTP/1.1 302")) { ready = true; break }
+      Thread.sleep(1000)
+    }
+    if (!ready) {
+      println "---- logs (tail) ----"
+      exec {
+        ignoreExitValue true
+        commandLine OperatingSystem.current().isWindows()
+          ? ["cmd","/c","docker","compose","-p",A11Y_PROJECT,"-f",A11Y_COMPOSE_BASE,"-f",overrideFile.absolutePath,"logs","--tail","200","a11yweb"]
+          : ["bash","-lc","docker compose -p ${A11Y_PROJECT} -f ${A11Y_COMPOSE_BASE} -f ${overrideFile.absolutePath} logs --tail 200 a11yweb || true"]
+      }
+      throw new GradleException("App did not become ready at ${A11Y_URL}")
+    }
+    println "Server is up: ${A11Y_URL}"
+  }
+}
+
+tasks.register("stopA11yWar") {
+  group = "verification"
+  description = "Shutdown a11yweb service from compose."
+  doLast {
+    def overrideFile = file("${buildDir}/a11y/docker-compose.a11y.override.yaml")
+    exec {
+      ignoreExitValue true
+      commandLine OperatingSystem.current().isWindows()
+        ? ["cmd","/c","docker","compose","-p",A11Y_PROJECT,"-f",A11Y_COMPOSE_BASE,"-f",overrideFile.absolutePath,"down","-v"]
+        : ["bash","-lc","docker compose -p ${A11Y_PROJECT} -f ${A11Y_COMPOSE_BASE} -f ${overrideFile.absolutePath} down -v || true"]
+    }
+  }
+}
+
+tasks.register("a11yScan", Exec) {
+  group = "verification"
+  description = "Run Lighthouse CI on the mounted WAR via a11yweb."
+  dependsOn("serveWarForA11y")
+
+  // tell Lighthouse what URL to hit via .lighthouserc.json (or override with LHCI_* env vars)
+  def chromePath = System.getenv("CHROME_PATH")
+  if (!chromePath) {
+    def candidates = [
+      "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+      "/usr/bin/google-chrome", "/usr/bin/chromium-browser", "/usr/bin/chromium",
+      "C:/Program Files/Google/Chrome/Application/chrome.exe"
+    ]
+    chromePath = candidates.find { new File(it).exists() }
+  }
+  if (chromePath) {
+    environment "CHROME_PATH", chromePath
+    println "Using Chrome at: ${chromePath}"
+  }
+
+  // LHCI will read .lighthouserc.json; to force the URL, you can set LHCI_COLLECT_URL
+  if (project.findProperty("a11yUrl")) {
+    environment "LHCI_COLLECT_URL", A11Y_URL
+  }
+
+  commandLine OperatingSystem.current().isWindows()
+    ? ["cmd","/c","npx","--yes","@lhci/cli@0.13.x","autorun"]
+    : ["bash","-lc","npx --yes @lhci/cli@0.13.x autorun"]
+
+  finalizedBy("copyA11yReports","stopA11yStack")
+}
+
+tasks.register("copyA11yReports") {
+  group = "verification"
+  doLast {
+    def out = file("${buildDir}/reports/a11y")
+    out.mkdirs()
+    copy { from file("lhci-results"); include "**/*.html","**/*.json"; into out }
+    println "LHCI reports copied to ${out}"
+  }
+}

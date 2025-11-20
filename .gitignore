@@ -43,3 +43,6 @@ bin/
 .DS_Store
 
 gradle.properties
+
+### Lighthouse ###
+.lighthouseci
