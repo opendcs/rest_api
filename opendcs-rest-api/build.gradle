@@ -73,7 +73,7 @@ tasks.register('extractWebJars', Copy) {
     from zipTree(configurations.webjars.singleFile)
 
     into file("${layout.buildDirectory.get().asFile}/generated/webapp/swaggerui")
-    includeEmptyDirs false
+    includeEmptyDirs = false
     eachFile {
         path -= ~/^.+?\/.+?\/.+?\/.+?\/.+?\//
     }
@@ -130,7 +130,11 @@ def genSpec = tasks.register('generateOpenAPI') {
     group = "documentation"
     description = "Generates the Swagger OpenAPI JSON file without running the application"
     dependsOn('resolve')
-    outputs.files(resolve.outputDir.get().asPath()+"/"+outputFileName+"."+outputFormat.get())
+    outputs.files(
+        resolve.outputDir
+               .file(resolve.outputFileName.get() +
+                     "." +
+                     resolve.outputFormat.get().toString().toLowerCase()))
 }
 
 artifacts {
