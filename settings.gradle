@@ -20,8 +20,6 @@ include ":opendcs-web-client"
 include ":opendcs-integration-test"
 include ":api-client-typescript"
 project(":api-client-typescript").projectDir=file("api-clients/api-client-typescript")
-include ":api-client-javascript"
-project(":api-client-javascript").projectDir=file("api-clients/api-client-javascript")
 include ":api-client-java"
 project(":api-client-java").projectDir=file("api-clients/api-client-java")
 
