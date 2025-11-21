@@ -1,9 +1,8 @@
 plugins {
+    id 'base'
     id 'opendcs-rest-api.deps-conventions'
-    id 'opendcs-rest-api.java-conventions'
-    id 'opendcs-rest-api.publishing-conventions'
-    id 'java-library'
     id "org.openapi.generator" version "7.17.0"
+    id 'com.github.node-gradle.node' version '7.1.0'
 }
 
 configurations {
@@ -11,8 +10,6 @@ configurations {
 }
 
 dependencies {
-    api(libs.bundles.openapi.deps)
-    implementation(project(":opendcs-rest-api"))
     apiSpec(project(path: ":opendcs-rest-api", configuration: 'api_spec'))
 }
 
@@ -20,9 +17,10 @@ openApiGenerate {
     inputSpec = configurations.apiSpec.asPath
     outputDir = "$buildDir/generated/openApi"
     generatorName = "typescript"
-    apiPackage = "org/opendcs/rest/client/api"
-    modelPackage = "org/opendcs/rest/client/model"
-    invokerPackage = "org/opendcs/rest/client/invoker"
+    // packageName = "org.opendcs"
+    // apiPackage = "org.opendcs"
+    // modelPackage = "org.opendcs"
+    // invokerPackage = "org.opendcs"
     globalProperties.set([
         modelDocs: "true",
         modelTests: "false",
@@ -31,40 +29,40 @@ openApiGenerate {
         enabledPostProcessFile: "false"
     ])
     ignoreFileOverride = "$projectDir/.openapi-generator-ignore"
-    
 }
 
-sourceSets.main {
-    java.srcDir("$buildDir/generated/openApi/src/main/java")
+openApiValidate {
+    inputSpec = configurations.apiSpec.asPath
 }
+
 
 def genTask = tasks.named("openApiGenerate")
 
 genTask.configure {
     dependsOn configurations.apiSpec
-}
-compileJava.dependsOn genTask
-sourcesJar.dependsOn genTask
-
-
-
-javadoc {
-    options {
-        addStringOption('Xdoclint:none', '-quiet')
-    }
+    mustRunAfter npmInstall
 }
 
-
-publishing {
-    publications {
-        maven(MavenPublication) {
-            artifactId = 'REST API Client'
-            from components.java
-
-            pom {
-                name = 'OpenDCS REST Api client'
-                description = 'Code generated from the OpenDCS Rest APi.'
-            }
-        }
-    }
+node {
+    // Version of Node.js to install. Required.
+    version = '20.10.0'
+    
+   
+    // Whether to download Node.js if it is not already installed. Defaults to true.
+    download = true
+    
+    // The working directory for Node.js. Defaults to the project directory.
+    nodeProjectDir = project.layout.buildDirectory.dir("generated/openApi")
+    
+    // Configure a proxy for the download. Optional.
+    // distBaseUrl = 'https://custom.node.dist.mirror'
 }
+
+task bundle(type: NpxTask) {
+    dependsOn genTask
+    dependsOn npmInstall
+    command = "npm"
+    args = ['run', 'build']
+}
+
+build.dependsOn bundle
