@@ -16,7 +16,7 @@ dependencies {
 openApiGenerate {
     inputSpec = configurations.apiSpec.asPath
     outputDir = "$buildDir/generated/openApi"
-    generatorName = "typescript"
+    generatorName = "typescript-fetch"
     // packageName = "org.opendcs"
     // apiPackage = "org.opendcs"
     // modelPackage = "org.opendcs"
@@ -52,17 +52,33 @@ node {
     download = true
     
     // The working directory for Node.js. Defaults to the project directory.
-    nodeProjectDir = project.layout.buildDirectory.dir("generated/openApi")
     
     // Configure a proxy for the download. Optional.
     // distBaseUrl = 'https://custom.node.dist.mirror'
 }
 
-task bundle(type: NpxTask) {
+def buildLib = tasks.register("buildLib", NpxTask) {
     dependsOn genTask
     dependsOn npmInstall
     command = "npm"
     args = ['run', 'build']
+    outputs.dir(file("build/dist"))
+}
+
+def bundle = tasks.register("bundle", NpxTask) {
+    dependsOn buildLib
+    command = "npm"
+    args = ['run', 'bundle']
+    inputs.files file("build/dist")
+    outputs.dir(file("dist"))
 }
 
 build.dependsOn bundle
+
+configurations {
+    lib {
+        artifacts {
+            add("lib", tasks.named("bundle"))
+        }
+    }
+}
