@@ -20,7 +20,7 @@ import java.util.Set;
 import org.opendcs.database.api.OpenDcsDao;
 import org.opendcs.odcsapi.sec.OpenDcsApiRoles;
 
-public interface ApiAuthorizationDAI extends OpenDcsDao, AutoCloseable
+public interface ApiAuthorizationDAI extends OpenDcsDao
 {
-	Set<OpenDcsApiRoles> getRoles(String username) throws DbException;
+	Set<OpenDcsApiRoles> getRoles(String username, String organizationId) throws DbException;
 }

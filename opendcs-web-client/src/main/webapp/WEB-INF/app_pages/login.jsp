@@ -59,6 +59,9 @@
 								  <p>
 									  <input type="password" name="password" class="form-control" placeholder="Password" maxlength="150" required id="id_password">
 								  </p>
+								  <p>
+									  <input type="text" name="organization" class="form-control" placeholder="Organization" maxlength="50" id="id_organization">
+								  </p>
 						  		<button class="btn btn-primary mb-2" id="loginButton">Login</button>
 						  	<% } %>
 					    <!-- Remind Passowrd -->

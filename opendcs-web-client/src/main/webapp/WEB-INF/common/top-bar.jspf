@@ -80,6 +80,7 @@
                             <ul class="dropdown-menu dropdown-menu-end">
                                 <li><a class="dropdown-item" href="#">Profile</a></li>
                                 <li><a class="dropdown-item" href="#">Admin</a></li>
+                                <li><a class="dropdown-item" href="#">Organization: <span id="organization_id"></span></a></li>
                                 <li>
                                     <hr class="dropdown-divider"/>
                                 </li>
@@ -94,5 +95,6 @@
                 </div>
             </nav>
 
+<script src="${pageContext.request.contextPath}/resources/js/layout.js"></script>
             <%-- /main navbar --%>
                 

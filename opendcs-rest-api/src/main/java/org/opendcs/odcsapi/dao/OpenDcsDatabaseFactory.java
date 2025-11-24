@@ -15,17 +15,13 @@
 
 package org.opendcs.odcsapi.dao;
 
-import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 import javax.sql.DataSource;
 
-import decodes.cwms.CwmsDatabaseProvider;
 import decodes.db.DatabaseException;
-import decodes.sql.OracleSequenceKeyGenerator;
 import decodes.util.DecodesSettings;
-import opendcs.opentsdb.OpenTsdbProvider;
 import org.opendcs.database.DatabaseService;
 import org.opendcs.database.api.OpenDcsDatabase;
 import org.opendcs.odcsapi.dao.datasource.ConnectionPreparer;
@@ -34,15 +30,9 @@ import org.opendcs.odcsapi.dao.datasource.DelegatingConnectionPreparer;
 import org.opendcs.odcsapi.dao.datasource.DirectUserPreparer;
 import org.opendcs.odcsapi.dao.datasource.SessionOfficePreparer;
 import org.opendcs.odcsapi.dao.datasource.SessionTimeZonePreparer;
-import org.opendcs.odcsapi.hydrojson.DbInterface;
-import org.opendcs.spi.database.DatabaseProvider;
-import org.slf4j.Logger;
-import org.opendcs.utils.logging.OpenDcsLoggerFactory;
 
 public final class OpenDcsDatabaseFactory
 {
-	private static final Logger log = OpenDcsLoggerFactory.getLogger();
-	private static OpenDcsDatabase database;
 
 	private OpenDcsDatabaseFactory()
 	{
@@ -54,25 +44,26 @@ public final class OpenDcsDatabaseFactory
 		List<ConnectionPreparer> preparers = new ArrayList<>();
 		preparers.add(new SessionTimeZonePreparer());
 		preparers.add(new SessionOfficePreparer(organization));
-		preparers.add(new DirectUserPreparer(user));
+		if(user != null)
+		{
+			preparers.add(new DirectUserPreparer(user));
+		}
 
 		DataSource wrappedDataSource = new ConnectionPreparingDataSource(new DelegatingConnectionPreparer(preparers), dataSource);
-		if(database != null)
+		if(dataSource == null)
 		{
-			return database;
+			throw new IllegalStateException("No data source defined in context.xml");
 		}
 		try
 		{
-			if(dataSource == null)
-			{
-				throw new IllegalStateException("No data source defined in context.xml");
-			}
-			database = DatabaseService.getDatabaseFor(dataSource);
+			Properties properties = new Properties();
+			properties.put("CwmsOfficeId", organization);
+			OpenDcsDatabase retval = DatabaseService.getDatabaseFor(wrappedDataSource, properties);
+			return retval;
 		}
 		catch(DatabaseException ex)
 		{
 			throw new IllegalStateException("Error establishing database instance through data source.", ex);
 		}
-		return database;
 	}
 }

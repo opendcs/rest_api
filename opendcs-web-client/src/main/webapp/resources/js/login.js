@@ -41,6 +41,13 @@ $( document ).ready(function() {
     $("#id_password").keyup(function(event) {
         inputBoxLogin(event);
     });
+    $("#id_organization").keyup(function(event) {
+        inputBoxLogin(event);
+    });
+    const orgId = localStorage.getItem("organizationId");
+    if (orgId) {
+        $("#id_organization").val(orgId);
+    }
     $("#id_username").focus();
 });
 
@@ -61,6 +68,7 @@ function login()
 {
     var username = $("#id_username").val();
     var password = $("#id_password").val();
+    var organization = $("#id_organization").val();
     var params = {
             "username": username,
             "password": password
@@ -70,11 +78,13 @@ function login()
         type: "POST",
         data: JSON.stringify(params),
         headers: {
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
+            "X-ORGANIZATION-ID": organization
         },
         success: function(response) {
             sessionStorage.setItem("username", response.username);
             sessionStorage.setItem("token", response.token);
+            localStorage.setItem("organizationId", organization);
             window.location = "platforms";
         },
         error: function(response) {

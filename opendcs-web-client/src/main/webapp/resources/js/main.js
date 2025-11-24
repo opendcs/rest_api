@@ -15,8 +15,11 @@ document.addEventListener("DOMContentLoaded", function(event) {
 	{
 		$.ajaxSetup({
 		    beforeSend: function(xhr) {
-		    	xhr.setRequestHeader('Authorization', 
-		    			`${token}`);
+                var orgId = localStorage.getItem("organizationId");
+                if (orgId) {
+                    xhr.setRequestHeader("X-ORGANIZATION-ID", orgId);
+                }
+		    	xhr.setRequestHeader('Authorization', `${token}`);
 		    }
 		});
 	}

@@ -31,7 +31,6 @@ public class DelegatingConnectionPreparer implements ConnectionPreparer
 			logger.atTrace().log(delegate.getClass().getName());
 			retval = delegate.prepare(retval);
 		}
-
 		return retval;
 	}
 

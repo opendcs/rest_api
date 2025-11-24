@@ -15,8 +15,10 @@
 
 package org.opendcs.odcsapi.res;
 
+import java.security.Principal;
 import javax.servlet.ServletContext;
 import javax.sql.DataSource;
+import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.Context;
 
 import decodes.db.Database;
@@ -42,15 +44,35 @@ public class OpenDcsResource
 	private static final String UNSUPPORTED_OPERATION_MESSAGE = "Endpoint is unsupported by the OpenDCS REST API.";
 
 	@Context
+	private ContainerRequestContext request;
+
+	@Context
 	protected ServletContext context;
 
 	protected final synchronized OpenDcsDatabase createDb()
 	{
-		DataSource dataSource = (DataSource) context.getAttribute(DATA_SOURCE_ATTRIBUTE_KEY);
-		return OpenDcsDatabaseFactory.createDb(dataSource);
+		DataSource dataSource = getDataSource();
+		Principal userPrincipal = request.getSecurityContext().getUserPrincipal();
+		String clientId = null;
+		if(userPrincipal != null)
+		{
+			clientId = userPrincipal.getName();
+		}
+		String organization = request.getHeaders().getFirst("X-ORGANIZATION-ID");
+		return OpenDcsDatabaseFactory.createDb(dataSource, organization, clientId);
 	}
 
-	protected DatabaseIO getLegacyDatabase()
+	protected final DataSource getDataSource()
+	{
+		DataSource dataSource = (DataSource) context.getAttribute(DATA_SOURCE_ATTRIBUTE_KEY);
+		if(dataSource == null)
+		{
+			throw new IllegalStateException("DataSource not found in ServletContext.");
+		}
+		return dataSource;
+	}
+
+	protected final DatabaseIO getLegacyDatabase()
 	{
 		return createDb().getLegacyDatabase(Database.class)
 				.map(Database::getDbIo)
