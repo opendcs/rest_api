@@ -15,6 +15,10 @@
 
 package org.opendcs.odcsapi.dao;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -33,6 +37,8 @@ import org.opendcs.odcsapi.dao.datasource.SessionTimeZonePreparer;
 
 public final class OpenDcsDatabaseFactory
 {
+	public static final String CWMS_DB_TYPE = "CWMS";
+	public static final String OPENTSDB_DB_TYPE = "OPENTSDB";
 
 	private OpenDcsDatabaseFactory()
 	{
@@ -65,5 +71,24 @@ public final class OpenDcsDatabaseFactory
 		{
 			throw new IllegalStateException("Error establishing database instance through data source.", ex);
 		}
+	}
+
+	public static String getDatabaseType(DataSource dataSource)
+	{
+		String databaseType = "";
+		try (Connection conn = dataSource.getConnection();
+			 PreparedStatement stmt = conn.prepareStatement("select prop_value from tsdb_property WHERE prop_name = 'editDatabaseType'");
+			 ResultSet rs = stmt.executeQuery())
+		{
+			if (rs.next())
+			{
+				databaseType = rs.getString("prop_value");
+			}
+		}
+		catch (SQLException ex)
+		{
+			throw new IllegalStateException("editDatabaseType not set in tsdb_property table. Cannot determine the type of database.", ex);
+		}
+		return databaseType;
 	}
 }

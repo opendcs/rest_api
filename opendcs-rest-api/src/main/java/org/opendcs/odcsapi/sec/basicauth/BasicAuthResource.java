@@ -56,6 +56,7 @@ import org.opendcs.odcsapi.util.ApiConstants;
 import org.opendcs.utils.logging.OpenDcsLoggerFactory;
 import org.slf4j.Logger;
 
+import static org.opendcs.odcsapi.dao.OpenDcsDatabaseFactory.getDatabaseType;
 import static org.opendcs.odcsapi.res.DataSourceContextCreator.DATA_SOURCE_ATTRIBUTE_KEY;
 
 @Path("/")
@@ -286,25 +287,5 @@ public final class BasicAuthResource extends OpenDcsResource
 			return new CwmsAuthorizationDAO(dataSource);
 		}
 		throw new UnsupportedOperationException("Endpoint is unsupported by the OpenDCS REST API.");
-	}
-
-	private static String getDatabaseType(DataSource dataSource)
-	{
-		String databaseType = "";
-		try (Connection conn = dataSource.getConnection();
-			 PreparedStatement stmt = conn.prepareStatement("select prop_value from tsdb_property WHERE prop_name = 'editDatabaseType'");
-			 ResultSet rs = stmt.executeQuery())
-		{
-			Properties props = new Properties();
-			if (rs.next())
-			{
-				databaseType = rs.getString("prop_value");
-			}
-		}
-		catch (SQLException ex)
-		{
-			throw new IllegalStateException("editDatabaseType not set in tsdb_property table. Cannot determine the type of database.", ex);
-		}
-		return databaseType;
 	}
 }

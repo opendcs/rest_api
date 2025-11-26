@@ -23,7 +23,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Vector;
-import java.util.stream.Collectors;
 import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.Consumes;
@@ -34,6 +33,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 
+import decodes.db.PlatformRef;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
@@ -53,7 +53,6 @@ import decodes.db.DatabaseException;
 import decodes.db.DatabaseIO;
 import decodes.db.Platform;
 import decodes.db.PlatformConfig;
-import decodes.db.PlatformList;
 import decodes.db.PlatformSensor;
 import decodes.db.PlatformStatus;
 import decodes.db.RoutingSpec;
@@ -120,10 +119,8 @@ public final class PlatformResources extends OpenDcsResource
 		Map<String, ApiPlatformRef> ret = new HashMap<>();
 		try
 		{
-
-			PlatformList platformList = new PlatformList();
-			dbIo.readPlatformList(platformList, tmtype);
-			List<ApiPlatformRef> platSpecs = map(platformList);
+			List<PlatformRef> refs = dbIo.readPlatformRefs(tmtype);
+			List<ApiPlatformRef> platSpecs = mapPlatformRef(refs);
 			for(ApiPlatformRef ps : platSpecs)
 			{
 				ret.put(ps.getName(), ps);
@@ -140,51 +137,49 @@ public final class PlatformResources extends OpenDcsResource
 		}
 	}
 
-	static List<ApiPlatformRef> map(PlatformList platformList)
+	static List<ApiPlatformRef> mapPlatformRef(List<PlatformRef> platformList)
 	{
 		List<ApiPlatformRef> ret = new ArrayList<>();
-		Iterator<Platform> platform = platformList.iterator();
-		while (platform.hasNext())
+		for(PlatformRef plat : platformList)
 		{
 			ApiPlatformRef ref = new ApiPlatformRef();
-			Platform plat = platform.next();
-			ref.setName(plat.getDisplayName());
-			if (plat.getId() != null)
+			ref.setName(plat.platformName());
+			if (plat.platformId() != null)
 			{
-				ref.setPlatformId(plat.getId().getValue());
+				ref.setPlatformId(plat.platformId());
 			}
 			else
 			{
 				ref.setPlatformId(DbKey.NullKey.getValue());
 			}
-			ref.setAgency(plat.getAgency());
-			ref.setConfig(plat.getConfigName());
-			ref.setDescription(plat.getDescription());
-			if (plat.getConfig() != null && plat.getConfig().getId() != null)
+			ref.setAgency(plat.agency());
+			ref.setConfig(plat.configName());
+			ref.setDescription(plat.description());
+			if (plat.configId() != null)
 			{
-				ref.setConfigId(plat.getConfig().getId().getValue());
+				ref.setConfigId(plat.configId());
 			}
 			else
 			{
 				ref.setConfigId(DbKey.NullKey.getValue());
 			}
-			if (plat.getSite() != null)
+			if (plat.siteId() != null)
 			{
-				ref.setSiteId(plat.getSite().getId().getValue());
+				ref.setSiteId(plat.siteId());
 			}
 			else
 			{
 				ref.setSiteId(DbKey.NullKey.getValue());
 			}
 			Properties transportProps = new Properties();
-			transportProps.putAll(plat.getProperties());
-			for(Iterator<TransportMedium> it = plat.getTransportMedia(); it.hasNext(); )
-			{
-				final TransportMedium medium = it.next();
-				transportProps.setProperty(medium.getMediumType(), medium.getMediumId());
-			}
+//			transportProps.putAll(plat.getProperties());
+//			for(Iterator<TransportMedium> it = plat.getTransportMedia(); it.hasNext(); )
+//			{
+//				final TransportMedium medium = it.next();
+//				transportProps.setProperty(medium.getMediumType(), medium.getMediumId());
+//			}
 			ref.setTransportMedia(transportProps);
-			ref.setDesignator(plat.getPlatformDesignator());
+			ref.setDesignator(plat.platformDesignator());
 			ret.add(ref);
 		}
 		return ret;
