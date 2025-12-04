@@ -23,7 +23,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Vector;
-import java.util.stream.Collectors;
 import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.Consumes;
@@ -113,7 +112,7 @@ public final class PlatformResources extends OpenDcsResource
 	)
 	public Response getPlatformRefs(@Parameter(description = "Transport medium type",
 			schema = @Schema(implementation = String.class, example = "goes"))
-		@QueryParam("tmtype") String tmtype)
+	@QueryParam("tmtype") String tmtype)
 			throws DbException
 	{
 		DatabaseIO dbIo = getLegacyDatabase();

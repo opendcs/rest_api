@@ -57,10 +57,8 @@ import uk.org.webcompere.systemstubs.security.SystemExit;
 public final class TomcatServer implements AutoCloseable
 {
 	private static final Logger log = OpenDcsLoggerFactory.getLogger();
-	public static final String DB_OFFICE = "DB_OFFICE";
 	public static final String DB_DRIVER_CLASS = "DB_DRIVER_CLASS";
 	public static final String DB_DATASOURCE_CLASS = "DB_DATASOURCE_CLASS";
-	public static final String DB_CONNECTION_INIT = "DB_CONNECTION_INIT";
 	public static final String DB_VALIDATION_QUERY = "DB_VALIDATION_QUERY";
 	public static final String DB_URL = "DB_URL";
 	public static final String DB_USERNAME = "DB_USERNAME";
@@ -97,11 +95,6 @@ public final class TomcatServer implements AutoCloseable
 		restApiContext.setReloadable(true);
 		restApiContext.setPrivileged(true);
 		sessionManager = restApiContext::getManager;
-		if(System.getProperty(DB_OFFICE) != null)
-		{
-			restApiContext.removeParameter("opendcs.rest.api.cwms.office");
-			restApiContext.addParameter("opendcs.rest.api.cwms.office", System.getProperty(DB_OFFICE));
-		}
 
 		StandardContext guiContext = (StandardContext) tomcatInstance.addWebapp("", guiWar);
 		guiContext.setDelegate(true);
@@ -200,10 +193,6 @@ public final class TomcatServer implements AutoCloseable
 		{
 			System.setProperty(DB_DRIVER_CLASS, "oracle.jdbc.driver.OracleDriver");
 			System.setProperty(DB_DATASOURCE_CLASS, DataSourceFactory.class.getName());
-			String dbOffice = System.getProperty("testcontainer.cwms.bypass.office.id");
-			String initScript = String.format("BEGIN cwms_ccp_vpd.set_ccp_session_ctx(cwms_util.get_office_code('%s'), 2, '%s' ); END;", dbOffice, dbOffice);
-			System.setProperty(DB_OFFICE, dbOffice);
-			System.setProperty(DB_CONNECTION_INIT, initScript);
 			System.setProperty(DB_VALIDATION_QUERY, "SELECT 1 FROM dual");
 			System.setProperty(DB_URL, System.getProperty("testcontainer.cwms.bypass.url"));
 			System.setProperty(DB_USERNAME, System.getProperty("testcontainer.cwms.bypass.office.eroc") + "WEBTEST");
@@ -214,7 +203,6 @@ public final class TomcatServer implements AutoCloseable
 			String validationQuery = "SELECT 1";
 			System.setProperty(DB_DRIVER_CLASS, "org.postgresql.Driver");
 			System.setProperty(DB_DATASOURCE_CLASS, DataSourceFactory.class.getName());
-			System.setProperty(DB_CONNECTION_INIT, validationQuery);
 			System.setProperty(DB_VALIDATION_QUERY, validationQuery);
 			System.setProperty(DB_URL, System.getProperty("testcontainer.opentsdb.bypass.url"));
 			System.setProperty(DB_USERNAME, System.getProperty("testcontainer.opentsdb.bypass.username"));
@@ -289,9 +277,6 @@ public final class TomcatServer implements AutoCloseable
 		{
 			System.setProperty(DB_DRIVER_CLASS, "oracle.jdbc.driver.OracleDriver");
 			System.setProperty(DB_DATASOURCE_CLASS, "org.apache.tomcat.jdbc.pool.DataSourceFactory");
-			String dbOffice = System.getProperty(DB_OFFICE);
-			String initScript = String.format("BEGIN cwms_ccp_vpd.set_ccp_session_ctx(cwms_util.get_office_code('%s'), 2, '%s' ); END;", dbOffice, dbOffice);
-			System.setProperty(DB_CONNECTION_INIT, initScript);
 			System.setProperty(DB_VALIDATION_QUERY, "SELECT 1 FROM dual");
 		}
 		else
@@ -299,7 +284,6 @@ public final class TomcatServer implements AutoCloseable
 			String validationQuery = "SELECT 1";
 			System.setProperty(DB_DRIVER_CLASS, "org.postgresql.Driver");
 			System.setProperty(DB_DATASOURCE_CLASS, "org.apache.tomcat.jdbc.pool.DataSourceFactory");
-			System.setProperty(DB_CONNECTION_INIT, validationQuery);
 			System.setProperty(DB_VALIDATION_QUERY, validationQuery);
 		}
 		setupClientUser(dbType);
@@ -312,28 +296,14 @@ public final class TomcatServer implements AutoCloseable
 		{
 			// I have no idea why this is suddenly required but it was also affecting operations in
 			// runtime test environments where the required entries weren't present.
-			String unlockUser = "begin cwms_sec.unlock_user(?,?); end;";
 			String userPermissions = "begin execute immediate 'grant web_user to ' || ?; end;";
-			String dbOffice = System.getProperty(DB_OFFICE);
-			String setWebUserPermissions = "begin\n" +
-					"   cwms_sec.add_user_to_group(?, 'CWMS User Admins',?) ;\n" +
-					"   commit;\n" +
-					"end;";
 			try(Connection connection = DriverManager.getConnection(System.getProperty(DB_URL), "CWMS_20",
 					System.getProperty(DB_PASSWORD));
-				PreparedStatement unlockUserStmt = connection.prepareStatement(unlockUser);
-				PreparedStatement userPermissionsStmt = connection.prepareStatement(userPermissions);
-				PreparedStatement setWebUserPermissionsStmt = connection.prepareStatement(setWebUserPermissions))
+				PreparedStatement userPermissionsStmt = connection.prepareStatement(userPermissions))
 			{
 				final String username = System.getProperty(DB_USERNAME);
-				unlockUserStmt.setString(1, username);
-				unlockUserStmt.setString(2, dbOffice);
-				unlockUserStmt.executeQuery();
 				userPermissionsStmt.setString(1, username);
 				userPermissionsStmt.executeQuery();
-				setWebUserPermissionsStmt.setString(1, username);
-				setWebUserPermissionsStmt.setString(2, dbOffice);
-				setWebUserPermissionsStmt.executeQuery();
 			}
 			catch(SQLException ex)
 			{

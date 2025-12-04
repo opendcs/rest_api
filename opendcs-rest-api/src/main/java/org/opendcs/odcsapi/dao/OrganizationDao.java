@@ -15,12 +15,10 @@
 
 package org.opendcs.odcsapi.dao;
 
-import java.util.Set;
+import java.util.List;
 
-import org.opendcs.database.api.OpenDcsDao;
-import org.opendcs.odcsapi.sec.OpenDcsApiRoles;
-
-public interface ApiAuthorizationDAI extends OpenDcsDao
+public interface OrganizationDao
 {
-	Set<OpenDcsApiRoles> getRoles(String username, String organizationId) throws DbException;
+
+	List<String> retrieveOrganizationIds() throws DbException;
 }
