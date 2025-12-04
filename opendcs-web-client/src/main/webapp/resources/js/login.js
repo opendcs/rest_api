@@ -47,8 +47,8 @@ $( document ).ready(function() {
         url: `${window.API_URL}/organizations`,
         type: "GET",
         dataType: "json",
-        success: function(data) {
-            data.forEach(function(org) {
+        success: function (data) {
+            data.forEach(function (org) {
                 $('<option>')
                     .val(org)
                     .text(org)
@@ -65,7 +65,7 @@ $( document ).ready(function() {
                 $orgSelect.val(orgId).trigger('change');
             }
         },
-        failure: function() {
+        failure: function () {
             console.error("Failed to load organizations");
             $orgSelect.next('.select2-container').hide();
         }

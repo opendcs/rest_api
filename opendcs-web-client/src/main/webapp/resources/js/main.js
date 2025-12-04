@@ -7,22 +7,25 @@ document.addEventListener("DOMContentLoaded", function(event) {
 		e.preventDefault();
 		console.log("Logging out.");
         sessionStorage.removeItem("token");
+        $.ajax({
+            url: `${window.API_URL}/logout`,
+            type: "DELETE"
+        });
         window.location = "login";
     });
-	
-	var token = sessionStorage.getItem("token");
-	if (token != null)
-	{
-		$.ajaxSetup({
-		    beforeSend: function(xhr) {
-                var orgId = localStorage.getItem("organizationId");
-                if (orgId) {
-                    xhr.setRequestHeader("X-ORGANIZATION-ID", orgId);
-                }
-		    	xhr.setRequestHeader('Authorization', `${token}`);
-		    }
-		});
-	}
+
+    $.ajaxSetup({
+        beforeSend: function(xhr) {
+            let orgId = localStorage.getItem("organizationId");
+            if (orgId) {
+                xhr.setRequestHeader("X-ORGANIZATION-ID", orgId);
+            }
+            let token = sessionStorage.getItem("token");
+            if (token != null) {
+                xhr.setRequestHeader('Authorization', `${token}`);
+            }
+        }
+    });
 });
 
 
