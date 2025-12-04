@@ -80,7 +80,7 @@
                             <ul class="dropdown-menu dropdown-menu-end">
                                 <li><a class="dropdown-item" href="#">Profile</a></li>
                                 <li><a class="dropdown-item" href="#">Admin</a></li>
-                                <li><a class="dropdown-item" href="#">Organization: <span id="organization_id"></span></a></li>
+                                <li><a class="dropdown-item" href="#" id="organization_select">Organization: <span id="organization_id"></span></a></li>
                                 <li>
                                     <hr class="dropdown-divider"/>
                                 </li>
@@ -88,7 +88,7 @@
                                 <li>
                                     <hr class="dropdown-divider"/>
                                 </li>
-                                <li><a class="dropdown-item" href="#">Logout</a></li>
+                                <li><a class="dropdown-item" href="#" id="logoutButton">Logout</a></li>
                             </ul>
                         </li>
                     </ul>
