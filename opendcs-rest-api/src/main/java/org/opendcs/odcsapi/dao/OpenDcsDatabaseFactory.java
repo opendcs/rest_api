@@ -19,8 +19,11 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.SQLRecoverableException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import javax.sql.DataSource;
 
@@ -37,8 +40,8 @@ import org.opendcs.odcsapi.dao.datasource.SessionTimeZonePreparer;
 
 public final class OpenDcsDatabaseFactory
 {
-	public static final String CWMS_DB_TYPE = "CWMS";
-	public static final String OPENTSDB_DB_TYPE = "OPENTSDB";
+
+	private static final Map<String, OpenDcsDatabase> dbCache = new HashMap<>();
 
 	private OpenDcsDatabaseFactory()
 	{
@@ -47,6 +50,12 @@ public final class OpenDcsDatabaseFactory
 
 	public static synchronized OpenDcsDatabase createDb(DataSource dataSource, String organization, String user)
 	{
+		OpenDcsDatabase db = dbCache.get(organization);
+		if(db != null)
+		{
+			return db;
+		}
+
 		List<ConnectionPreparer> preparers = new ArrayList<>();
 		preparers.add(new SessionTimeZonePreparer());
 		preparers.add(new SessionOfficePreparer(organization));
@@ -63,12 +72,21 @@ public final class OpenDcsDatabaseFactory
 		try
 		{
 			Properties properties = new Properties();
-			properties.put("CwmsOfficeId", organization);
-			OpenDcsDatabase retval = DatabaseService.getDatabaseFor(wrappedDataSource, properties);
-			return retval;
+			if(organization != null)
+			{
+				properties.put("CwmsOfficeId", organization);
+			}
+			OpenDcsDatabase newDb = DatabaseService.getDatabaseFor(wrappedDataSource, properties);
+			dbCache.put(organization, newDb);
+			return newDb;
 		}
 		catch(DatabaseException ex)
 		{
+			Throwable cause = ex.getCause();
+			if(cause instanceof SQLException sqlException && sqlException.getErrorCode() == 28113)
+			{
+				throw new IllegalArgumentException("Error establishing organization id for request.", ex);
+			}
 			throw new IllegalStateException("Error establishing database instance through data source.", ex);
 		}
 	}
@@ -84,6 +102,10 @@ public final class OpenDcsDatabaseFactory
 			{
 				databaseType = rs.getString("prop_value");
 			}
+		}
+		catch(SQLRecoverableException ex)
+		{
+			throw new IllegalStateException("Error connecting to the database.", ex);
 		}
 		catch (SQLException ex)
 		{

@@ -26,6 +26,7 @@
               url="${DB_URL}"
               logValidationErrors="true"
               validationQuery="${DB_VALIDATION_QUERY}"
+              testOnBorrow="true"
               maxActive="10"
               maxIdle="4"
               minIdle="1"/>
