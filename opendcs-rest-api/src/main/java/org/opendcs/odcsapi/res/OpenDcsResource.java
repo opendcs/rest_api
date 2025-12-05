@@ -15,11 +15,9 @@
 
 package org.opendcs.odcsapi.res;
 
-import java.security.Principal;
-import javax.servlet.ServletContext;
+import jakarta.servlet.ServletContext;
 import javax.sql.DataSource;
-import javax.ws.rs.container.ContainerRequestContext;
-import javax.ws.rs.core.Context;
+import jakarta.ws.rs.core.Context;
 
 import decodes.db.Database;
 import decodes.db.DatabaseIO;
