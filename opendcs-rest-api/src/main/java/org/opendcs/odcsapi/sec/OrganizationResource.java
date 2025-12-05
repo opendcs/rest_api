@@ -16,25 +16,23 @@
 package org.opendcs.odcsapi.sec;
 
 import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
-import javax.annotation.security.RolesAllowed;
-import javax.servlet.http.HttpServletResponse;
+
 import javax.sql.DataSource;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import org.opendcs.odcsapi.beans.ApiAlgorithmRef;
+import jakarta.annotation.security.RolesAllowed;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
+import org.opendcs.database.SimpleTransaction;
 import org.opendcs.odcsapi.beans.Status;
 import org.opendcs.odcsapi.dao.DbException;
 import org.opendcs.odcsapi.dao.cwms.CwmsOrganizationDao;
@@ -64,17 +62,27 @@ public final class OrganizationResource extends OpenDcsResource
 			},
 			tags = {"REST - Authentication and Authorization"}
 	)
-	public Response checkSessionAuthorization() throws DbException
+	public Response getOrganizations() throws DbException
 	{
 		DataSource dataSource = getDataSource();
 		String databaseType = getDatabaseType(dataSource);
 		if("cwms".equalsIgnoreCase(databaseType))
 		{
-			CwmsOrganizationDao cwmsOrganizationDao = new CwmsOrganizationDao(dataSource);
-			return Response.status(HttpServletResponse.SC_OK).entity(cwmsOrganizationDao.retrieveOrganizationIds())
-					.build();
+			try(Connection connection = dataSource.getConnection())
+			{
+
+				CwmsOrganizationDao cwmsOrganizationDao = new CwmsOrganizationDao();
+				return Response.status(HttpServletResponse.SC_OK)
+						.entity(cwmsOrganizationDao.retrieveOrganizationIds(new SimpleTransaction(connection)))
+						.build();
+			}
+			catch(SQLException e)
+			{
+				throw new DbException("Error establishing connection to the database.", e);
+			}
 		}
-		return Response.status(HttpServletResponse.SC_NOT_FOUND).entity(new Status("Session Valid"))
+		return Response.status(HttpServletResponse.SC_NOT_FOUND)
+				.entity(new Status("Session Valid"))
 				.build();
 	}
 }

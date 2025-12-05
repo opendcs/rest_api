@@ -12,23 +12,23 @@
   ~  See the License for the specific language governing permissions and
   ~  limitations under the License.
   --%>
-<div class="modal fade" id="modal_organizations" tabindex="-1" role="dialog">
-	<div class="modal-dialog">
-		<div class="modal-content">
-			<div class="modal-header">
-				<h5 class="modal-title" id="modal_organizations_label">Select Organization</h5>
-				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-			</div>
-			<div class="modal-body">
-					<select id="id_organization" class="form-select" name="id_organization">
-						<option></option>
-					</select>
-			</div>
-			<div class="modal-footer">
-				<button type="button" class="btn btn-primary" id="modal_organizations_ok_button">OK</button>
-				<button type="button" data-bs-dismiss="modal" class="btn btn-secondary" id="modal_organizations_cancel_button">Cancel</button>
-			</div>
-		</div>
-	</div>
-</div>
+<%--<div class="modal fade" id="modal_organizations" tabindex="-1" role="dialog">--%>
+<%--	<div class="modal-dialog">--%>
+<%--		<div class="modal-content">--%>
+<%--			<div class="modal-header">--%>
+<%--				<h5 class="modal-title" id="modal_organizations_label">Select Organization</h5>--%>
+<%--				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>--%>
+<%--			</div>--%>
+<%--			<div class="modal-body">--%>
+<%--					<select id="id_organization" class="form-select" name="id_organization">--%>
+<%--						<option></option>--%>
+<%--					</select>--%>
+<%--			</div>--%>
+<%--			<div class="modal-footer">--%>
+<%--				<button type="button" class="btn btn-primary" id="modal_organizations_ok_button">OK</button>--%>
+<%--				<button type="button" data-bs-dismiss="modal" class="btn btn-secondary" id="modal_organizations_cancel_button">Cancel</button>--%>
+<%--			</div>--%>
+<%--		</div>--%>
+<%--	</div>--%>
+<%--</div>--%>
 <script src="../resources/js/modals/organizations.js"></script>

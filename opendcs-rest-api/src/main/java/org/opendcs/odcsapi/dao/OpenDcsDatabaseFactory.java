@@ -76,7 +76,7 @@ public final class OpenDcsDatabaseFactory
 			{
 				properties.put("CwmsOfficeId", organization);
 			}
-			OpenDcsDatabase newDb = DatabaseService.getDatabaseFor(wrappedDataSource, properties);
+			OpenDcsDatabase newDb = DatabaseService.getDatabaseFor(wrappedDataSource);//, properties);
 			dbCache.put(organization, newDb);
 			return newDb;
 		}

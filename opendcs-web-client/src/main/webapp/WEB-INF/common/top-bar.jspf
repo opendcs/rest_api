@@ -77,19 +77,32 @@
                                         aria-label="User Settings">
                                 <i class="bi my-1 bi-person-gear theme-icon"></i>
                             </button>
-                            <ul class="dropdown-menu dropdown-menu-end">
-                                <li><a class="dropdown-item" href="#">Profile</a></li>
-                                <li><a class="dropdown-item" href="#">Admin</a></li>
-                                <li><a class="dropdown-item" href="#" id="organization_select">Organization: <span id="organization_id"></span></a></li>
-                                <li>
-                                    <hr class="dropdown-divider"/>
-                                </li>
-                                <%@include file="/WEB-INF/common/theme-selection.jspf"%>
-                                <li>
-                                    <hr class="dropdown-divider"/>
-                                </li>
-                                <li><a class="dropdown-item" href="#" id="logoutButton">Logout</a></li>
-                            </ul>
+                            <div class="dropdown">
+                                <!-- toggle (you must have some trigger: button or a link) -->
+                                <button class="btn btn-secondary dropdown-toggle" type="button"
+                                        id="dropdownMenuButton" data-bs-toggle="dropdown"
+                                        aria-expanded="false">
+                                    User Menu
+                                </button>
+                                <div class="dropdown-menu dropdown-menu-end p-2" aria-labelledby="dropdownMenuButton">
+                                    <a class="dropdown-item" href="#">Profile</a>
+                                    <a class="dropdown-item" href="#">Admin</a>
+
+                                    <!-- Organization selector block -->
+                                    <div class="dropdown-item p-2">
+                                        <!-- you can adjust padding / spacing as needed -->
+                                        <div class="mb-1">Organization:</div>
+                                        <label for="id_organization" class="form-label mb-1">Select Organization:</label>
+                                        <select id="id_organization" class="form-select" name="id_organization">
+                                            <option value="">Select …</option>
+                                        </select>
+                                    </div>
+                                    <div><hr class="dropdown-divider"></div>
+                                    <%@ include file="/WEB-INF/common/theme-selection.jspf" %>
+                                    <div><hr class="dropdown-divider"></div>
+                                    <a class="dropdown-item" href="#">Logout</a>
+                                </div>
+                            </div>
                         </li>
                     </ul>
                 </div>

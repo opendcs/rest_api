@@ -22,24 +22,18 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.sql.DataSource;
-
+import org.opendcs.database.api.DataTransaction;
+import org.opendcs.database.api.OpenDcsDataException;
 import org.opendcs.odcsapi.dao.DbException;
 import org.opendcs.odcsapi.dao.OrganizationDao;
 
 public final class CwmsOrganizationDao implements OrganizationDao
 {
-	private final DataSource dataSource;
-
-	public CwmsOrganizationDao(DataSource dataSource)
-	{
-		this.dataSource = dataSource;
-	}
 
 	@Override
-	public List<String> retrieveOrganizationIds() throws DbException
+	public List<String> retrieveOrganizationIds(DataTransaction dataTransaction) throws DbException
 	{
-		try(Connection connection = dataSource.getConnection();
+		try(Connection connection = dataTransaction.connection(Connection.class).orElseThrow();
 			Statement statement = connection.createStatement();
 			ResultSet rs = statement.executeQuery("SELECT OFFICE_ID FROM CWMS_20.CWMS_OFFICE"))
 		{
@@ -50,9 +44,13 @@ public final class CwmsOrganizationDao implements OrganizationDao
 			}
 			return ids;
 		}
+		catch(OpenDcsDataException ex)
+		{
+			throw new DbException("Unable to connect to the database.", ex);
+		}
 		catch(SQLException ex)
 		{
-			throw new DbException("Unable to retrieve organization ids");
+			throw new DbException("Unable to retrieve organization ids", ex);
 		}
 	}
 }

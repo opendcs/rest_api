@@ -123,16 +123,14 @@ sonarqube {
 
 
 // task to generate OpenAPI JSON file
-//resolve {
-//    doLast {
-//        classpath = sourceSets.main.runtimeClasspath
-//        outputFileName = 'opendcs-openapi'
-//        outputFormat = providers.gradleProperty('outputFormat').getOrElse('JSON')
-//        prettyPrint = 'TRUE'
-//        resourcePackages = ['org.opendcs.odcsapi.res', 'org.opendcs.odcsapi.beans', 'org.opendcs.odcsapi.sec']
-//        outputDir = file('build/swagger/')
-//    }
-//}
+resolve {
+    classpath = sourceSets.main.runtimeClasspath
+    outputFileName = 'opendcs-openapi'
+    outputFormat = providers.gradleProperty('outputFormat').getOrElse('JSON')
+    prettyPrint = 'TRUE'
+    resourcePackages = ['org.opendcs.odcsapi.res', 'org.opendcs.odcsapi.beans', 'org.opendcs.odcsapi.sec']
+    outputDir = file('build/swagger/')
+}
 
 def genSpec = tasks.register('generateOpenAPI') {
     group = "documentation"

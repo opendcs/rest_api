@@ -17,8 +17,10 @@ package org.opendcs.odcsapi.dao;
 
 import java.util.List;
 
-public interface OrganizationDao
-{
+import org.opendcs.database.api.DataTransaction;
+import org.opendcs.database.api.OpenDcsDao;
 
-	List<String> retrieveOrganizationIds() throws DbException;
+public interface OrganizationDao extends OpenDcsDao
+{
+	List<String> retrieveOrganizationIds(DataTransaction dataTransaction) throws DbException;
 }
