@@ -44,10 +44,11 @@ import opendcs.dai.PlatformStatusDAI;
 import opendcs.dai.ScheduleEntryDAI;
 import opendcs.dai.TimeSeriesDAI;
 import org.apache.catalina.session.StandardSession;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.opendcs.odcsapi.fixtures.DatabaseContextProvider;
 import org.opendcs.odcsapi.fixtures.DatabaseSetupExtension;
 import org.opendcs.odcsapi.fixtures.DbType;
 import org.opendcs.odcsapi.fixtures.TomcatServer;
-import org.opendcs.odcsapi.hydrojson.DbInterface;
 import org.opendcs.odcsapi.res.ObjectMapperContextResolver;
 import org.opendcs.odcsapi.sec.OpenDcsApiRoles;
 import org.opendcs.odcsapi.sec.OpenDcsPrincipal;
@@ -58,6 +59,8 @@ import static java.util.stream.Collectors.joining;
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+
+@ExtendWith(DatabaseContextProvider.class)
 class BaseIT
 {
 	protected static String authHeader = null;

@@ -40,10 +40,7 @@ import io.restassured.filter.session.SessionFilter;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.TestTemplate;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.opendcs.odcsapi.fixtures.DatabaseContextProvider;
 import org.opendcs.odcsapi.hydrojson.DbInterface;
 
 import static io.restassured.RestAssured.given;
@@ -52,8 +49,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-@ExtendWith(DatabaseContextProvider.class)
-@Tag("integration")
 @Disabled
 final class OpenIdAuthIT
 {
