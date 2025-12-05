@@ -196,8 +196,8 @@ public final class TomcatServer implements AutoCloseable
 			System.setProperty(DB_DATASOURCE_CLASS, DataSourceFactory.class.getName());
 			System.setProperty(DB_VALIDATION_QUERY, "SELECT 1 FROM dual");
 			System.setProperty(DB_URL, System.getProperty("testcontainer.cwms.bypass.url"));
-			System.setProperty(DB_USERNAME, System.getProperty("testcontainer.cwms.bypass.office.eroc") + "WEBTEST");
-			System.setProperty(DB_PASSWORD, System.getProperty("testcontainer.cwms.bypass.cwms.pass"));
+			System.setProperty(DB_USERNAME, System.getProperty("testcontainer.cwms.bypass.dcs.user", "dcs_user"));
+			System.setProperty(DB_PASSWORD, System.getProperty("testcontainer.cwms.bypass.dcs.pass", "dcs_user"));
 		}
 		else
 		{

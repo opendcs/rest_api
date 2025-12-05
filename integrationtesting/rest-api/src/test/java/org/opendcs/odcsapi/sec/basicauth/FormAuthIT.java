@@ -21,17 +21,14 @@ import jakarta.ws.rs.core.MediaType;
 import io.restassured.filter.log.LogDetail;
 import io.restassured.filter.session.SessionFilter;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.TestTemplate;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.opendcs.odcsapi.fixtures.DatabaseContextProvider;
+import org.opendcs.fixtures.annotations.EnableIfTsDb;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 
-@Tag("integration-opentsdb-only")
-@ExtendWith(DatabaseContextProvider.class)
+@EnableIfTsDb({"OpenDCS-Postgres"})
 final class FormAuthIT
 {
 

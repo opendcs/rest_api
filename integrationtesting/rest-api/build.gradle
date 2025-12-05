@@ -73,7 +73,7 @@ configurations.all {
 }
 
 
-tasks.register('generateConfig', Copy) {
+def genConfig = tasks.register('generateConfig', Copy) {
     doFirst {
         project.delete layout.buildDirectory.file("tomcat/")
         project.mkdir layout.buildDirectory.file("tomcat/logs")
@@ -140,8 +140,8 @@ tasks.register('owaspZap', JavaExec) {
     systemProperties.put("DCSTOOL_HOME", outputDir)
 }
 
-
-tasks.register('downloadAndUnzipInstaller') {
+// to be removed during merge into main code
+def odcsInstall = tasks.register('downloadAndUnzipInstaller') {
     def zipUrl = "https://github.com/opendcs/opendcs/releases/download/${libs.versions.opendcs.get()}/opendcs-${libs.versions.opendcs.get()}.zip"
     def outputDir = project.layout.buildDirectory.dir("opendcs-install").get()
     def zipFile = project.layout.buildDirectory.dir("download/opendcs-install.zip").get().getAsFile()
@@ -163,101 +163,97 @@ tasks.register('downloadAndUnzipInstaller') {
     }
 }
 
-tasks.register('integrationTestOpenTSDB', Test) {
-    group "verification"
-    useJUnitPlatform {
-        includeTags "integration"
-        includeTags "integration-opentsdb-only"
-    }
-    // with gradle 9.2 it seems we need to set these manually
-    testClassesDirs = sourceSets.test.output.classesDirs
-    classpath = sourceSets.test.runtimeClasspath
-    shouldRunAfter test
-    dependsOn(':opendcs-rest-api:war')
-    dependsOn(':opendcs-web-ui:war')
-    dependsOn generateConfig
-    dependsOn downloadAndUnzipInstaller
-    jvmArgs += "-Dorg.apache.tomcat.util.digester.PROPERTY_SOURCE=org.apache.tomcat.util.digester.EnvironmentPropertySource"
-    jvmArgs += "-Dcatalina.base=${layout.buildDirectory.file("tomcat")}"
-    jvmArgs += "-Dopendcs.test.integration.db=OpenDCS-Postgres"
-    def restWar = project(':opendcs-rest-api').tasks.named('war').get().archiveFile.get().asFile.getAbsolutePath()
-    def guiWar = project(':opendcs-web-ui').tasks.named('war').get().archiveFile.get().asFile.getAbsolutePath()
-    jvmArgs += "-Dopendcs.restapi.warfile=${restWar}"
-    jvmArgs += "-Dopendcs.gui.warfile=${guiWar}"
-    def outputDir = downloadAndUnzipInstaller.outputs.files.singleFile
-    systemProperties.put("DCSTOOL_HOME", outputDir)
-    systemProperties.put("DCSTOOL_USERDIR", "build/resources/test/tomcat/conf")
-    systemProperties.put("java.util.logging.config.file", "build/tomcat/conf/logging.properties")
-    finalizedBy integrationTestReportOpenTSDB
-}
+def commonJacocoExcludes = [
+  "**/easy_install/**",
+  "**/python_packages",
+  "**/certifi/**",
+  "**/chardet/**",
+  "**/urllib3/**",
+  "**/requests/**",
+  "**/idna/**",
+  "**/pkg_resources/**"
+]
 
-tasks.register('integrationTestCWMS', Test) {
-    group "verification"
-    useJUnitPlatform {
-        includeTags "integration"
-        includeTags "integration-cwms-only"
-    }
-    // with gradle 9.2 it seems we need to set these manually
-    testClassesDirs = sourceSets.test.output.classesDirs
-    classpath = sourceSets.test.runtimeClasspath
-    shouldRunAfter test
-    dependsOn(':opendcs-rest-api:war')
-    dependsOn(':opendcs-web-ui:war')
-    dependsOn generateConfig
-    dependsOn downloadAndUnzipInstaller
-    jvmArgs += "-Dorg.apache.tomcat.util.digester.PROPERTY_SOURCE=org.apache.tomcat.util.digester.EnvironmentPropertySource"
-    jvmArgs += "-Dcatalina.base=${layout.buildDirectory.file("tomcat")}"
-    jvmArgs += "-Dopendcs.test.integration.db=CWMS-Oracle"
-    jvmArgs += "-Dtestcontainer.cwms.bypass.cwms.pass=dcs_user"
-    def restWar = project(':opendcs-rest-api').tasks.named('war').get().archiveFile.get().asFile.getAbsolutePath()
-    def guiWar = project(':opendcs-web-ui').tasks.named('war').get().archiveFile.get().asFile.getAbsolutePath()
-    jvmArgs += "-Dopendcs.restapi.warfile=${restWar}"
-    jvmArgs += "-Dopendcs.gui.warfile=${guiWar}"
-    def outputDir = downloadAndUnzipInstaller.outputs.files.singleFile
-    systemProperties.put("DCSTOOL_HOME", outputDir)
-    systemProperties.put("DCSTOOL_USERDIR", "build/resources/test/tomcat/conf")
-    systemProperties.put("java.util.logging.config.file", "build/tomcat/conf/logging.properties")
-    finalizedBy integrationTestReportCWMS
-}
+def testEngines = (project.findProperty("opendcs.test.engine")?: "OpenDCS-Postgres,OpenDCS-Oracle,CWMS-Oracle").split(",")
 
+testEngines.each { engine  ->
 
-tasks.register('integrationTestReportCWMS', JacocoReport) {
-    group = "verification"
-    dependsOn tasks.named('integrationTestCWMS')
-    additionalSourceDirs.setFrom(files(project(':opendcs-rest-api').sourceSets.main.allSource.srcDirs))
-    executionData = files(
-            layout.buildDirectory.dir("jacoco/integrationTestCWMS.exec")
-    )
-    classDirectories.setFrom(files(
-            project(':opendcs-rest-api').sourceSets.main.output,
-            sourceSets.main.output
-    ))
-    reports {
-        xml.required.set(true)
-    }
-}
+    def tmpdir = "${project.layout.buildDirectory.get()}/runs/${engine}/tmp"
 
-tasks.register('integrationTestReportOpenTSDB', JacocoReport) {
-    group = "verification"
-    dependsOn tasks.named('integrationTestOpenTSDB')
-    additionalSourceDirs.setFrom(files(project(':opendcs-rest-api').sourceSets.main.allSource.srcDirs))
-    executionData = files(
-            layout.buildDirectory.dir("jacoco/integrationTestOpenTSDB.exec")
-    )
-    classDirectories.setFrom(files(
-            project(':opendcs-rest-api').sourceSets.main.output,
-            sourceSets.main.output
-    ))
-    reports {
-        xml.required.set(true)
+    def task = tasks.register("test"+engine.replace("-",""), Test) { task ->
+        group "verification"
+        dependsOn odcsInstall
+        dependsOn(':opendcs-rest-api:war')
+        dependsOn(':opendcs-web-ui:war')
+        dependsOn genConfig
+        useJUnitPlatform()
+
+        // with gradle 9.2 it seems we need to set these manually
+        testClassesDirs = sourceSets.test.output.classesDirs
+        classpath = sourceSets.test.runtimeClasspath
+
+        enabled = gradle.startParameter.taskNames.contains(":testing:" + project.name + ":test") ||
+                  gradle.startParameter.taskNames.contains(":testing:" + project.name + ":" +task.name)
+        doFirst {
+            project.mkdir(tmpdir)
+        }
+
+        inputs.property "opendcs.test.engine", engine
+
+        systemProperties += project.properties.findAll {k, v -> k.startsWith("opendcs")}
+        systemProperties += project.properties.findAll {k, v -> k.startsWith("testcontainer")}
+        systemProperties += ["opendcs.test.engine": engine]
+
+        jvmArgs += "-Dorg.apache.tomcat.util.digester.PROPERTY_SOURCE=org.apache.tomcat.util.digester.EnvironmentPropertySource"
+        jvmArgs += "-Dcatalina.base=${layout.buildDirectory.file("tomcat")}"
+        jvmArgs += "-Dopendcs.test.integration.db=${engine}"
+        def restWar = project(':opendcs-rest-api').tasks.named('war').get().archiveFile.get().asFile.getAbsolutePath()
+        def guiWar = project(':opendcs-web-ui').tasks.named('war').get().archiveFile.get().asFile.getAbsolutePath()
+        jvmArgs += "-Dopendcs.restapi.warfile=${restWar}"
+        jvmArgs += "-Dopendcs.gui.warfile=${guiWar}"
+        def odcsInstallDir = downloadAndUnzipInstaller.outputs.files.singleFile
+        systemProperties.put("DCSTOOL_HOME", odcsInstallDir)
+        systemProperties.put("DCSTOOL_USERDIR", "build/resources/test/tomcat/conf")
+        systemProperties.put("java.util.logging.config.file", "build/tomcat/conf/logging.properties")
+        reports {
+            html {}
+            junitXml {}
+        }
+        jacoco {
+            excludes += commonJacocoExcludes
+        }
     }
+    test.dependsOn task
+
+    def jtr = tasks.register("jacocoTestReport"+engine.replace("-",""), JacocoReport) {
+        dependsOn task
+        sourceSets project(":opendcs-rest-api").sourceSets.main
+        executionData = files("${buildDir}/jacoco/test"+engine.replace("-","")+".exec") // Use the .exec file from the custom test task
+        reports {
+            html {
+                outputLocation = jacoco.reportsDirectory.dir("jacoco-${engine}-html")
+            }
+            xml {
+                outputLocation = jacoco.reportsDirectory.file("jacoco-${engine}.xml")
+            }
+
+        }
+
+        classDirectories.setFrom(files(classDirectories.files.collect {
+            fileTree(dir: it, exclude: commonJacocoExcludes)
+        }))
+
+    }
+
+    task.configure {
+        finalizedBy jtr
+    }
+
 }
 
 test {
     useJUnitPlatform {
-        excludeTags "integration"
-        excludeTags "integration-opentsdb-only"
-        excludeTags "integration-cwms-only"
+    exclude '**/*'
     }
 }
 
