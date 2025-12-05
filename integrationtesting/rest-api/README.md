@@ -21,5 +21,5 @@ environment variables for the database connection information and CWMS office id
 REST API config files can be found at [src/test/resources/rest-api/conf](src/test/resources/rest-api/conf)
 which includes separate configurations for CWMS and OpenTSDB.
 
-Web Client config files can be found at [src/test/resources/web-client/conf](src/test/resources/web-client/conf)
+Web Client config files can be found at [src/test/resources/web-ui/conf](src/test/resources/web-ui/conf)
 which includes separate configurations for CWMS and OpenTSDB.
