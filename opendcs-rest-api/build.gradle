@@ -57,7 +57,7 @@ dependencies {
     implementation(libs.slf4j.api)
     implementation(libs.jackson)
     runtimeOnly(libs.slf4j.jdk14)
-    runtimeOnly(libs.jackson.annotations) // updated for swagger compatibility
+    runtimeOnly(libs.com.faster.xml.jackson.annotations) // updated for swagger compatibility
 
     webjars(libs.swagger.ui)
 
