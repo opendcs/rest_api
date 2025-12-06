@@ -174,7 +174,8 @@ def commonJacocoExcludes = [
   "**/pkg_resources/**"
 ]
 
-def testEngines = (project.findProperty("opendcs.test.engine")?: "OpenDCS-Postgres,OpenDCS-Oracle,CWMS-Oracle").split(",")
+// do need to add OpenDCS-Oracle support eventually.
+def testEngines = (project.findProperty("opendcs.test.engine")?: "OpenDCS-Postgres,CWMS-Oracle").split(",")
 
 testEngines.each { engine  ->
 
