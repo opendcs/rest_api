@@ -22,13 +22,16 @@ import io.restassured.filter.log.LogDetail;
 import io.restassured.filter.session.SessionFilter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.TestTemplate;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.opendcs.fixtures.annotations.EnableIfTsDb;
+import org.opendcs.odcsapi.fixtures.DatabaseContextProvider;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 
 @EnableIfTsDb({"OpenDCS-Postgres"})
+@ExtendWith(DatabaseContextProvider.class)
 final class FormAuthIT
 {
 

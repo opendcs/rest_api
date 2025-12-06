@@ -33,10 +33,13 @@ import io.swagger.v3.oas.models.parameters.RequestBody;
 import io.swagger.v3.oas.models.responses.ApiResponse;
 import io.swagger.v3.parser.OpenAPIV3Parser;
 import org.junit.jupiter.api.TestTemplate;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.opendcs.odcsapi.fixtures.DatabaseContextProvider;
 
 import static io.restassured.RestAssured.given;
 import static org.junit.jupiter.api.Assertions.assertAll;
 
+@ExtendWith(DatabaseContextProvider.class)
 final class AuthorizationTestIT
 {
 

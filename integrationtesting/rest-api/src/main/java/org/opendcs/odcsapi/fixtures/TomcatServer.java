@@ -234,11 +234,10 @@ public final class TomcatServer implements AutoCloseable
 		Iterator<ConfigurationProvider> configs = loader.iterator();
 
 		ConfigurationProvider configProvider = null;
-		System.out.println("DbType " + dbType.name());
+		log.info("DbType {}", dbType.name());
 		while(configs.hasNext())
 		{
 			ConfigurationProvider configProviderTmp = configs.next();
-			System.out.println("Current provider: " + configProviderTmp.getImplementation());
 			if(configProviderTmp.getImplementation().equals(dbType.getProvider()))
 			{
 				configProvider = configProviderTmp;
@@ -269,14 +268,13 @@ public final class TomcatServer implements AutoCloseable
 			for(var k: props.keySet())
 			{
 				final String value = props.getProperty(k.toString(), null);
-				if (k != null && value != null)
+				if (value != null)
 				{
 					stmt.setString(1, k.toString());
 					stmt.setString(2, value);
 					stmt.executeUpdate();
 				}
 			}
-			//stmt.executeBatch();
 		}
 		catch (Throwable ex)
 		{
@@ -308,38 +306,7 @@ public final class TomcatServer implements AutoCloseable
 
 	private static void setupClientUser(DbType dbType)
 	{
-		if(CwmsOracleConfiguration.NAME.equals(dbType.getProvider()))
-		{
-			// I have no idea why this is suddenly required but it was also affecting operations in
-			// runtime test environments where the required entries weren't present.
-			String unlockUser = "begin cwms_sec.unlock_user(?,?); end;";
-			String userPermissions = "begin execute immediate 'grant web_user to ' || ?; end;";
-			String dbOffice = System.getProperty(DB_OFFICE);
-			String setWebUserPermissions = "begin\n" +
-					"   cwms_sec.add_user_to_group(?, 'CWMS User Admins',?) ;\n" +
-					"   commit;\n" +
-					"end;";
-			try(Connection connection = DriverManager.getConnection(System.getProperty(DB_URL), "CWMS_20",
-					System.getProperty(DB_PASSWORD));
-				PreparedStatement unlockUserStmt = connection.prepareStatement(unlockUser);
-				PreparedStatement userPermissionsStmt = connection.prepareStatement(userPermissions);
-				PreparedStatement setWebUserPermissionsStmt = connection.prepareStatement(setWebUserPermissions))
-			{
-				final String username = System.getProperty(DB_USERNAME);
-				unlockUserStmt.setString(1, username);
-				unlockUserStmt.setString(2, dbOffice);
-				unlockUserStmt.executeQuery();
-				userPermissionsStmt.setString(1, username);
-				userPermissionsStmt.executeQuery();
-				setWebUserPermissionsStmt.setString(1, username);
-				setWebUserPermissionsStmt.setString(2, dbOffice);
-				setWebUserPermissionsStmt.executeQuery();
-			}
-			catch(SQLException ex)
-			{
-				log.atDebug().setCause(ex).log("Error setting up client user");
-			}
-		}
+		// logic will get moved to baseline configuration after merge
 	}
 
 	public Manager getTestSessionManager()
