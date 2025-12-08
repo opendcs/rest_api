@@ -5,13 +5,13 @@ servlet-api = "6.1.0" #Updating this further will require a change to the jakart
 slf4j = { strictly = "2.0.17" }
 jersey = "4.0.0"
 
-swagger = "2.2.28"
+swagger = "2.2.41"
 swagger-ui = "5.18.3"
 swagger-parser = "2.1.25"
 rs-api = "4.0.0"
 jackson = "2.20.1"
 jackson-annotations = "2.20"
-selenium = "3.141.59"
+selenium = "4.38.0"
 nimbus = "9.41.1"
 jwt = "4.4.0"
 auto-service = "1.1.1"
@@ -67,6 +67,7 @@ jakarta-xml-bind-api = { module = "jakarta.xml.bind:jakarta.xml.bind-api", versi
 org-glassfish-jaxb-runtime = {module = "org.glassfish.jaxb:jaxb-runtime", version.ref = "jaxb" }
 
 selenium = { module = "org.seleniumhq.selenium:selenium-java", version.ref = "selenium" }
+web-driver-manager = { module = "io.github.bonigarcia:webdrivermanager", version = "6.3.3" }
 nimbus = { module = "com.nimbusds:nimbus-jose-jwt", version.ref = "nimbus" }
 jwt = { module = "com.auth0:java-jwt", version.ref = "jwt" }
 auto-service = { module = "com.google.auto.service:auto-service", version.ref = "auto-service" }
