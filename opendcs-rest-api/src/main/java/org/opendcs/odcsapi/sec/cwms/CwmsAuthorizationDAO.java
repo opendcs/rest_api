@@ -24,6 +24,8 @@ import java.util.Set;
 
 import javax.sql.DataSource;
 
+import org.opendcs.database.api.DataTransaction;
+import org.opendcs.database.api.OpenDcsDataException;
 import org.opendcs.odcsapi.dao.ApiAuthorizationDAI;
 import org.opendcs.odcsapi.dao.DbException;
 import org.opendcs.odcsapi.sec.OpenDcsApiRoles;
@@ -33,15 +35,9 @@ import org.slf4j.Logger;
 public final class CwmsAuthorizationDAO implements ApiAuthorizationDAI
 {
 	private static final Logger log = OpenDcsLoggerFactory.getLogger();
-	private final DataSource dataSource;
-
-	public CwmsAuthorizationDAO(DataSource dataSource)
-	{
-		this.dataSource = dataSource;
-	}
 
 	@Override
-	public Set<OpenDcsApiRoles> getRoles(String username, String organizationId) throws DbException
+	public Set<OpenDcsApiRoles> getRoles(DataTransaction dataTransaction, String username, String organizationId) throws DbException
 	{
 		Set<OpenDcsApiRoles> roles = EnumSet.noneOf(OpenDcsApiRoles.class);
 		roles.add(OpenDcsApiRoles.ODCS_API_GUEST);
@@ -57,7 +53,7 @@ public final class CwmsAuthorizationDAO implements ApiAuthorizationDAI
 				"            upper(?) " +
 				"      end " +
 				"  and is_member = 'T'";
-		try(Connection c = dataSource.getConnection())
+		try(Connection c = dataTransaction.connection(Connection.class).orElseThrow())
 		{
 			try(PreparedStatement statement = c.prepareStatement(q))
 			{
@@ -85,7 +81,7 @@ public final class CwmsAuthorizationDAO implements ApiAuthorizationDAI
 			}
 			return roles;
 		}
-		catch(SQLException ex)
+		catch(SQLException | OpenDcsDataException ex)
 		{
 			throw new DbException("Unable to determine user roles for user: " + username + " and office: " + organizationId, ex);
 		}

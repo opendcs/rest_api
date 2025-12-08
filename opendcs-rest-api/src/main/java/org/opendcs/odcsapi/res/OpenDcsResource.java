@@ -55,13 +55,13 @@ public class OpenDcsResource
 	{
 		DataSource dataSource = getDataSource();
 		Principal userPrincipal = request.getSecurityContext().getUserPrincipal();
-		String clientId = null;
+		String username = null;
 		if(userPrincipal != null)
 		{
-			clientId = userPrincipal.getName();
+			username = userPrincipal.getName();
 		}
 		String organization = request.getHeaders().getFirst("X-ORGANIZATION-ID");
-		return OpenDcsDatabaseFactory.createDb(dataSource, organization, clientId);
+		return OpenDcsDatabaseFactory.createDb(dataSource, organization, username);
 	}
 
 	protected final DataSource getDataSource()

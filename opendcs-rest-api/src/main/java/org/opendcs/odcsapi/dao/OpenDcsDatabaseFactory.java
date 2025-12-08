@@ -15,11 +15,7 @@
 
 package org.opendcs.odcsapi.dao;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.SQLRecoverableException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -28,7 +24,6 @@ import java.util.Properties;
 import javax.sql.DataSource;
 
 import decodes.db.DatabaseException;
-import decodes.util.DecodesSettings;
 import org.opendcs.database.DatabaseService;
 import org.opendcs.database.api.OpenDcsDatabase;
 import org.opendcs.odcsapi.dao.datasource.ConnectionPreparer;
@@ -41,6 +36,11 @@ import org.opendcs.odcsapi.dao.datasource.SessionTimeZonePreparer;
 public final class OpenDcsDatabaseFactory
 {
 
+	/**
+	 * The plan going forward is to add the organization as to a database context mechanism
+	 * Right now the office id is set statefully in too many places to allow for reuse
+	 * of the OpenDcsDatabase instance.
+	 */
 	private static final Map<String, OpenDcsDatabase> dbCache = new HashMap<>();
 
 	private OpenDcsDatabaseFactory()
@@ -76,7 +76,7 @@ public final class OpenDcsDatabaseFactory
 			{
 				properties.put("CwmsOfficeId", organization);
 			}
-			OpenDcsDatabase newDb = DatabaseService.getDatabaseFor(wrappedDataSource);//, properties);
+			OpenDcsDatabase newDb = DatabaseService.getDatabaseFor(wrappedDataSource, properties);
 			dbCache.put(organization, newDb);
 			return newDb;
 		}
@@ -89,28 +89,5 @@ public final class OpenDcsDatabaseFactory
 			}
 			throw new IllegalStateException("Error establishing database instance through data source.", ex);
 		}
-	}
-
-	public static String getDatabaseType(DataSource dataSource)
-	{
-		String databaseType = "";
-		try (Connection conn = dataSource.getConnection();
-			 PreparedStatement stmt = conn.prepareStatement("select prop_value from tsdb_property WHERE prop_name = 'editDatabaseType'");
-			 ResultSet rs = stmt.executeQuery())
-		{
-			if (rs.next())
-			{
-				databaseType = rs.getString("prop_value");
-			}
-		}
-		catch(SQLRecoverableException ex)
-		{
-			throw new IllegalStateException("Error connecting to the database.", ex);
-		}
-		catch (SQLException ex)
-		{
-			throw new IllegalStateException("editDatabaseType not set in tsdb_property table. Cannot determine the type of database.", ex);
-		}
-		return databaseType;
 	}
 }

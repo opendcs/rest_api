@@ -16,46 +16,35 @@
 package org.opendcs.odcsapi.sec.basicauth;
 
 import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Base64;
-import java.util.Properties;
 import java.util.Set;
-import jakarta.annotation.security.RolesAllowed;
+import javax.sql.DataSource;
 
+import decodes.util.DecodesSettings;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.StringToClassMapItem;
+import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
-
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.annotation.security.RolesAllowed;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
-import javax.sql.DataSource;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
-import jakarta.ws.rs.ServerErrorException;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
-
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.StringToClassMapItem;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.ExampleObject;
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.tags.Tag;
+import org.opendcs.database.api.DataTransaction;
+import org.opendcs.database.api.OpenDcsDatabase;
 import org.opendcs.odcsapi.beans.Status;
 import org.opendcs.odcsapi.dao.ApiAuthorizationDAI;
 import org.opendcs.odcsapi.errorhandling.WebAppException;
@@ -67,7 +56,6 @@ import org.opendcs.odcsapi.util.ApiConstants;
 import org.opendcs.utils.logging.OpenDcsLoggerFactory;
 import org.slf4j.Logger;
 
-import static org.opendcs.odcsapi.dao.OpenDcsDatabaseFactory.getDatabaseType;
 import static org.opendcs.odcsapi.res.DataSourceContextCreator.DATA_SOURCE_ATTRIBUTE_KEY;
 
 @Path("/")
@@ -273,10 +261,11 @@ public final class BasicAuthResource extends OpenDcsResource
 
 	private Set<OpenDcsApiRoles> getUserRoles(String username, String organizationId)
 	{
-		try
+		OpenDcsDatabase db = createDb();
+		ApiAuthorizationDAI dao = getAuthDao(db);
+		try(DataTransaction tx = db.newTransaction())
 		{
-			ApiAuthorizationDAI dao = getAuthDao();
-			return dao.getRoles(username, organizationId);
+			return dao.getRoles(tx, username, organizationId);
 		}
 		catch(Exception ex)
 		{
@@ -284,18 +273,17 @@ public final class BasicAuthResource extends OpenDcsResource
 		}
 	}
 
-	private ApiAuthorizationDAI getAuthDao()
+	private ApiAuthorizationDAI getAuthDao(OpenDcsDatabase db)
 	{
-		DataSource dataSource = getDataSource();
-		String databaseType = getDatabaseType(dataSource);
+		String databaseType = db.getSettings(DecodesSettings.class).orElseThrow().editDatabaseType;
 		// Username+Password login only supported by OpenTSDB
 		if("opentsdb".equalsIgnoreCase(databaseType))
 		{
-			return new OpenTsdbAuthorizationDAO(dataSource);
+			return new OpenTsdbAuthorizationDAO();
 		}
 		else if("cwms".equalsIgnoreCase(databaseType))
 		{
-			return new CwmsAuthorizationDAO(dataSource);
+			return new CwmsAuthorizationDAO();
 		}
 		throw new UnsupportedOperationException("Endpoint is unsupported by the OpenDCS REST API.");
 	}

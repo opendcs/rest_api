@@ -15,11 +15,7 @@
 
 package org.opendcs.odcsapi.sec;
 
-import java.sql.Connection;
-import java.sql.SQLException;
-
-import javax.sql.DataSource;
-
+import decodes.util.DecodesSettings;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -32,14 +28,14 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
-import org.opendcs.database.SimpleTransaction;
+import org.opendcs.database.api.DataTransaction;
+import org.opendcs.database.api.OpenDcsDataException;
+import org.opendcs.database.api.OpenDcsDatabase;
 import org.opendcs.odcsapi.beans.Status;
 import org.opendcs.odcsapi.dao.DbException;
 import org.opendcs.odcsapi.dao.cwms.CwmsOrganizationDao;
 import org.opendcs.odcsapi.res.OpenDcsResource;
 import org.opendcs.odcsapi.util.ApiConstants;
-
-import static org.opendcs.odcsapi.dao.OpenDcsDatabaseFactory.getDatabaseType;
 
 @Path("/")
 public final class OrganizationResource extends OpenDcsResource
@@ -64,19 +60,18 @@ public final class OrganizationResource extends OpenDcsResource
 	)
 	public Response getOrganizations() throws DbException
 	{
-		DataSource dataSource = getDataSource();
-		String databaseType = getDatabaseType(dataSource);
-		if("cwms".equalsIgnoreCase(databaseType))
+		OpenDcsDatabase db = createDb();
+		if("cwms".equalsIgnoreCase(db.getSettings(DecodesSettings.class).orElseThrow().editDatabaseType))
 		{
-			try(Connection connection = dataSource.getConnection())
+			try(DataTransaction tx = db.newTransaction())
 			{
 
 				CwmsOrganizationDao cwmsOrganizationDao = new CwmsOrganizationDao();
 				return Response.status(HttpServletResponse.SC_OK)
-						.entity(cwmsOrganizationDao.retrieveOrganizationIds(new SimpleTransaction(connection)))
+						.entity(cwmsOrganizationDao.retrieveOrganizationIds(tx))
 						.build();
 			}
-			catch(SQLException e)
+			catch(OpenDcsDataException e)
 			{
 				throw new DbException("Error establishing connection to the database.", e);
 			}

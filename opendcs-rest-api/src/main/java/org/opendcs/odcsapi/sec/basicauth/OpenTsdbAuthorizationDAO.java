@@ -27,6 +27,8 @@ import javax.sql.DataSource;
 import opendcs.dao.DaoBase;
 import opendcs.dao.DatabaseConnectionOwner;
 import opendcs.opentsdb.OpenTsdb;
+import org.opendcs.database.api.DataTransaction;
+import org.opendcs.database.api.OpenDcsDataException;
 import org.opendcs.odcsapi.dao.ApiAuthorizationDAI;
 import org.opendcs.odcsapi.dao.DbException;
 import org.opendcs.odcsapi.sec.OpenDcsApiRoles;
@@ -36,15 +38,9 @@ import org.opendcs.utils.logging.OpenDcsLoggerFactory;
 public final class OpenTsdbAuthorizationDAO implements ApiAuthorizationDAI
 {
 	private static final Logger log = OpenDcsLoggerFactory.getLogger();
-	private final DataSource dataSource;
-
-	public OpenTsdbAuthorizationDAO(DataSource dataSource)
-	{
-		this.dataSource = dataSource;
-	}
 
 	@Override
-	public Set<OpenDcsApiRoles> getRoles(String username, String unused) throws DbException
+	public Set<OpenDcsApiRoles> getRoles(DataTransaction transaction, String username, String unused) throws DbException
 	{
 		Set<OpenDcsApiRoles> roles = EnumSet.noneOf(OpenDcsApiRoles.class);
 		roles.add(OpenDcsApiRoles.ODCS_API_GUEST);
@@ -52,7 +48,8 @@ public final class OpenTsdbAuthorizationDAO implements ApiAuthorizationDAI
 		String q = "select pm.roleid, pr.rolname from pg_auth_members pm, pg_roles pr"
 				+ " where pm.member = (select oid from pg_roles where upper(rolname) = upper(?))"
 				+ " and pm.roleid = pr.oid";
-		try(Connection c = dataSource.getConnection())
+
+		try(Connection c = transaction.connection(Connection.class).orElseThrow())
 		{
 			try(PreparedStatement statement = c.prepareStatement(q))
 			{
@@ -77,7 +74,7 @@ public final class OpenTsdbAuthorizationDAO implements ApiAuthorizationDAI
 			}
 			return roles;
 		}
-		catch(SQLException ex)
+		catch(SQLException | OpenDcsDataException ex)
 		{
 			throw new DbException("Unable to determine user roles in the database.", ex);
 		}
