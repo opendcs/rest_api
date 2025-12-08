@@ -40,6 +40,7 @@ dependencies {
     testImplementation(libs.nimbus)
     testImplementation(libs.jwt)
     testImplementation(libs.swagger.parser)
+    testImplementation(libs.swagger.models)
     testImplementation(libs.selenium)
     testImplementation(libs.web.driver.manager)
     testRuntimeOnly(libs.byte.buddy)
@@ -66,6 +67,8 @@ configurations.all {
     exclude group: "javax.xml.bind", module: "jaxb-api"
     exclude group: "javax.transaction", module: "jta"
     exclude group: "javax.xml.stream", module: "stax-api"
+    exclude group: "io.swagger.core.v3", module: "swagger-core"
+    exclude group: "io.swagger.core.v3", module: "swagger-models"
 
 }
 
