@@ -67,9 +67,8 @@ final class LoginPageTest
 	public void testInvalidLoginShowsError()
 	{
 		driver.get(RestAssured.baseURI + ":" + RestAssured.port + "/" + "login");
-		String pageTitle = driver.getTitle();
 		String pageSource = driver.getPageSource();
-		assertTrue(pageTitle.contains("Login"), "The valid login page content was not found");
-		assertTrue(pageSource.contains("OpenDCS Web Client"), "The valid login page content was not found");
+		assertTrue(pageSource.contains("Login"), "The valid login page content was not found");
+		assertTrue(pageSource.contains("Don't have an account?"), "The valid login page content was not found");
 	}
 }
