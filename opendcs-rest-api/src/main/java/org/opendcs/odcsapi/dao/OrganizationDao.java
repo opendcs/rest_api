@@ -23,5 +23,5 @@ import org.opendcs.odcsapi.beans.ApiOrganization;
 
 public interface OrganizationDao extends OpenDcsDao
 {
-	List<ApiOrganization> retrieveOrganizationIds(DataTransaction tx) throws DbException;
+	List<ApiOrganization> retrieveOrganizationIds(DataTransaction tx, int limit, int offset) throws DbException;
 }

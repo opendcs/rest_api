@@ -107,7 +107,7 @@ public class DatabaseSetupExtension implements BeforeEachCallback
 				log.debug("Server is up!");
 				break;
 			}
-			catch(Throwable ex)
+			catch(AssertionError ex)
 			{
 				log.atDebug().setCause(ex).log("Waiting for the server to start...");
 				Thread.sleep(100);//NOSONAR
@@ -125,10 +125,11 @@ public class DatabaseSetupExtension implements BeforeEachCallback
 		{
 			String userPermissions = "begin execute immediate 'grant web_user to " + System.getProperty("DB_USERNAME") + "'; end;";
 			String dbOffice = System.getProperty("DB_OFFICE");
-			String setWebUserPermissions = "begin\n" +
-					"   cwms_sec.add_user_to_group(?, 'CWMS User Admins',?) ;\n" +
-					"   commit;\n" +
-					"end;";
+			String setWebUserPermissions = """
+					begin
+					   cwms_sec.add_user_to_group(?, 'CWMS User Admins',?) ;
+					   commit;
+					end;""";
 			try(Connection connection = DriverManager.getConnection(System.getProperty("DB_URL"), "CWMS_20",
 					System.getProperty("DB_PASSWORD"));
 				PreparedStatement stmt1 = connection.prepareStatement(userPermissions);

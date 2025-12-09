@@ -25,9 +25,11 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.ws.rs.DefaultValue;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.EntityTag;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
@@ -62,7 +64,8 @@ public final class OrganizationResource extends OpenDcsResource
 			},
 			tags = {"REST - Authentication and Authorization"}
 	)
-	public Response getOrganizations() throws DbException
+	public Response getOrganizations(@QueryParam("limit") @DefaultValue("-1") int limit,
+									 @QueryParam("offset") @DefaultValue("0") int offset) throws DbException
 	{
 		OpenDcsDatabase db = createDb();
 		if("cwms".equalsIgnoreCase(db.getSettings(DecodesSettings.class).orElseThrow().editDatabaseType))
@@ -71,7 +74,7 @@ public final class OrganizationResource extends OpenDcsResource
 			{
 
 				CwmsOrganizationDao cwmsOrganizationDao = new CwmsOrganizationDao();
-				List<ApiOrganization> organizations = cwmsOrganizationDao.retrieveOrganizationIds(tx);
+				List<ApiOrganization> organizations = cwmsOrganizationDao.retrieveOrganizationIds(tx, limit, offset);
 				//Using basic/faster hash instead of more complex hashing (SHA-256/Base64/CRC32).
 				//Not really worried about hash collisions, and the list is very static
 				String etagString = Integer.toHexString(organizations.hashCode());

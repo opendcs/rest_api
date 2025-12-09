@@ -29,13 +29,23 @@ public final class CwmsOrganizationDao implements OrganizationDao
 {
 
 	@Override
-	public List<ApiOrganization> retrieveOrganizationIds(DataTransaction tx) throws DbException
+	public List<ApiOrganization> retrieveOrganizationIds(DataTransaction tx, int limit, int offset) throws DbException
 	{
 		try
 		{
 			Handle handle = tx.connection(Handle.class).orElseThrow();
-			try(Query query = handle.createQuery("SELECT OFFICE_ID, LONG_NAME, REPORT_TO_OFFICE_ID FROM CWMS_V_OFFICE"))
+			String queryStr = "SELECT OFFICE_ID, LONG_NAME, REPORT_TO_OFFICE_ID FROM CWMS_V_OFFICE";
+			if (limit > 0)
 			{
+				queryStr += " OFFSET :offset ROWS FETCH NEXT :limit ROWS ONLY";
+			}
+			try(Query query = handle.createQuery(queryStr))
+			{
+				if (limit > 0)
+				{
+					query.bind("limit", limit);
+					query.bind("offset", offset);
+				}
 				return query.map((rs, ctx) -> new ApiOrganization(rs.getString(1), rs.getString(2), rs.getString(3)))
 					.list();
 			}
