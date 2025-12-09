@@ -15,9 +15,11 @@
 
 package org.opendcs.odcsapi.res;
 
+import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.servlet.ServletContext;
 import javax.sql.DataSource;
 
+import jakarta.ws.rs.HeaderParam;
 import jakarta.ws.rs.container.ContainerRequestContext;
 import jakarta.ws.rs.core.Context;
 
@@ -42,6 +44,10 @@ import static org.opendcs.odcsapi.util.ApiConstants.ORGANIZATION_HEADER;
 )
 public class OpenDcsResource
 {
+	@HeaderParam(ORGANIZATION_HEADER)
+	@Parameter(description = "Organization ID for the request", required = true)
+	protected String organizationId;
+
 	private static final String UNSUPPORTED_OPERATION_MESSAGE = "Endpoint is unsupported by the OpenDCS REST API.";
 
 	@Context
@@ -53,8 +59,7 @@ public class OpenDcsResource
 	protected final synchronized OpenDcsDatabase createDb()
 	{
 		DataSource dataSource = getDataSource();
-		String organization = request.getHeaders().getFirst(ORGANIZATION_HEADER);
-		return OpenDcsDatabaseFactory.createDb(dataSource, organization);
+		return OpenDcsDatabaseFactory.createDb(dataSource, organizationId);
 	}
 
 	protected final DataSource getDataSource()

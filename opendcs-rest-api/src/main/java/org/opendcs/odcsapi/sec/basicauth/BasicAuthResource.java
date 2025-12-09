@@ -144,7 +144,6 @@ public final class BasicAuthResource extends OpenDcsResource
 		String authorizationHeader = httpHeaders.getHeaderString(HttpHeaders.AUTHORIZATION);
 		credentials = getCredentials(credentials, authorizationHeader);
 		validateDbCredentials(credentials);
-		String organizationId = httpHeaders.getHeaderString(ORGANIZATION_HEADER);
 		Set<OpenDcsApiRoles> roles = getUserRoles(credentials.getUsername(), organizationId);
 		OpenDcsPrincipal principal = new OpenDcsPrincipal(credentials.getUsername(), roles);
 		HttpSession oldSession = request.getSession(false);
