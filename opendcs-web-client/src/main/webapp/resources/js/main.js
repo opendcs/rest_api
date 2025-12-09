@@ -6,7 +6,6 @@ document.addEventListener("DOMContentLoaded", function(event) {
 	$(document).on('click', '#logoutButton', function (e) {
 		e.preventDefault();
 		console.log("Logging out.");
-        sessionStorage.removeItem("token");
         $.ajax({
             url: `${window.API_URL}/logout`,
             type: "DELETE"
@@ -19,10 +18,6 @@ document.addEventListener("DOMContentLoaded", function(event) {
             let orgId = localStorage.getItem("organizationId");
             if (orgId) {
                 xhr.setRequestHeader("X-ORGANIZATION-ID", orgId);
-            }
-            let token = sessionStorage.getItem("token");
-            if (token != null) {
-                xhr.setRequestHeader('Authorization', `${token}`);
             }
         }
     });

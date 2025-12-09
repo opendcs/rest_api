@@ -1,32 +1,5 @@
-document.addEventListener("DOMContentLoaded", function(event) {
-    console.log("organizations js loaded.");
-    document.getElementById('organization_select')
-        .addEventListener('click', () => {openOrgModal(); });
-    document.getElementById("modal_organizations")
-        .addEventListener('click', (e) => {
-        if (e.target.classList.contains('modal-backdrop')) {
-            closeOrgModal();
-        }
-    });
-
-    document.getElementById("modal_organizations_ok_button")
-        .addEventListener('click', () => {
-        const selectedId = document.getElementById('id_organization').value;
-
-        if (!selectedId) {
-            alert('Please select an organization first.');
-            return;
-        }
-        localStorage.setItem("organizationId", selectedId);
-        closeOrgModal();
-        window.location.reload();
-    });
-});
-
-function openOrgModal() {
-    const myModal = getOrgModal();
-    myModal.show();
-    const $orgSelect = $('#id_organization');
+$(document).ready(function() {
+    const orgSelect = $('#select_organization');
     $.ajax({
         url: `${window.API_URL}/organizations`,
         type: "GET",
@@ -36,33 +9,33 @@ function openOrgModal() {
                 $('<option>')
                     .val(org)
                     .text(org)
-                    .appendTo($orgSelect);
+                    .appendTo(orgSelect);
             });
-            $orgSelect.select2({
+            orgSelect.select2({
                 placeholder: 'Select an organization',
                 allowClear: true,
                 minimumResultsForSearch: 0,
+                dropdownParent: orgSelect.closest('.dropdown-menu'),
                 width: '100%'
             });
-            const orgId = localStorage.getItem("organizationId");
-            if (orgId && $orgSelect.find('option[value="' + orgId + '"]').length) {
-                $orgSelect.val(orgId).trigger('change');
-            }
+            orgSelect.on('select2:select', function (e) {
+                const selectedData = e.params.data;
+                localStorage.setItem('organizationId', selectedData.id);
+                window.location.reload();
+            });
         }
     });
-}
-
-function getOrgModal() {
-    const modalEl = document.getElementById('modal_organizations');
-    let modal = bootstrap.Modal.getInstance(modalEl);
-    if (!modal) {
-        modal = new bootstrap.Modal(modalEl);
-    }
-    return modal;
-}
-
-function closeOrgModal() {
-    const modalEl = document.getElementById('modal_organizations');
-    const myModal = new bootstrap.Modal(modalEl);
-    myModal.hide();
-}
+    $('.submenu-menu').on('mousedown click', function(e) {
+        e.stopPropagation();
+    });
+    $('.dropdown-submenu > .dropdown-toggle').on('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        const submenu = $(this).next('.submenu-menu');
+        $('.submenu-menu.show').not(submenu).removeClass('show');
+        submenu.toggleClass('show');
+    });
+    $('.dropdown').on('hide.bs.dropdown', function () {
+        $(this).find('.submenu-menu.show').removeClass('show');
+    });
+});

@@ -104,7 +104,6 @@ function login()
         },
         success: function(response) {
             sessionStorage.setItem("username", response.username);
-            sessionStorage.setItem("token", response.token);
             localStorage.setItem("organizationId", organization);
             window.location = "platforms";
         },

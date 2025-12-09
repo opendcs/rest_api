@@ -46,7 +46,7 @@ public class OpenDcsResource
 	private static final String UNSUPPORTED_OPERATION_MESSAGE = "Endpoint is unsupported by the OpenDCS REST API.";
 
 	@Context
-	private ContainerRequestContext request;
+	protected ContainerRequestContext request;
 
 	@Context
 	protected ServletContext context;
@@ -54,14 +54,8 @@ public class OpenDcsResource
 	protected final synchronized OpenDcsDatabase createDb()
 	{
 		DataSource dataSource = getDataSource();
-		Principal userPrincipal = request.getSecurityContext().getUserPrincipal();
-		String username = null;
-		if(userPrincipal != null)
-		{
-			username = userPrincipal.getName();
-		}
 		String organization = request.getHeaders().getFirst("X-ORGANIZATION-ID");
-		return OpenDcsDatabaseFactory.createDb(dataSource, organization, username);
+		return OpenDcsDatabaseFactory.createDb(dataSource, organization);
 	}
 
 	protected final DataSource getDataSource()

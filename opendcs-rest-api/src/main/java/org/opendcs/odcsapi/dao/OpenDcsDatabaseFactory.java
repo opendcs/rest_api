@@ -29,7 +29,6 @@ import org.opendcs.database.api.OpenDcsDatabase;
 import org.opendcs.odcsapi.dao.datasource.ConnectionPreparer;
 import org.opendcs.odcsapi.dao.datasource.ConnectionPreparingDataSource;
 import org.opendcs.odcsapi.dao.datasource.DelegatingConnectionPreparer;
-import org.opendcs.odcsapi.dao.datasource.DirectUserPreparer;
 import org.opendcs.odcsapi.dao.datasource.SessionOfficePreparer;
 import org.opendcs.odcsapi.dao.datasource.SessionTimeZonePreparer;
 
@@ -48,7 +47,7 @@ public final class OpenDcsDatabaseFactory
 		throw new AssertionError("Utility class");
 	}
 
-	public static synchronized OpenDcsDatabase createDb(DataSource dataSource, String organization, String user)
+	public static synchronized OpenDcsDatabase createDb(DataSource dataSource, String organization)
 	{
 		OpenDcsDatabase db = dbCache.get(organization);
 		if(db != null)
@@ -59,10 +58,6 @@ public final class OpenDcsDatabaseFactory
 		List<ConnectionPreparer> preparers = new ArrayList<>();
 		preparers.add(new SessionTimeZonePreparer());
 		preparers.add(new SessionOfficePreparer(organization));
-		if(user != null)
-		{
-			preparers.add(new DirectUserPreparer(user));
-		}
 
 		DataSource wrappedDataSource = new ConnectionPreparingDataSource(new DelegatingConnectionPreparer(preparers), dataSource);
 		if(dataSource == null)
