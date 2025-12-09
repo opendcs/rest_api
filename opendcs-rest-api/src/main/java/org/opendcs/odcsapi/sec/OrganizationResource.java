@@ -93,7 +93,7 @@ public final class OrganizationResource extends OpenDcsResource
 			}
 		}
 		return Response.status(HttpServletResponse.SC_NOT_FOUND)
-				.entity(new Status("Session Valid"))
+				.entity(new Status("Implementation does not support organizations yet."))
 				.build();
 	}
 }
