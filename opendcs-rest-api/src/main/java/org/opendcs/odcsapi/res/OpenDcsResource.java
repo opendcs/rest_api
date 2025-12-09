@@ -15,8 +15,6 @@
 
 package org.opendcs.odcsapi.res;
 
-import java.security.Principal;
-
 import jakarta.servlet.ServletContext;
 import javax.sql.DataSource;
 
@@ -32,6 +30,7 @@ import org.opendcs.database.api.OpenDcsDatabase;
 import org.opendcs.odcsapi.dao.OpenDcsDatabaseFactory;
 
 import static org.opendcs.odcsapi.res.DataSourceContextCreator.DATA_SOURCE_ATTRIBUTE_KEY;
+import static org.opendcs.odcsapi.util.ApiConstants.ORGANIZATION_HEADER;
 
 @OpenAPIDefinition(
 		info = @Info(
@@ -54,7 +53,7 @@ public class OpenDcsResource
 	protected final synchronized OpenDcsDatabase createDb()
 	{
 		DataSource dataSource = getDataSource();
-		String organization = request.getHeaders().getFirst("X-ORGANIZATION-ID");
+		String organization = request.getHeaders().getFirst(ORGANIZATION_HEADER);
 		return OpenDcsDatabaseFactory.createDb(dataSource, organization);
 	}
 

@@ -57,6 +57,7 @@ import org.opendcs.utils.logging.OpenDcsLoggerFactory;
 import org.slf4j.Logger;
 
 import static org.opendcs.odcsapi.res.DataSourceContextCreator.DATA_SOURCE_ATTRIBUTE_KEY;
+import static org.opendcs.odcsapi.util.ApiConstants.ORGANIZATION_HEADER;
 
 @Path("/")
 @Tag(name = "REST - Authentication and Authorization", description = "Endpoints for authentication and authorization.")
@@ -143,7 +144,7 @@ public final class BasicAuthResource extends OpenDcsResource
 		String authorizationHeader = httpHeaders.getHeaderString(HttpHeaders.AUTHORIZATION);
 		credentials = getCredentials(credentials, authorizationHeader);
 		validateDbCredentials(credentials);
-		String organizationId = httpHeaders.getHeaderString("X-ORGANIZATION-ID");
+		String organizationId = httpHeaders.getHeaderString(ORGANIZATION_HEADER);
 		Set<OpenDcsApiRoles> roles = getUserRoles(credentials.getUsername(), organizationId);
 		OpenDcsPrincipal principal = new OpenDcsPrincipal(credentials.getUsername(), roles);
 		HttpSession oldSession = request.getSession(false);

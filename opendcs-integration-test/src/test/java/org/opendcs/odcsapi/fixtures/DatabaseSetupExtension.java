@@ -20,6 +20,8 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Objects;
+
+import decodes.util.DecodesSettings;
 import jakarta.servlet.http.HttpServletResponse;
 
 import io.restassured.RestAssured;
@@ -61,6 +63,18 @@ public class DatabaseSetupExtension implements BeforeEachCallback
 	public static TomcatServer getCurrentTomcat()
 	{
 		return currentTomcat;
+	}
+
+	public static String getOrganization()
+	{
+		try
+		{
+			return getCurrentConfig().getOpenDcsDatabase().getSettings(DecodesSettings.class).orElseThrow().CwmsOfficeId;
+		}
+		catch(Throwable e)
+		{
+			throw new IllegalStateException(e);
+		}
 	}
 
 	@Override
