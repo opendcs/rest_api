@@ -25,6 +25,7 @@ import javax.sql.DataSource;
 import decodes.db.DatabaseException;
 import org.opendcs.database.DatabaseService;
 import org.opendcs.database.api.OpenDcsDatabase;
+import org.opendcs.odcsapi.dao.datasource.ConnectionPreparer;
 import org.opendcs.odcsapi.dao.datasource.ConnectionPreparingDataSource;
 import org.opendcs.odcsapi.dao.datasource.DelegatingConnectionPreparer;
 import org.opendcs.odcsapi.dao.cwms.SessionOfficePreparer;
@@ -57,15 +58,14 @@ public final class OpenDcsDatabaseFactory
 		}
 		try
 		{
-			Properties properties = new Properties();
-			if(organization == null)
-			{
-				//Workaround for default loaded data on OpenDcsDatabase creation
-				organization = "HQ";
-			}
+			List<ConnectionPreparer> preparers = List.of(new SessionOfficePreparer(organization));
 			DataSource wrappedDataSource = new ConnectionPreparingDataSource(
-					new DelegatingConnectionPreparer(List.of(new SessionOfficePreparer(organization))), dataSource);
-			properties.put("CwmsOfficeId", organization);
+					new DelegatingConnectionPreparer(preparers), dataSource);
+			Properties properties = new Properties();
+			if(organization != null)
+			{
+				properties.put("CwmsOfficeId", organization);
+			}
 			return DatabaseService.getDatabaseFor(wrappedDataSource, properties);
 		}
 		catch(DatabaseException ex)

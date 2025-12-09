@@ -30,7 +30,7 @@ import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.is;
 
-@Tag("integration")
+@Tag("integration-cwms-only")
 @ExtendWith(DatabaseContextProvider.class)
 final class OrganizationResourcesIT extends BaseIT
 {

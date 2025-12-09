@@ -37,13 +37,27 @@ public class SessionOfficePreparer implements ConnectionPreparer
 	@Override
 	public Connection prepare(Connection conn) throws SQLException
 	{
+		if (!conn.getMetaData().getDatabaseProductName().equalsIgnoreCase("Oracle"))
+		{
+			return conn;
+		}
 		String sessionOffice = this.office;
 		if(sessionOffice == null || !sessionOffice.isBlank())
 		{
 			logger.atDebug().log("Office is null or empty.");
+			//Workaround for default loaded data on OpenDcsDatabase creation
 			sessionOffice = "HQ";
 		}
-		String sql = "BEGIN cwms_ccp_vpd.set_ccp_session_ctx(cwms_util.get_office_code(:1), 2, :2 ); END;";
+		String sql = """
+				declare
+				l_exists NUMBER;
+				begin
+				  select count(*) into l_exists from all_objects where object_name = 'CWMS_CCP_VPD' and object_type = 'PACKAGE';
+				  if l_exists > 0 then
+				    execute immediate 'BEGIN cwms_ccp_vpd.set_ccp_session_ctx(cwms_util.get_office_code(:1), 2, :2 ); END;' using :1, :2;
+				  end if;
+				end;
+				""";
 		try(PreparedStatement setApiUser = conn.prepareStatement(sql))
 		{
 			setApiUser.setString(1, sessionOffice);
