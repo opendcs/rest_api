@@ -13,15 +13,14 @@
  *  limitations under the License.
  */
 
-package org.opendcs.odcsapi.dao;
+package org.opendcs.odcsapi.beans;
 
-import java.util.List;
+import io.swagger.v3.oas.annotations.media.Schema;
 
-import org.opendcs.database.api.DataTransaction;
-import org.opendcs.database.api.OpenDcsDao;
-import org.opendcs.odcsapi.beans.ApiOrganization;
-
-public interface OrganizationDao extends OpenDcsDao
+@Schema(description = "Represents an organization within the system")
+public record ApiOrganization(
+		@Schema(description = "The short unique identifier name of the organization") String name,
+		@Schema(description = "A longer descriptive name of the organization") String description,
+		@Schema(description = "The parent organization's name, if any", nullable = true) String parent)
 {
-	List<ApiOrganization> retrieveOrganizationIds(DataTransaction tx) throws DbException;
 }

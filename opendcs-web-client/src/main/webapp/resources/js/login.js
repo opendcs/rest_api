@@ -50,8 +50,8 @@ $( document ).ready(function() {
         success: function (data) {
             data.forEach(function (org) {
                 $('<option>')
-                    .val(org)
-                    .text(org)
+                    .val(org.name)
+                    .text(org.name)
                     .appendTo($orgSelect);
             });
             $orgSelect.select2({

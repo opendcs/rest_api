@@ -37,7 +37,7 @@ public final class CwmsAuthorizationDAO implements ApiAuthorizationDAI
     private static final Logger log = OpenDcsLoggerFactory.getLogger();
 
 	@Override
-	public Set<OpenDcsApiRoles> getRoles(DataTransaction dataTransaction, String username, String organizationId) throws DbException
+	public Set<OpenDcsApiRoles> getRoles(DataTransaction tx, String username, String organizationId) throws DbException
 	{
         Set<OpenDcsApiRoles> roles = EnumSet.noneOf(OpenDcsApiRoles.class);
         roles.add(OpenDcsApiRoles.ODCS_API_GUEST);
@@ -56,7 +56,7 @@ public final class CwmsAuthorizationDAO implements ApiAuthorizationDAI
                 end
             and avsu.is_member = 'T'
         """;
-		try(Connection c = dataTransaction.connection(Connection.class).orElseThrow();
+		try(Connection c = tx.connection(Connection.class).orElseThrow();
 			PreparedStatement statement = c.prepareStatement(q))
         {
 			statement.setString(1, username);

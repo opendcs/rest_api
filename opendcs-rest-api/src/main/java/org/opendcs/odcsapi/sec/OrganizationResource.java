@@ -16,8 +16,6 @@
 package org.opendcs.odcsapi.sec;
 
 import java.util.List;
-import java.util.concurrent.TimeUnit;
-import java.util.zip.CRC32;
 
 import decodes.util.DecodesSettings;
 import io.swagger.v3.oas.annotations.Operation;
@@ -30,13 +28,13 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
-import jakarta.ws.rs.core.CacheControl;
 import jakarta.ws.rs.core.EntityTag;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import org.opendcs.database.api.DataTransaction;
 import org.opendcs.database.api.OpenDcsDataException;
 import org.opendcs.database.api.OpenDcsDatabase;
+import org.opendcs.odcsapi.beans.ApiOrganization;
 import org.opendcs.odcsapi.beans.Status;
 import org.opendcs.odcsapi.dao.DbException;
 import org.opendcs.odcsapi.dao.cwms.CwmsOrganizationDao;
@@ -73,7 +71,7 @@ public final class OrganizationResource extends OpenDcsResource
 			{
 
 				CwmsOrganizationDao cwmsOrganizationDao = new CwmsOrganizationDao();
-				List<String> organizations = cwmsOrganizationDao.retrieveOrganizationIds(tx);
+				List<ApiOrganization> organizations = cwmsOrganizationDao.retrieveOrganizationIds(tx);
 				//Using basic/faster hash instead of more complex hashing (SHA-256/Base64/CRC32).
 				//Not really worried about hash collisions, and the list is very static
 				String etagString = Integer.toHexString(organizations.hashCode());
@@ -87,9 +85,9 @@ public final class OrganizationResource extends OpenDcsResource
 						.header("Cache-Control", "public, max-age=86400")
 						.build();
 			}
-			catch(OpenDcsDataException e)
+			catch(OpenDcsDataException ex)
 			{
-				throw new DbException("Error establishing connection to the database.", e);
+				throw new DbException("Error establishing connection to the database.", ex);
 			}
 		}
 		return Response.status(HttpServletResponse.SC_NOT_FOUND)

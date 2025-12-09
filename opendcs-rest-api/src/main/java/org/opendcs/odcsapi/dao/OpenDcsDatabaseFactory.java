@@ -30,7 +30,6 @@ import org.opendcs.odcsapi.dao.datasource.ConnectionPreparer;
 import org.opendcs.odcsapi.dao.datasource.ConnectionPreparingDataSource;
 import org.opendcs.odcsapi.dao.datasource.DelegatingConnectionPreparer;
 import org.opendcs.odcsapi.dao.datasource.SessionOfficePreparer;
-import org.opendcs.odcsapi.dao.datasource.SessionTimeZonePreparer;
 
 public final class OpenDcsDatabaseFactory
 {
@@ -49,14 +48,12 @@ public final class OpenDcsDatabaseFactory
 
 	public static synchronized OpenDcsDatabase createDb(DataSource dataSource, String organization)
 	{
-		OpenDcsDatabase db = dbCache.get(organization);
-		if(db != null)
-		{
-			return db;
-		}
+		return dbCache.computeIfAbsent(organization, o -> newDatabase(dataSource, organization));
+	}
 
+	private static OpenDcsDatabase newDatabase(DataSource dataSource, String organization)
+	{
 		List<ConnectionPreparer> preparers = new ArrayList<>();
-		preparers.add(new SessionTimeZonePreparer());
 		preparers.add(new SessionOfficePreparer(organization));
 
 		DataSource wrappedDataSource = new ConnectionPreparingDataSource(new DelegatingConnectionPreparer(preparers), dataSource);
@@ -67,10 +64,12 @@ public final class OpenDcsDatabaseFactory
 		try
 		{
 			Properties properties = new Properties();
-			if(organization != null)
+			if(organization == null)
 			{
-				properties.put("CwmsOfficeId", organization);
+				//Workaround for default loaded data on OpenDcsDatabase creation
+				organization = "HQ";
 			}
+			properties.put("CwmsOfficeId", organization);
 			OpenDcsDatabase newDb = DatabaseService.getDatabaseFor(wrappedDataSource, properties);
 			dbCache.put(organization, newDb);
 			return newDb;

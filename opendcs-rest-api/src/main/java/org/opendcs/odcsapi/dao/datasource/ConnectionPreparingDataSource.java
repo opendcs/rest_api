@@ -4,8 +4,6 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import javax.sql.DataSource;
 
-import org.opendcs.odcsapi.dao.DbException;
-
 public class ConnectionPreparingDataSource extends DelegatingDataSource
 {
 

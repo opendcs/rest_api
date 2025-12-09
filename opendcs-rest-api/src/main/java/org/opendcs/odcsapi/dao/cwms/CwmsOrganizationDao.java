@@ -15,15 +15,12 @@
 
 package org.opendcs.odcsapi.dao.cwms;
 
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.ArrayList;
 import java.util.List;
 
+import org.jdbi.v3.core.Handle;
 import org.opendcs.database.api.DataTransaction;
 import org.opendcs.database.api.OpenDcsDataException;
+import org.opendcs.odcsapi.beans.ApiOrganization;
 import org.opendcs.odcsapi.dao.DbException;
 import org.opendcs.odcsapi.dao.OrganizationDao;
 
@@ -31,26 +28,18 @@ public final class CwmsOrganizationDao implements OrganizationDao
 {
 
 	@Override
-	public List<String> retrieveOrganizationIds(DataTransaction dataTransaction) throws DbException
+	public List<ApiOrganization> retrieveOrganizationIds(DataTransaction tx) throws DbException
 	{
-		try(Connection connection = dataTransaction.connection(Connection.class).orElseThrow();
-			Statement statement = connection.createStatement();
-			ResultSet rs = statement.executeQuery("SELECT OFFICE_ID FROM CWMS_20.CWMS_OFFICE"))
+		try
 		{
-			List<String> ids = new ArrayList<>();
-			while(rs.next())
-			{
-				ids.add(rs.getString(1));
-			}
-			return ids;
+			Handle handle = tx.connection(Handle.class).orElseThrow();
+			return handle.createQuery("SELECT OFFICE_ID, LONG_NAME, REPORT_TO_OFFICE_ID FROM CWMS_V_OFFICE")
+					.map((rs, ctx) -> new ApiOrganization(rs.getString(1), rs.getString(2), rs.getString(3)))
+					.list();
 		}
 		catch(OpenDcsDataException ex)
 		{
 			throw new DbException("Unable to connect to the database.", ex);
-		}
-		catch(SQLException ex)
-		{
-			throw new DbException("Unable to retrieve organization ids", ex);
 		}
 	}
 }

@@ -49,7 +49,7 @@ final class OrganizationResourcesIT extends BaseIT
 			.log().ifValidationFails(LogDetail.ALL, true)
 		.assertThat()
 			.statusCode(is(HttpServletResponse.SC_OK))
-				.body("", hasItem("SPK"))
+				.body("name", hasItem("SPK"))
 		;
 	}
 }
