@@ -53,10 +53,6 @@ public final class OpenDcsDatabaseFactory
 
 	private static OpenDcsDatabase newDatabase(DataSource dataSource, String organization)
 	{
-		List<ConnectionPreparer> preparers = new ArrayList<>();
-		preparers.add(new SessionOfficePreparer(organization));
-
-		DataSource wrappedDataSource = new ConnectionPreparingDataSource(new DelegatingConnectionPreparer(preparers), dataSource);
 		if(dataSource == null)
 		{
 			throw new IllegalStateException("No data source defined in context.xml");
@@ -69,10 +65,13 @@ public final class OpenDcsDatabaseFactory
 				//Workaround for default loaded data on OpenDcsDatabase creation
 				organization = "HQ";
 			}
+			List<ConnectionPreparer> preparers = new ArrayList<>();
+			preparers.add(new SessionOfficePreparer(organization));
+
+			DataSource wrappedDataSource = new ConnectionPreparingDataSource(new DelegatingConnectionPreparer(preparers), dataSource);
 			properties.put("CwmsOfficeId", organization);
-			OpenDcsDatabase newDb = DatabaseService.getDatabaseFor(wrappedDataSource, properties);
-			dbCache.put(organization, newDb);
-			return newDb;
+
+			return DatabaseService.getDatabaseFor(wrappedDataSource, properties);
 		}
 		catch(DatabaseException ex)
 		{

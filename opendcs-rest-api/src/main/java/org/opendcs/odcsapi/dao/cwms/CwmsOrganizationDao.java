@@ -18,6 +18,7 @@ package org.opendcs.odcsapi.dao.cwms;
 import java.util.List;
 
 import org.jdbi.v3.core.Handle;
+import org.jdbi.v3.core.statement.Query;
 import org.opendcs.database.api.DataTransaction;
 import org.opendcs.database.api.OpenDcsDataException;
 import org.opendcs.odcsapi.beans.ApiOrganization;
@@ -33,9 +34,11 @@ public final class CwmsOrganizationDao implements OrganizationDao
 		try
 		{
 			Handle handle = tx.connection(Handle.class).orElseThrow();
-			return handle.createQuery("SELECT OFFICE_ID, LONG_NAME, REPORT_TO_OFFICE_ID FROM CWMS_V_OFFICE")
-					.map((rs, ctx) -> new ApiOrganization(rs.getString(1), rs.getString(2), rs.getString(3)))
+			try(Query query = handle.createQuery("SELECT OFFICE_ID, LONG_NAME, REPORT_TO_OFFICE_ID FROM CWMS_V_OFFICE"))
+			{
+				return query.map((rs, ctx) -> new ApiOrganization(rs.getString(1), rs.getString(2), rs.getString(3)))
 					.list();
+			}
 		}
 		catch(OpenDcsDataException ex)
 		{
