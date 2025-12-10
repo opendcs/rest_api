@@ -7,7 +7,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
 		e.preventDefault();
 		console.log("Logging out.");
         $.ajax({
-            url: `${window.API_URL}/logout`,
+            url: `${globalThis.API_URL}/logout`,
             type: "DELETE"
         });
         window.location = "login";

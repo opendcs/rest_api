@@ -46,7 +46,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     });
-    if(!window.location.pathname.toLowerCase().startsWith("/login")) {
+    if(!globalThis.location.pathname.toLowerCase().startsWith("/login")) {
         setPropSpecsMeta();
     }
     document

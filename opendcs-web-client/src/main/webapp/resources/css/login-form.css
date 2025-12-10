@@ -163,13 +163,6 @@ input[type="reset"]:active {
   margin-bottom: 1rem;
 }
 
-
-.select2-container--default .select2-selection--single {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
 .select2-container--default .select2-selection--single {
   background-color: var(--bs-form-control-bg, #fff);
   border: 1px solid var(--bs-border-color, #ced4da);
@@ -285,7 +278,3 @@ input[type="reset"]:active {
 #icon {
   width: 60%;
 }
-
-/* Note: we intentionally do NOT globally remove focus outlines
-   (no *:focus { outline: none; }) to keep things accessible
-   and compatible with Bootstrap’s focus styles. */

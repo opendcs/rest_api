@@ -1,7 +1,7 @@
 $(document).ready(function() {
     const orgSelect = $('#select_organization');
     $.ajax({
-        url: `${window.API_URL}/organizations`,
+        url: `${globalThis.API_URL}/organizations`,
         type: "GET",
         dataType: "json",
         success: function (data) {
@@ -21,7 +21,7 @@ $(document).ready(function() {
             orgSelect.on('select2:select', function (e) {
                 const selectedData = e.params.data;
                 localStorage.setItem('organizationId', selectedData.id);
-                window.location.reload();
+                globalThis.location.reload();
             });
         }
     });

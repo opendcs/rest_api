@@ -44,7 +44,7 @@ $( document ).ready(function() {
     const $orgSelect = $('#id_organization');
 
     $.ajax({
-        url: `${window.API_URL}/organizations`,
+        url: `${globalThis.API_URL}/organizations`,
         type: "GET",
         dataType: "json",
         success: function (data) {
