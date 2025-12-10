@@ -16,8 +16,8 @@
 	<%@include file="/WEB-INF/common/header.jspf" %>
 	<head>
 		<link rel="stylesheet" type="text/css" href="../resources/css/login-form.css">
+        <title>OpenDCS Login</title>
 	</head>
-    <title>OpenDCS Login</title>
 	<body>
 		<%@include file="/WEB-INF/common/top-bar.jspf" %>
 		<div class="page-content">
