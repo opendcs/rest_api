@@ -80,7 +80,8 @@ public final class OrganizationResource extends OpenDcsResource
 				String etagString = Integer.toHexString(organizations.hashCode());
 				EntityTag etag = new EntityTag(etagString);
 				Response.ResponseBuilder precheck = request.getRequest().evaluatePreconditions(etag);
-				if (precheck != null) {
+				if (precheck != null)
+				{
 					return precheck.build();
 				}
 				return Response.status(HttpServletResponse.SC_OK)

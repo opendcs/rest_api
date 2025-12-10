@@ -37,7 +37,7 @@ public class SessionOfficePreparer implements ConnectionPreparer
 	@Override
 	public Connection prepare(Connection conn) throws SQLException
 	{
-		if (!conn.getMetaData().getDatabaseProductName().equalsIgnoreCase("Oracle"))
+		if (!"Oracle".equalsIgnoreCase(conn.getMetaData().getDatabaseProductName()))
 		{
 			return conn;
 		}

@@ -18,7 +18,6 @@ package org.opendcs.odcsapi.dao.cwms;
 import java.util.List;
 
 import org.jdbi.v3.core.Handle;
-import org.jdbi.v3.core.statement.Query;
 import org.opendcs.database.api.DataTransaction;
 import org.opendcs.database.api.OpenDcsDataException;
 import org.opendcs.odcsapi.beans.ApiOrganization;

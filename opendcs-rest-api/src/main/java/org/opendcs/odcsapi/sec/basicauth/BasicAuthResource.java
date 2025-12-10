@@ -57,7 +57,6 @@ import org.opendcs.utils.logging.OpenDcsLoggerFactory;
 import org.slf4j.Logger;
 
 import static org.opendcs.odcsapi.res.DataSourceContextCreator.DATA_SOURCE_ATTRIBUTE_KEY;
-import static org.opendcs.odcsapi.util.ApiConstants.ORGANIZATION_HEADER;
 
 @Path("/")
 @Tag(name = "REST - Authentication and Authorization", description = "Endpoints for authentication and authorization.")
@@ -68,7 +67,7 @@ public final class BasicAuthResource extends OpenDcsResource
 	private static final String MODULE = "BasicAuthResource";
 
 	@Context
-	private HttpServletRequest request;
+	private HttpServletRequest httpServletRequest;
 	@Context
 	private HttpHeaders httpHeaders;
 
@@ -146,12 +145,12 @@ public final class BasicAuthResource extends OpenDcsResource
 		validateDbCredentials(credentials);
 		Set<OpenDcsApiRoles> roles = getUserRoles(credentials.getUsername(), organizationId);
 		OpenDcsPrincipal principal = new OpenDcsPrincipal(credentials.getUsername(), roles);
-		HttpSession oldSession = request.getSession(false);
+		HttpSession oldSession = httpServletRequest.getSession(false);
 		if(oldSession != null)
 		{
 			oldSession.invalidate();
 		}
-		HttpSession session = request.getSession(true);
+		HttpSession session = httpServletRequest.getSession(true);
 		session.setAttribute(OpenDcsPrincipal.USER_PRINCIPAL_SESSION_ATTRIBUTE, principal);
 		return Response.status(HttpServletResponse.SC_OK).entity(new Status("Authentication Successful."))
 				.build();

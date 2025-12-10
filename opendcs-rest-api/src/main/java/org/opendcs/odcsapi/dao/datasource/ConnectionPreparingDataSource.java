@@ -24,7 +24,7 @@ public class ConnectionPreparingDataSource extends DelegatingDataSource
 		{
 			return getPreparer().prepare(connection);
 		}
-		catch(Exception e)
+		catch(RuntimeException e)
 		{
 			try
 			{

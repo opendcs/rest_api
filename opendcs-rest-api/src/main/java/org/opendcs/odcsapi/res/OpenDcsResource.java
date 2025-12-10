@@ -44,11 +44,11 @@ import static org.opendcs.odcsapi.util.ApiConstants.ORGANIZATION_HEADER;
 )
 public class OpenDcsResource
 {
+	private static final String UNSUPPORTED_OPERATION_MESSAGE = "Endpoint is unsupported by the OpenDCS REST API.";
+
 	@HeaderParam(ORGANIZATION_HEADER)
 	@Parameter(description = "Organization ID for the request", required = true)
 	protected String organizationId;
-
-	private static final String UNSUPPORTED_OPERATION_MESSAGE = "Endpoint is unsupported by the OpenDCS REST API.";
 
 	@Context
 	protected ContainerRequestContext request;

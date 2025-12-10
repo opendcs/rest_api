@@ -17,6 +17,7 @@
 	<head>
 		<link rel="stylesheet" type="text/css" href="../resources/css/login-form.css">
 	</head>
+    <title>OpenDCS Login</title>
 	<body>
 		<%@include file="/WEB-INF/common/top-bar.jspf" %>
 		<div class="page-content">

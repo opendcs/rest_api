@@ -87,10 +87,10 @@ function inputBoxLogin(event)
  */
 function login()
 {
-    var username = $("#id_username").val();
-    var password = $("#id_password").val();
-    var organization = $("#id_organization").val();
-    var params = {
+    const username = $("#id_username").val();
+    const password = $("#id_password").val();
+    const organization = $("#id_organization").val();
+    const params = {
             "username": username,
             "password": password
     };
@@ -108,8 +108,8 @@ function login()
             window.location = "platforms";
         },
         error: function(response) {
-            var errorJson;
-            var errorMessage;
+            let errorJson;
+            let errorMessage;
             try {
                 errorJson = JSON.parse(response.responseText);
                 errorMessage = errorJson.errMessage;

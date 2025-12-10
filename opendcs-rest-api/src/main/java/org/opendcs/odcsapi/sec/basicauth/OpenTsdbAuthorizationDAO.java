@@ -22,11 +22,6 @@ import java.sql.SQLException;
 import java.util.EnumSet;
 import java.util.Set;
 
-import javax.sql.DataSource;
-
-import opendcs.dao.DaoBase;
-import opendcs.dao.DatabaseConnectionOwner;
-import opendcs.opentsdb.OpenTsdb;
 import org.opendcs.database.api.DataTransaction;
 import org.opendcs.database.api.OpenDcsDataException;
 import org.opendcs.odcsapi.dao.ApiAuthorizationDAI;
