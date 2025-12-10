@@ -212,6 +212,9 @@ testEngines.each { engine  ->
         def guiWar = project(':opendcs-web-ui').tasks.named('war').get().archiveFile.get().asFile.getAbsolutePath()
         jvmArgs += "-Dopendcs.restapi.warfile=${restWar}"
         jvmArgs += "-Dopendcs.gui.warfile=${guiWar}"
+        // not needed for the Postgres setup but it doesn't get in the way and we need to make some tweaks to the fixture
+        // that we can't make in this PR.
+        jvmArgs += "-Dtestcontainer.cwms.bypass.cwms.pass=dcs_user"
         def odcsInstallDir = downloadAndUnzipInstaller.outputs.files.singleFile
         systemProperties.put("DCSTOOL_HOME", odcsInstallDir)
         systemProperties.put("DCSTOOL_USERDIR", "build/resources/test/tomcat/conf")

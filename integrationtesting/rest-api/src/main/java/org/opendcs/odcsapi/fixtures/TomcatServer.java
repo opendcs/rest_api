@@ -291,7 +291,30 @@ public final class TomcatServer implements AutoCloseable
 
 	private static void setupClientUser(DbType dbType)
 	{
-		// logic will get moved to baseline configuration after merge
+		if(CwmsOracleConfiguration.NAME.equals(dbType.getProvider()))
+		{
+			// I have no idea why this is suddenly required but it was also affecting operations in
+			// runtime test environments where the required entries weren't present.
+			String userPermissions = "begin execute immediate 'grant web_user to ' || ?; end;";
+			String userPermissions2 = "begin cwms_sec.ADD_USER_TO_GROUP(?, 'CWMS PD Users', 'HQ'); end;";
+			try(Connection connection = DriverManager.getConnection(System.getProperty(DB_URL), "CWMS_20",
+					System.getProperty(DB_PASSWORD)))
+			{
+				try(PreparedStatement stmt1 = connection.prepareStatement(userPermissions);
+					PreparedStatement stmt2 = connection.prepareStatement(userPermissions2))
+				{
+					String username = System.getProperty(DB_USERNAME);
+					stmt1.setString(1, username);
+					stmt1.executeQuery();
+					stmt2.setString(1, username);
+					stmt2.executeQuery();
+				}
+			}
+			catch(SQLException ex)
+			{
+				log.atDebug().setCause(ex).log("Error setting up web user");
+			}
+		}
 	}
 
 	public Manager getTestSessionManager()

@@ -19,22 +19,19 @@ package org.opendcs.odcsapi.res.it;
 import io.restassured.filter.log.LogDetail;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.ws.rs.core.MediaType;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.TestTemplate;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.opendcs.odcsapi.fixtures.DatabaseContextProvider;
+import org.opendcs.fixtures.annotations.EnableIfTsDb;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.is;
 
-@Tag("integration-cwms-only")
-@ExtendWith(DatabaseContextProvider.class)
+@EnableIfTsDb({"CWMS-Oracle"})
 final class OrganizationResourcesIT extends BaseIT
 {
 
 	@TestTemplate
-	void getAlgorithmRefs()
+	void getOrganizations()
 	{
 		given()
 			.log().ifValidationFails(LogDetail.ALL, true)

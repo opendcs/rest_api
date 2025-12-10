@@ -135,6 +135,29 @@ public class DatabaseSetupExtension implements BeforeEachCallback
 
 	private void setupClientUser()
 	{
-		// logic will get moved to baseline Configuration when merged.
+		if(dbType == DbType.CWMS_ORACLE)
+		{
+			String userPermissions = "begin execute immediate 'grant web_user to " + System.getProperty("DB_USERNAME") + "'; end;";
+			String dbOffice = System.getProperty("DB_OFFICE");
+			String setWebUserPermissions = """
+					begin
+					   cwms_sec.add_user_to_group(?, 'CWMS User Admins',?) ;
+					   commit;
+					end;""";
+			try(Connection connection = DriverManager.getConnection(System.getProperty("DB_URL"), "CWMS_20",
+					System.getProperty("DB_PASSWORD"));
+				PreparedStatement stmt1 = connection.prepareStatement(userPermissions);
+				PreparedStatement stmt2 = connection.prepareStatement(setWebUserPermissions))
+			{
+				stmt1.executeQuery();
+				stmt2.setString(1, System.getProperty("DB_USERNAME"));
+				stmt2.setString(2, dbOffice);
+				stmt2.executeQuery();
+			}
+			catch(SQLException ex)
+			{
+				throw new RuntimeException(ex);
+			}
+		}
 	}
 }
