@@ -39,7 +39,7 @@ public final class CwmsOrganizationDao implements OrganizationDao
 			{
 				queryStr += " OFFSET :offset ROWS FETCH NEXT :limit ROWS ONLY";
 			}
-			try(Query query = handle.createQuery(queryStr))
+			try(var query = handle.createQuery(queryStr))
 			{
 				if (limit > 0)
 				{
