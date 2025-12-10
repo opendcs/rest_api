@@ -42,7 +42,7 @@ public class SessionOfficePreparer implements ConnectionPreparer
 			return conn;
 		}
 		String sessionOffice = this.office;
-		if(sessionOffice == null || !sessionOffice.isBlank())
+		if(sessionOffice == null || sessionOffice.isBlank())
 		{
 			logger.atDebug().log("Office is null or empty.");
 			//Workaround for default loaded data on OpenDcsDatabase creation
