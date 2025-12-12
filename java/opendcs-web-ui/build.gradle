@@ -18,7 +18,7 @@ plugins {
     id "opendcs-rest-api.deps-conventions"
     id "opendcs-rest-api.publishing-conventions"
     id "war"
-    id "com.netflix.nebula.jakartaee-migration" version "2.0.0"
+    id "com.netflix.nebula.jakartaee-migration" version "2.0.1"
 }
 
 configurations {
@@ -48,7 +48,7 @@ dependencies {
     runtimeOnly("org.webjars:jquery")
     runtimeOnly("org.webjars:select2:4.0.13")
     runtimeOnly("org.webjars:d3js:6.7.0")
-    runtimeOnly("org.webjars:jquery-validation:1.20.0")
+    runtimeOnly("org.webjars:jquery-validation:1.21.0")
     runtimeOnly("org.webjars:pickadate.js:3.6.4")
     runtimeOnly("org.webjars:bootstrap-daterangepicker:3.1")
     runtimeOnly("org.webjars:momentjs:2.30.1-1")
