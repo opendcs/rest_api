@@ -47,20 +47,20 @@ jobs:
         if: always()
         run: ./gradlew :testing:rest-api:testOpenDCSPostgres --stacktrace --info
       - name: Upload WAR files
-        uses: actions/upload-artifact@v5.0.0
+        uses: actions/upload-artifact@v6.0.0
         with:
           name: warfile-${{ matrix.java }}
           path: ./**/build/libs/*.war
           retention-days: 1
           if-no-files-found: error
       - name: Upload Test Reports
-        uses: actions/upload-artifact@v5.0.0
+        uses: actions/upload-artifact@v6.0.0
         with:
           name: test-report-${{ matrix.java }}
           path: ./**/build/reports/tests/**
           if-no-files-found: error
       - name: Upload Coverage Reports
-        uses: actions/upload-artifact@v5.0.0
+        uses: actions/upload-artifact@v6.0.0
         with:
           name: coverage-report-${{ matrix.java }}
           path: ./**/build/reports/jacoco/
