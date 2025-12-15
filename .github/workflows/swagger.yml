@@ -26,7 +26,7 @@ jobs:
       - name: Generate OpenAPI
         run: ./gradlew generateOpenAPI
       - name: Upload OpenAPI Specification
-        uses: actions/upload-artifact@v5.0.0
+        uses: actions/upload-artifact@v6.0.0
         with:
           name: openapi
           path: ./**/build/swagger/opendcs-openapi.json
