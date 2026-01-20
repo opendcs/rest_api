@@ -18,7 +18,7 @@ plugins {
     id "opendcs-rest-api.deps-conventions"
     id "opendcs-rest-api.publishing-conventions"
     id "war"
-    id "io.swagger.core.v3.swagger-gradle-plugin" version "2.2.41"
+    id "io.swagger.core.v3.swagger-gradle-plugin" version "2.2.42"
 }
 
 configurations {
