@@ -1,3 +1,5 @@
+# The REST API code has been moved into the main repository at https://github.com/opendcs/opendcs. No more development will happen within this repository.
+
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=opendcs_rest_api&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=opendcs_rest_api)
 [![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=opendcs_rest_api&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=opendcs_rest_api)
 [![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=opendcs_rest_api&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=opendcs_rest_api)
