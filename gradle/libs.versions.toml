@@ -24,7 +24,7 @@ openapitools-databind-nullable = "0.2.1"
 httpmime-version = "4.5.13"
 
 #Test Dependencies
-junit = "5.10.2"
+junit = "6.0.1"
 mockito = "4.11.0"
 byte-buddy = "1.15.3"
 rest-assured = "5.5.0"
